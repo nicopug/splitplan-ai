@@ -52,57 +52,73 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     session.refresh(new_account)
 
     # Send verification email via SMTP (fastapi-mail)
-    try:
-        message = MessageSchema(
-            subject="Verifica il tuo account SplitPlan",
-            recipients=[req.email],
-            body=f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #23599E;">Benvenuto su SplitPlan!</h1>
-                    <p>Ciao <strong>{req.name}</strong>,</p>
-                    <p>Grazie per esserti registrato. Clicca il pulsante qui sotto per verificare il tuo account:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{verification_url}" 
-                           style="background: #23599E; color: white; padding: 15px 30px; 
-                                  text-decoration: none; border-radius: 8px; font-weight: bold;">
-                            Verifica Email
-                        </a>
-                    </div>
-                    <p style="color: #666; font-size: 0.9em;">
-                        Se non riesci a cliccare il pulsante, copia e incolla questo link nel browser:<br/>
-                        <a href="{verification_url}">{verification_url}</a>
-                    </p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
-                    <p style="color: #999; font-size: 0.8em;">
-                        Se non hai richiesto questa registrazione, ignora questa email.
-                    </p>
-                </div>
-            """,
-            subtype=MessageType.html
-        )
-        
-        # Configure SMTP
-        conf = ConnectionConfig(
-            MAIL_USERNAME=os.getenv("SMTP_USER"),
-            MAIL_PASSWORD=os.getenv("SMTP_PASSWORD"),
-            MAIL_FROM=os.getenv("SMTP_FROM", os.getenv("SMTP_USER")),
-            MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-            MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-            MAIL_STARTTLS=True,
-            MAIL_SSL_TLS=False,
-            USE_CREDENTIALS=True,
-            VALIDATE_CERTS=True
-        )
-
-        fm = FastMail(conf)
-        await fm.send_message(message)
-        print(f"[OK] Email SMTP inviata a {req.email}")
-        
-    except Exception as e:
-        print(f"[ERROR] Errore nell'invio SMTP: {e}")
-        # Non blocchiamo la registrazione se l'email fallisce
+    # Send verification email via SMTP (fastapi-mail)
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
     
+    if smtp_user and smtp_password:
+        try:
+            message = MessageSchema(
+                subject="Verifica il tuo account SplitPlan",
+                recipients=[req.email],
+                body=f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h1 style="color: #23599E;">Benvenuto su SplitPlan!</h1>
+                        <p>Ciao <strong>{req.name}</strong>,</p>
+                        <p>Grazie per esserti registrato. Clicca il pulsante qui sotto per verificare il tuo account:</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{verification_url}" 
+                               style="background: #23599E; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 8px; font-weight: bold;">
+                                Verifica Email
+                            </a>
+                        </div>
+                        <p style="color: #666; font-size: 0.9em;">
+                            Se non riesci a cliccare il pulsante, copia e incolla questo link nel browser:<br/>
+                            <a href="{verification_url}">{verification_url}</a>
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+                        <p style="color: #999; font-size: 0.8em;">
+                            Se non hai richiesto questa registrazione, ignora questa email.
+                        </p>
+                    </div>
+                """,
+                subtype=MessageType.html
+            )
+            
+            # Configure SMTP
+            conf = ConnectionConfig(
+                MAIL_USERNAME=smtp_user,
+                MAIL_PASSWORD=smtp_password,
+                MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
+                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
+                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+                MAIL_STARTTLS=True,
+                MAIL_SSL_TLS=False,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True
+            )
+
+            fm = FastMail(conf)
+            await fm.send_message(message)
+            print(f"[OK] Email SMTP inviata a {req.email}")
+            
+        except Exception as e:
+            print(f"[ERROR] Errore nell'invio SMTP: {e}")
+            # Non blocchiamo la registrazione se l'email fallisce
+    else:
+        print("[WARNING] SMTP settings missing. Skipping email.")
+
     return {"message": "Registrazione completata. Controlla la tua email per la verifica."}
+
+@router.get("/debug-env")
+async def debug_env():
+    return {
+        "db_url_set": bool(os.getenv("DATABASE_URL")),
+        "smtp_user_set": bool(os.getenv("SMTP_USER")),
+        "smtp_password_set": bool(os.getenv("SMTP_PASSWORD")),
+        "secret_key_set": bool(os.getenv("SECRET_KEY"))
+    }
 
 @router.get("/verify-email")
 async def verify_email(token: str, session: Session = Depends(get_session)):

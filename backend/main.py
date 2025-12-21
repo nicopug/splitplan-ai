@@ -11,7 +11,12 @@ from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    try:
+        create_db_and_tables()
+        print("[OK] Database tables created/verified.")
+    except Exception as e:
+        print(f"🔥 Startup DB Error: {e}")
+        # We don't raise here so the app can still start and return 500s for requests instead of crashing entirely
     yield
 
 app = FastAPI(lifespan=lifespan)

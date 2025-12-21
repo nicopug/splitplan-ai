@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8000";
+// Use relative path '/api' in production (Vercel rewrites), or localhost in dev
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("token");

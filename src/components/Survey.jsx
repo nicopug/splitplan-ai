@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Survey = ({ trip, onComplete }) => {
+const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
 
     const [formData, setFormData] = useState({
@@ -203,8 +203,12 @@ const Survey = ({ trip, onComplete }) => {
                         </div>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '1.1rem' }}>
-                        {isGroup ? 'Crea il Piano e Invita 🚀' : 'Genera Opzioni ✨'}
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '1.1rem' }} disabled={isGenerating}>
+                        {isGenerating ? (
+                            <span><span className="spinner"></span> Generazione...</span>
+                        ) : (
+                            isGroup ? 'Crea il Piano e Invita 🚀' : 'Genera Opzioni ✨'
+                        )}
                     </button>
                 </form>
             </div>

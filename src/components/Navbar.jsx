@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo_splitplan.jpg';
 
 const Navbar = () => {
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -28,9 +29,13 @@ const Navbar = () => {
                 </Link>
             </div>
             <div className="links" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                <a href="#how-it-works" style={{ fontWeight: '500' }}>Come Funziona</a>
-                <a href="#features" style={{ fontWeight: '500' }}>Funzionalità</a>
-                <a href="#pricing" style={{ fontWeight: '500' }}>Prezzi</a>
+                {location.pathname === '/' && (
+                    <>
+                        <a href="#how-it-works" style={{ fontWeight: '500' }}>Come Funziona</a>
+                        <a href="#features" style={{ fontWeight: '500' }}>Funzionalità</a>
+                        <a href="#pricing" style={{ fontWeight: '500' }}>Prezzi</a>
+                    </>
+                )}
 
                 {user ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

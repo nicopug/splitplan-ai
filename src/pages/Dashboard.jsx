@@ -18,6 +18,7 @@ const Dashboard = () => {
     const [proposals, setProposals] = useState([]);
     const [itinerary, setItinerary] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [view, setView] = useState('TRIP'); // 'TRIP', 'CHAT', 'BUDGET', 'FINANCE', or 'PHOTOS'
     const [user, setUser] = useState(null);
     const [chatMessages, setChatMessages] = useState([
@@ -51,7 +52,7 @@ const Dashboard = () => {
     }, [id]);
 
     const handleSurveyComplete = async (surveyData) => {
-        setLoading(true);
+        setIsGenerating(true);
         try {
             const props = await generateProposals(id, surveyData);
             setProposals(props);
@@ -59,7 +60,7 @@ const Dashboard = () => {
         } catch (e) {
             alert("Errore generazione: " + e.message);
         } finally {
-            setLoading(false);
+            setIsGenerating(false);
         }
     };
 
@@ -139,7 +140,7 @@ const Dashboard = () => {
             {view === 'TRIP' && (
                 <>
                     {trip.status === 'PLANNING' && (
-                        <Survey trip={trip} onComplete={handleSurveyComplete} />
+                        <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
                     )}
 
                     {trip.status === 'VOTING' && (

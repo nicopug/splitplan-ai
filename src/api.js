@@ -167,7 +167,14 @@ export const register = async (userData) => {
         body: JSON.stringify(userData),
     });
     if (!response.ok) {
-        const error = await response.json();
+        let error;
+        try {
+            error = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            console.error("Failed to parse JSON error response:", text);
+            throw new Error(`Request failed with ${response.status}: ${text.substring(0, 100)}...`);
+        }
         throw new Error(error.detail || "Registration failed");
     }
     return response.json();

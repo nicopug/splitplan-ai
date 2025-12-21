@@ -7,19 +7,15 @@ from ..auth import get_password_hash, verify_password, create_access_token, deco
 from pydantic import EmailStr, BaseModel
 import os
 from dotenv import load_dotenv
-import resend
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
 load_dotenv()
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-# --- Resend Config ---
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")
-if RESEND_API_KEY:
-    resend.api_key = RESEND_API_KEY
-    print(f"[OK] Resend API Key loaded: {RESEND_API_KEY[:10]}***")
-else:
-    print("[WARNING] RESEND_API_KEY not found. Email sending will fail.")
+# --- SMTP Config check ---
+if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
+    print("[WARNING] SMTP Credentials not found in .env. Email sending will fail.")
 
 class RegisterRequest(BaseModel):
     name: str
@@ -54,17 +50,13 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     session.add(new_account)
     session.commit()
     session.refresh(new_account)
-    
-    # Send verification email via Resend
-    token = create_verification_token(req.email)
-    verification_url = f"http://localhost:5173/auth?token={token}"
-    
+
+    # Send verification email via SMTP (fastapi-mail)
     try:
-        params = {
-            "from": "SplitPlan <onboarding@resend.dev>",
-            "to": [req.email],
-            "subject": "Verifica il tuo account SplitPlan",
-            "html": f"""
+        message = MessageSchema(
+            subject="Verifica il tuo account SplitPlan",
+            recipients=[req.email],
+            body=f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h1 style="color: #23599E;">Benvenuto su SplitPlan!</h1>
                     <p>Ciao <strong>{req.name}</strong>,</p>
@@ -85,12 +77,29 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
                         Se non hai richiesto questa registrazione, ignora questa email.
                     </p>
                 </div>
-            """
-        }
-        email_response = resend.Emails.send(params)
-        print(f"[OK] Email di verifica inviata a {req.email} - ID: {email_response.get('id', 'N/A')}")
+            """,
+            subtype=MessageType.html
+        )
+        
+        # Configure SMTP
+        conf = ConnectionConfig(
+            MAIL_USERNAME=os.getenv("SMTP_USER"),
+            MAIL_PASSWORD=os.getenv("SMTP_PASSWORD"),
+            MAIL_FROM=os.getenv("SMTP_FROM", os.getenv("SMTP_USER")),
+            MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
+            MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+            MAIL_STARTTLS=True,
+            MAIL_SSL_TLS=False,
+            USE_CREDENTIALS=True,
+            VALIDATE_CERTS=True
+        )
+
+        fm = FastMail(conf)
+        await fm.send_message(message)
+        print(f"[OK] Email SMTP inviata a {req.email}")
+        
     except Exception as e:
-        print(f"[ERROR] Errore nell'invio dell'email: {e}")
+        print(f"[ERROR] Errore nell'invio SMTP: {e}")
         # Non blocchiamo la registrazione se l'email fallisce
     
     return {"message": "Registrazione completata. Controlla la tua email per la verifica."}

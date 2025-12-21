@@ -7,6 +7,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
     const isSolo = trip.trip_type === 'SOLO';
     const [participants, setParticipants] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [loadingProposalId, setLoadingProposalId] = useState(null);
 
     // Fetch Participants on load
     React.useEffect(() => {
@@ -29,7 +30,13 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
             return;
         }
 
-        const voterId = isSolo ? 1 : selectedUser;
+        const voterId = isSolo ? (participants[0]?.id) : selectedUser;
+        if (!voterId) {
+            alert("Errore: Partecipante non trovato. Riprova.");
+            return;
+        }
+
+        setLoadingProposalId(proposalId);
         try {
             // Mock logic: User ID 1 is the current user. NOW we use voterId
             const res = await voteProposal(proposalId, voterId, 1);
@@ -44,6 +51,8 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
             }
         } catch (e) {
             alert("Errore voto: " + e.message);
+        } finally {
+            setLoadingProposalId(null);
         }
     };
 
@@ -117,12 +126,15 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                 onClick={() => handleVote(prop.id)}
                                 className={`btn ${votedId === prop.id ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ width: '100%' }}
-                                disabled={votedId !== null && !isSolo} // Disable if already voted, unless solo
+                                disabled={(votedId !== null && !isSolo) || loadingProposalId !== null} // Disable if already voted (unless solo) or ANY loading
                             >
-                                {votedId === prop.id
-                                    ? (isSolo ? 'Scelta ✅' : 'Votato ✅')
-                                    : (isSolo ? 'Genera Itinerario ✨' : 'Vota Questo 👍')
-                                }
+                                {loadingProposalId === prop.id ? ( // Show spinner only if loading THIS specific action
+                                    <span><span className="spinner"></span> Generazione...</span>
+                                ) : (
+                                    votedId === prop.id
+                                        ? (isSolo ? 'Scelta ✅' : 'Votato ✅')
+                                        : (isSolo ? 'Genera Itinerario ✨' : 'Vota Questo 👍')
+                                )}
                             </button>
                         </div>
                     </div>

@@ -13,9 +13,8 @@ if DATABASE_URL:
     engine = create_engine(DATABASE_URL, echo=False)
 else:
     # Fallback to SQLite for local development
-    print("[WARNING] DATABASE_URL not found, using SQLite fallback")
-    sqlite_file_name = "database.db"
-    sqlite_url = f"sqlite:///{sqlite_file_name}"
+    print("[WARNING] DATABASE_URL not found, using SQLite fallback (IN-MEMORY)")
+    sqlite_url = "sqlite://" # In-memory for tests/Vercel-fallback to avoid Read-Only error
     connect_args = {"check_same_thread": False}
     engine = create_engine(sqlite_url, connect_args=connect_args)
 

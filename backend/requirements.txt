@@ -3,8 +3,8 @@ uvicorn
 sqlmodel
 google-generativeai
 python-dotenv
-bcrypt
 python-jose[cryptography]
 python-multipart
 fastapi-mail
 psycopg2-binary
+passlib[bcrypt]

@@ -167,15 +167,18 @@ export const register = async (userData) => {
         body: JSON.stringify(userData),
     });
     if (!response.ok) {
-        let error;
+        const text = await response.text();
         try {
-            error = await response.json();
+            const error = JSON.parse(text);
+            throw new Error(error.detail || "Registration failed");
         } catch (e) {
-            const text = await response.text();
-            console.error("Failed to parse JSON error response:", text);
-            throw new Error(`Request failed with ${response.status}: ${text.substring(0, 100)}...`);
+            console.error("Failed to parse error response:", text);
+            // If it's the JSON parse error itself, re-throw the original text
+            if (e instanceof SyntaxError) {
+                throw new Error(`Request failed with ${response.status}: ${text.substring(0, 100)}...`);
+            }
+            throw e; // Throw the error object directly if it was a structured error
         }
-        throw new Error(error.detail || "Registration failed");
     }
     return response.json();
 };

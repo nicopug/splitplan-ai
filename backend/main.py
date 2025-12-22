@@ -11,13 +11,15 @@ from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("🚀 [STARTUP] Iniziando startup...")
     try:
         create_db_and_tables()
-        print("[OK] Database tables created/verified.")
+        print("✅ [OK] Database tables created/verified.")
     except Exception as e:
-        print(f"🔥 Startup DB Error: {e}")
-        # We don't raise here so the app can still start and return 500s for requests instead of crashing entirely
+        print(f"🔥 [STARTUP ERROR] DB Error: {e}")
+        print(traceback.format_exc())
     yield
+    print("🛑 [SHUTDOWN] App shutting down...")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -28,13 +30,13 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error", "error": str(exc)},
-        headers={"Access-Control-Allow-Origin": "*"} # Manually enable CORS on 500
+        headers={"Access-Control-Allow-Origin": "*"}
     )
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow Vercel domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,20 +44,65 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    print("📍 [HEALTH CHECK] Request ricevuta")
+    return {"status": "ok", "database": "connected"}
 
-app.include_router(trips.router)
-app.include_router(itinerary.router)
-app.include_router(expenses.router)
-app.include_router(photos.router)
-app.include_router(users.router)
+@app.get("/debug")
+def debug_info():
+    return {
+        "env_vars": {
+            "DATABASE_URL": "***" if os.getenv("DATABASE_URL") else "NOT SET",
+            "SMTP_USER": "***" if os.getenv("SMTP_USER") else "NOT SET",
+            "SMTP_PASSWORD": "***" if os.getenv("SMTP_PASSWORD") else "NOT SET",
+            "SECRET_KEY": "***" if os.getenv("SECRET_KEY") else "NOT SET",
+            "GOOGLE_API_KEY": "***" if os.getenv("GOOGLE_API_KEY") else "NOT SET",
+            "FRONTEND_URL": os.getenv("FRONTEND_URL", "NOT SET"),
+        }
+    }
 
-# Mount public folder to serve uploaded photos
+print("📦 [INIT] Loading routers...")
+try:
+    app.include_router(trips.router)
+    print("✅ trips router loaded")
+except Exception as e:
+    print(f"❌ Error loading trips router: {e}")
+    traceback.print_exc()
+
+try:
+    app.include_router(itinerary.router)
+    print("✅ itinerary router loaded")
+except Exception as e:
+    print(f"❌ Error loading itinerary router: {e}")
+    traceback.print_exc()
+
+try:
+    app.include_router(expenses.router)
+    print("✅ expenses router loaded")
+except Exception as e:
+    print(f"❌ Error loading expenses router: {e}")
+    traceback.print_exc()
+
+try:
+    app.include_router(photos.router)
+    print("✅ photos router loaded")
+except Exception as e:
+    print(f"❌ Error loading photos router: {e}")
+    traceback.print_exc()
+
+try:
+    app.include_router(users.router)
+    print("✅ users router loaded")
+except Exception as e:
+    print(f"❌ Error loading users router: {e}")
+    traceback.print_exc()
+
+# Mount public folder
 if not os.path.exists("public"):
     os.makedirs("public")
 app.mount("/public", StaticFiles(directory="public"), name="public")
-# Also mount uploads specifically if needed, but /public/uploads should work via /public
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to SplitPlan API"}
+
+print("✅ [INIT] All routers loaded successfully!")

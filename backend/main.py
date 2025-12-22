@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import trips, photos, users # Assicurati di importare anche 'auth' se la registrazione è lì
+from .routers import trips, photos, users
 
 app = FastAPI()
 
@@ -8,7 +8,7 @@ app = FastAPI()
 # Senza questo, il browser blocca le richieste POST di login/register
 origins = [
     "http://localhost:3000",
-    "https://tuo-progetto.vercel.app", # Metti qui il dominio del tuo frontend
+    "https://splitplan-ai.vercel.app", # Metti qui il dominio del tuo frontend
     "*" # In fase di dev/test puoi lasciare * per accettare tutto
 ]
 
@@ -21,11 +21,9 @@ app.add_middleware(
 )
 
 # --- INCLUSIONE ROUTER ---
-# Assicurati che il router dove gestisci la registrazione (es. users o auth) sia incluso!
 app.include_router(trips.router)
 app.include_router(photos.router)
-# app.include_router(auth.router) # Scommenta se hai un file auth.py
-# app.include_router(users.router) # Scommenta se la registrazione è qui
+app.include_router(users.router)
 
 @app.get("/")
 def root():

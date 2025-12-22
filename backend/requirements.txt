@@ -6,7 +6,8 @@ python-multipart
 google-genai
 supabase
 python-dotenv
-python-jose[cryptography]
 fastapi-mail
-passlib[bcrypt]
 email-validator
+requests
+python-jose[cryptography]
+passlib[bcrypt]

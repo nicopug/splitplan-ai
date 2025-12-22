@@ -1,11 +1,12 @@
 fastapi
 uvicorn
 sqlmodel
-google-generativeai
+psycopg2-binary
+python-multipart
+google-genai
+supabase
 python-dotenv
 python-jose[cryptography]
-python-multipart
 fastapi-mail
-psycopg2-binary
 passlib[bcrypt]
 email-validator

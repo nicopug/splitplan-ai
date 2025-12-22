@@ -1,5 +1,10 @@
-// Use relative path '/api' in production (Vercel rewrites), or localhost in dev
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+// Use environment variable or fallback to full URL
+const API_URL = import.meta.env.VITE_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? "http://localhost:5678"
+        : "https://splitplan-ai.vercel.app");
+
+console.log("🔗 API URL:", API_URL);
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
@@ -134,7 +139,7 @@ export const uploadPhoto = async (tripId, file) => {
 
     const response = await fetch(`${API_URL}/trips/${tripId}/photos`, {
         method: "POST",
-        headers: getAuthHeadersMultipart(), // No Content-Type for FormData, browser sets boundary
+        headers: getAuthHeadersMultipart(),
         body: formData
     });
     if (!response.ok) throw new Error("Failed to upload photo");
@@ -173,11 +178,10 @@ export const register = async (userData) => {
             throw new Error(error.detail || "Registration failed");
         } catch (e) {
             console.error("Failed to parse error response:", text);
-            // If it's the JSON parse error itself, re-throw the original text
             if (e instanceof SyntaxError) {
                 throw new Error(`Request failed with ${response.status}: ${text.substring(0, 100)}...`);
             }
-            throw e; // Throw the error object directly if it was a structured error
+            throw e;
         }
     }
     return response.json();

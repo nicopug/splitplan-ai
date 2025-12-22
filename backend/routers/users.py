@@ -58,7 +58,7 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     
     if smtp_user and smtp_password:
         try:
-            verification_token = create_verification_token(data={"sub": req.email})
+            verification_token = create_verification_token(email=req.email)
             frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
             verification_url = f"{frontend_url}/verify?token={verification_token}"
             message = MessageSchema(

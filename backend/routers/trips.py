@@ -392,29 +392,61 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
     return {"status": "Hotel Confirmed & Itinerary Generated"}
 
 @router.post("/vote/{proposal_id}")
-def vote_proposal(proposal_id: int, user_id: int, score: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    target_user = session.get(User, user_id)
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if target_user.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Unauthorized vote attempt")
+def vote_proposal(
+    proposal_id: int, 
+    score: int, 
+    # Mettiamo user_id opzionale per evitare errori di validazione frontend, ma lo calcoliamo noi
+    user_id: Optional[int] = None, 
+    session: Session = Depends(get_session), 
+    current_account: Account = Depends(get_current_user)
+):
+    # 1. Recuperiamo la proposta
+    proposal = session.get(Proposal, proposal_id)
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposta non trovata")
+    
+    trip = session.get(Trip, proposal.trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    vote = Vote(proposal_id=proposal_id, user_id=user_id, score=score)
-    session.add(vote)
+    # 2. IDENTIFICAZIONE AUTOMATICA
+    # Cerchiamo chi è l'utente collegato a questo account in questo viaggio
+    participant = session.exec(
+        select(User).where(User.trip_id == trip.id, User.account_id == current_account.id)
+    ).first()
+    
+    if not participant:
+        raise HTTPException(status_code=403, detail="Non sei un partecipante di questo viaggio, non puoi votare.")
+
+    # 3. Gestione Voto
+    existing_vote = session.exec(
+        select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)
+    ).first()
+    
+    if existing_vote:
+        existing_vote.score = score
+        session.add(existing_vote)
+    else:
+        new_vote = Vote(proposal_id=proposal_id, user_id=participant.id, score=score)
+        session.add(new_vote)
+        
     session.commit()
     
-    proposal = session.get(Proposal, proposal_id)
-    trip = session.get(Trip, proposal.trip_id)
-    
+    # 4. Calcolo Consenso
     statement = select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)
-    total_votes = session.exec(statement).one()
+    total_voters = session.exec(statement).one()
     
     status = "VOTING"
-    if total_votes >= trip.num_people:
+    
+    # Se tutti i partecipanti hanno votato
+    if total_voters >= trip.num_people:
         status = "CONSENSUS_REACHED"
+        
+        # Troviamo la proposta vincente
         proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
         best_p = None
         max_s = -999999
+        
         for p in proposals:
             total_s = session.exec(select(func.sum(Vote.score)).where(Vote.proposal_id == p.id)).one() or 0
             if total_s > max_s:
@@ -429,9 +461,16 @@ def vote_proposal(proposal_id: int, user_id: int, score: int, session: Session =
             session.add(trip)
             session.commit()
             session.refresh(trip)
+            
+            # Genera itinerario
             generate_itinerary_content(trip, best_p, session)
         
-    return {"status": "voted", "trip_status": status, "votes_count": total_votes, "required": trip.num_people}
+    return {
+        "status": "voted", 
+        "trip_status": status, 
+        "votes_count": total_voters, 
+        "required": trip.num_people
+    }
 
 @router.post("/{trip_id}/simulate-votes")
 def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):

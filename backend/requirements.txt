@@ -4,6 +4,7 @@ sqlmodel
 psycopg2-binary
 python-multipart
 google-genai
+openai
 supabase
 python-dotenv
 fastapi-mail

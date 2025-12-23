@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 import os
 import json
 from datetime import datetime
-# NUOVO SDK
+# Importiamo il NUOVO SDK ufficiale
 from google import genai
 from dotenv import load_dotenv
 
@@ -12,7 +12,7 @@ from ..database import get_session
 from ..auth import get_current_user
 from ..models import Trip, TripBase, User, UserBase, Proposal, Vote, ItineraryItem, SQLModel, Account
 
-# Configure Google Gen AI Client
+# Configurazione Client Google Gen AI
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
@@ -21,7 +21,7 @@ if GOOGLE_API_KEY:
     # Inizializzazione nuovo Client
     ai_client = genai.Client(api_key=GOOGLE_API_KEY)
 else:
-    print(f"[ERROR] GOOGLE_API_KEY not found. CWD: {os.getcwd()}")
+    print(f"[ERROR] GOOGLE_API_KEY not found. Funzionerò in modalità Mock/Manuale.")
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -100,6 +100,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
         
+    # Salviamo i dati grezzi iniziali
     trip.budget_per_person = prefs.budget / prefs.num_people
     trip.num_people = prefs.num_people
     trip.start_date = prefs.start_date
@@ -110,8 +111,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     session.add(trip)
     session.commit()
     
+    # Gestione partecipanti
     current_participants_count = session.exec(select(func.count(User.id)).where(User.trip_id == trip_id)).one()
-    
     if prefs.participant_names:
         for name in prefs.participant_names:
             exists = session.exec(select(User).where(User.trip_id == trip_id, User.name == name)).first()
@@ -120,9 +121,10 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 session.add(new_user)
         session.commit()
     
+    # --- LOGICA INTELLIGENTE ---
     if ai_client:
         try:
-            # --- MODIFICA AI: Chiediamo di normalizzare anche l'aeroporto di partenza ---
+            # 1. Tentativo con AI: Generazione + Correzione IATA
             prompt = f"""
             Act as a Travel Agent. 
             
@@ -166,7 +168,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             json_str = response.text.replace("```json", "").replace("```", "").strip()
             full_data = json.loads(json_str)
             
-            # --- SALVATAGGIO CORREZIONE IATA ---
+            # AGGIORNAMENTO DB: Se l'AI ha trovato il codice IATA corretto, lo salviamo
             clean_departure_iata = full_data.get("departure_iata_normalized")
             if clean_departure_iata and len(clean_departure_iata) == 3:
                 trip.departure_airport = clean_departure_iata.upper()
@@ -191,6 +193,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 )
                 options.append(prop)
                 
+            # Pulizia vecchie proposte e salvataggio nuove
             existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
             for e in existing:
                 session.delete(e)
@@ -205,9 +208,46 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
         except Exception as e:
-            print(f"AI Generation Failed: {e}. Falling back to Mock.")
+            print(f"AI Generation Failed: {e}. Falling back to Mock/Manual.")
     
-    # Fallback Mock Logic
+    # --- FALLBACK LOGIC (Se l'AI manca o fallisce) ---
+    
+    # 2. CORREZIONE MANUALE IATA (Dizionario di emergenza)
+    # Questo assicura che il link Skyscanner funzioni anche senza API Key!
+    iata_mapping = {
+        "roma": "ROM", "rome": "ROM", "fiumicino": "FCO", "ciampino": "CIA",
+        "milano": "MIL", "milan": "MIL", "malpensa": "MXP", "linate": "LIN", "bergamo": "BGY",
+        "napoli": "NAP", "naples": "NAP",
+        "venezia": "VCE", "venice": "VCE",
+        "catania": "CTA",
+        "palermo": "PMO",
+        "bologna": "BLQ",
+        "torino": "TRN",
+        "bari": "BRI",
+        "cagliari": "CAG",
+        "lamezia": "SUF",
+        "verona": "VRN",
+        "firenze": "FLR",
+        "pisa": "PSA"
+    }
+    
+    # Normalizziamo l'input utente
+    user_dep = prefs.departure_airport.strip().lower()
+    
+    # Se troviamo la città nella lista, aggiorniamo il database
+    if user_dep in iata_mapping:
+        trip.departure_airport = iata_mapping[user_dep]
+        session.add(trip)
+        session.commit()
+        print(f"[MOCK] Aeroporto corretto manualmente: {user_dep} -> {trip.departure_airport}")
+    else:
+        # Tentativo disperato: prime 3 lettere (es. ANCONA -> ANC)
+        if len(prefs.departure_airport) > 3:
+             trip.departure_airport = prefs.departure_airport[:3].upper()
+             session.add(trip)
+             session.commit()
+
+    # 3. GENERAZIONE PROPOSTE FINTE (Mock)
     dest_input = prefs.destination.lower()
     options = []
     
@@ -224,6 +264,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             Proposal(trip_id=trip_id, destination="Sicilia Tour", destination_iata="PMO", price_estimate=prefs.budget, description="Cultura, storia e cibo incredibile.", image_url="https://images.unsplash.com/photo-1528659587428-1b209b699949")
         ]
     else:
+        # Fallback generico
         options = [
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description=f"Piano bilanciato per {prefs.vibe}.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Budget", destination_iata="LHR", price_estimate=prefs.budget * 0.8, description="Opzione Low Cost ma divertente.", image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"),

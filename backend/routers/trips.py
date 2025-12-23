@@ -4,9 +4,8 @@ from typing import List, Dict, Optional
 import os
 import json
 from datetime import datetime
-# NUOVO IMPORT per il nuovo SDK
+# NUOVO SDK
 from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 
 from ..database import get_session
@@ -26,7 +25,7 @@ else:
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
-# --- MODELLI (Invariati) ---
+# --- MODELLI ---
 class PreferencesRequest(SQLModel):
     destination: str
     departure_airport: str
@@ -36,7 +35,7 @@ class PreferencesRequest(SQLModel):
     end_date: str
     must_have: Optional[str] = ""
     must_avoid: Optional[str] = ""
-    vibe: Optional[str] = "" # Legacy
+    vibe: Optional[str] = "" 
     participant_names: List[str] = []
 
 class HotelConfirmationRequest(SQLModel):
@@ -123,38 +122,58 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     
     if ai_client:
         try:
-            # SINTASSI NUOVO SDK
+            # --- MODIFICA AI: Chiediamo di normalizzare anche l'aeroporto di partenza ---
             prompt = f"""
-            Act as a Travel Agent. Generate 3 distinct travel proposals for a {trip.trip_type} trip.
+            Act as a Travel Agent. 
+            
+            TASK 1: Analyze the Departure City: "{prefs.departure_airport}".
+            Identify the general 3-letter IATA code for this city (e.g., if "Roma" -> "ROM", if "Milano" -> "MIL", if "London" -> "LON").
+            
+            TASK 2: Generate 3 distinct travel proposals for a {trip.trip_type} trip.
             Preferences:
             - Destination/Region: {prefs.destination}
-            - Departure Airport: {prefs.departure_airport}
+            - Departure Airport: {prefs.departure_airport} (Use the IATA code identified in TASK 1 for logistics)
             - Budget Total: {prefs.budget} EUR
             - People: {prefs.num_people}
             - Dates: {prefs.start_date} to {prefs.end_date}
-            - Must Include (Preferences): {prefs.must_have}
-            - Must Avoid (Exclusions): {prefs.must_avoid}
-            - General Vibe: {prefs.vibe}
+            - Must Include: {prefs.must_have}
+            - Must Avoid: {prefs.must_avoid}
+            - Vibe: {prefs.vibe}
 
-            Return ONLY valid JSON array with 3 objects. No markdown formatting. Keys:
-            "destination" (City, Country),
-            "destination_iata" (3-letter IATA code of main airport, e.g. "JFK"),
-            "description" (2 sentences max, persuasive),
-            "price_estimate" (numeric, total for the group/person),
-            "image_search_term" (keyword for image search)
+            RETURN ONLY A VALID JSON OBJECT with this exact structure:
+            {{
+                "departure_iata_normalized": "XXX", 
+                "proposals": [
+                    {{
+                        "destination": "City, Country",
+                        "destination_iata": "XXX",
+                        "description": "2 sentences max, persuasive",
+                        "price_estimate": 1000,
+                        "image_search_term": "keyword"
+                    }},
+                    ... (2 more proposals)
+                ]
+            }}
 
-            THE FINAL RESPONSE MUST BE IN ITALIAN.
+            THE FINAL RESPONSE MUST BE IN ITALIAN (except keys).
             """
             
             response = ai_client.models.generate_content(
-                model='gemini-2.0-flash-exp', # O usa 'gemini-1.5-flash' se preferisci stabilità
+                model='gemini-2.0-flash-exp', 
                 contents=prompt
             )
             
-            print(f"Gemini Response: {response.text}")
-            
             json_str = response.text.replace("```json", "").replace("```", "").strip()
-            proposals_data = json.loads(json_str)
+            full_data = json.loads(json_str)
+            
+            # --- SALVATAGGIO CORREZIONE IATA ---
+            clean_departure_iata = full_data.get("departure_iata_normalized")
+            if clean_departure_iata and len(clean_departure_iata) == 3:
+                trip.departure_airport = clean_departure_iata.upper()
+                session.add(trip)
+                session.commit() 
+            
+            proposals_data = full_data.get("proposals", [])
             
             options = []
             for p in proposals_data:
@@ -188,7 +207,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         except Exception as e:
             print(f"AI Generation Failed: {e}. Falling back to Mock.")
     
-    # Fallback Mock Logic (Invariato)
+    # Fallback Mock Logic
     dest_input = prefs.destination.lower()
     options = []
     
@@ -198,7 +217,12 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             Proposal(trip_id=trip_id, destination="Tokyo, Giappone", destination_iata="HND", price_estimate=prefs.budget * 1.1, description="Metropoli futuristica e cibo ovunque.", image_url="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf"),
             Proposal(trip_id=trip_id, destination="Osaka, Giappone", destination_iata="KIX", price_estimate=prefs.budget * 0.9, description="Street food e vita notturna.", image_url="https://images.unsplash.com/photo-1590559899731-a382839e5549")
         ]
-    # ... (Il resto del mock logic rimane uguale) ...
+    elif "italia" in dest_input:
+         options = [
+            Proposal(trip_id=trip_id, destination="Costiera Amalfitana", destination_iata="NAP", price_estimate=prefs.budget * 1.2, description="Dolce vita e mare cristallino.", image_url="https://images.unsplash.com/photo-1533904353181-25210c364a1d"),
+            Proposal(trip_id=trip_id, destination="Dolomiti", destination_iata="VRN", price_estimate=prefs.budget * 0.8, description="Natura incontaminata e trekking.", image_url="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"),
+            Proposal(trip_id=trip_id, destination="Sicilia Tour", destination_iata="PMO", price_estimate=prefs.budget, description="Cultura, storia e cibo incredibile.", image_url="https://images.unsplash.com/photo-1528659587428-1b209b699949")
+        ]
     else:
         options = [
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description=f"Piano bilanciato per {prefs.vibe}.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
@@ -225,15 +249,13 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
     
     if ai_client:
         try:
-            # Calculate Duration
             try:
                 d1 = datetime.strptime(trip.start_date, "%Y-%m-%d")
                 d2 = datetime.strptime(trip.end_date, "%Y-%m-%d")
                 num_days = abs((d2 - d1).days) + 1
             except Exception:
-                num_days = 3 # Fallback
+                num_days = 3 
             
-            # SINTASSI NUOVO SDK
             prompt = f"""
             Act as a Travel Assistant. Create a {num_days}-day simple itinerary for a trip to {proposal.destination}.
             The layout is based on this hotel: {trip.accommodation} ({trip.accommodation_location}).
@@ -293,7 +315,7 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             print(f"Itinerary Gen Failed: {e}")
     
     
-    # Fallback Mock Itinerary (Invariato)
+    # Fallback Mock Itinerary
     mock_items = [
         ItineraryItem(trip_id=trip.id, title="Arrivo & Check-in", description=f"Check-in presso {trip.accommodation}", start_time=f"{trip.start_date}T14:00:00", type="CHECKIN"),
         ItineraryItem(trip_id=trip.id, title="Cena di Benvenuto", description="Ristorante tipico vicino all'hotel", start_time=f"{trip.start_date}T20:00:00", type="FOOD"),
@@ -328,10 +350,8 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
     
     return {"status": "Hotel Confirmed & Itinerary Generated"}
 
-# ... (Endpoints di voto e simulazione restano uguali, non toccano il file system o AI direttamente) ...
 @router.post("/vote/{proposal_id}")
 def vote_proposal(proposal_id: int, user_id: int, score: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    # ... (Codice invariato) ...
     target_user = session.get(User, user_id)
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -374,7 +394,6 @@ def vote_proposal(proposal_id: int, user_id: int, score: int, session: Session =
 
 @router.post("/{trip_id}/simulate-votes")
 def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    # ... (Codice invariato fino a generate_itinerary_content che è già aggiornato sopra) ...
     # Verify access
     if not session.exec(select(User).where(User.trip_id == trip_id, User.account_id == current_account.id)).first():
          raise HTTPException(status_code=403, detail="Access denied")
@@ -443,7 +462,6 @@ def get_itinerary(trip_id: int, session: Session = Depends(get_session), current
          raise HTTPException(status_code=403, detail="Access denied")
     return session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
 
-
 @router.get("/{trip_id}/participants", response_model=List[User])
 def get_participants(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     if not session.exec(select(User).where(User.trip_id == trip_id, User.account_id == current_account.id)).first():
@@ -499,7 +517,6 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
     """
     
     try:
-        # SINTASSI NUOVO SDK
         if ai_client:
             response = ai_client.models.generate_content(
                 model='gemini-2.0-flash-exp',

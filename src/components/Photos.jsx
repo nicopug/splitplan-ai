@@ -4,6 +4,7 @@ import { uploadPhoto, getPhotos, deletePhoto } from '../api';
 const Photos = ({ trip }) => {
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState(null); // Stato per la foto ingrandita
     const fileInputRef = useRef(null);
 
     const fetchPhotos = async () => {
@@ -29,6 +30,9 @@ const Photos = ({ trip }) => {
         try {
             await deletePhoto(photoId);
             setPhotos(photos.filter(p => p.id !== photoId));
+            if (selectedPhoto && selectedPhoto.id === photoId) {
+                setSelectedPhoto(null); // Chiudi se elimini la foto aperta
+            }
         } catch (error) {
             alert("Errore nell'eliminazione della foto: " + error.message);
         }
@@ -88,8 +92,13 @@ const Photos = ({ trip }) => {
                                 background: 'white',
                                 boxShadow: 'var(--shadow-md)',
                                 aspectRatio: '1/1',
-                                position: 'relative'
+                                position: 'relative',
+                                cursor: 'pointer', // Cursore a manina
+                                transition: 'transform 0.2s'
                             }}
+                            onClick={() => setSelectedPhoto(photo)} // Apre la foto al click
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         >
                             <img
                                 src={photo.url}
@@ -97,12 +106,12 @@ const Photos = ({ trip }) => {
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    objectFit: 'cover'
+                                    objectFit: 'cover' // Mantiene la griglia ordinata
                                 }}
                             />
                             <button
                                 onClick={(e) => {
-                                    e.stopPropagation();
+                                    e.stopPropagation(); // Evita di aprire la foto quando cancelli
                                     handleDelete(photo.id);
                                 }}
                                 style={{
@@ -123,7 +132,7 @@ const Photos = ({ trip }) => {
                                     transition: 'background 0.2s',
                                     zIndex: 10
                                 }}
-                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 0, 0, 0.7)'}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)'}
                                 onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
                                 title="Elimina foto"
                             >
@@ -131,6 +140,59 @@ const Photos = ({ trip }) => {
                             </button>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* --- LIGHTBOX (MODALE PER VEDERE LA FOTO INTERA) --- */}
+            {selectedPhoto && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px',
+                        cursor: 'zoom-out'
+                    }}
+                    onClick={() => setSelectedPhoto(null)} // Chiudi cliccando sullo sfondo
+                >
+                    <img
+                        src={selectedPhoto.url}
+                        alt="Full size"
+                        style={{
+                            maxWidth: '100%',
+                            maxHeight: '90vh',
+                            objectFit: 'contain', // Qui si vede INTERA senza tagli
+                            borderRadius: '8px',
+                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                        }}
+                    />
+                    <button
+                        onClick={() => setSelectedPhoto(null)}
+                        style={{
+                            position: 'absolute',
+                            top: '20px',
+                            right: '20px',
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        ×
+                    </button>
                 </div>
             )}
         </div>

@@ -92,7 +92,7 @@ const Photos = ({ trip }) => {
                             }}
                         >
                             <img
-                                src={`http://localhost:8000/public${photo.url}`}
+                                src={photo.url}
                                 alt={photo.caption || "Trip photo"}
                                 style={{
                                     width: '100%',

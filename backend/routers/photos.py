@@ -13,7 +13,7 @@ router = APIRouter(prefix="/trips", tags=["photos"])
 # Configurazione Supabase
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-BUCKET_NAME = "TRIP-PHOTOS"
+BUCKET_NAME = "trip-photos"
 
 # Verifica configurazione
 if not SUPABASE_URL or not SUPABASE_KEY:

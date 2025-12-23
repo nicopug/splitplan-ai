@@ -1,17 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# Importa tutti i router
-from .routers import trips, photos, users 
+from .database import create_db_and_tables
+from .routers import trips, photos, users
 
-# --- PUNTO FONDAMENTALE 1: root_path="/api" ---
-# Questo dice a FastAPI: "Guarda che ti trovi sotto /api, quindi ignora quel pezzo iniziale"
+# --- CONFIGURAZIONE APP ---
+# root_path="/api" è fondamentale per il deployment su Vercel
 app = FastAPI(root_path="/api")
 
 # --- CONFIGURAZIONE CORS ---
+# Permette al frontend di parlare con il backend
 origins = [
     "http://localhost:3000",
     "https://splitplan-ai.vercel.app",
-    "*"
+    "*" # Lasciamo * per sicurezza in fase di sviluppo
 ]
 
 app.add_middleware(
@@ -22,10 +23,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- PUNTO FONDAMENTALE 2: Includi i Router ---
+# --- INCLUSIONE ROUTER ---
 app.include_router(trips.router)
 app.include_router(photos.router)
-app.include_router(users.router) # <--- ASSICURATI CHE QUESTO NON ABBIA IL # DAVANTI
+app.include_router(users.router)
+
+# --- AVVIO AUTOMATICO DB ---
+@app.on_event("startup")
+def on_startup():
+    # Tenta di creare le tabelle all'avvio
+    create_db_and_tables()
+
+# --- ENDPOINT MANUALE PER FORZARE LA CREAZIONE TABELLE ---
+# Usa questo se Supabase rimane vuoto dopo il deploy
+@app.get("/init-db")
+def init_db():
+    create_db_and_tables()
+    return {"message": "Database tables created successfully! Check Supabase now."}
 
 @app.get("/")
 def root():

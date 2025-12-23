@@ -3,6 +3,8 @@ from sqlmodel import Session, select, func
 from typing import List, Dict, Optional
 import os
 import json
+import requests
+import random
 from datetime import datetime
 # Importiamo il NUOVO SDK ufficiale
 from google import genai
@@ -49,6 +51,61 @@ class HotelConfirmationRequest(SQLModel):
 class ChatRequest(SQLModel):
     message: str
     history: Optional[List[Dict]] = []
+
+# --- HELPER FUNZIONI OSM (OpenStreetMap) ---
+
+def get_coordinates(address: str):
+    """Converte un indirizzo in Latitudine e Longitudine usando Nominatim (OSM)"""
+    try:
+        url = "https://nominatim.openstreetmap.org/search"
+        params = {
+            "q": address,
+            "format": "json",
+            "limit": 1
+        }
+        # Nominatim richiede uno User-Agent univoco
+        headers = {'User-Agent': 'SplitPlanApp/1.0'} 
+        
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+        data = response.json()
+        
+        if data:
+            return float(data[0]['lat']), float(data[0]['lon'])
+    except Exception as e:
+        print(f"[OSM] Errore geocoding: {e}")
+    return None, None
+
+def get_places_from_overpass(lat: float, lon: float, radius: int = 500):
+    """Trova ristoranti, bar e cafè reali vicini alle coordinate date"""
+    overpass_url = "https://overpass-api.de/api/interpreter"
+    
+    # Query Overpass QL
+    overpass_query = f"""
+    [out:json];
+    (
+      node["amenity"="restaurant"](around:{radius},{lat},{lon});
+      node["amenity"="bar"](around:{radius},{lat},{lon});
+      node["amenity"="cafe"](around:{radius},{lat},{lon});
+      node["amenity"="pub"](around:{radius},{lat},{lon});
+    );
+    out body 10;
+    """
+    
+    try:
+        response = requests.post(overpass_url, data=overpass_query, timeout=10)
+        data = response.json()
+        
+        places = []
+        for element in data.get('elements', []):
+            name = element.get('tags', {}).get('name')
+            amenity = element.get('tags', {}).get('amenity', 'place')
+            if name:
+                places.append(f"{name} ({amenity})")
+        
+        return places
+    except Exception as e:
+        print(f"[OSM] Errore Overpass: {e}")
+        return []
 
 # --- ENDPOINTS ---
 
@@ -213,7 +270,6 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     # --- FALLBACK LOGIC (Se l'AI manca o fallisce) ---
     
     # 2. CORREZIONE MANUALE IATA (Dizionario di emergenza)
-    # Questo assicura che il link Skyscanner funzioni anche senza API Key!
     iata_mapping = {
         "roma": "ROM", "rome": "ROM", "fiumicino": "FCO", "ciampino": "CIA",
         "milano": "MIL", "milan": "MIL", "malpensa": "MXP", "linate": "LIN", "bergamo": "BGY",
@@ -241,7 +297,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         session.commit()
         print(f"[MOCK] Aeroporto corretto manualmente: {user_dep} -> {trip.departure_airport}")
     else:
-        # Tentativo disperato: prime 3 lettere (es. ANCONA -> ANC)
+        # Tentativo disperato: prime 3 lettere
         if len(prefs.departure_airport) > 3:
              trip.departure_airport = prefs.departure_airport[:3].upper()
              session.add(trip)
@@ -285,21 +341,38 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
 def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session):
-    """Helper to generate itinerary items upon booking"""
+    """Genera l'itinerario usando AI + Dati Reali da OpenStreetMap"""
     print(f"Generating itinerary for {trip.name} to {proposal.destination}")
     
     if ai_client:
         try:
+            # 1. Calcolo Giorni
             try:
                 d1 = datetime.strptime(trip.start_date, "%Y-%m-%d")
                 d2 = datetime.strptime(trip.end_date, "%Y-%m-%d")
                 num_days = abs((d2 - d1).days) + 1
             except Exception:
                 num_days = 3 
+
+            # 2. OSM INTELLIGENCE: Troviamo locali reali vicino all'hotel
+            real_places_text = ""
+            hotel_lat, hotel_lon = get_coordinates(f"{trip.accommodation}, {proposal.destination}")
             
+            if hotel_lat and hotel_lon:
+                print(f"[OSM] Hotel trovato a: {hotel_lat}, {hotel_lon}")
+                places = get_places_from_overpass(hotel_lat, hotel_lon)
+                if places:
+                    # Ne prendiamo max 10 a caso per non intasare il prompt
+                    selected_places = random.sample(places, min(len(places), 10))
+                    real_places_text = f"\nREAL PLACES NEARBY (USE THESE NAMES FOR DINNER/LUNCH): {', '.join(selected_places)}"
+                    print(f"[OSM] Locali trovati: {len(places)}")
+            
+            # 3. Prompt AI Aggiornato
             prompt = f"""
             Act as a Travel Assistant. Create a {num_days}-day simple itinerary for a trip to {proposal.destination}.
             The layout is based on this hotel: {trip.accommodation} ({trip.accommodation_location}).
+            
+            {real_places_text}
             
             Key Timings:
             - Start Date: {trip.start_date}
@@ -309,27 +382,25 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             
             Rules:
             1. Plan exactly {num_days} days.
-            2. First day: Schedule activities starting from {trip.arrival_time}. If after 18:00, only dinner.
-            3. Final day ({trip.end_date}): MUST include checkout from the hotel.
-            4. Final day: Ensure all activities end at least 3 hours before the return flight ({trip.return_time}) for airport logistics.
-            5. ONLY the final day should have checkout and return flight logistics.
+            2. First day: Schedule activities starting from {trip.arrival_time}.
+            3. Final day ({trip.end_date}): MUST include checkout.
+            4. IMPORTANT: When suggesting Dinner, Lunch, or Drinks, DO NOT say generic things like "Dinner nearby". 
+               Instead, PICK A REAL NAME from the "REAL PLACES NEARBY" list I provided above.
+               If the list is empty, invent a realistic Italian/Local name.
             
-            Preferences to strictly respect:
+            Preferences:
             - Must Include: {trip.must_have}
             - Must Avoid: {trip.must_avoid}
             
-            Optimize the route starting from the hotel.
-            
-            Start Date: {trip.start_date}
-            
             Return ONLY valid JSON array of objects. Keys:
-            "title" (User friendly title, e.g. "Visit Colosseum"),
+            "title" (e.g. "Dinner at Trattoria Mario"),
             "description" (short detail),
-            "start_time" (ISO 8601 string, e.g. "2025-10-10T10:00:00"),
-            "end_time" (ISO 8601 string, e.g. "2025-10-10T12:00:00"),
+            "start_time" (ISO 8601 string),
+            "end_time" (ISO 8601 string),
             "type" (ACTIVITY, FOOD, CHECKIN)
             THE FINAL RESPONSE MUST BE IN ITALIAN.
             """
+            
             response = ai_client.models.generate_content(
                 model='gemini-2.0-flash-exp',
                 contents=prompt
@@ -355,12 +426,11 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
         except Exception as e:
             print(f"Itinerary Gen Failed: {e}")
     
-    
-    # Fallback Mock Itinerary
+    # Fallback Mock (Invariato)
     mock_items = [
         ItineraryItem(trip_id=trip.id, title="Arrivo & Check-in", description=f"Check-in presso {trip.accommodation}", start_time=f"{trip.start_date}T14:00:00", type="CHECKIN"),
-        ItineraryItem(trip_id=trip.id, title="Cena di Benvenuto", description="Ristorante tipico vicino all'hotel", start_time=f"{trip.start_date}T20:00:00", type="FOOD"),
-        ItineraryItem(trip_id=trip.id, title="Tour Guidato", description="Visita ai principali monumenti", start_time=f"{trip.start_date}T10:00:00", type="ACTIVITY"),
+        ItineraryItem(trip_id=trip.id, title="Cena Tipica", description="Ristorante locale vicino all'hotel", start_time=f"{trip.start_date}T20:00:00", type="FOOD"),
+        ItineraryItem(trip_id=trip.id, title="Tour Centro", description="Visita ai monumenti", start_time=f"{trip.start_date}T10:00:00", type="ACTIVITY"),
     ]
     for i in mock_items:
         session.add(i)
@@ -395,7 +465,6 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
 def vote_proposal(
     proposal_id: int, 
     score: int, 
-    # Mettiamo user_id opzionale per evitare errori di validazione frontend, ma lo calcoliamo noi
     user_id: Optional[int] = None, 
     session: Session = Depends(get_session), 
     current_account: Account = Depends(get_current_user)
@@ -409,8 +478,7 @@ def vote_proposal(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    # 2. IDENTIFICAZIONE AUTOMATICA
-    # Cerchiamo chi è l'utente collegato a questo account in questo viaggio
+    # 2. IDENTIFICAZIONE AUTOMATICA (Fix sicurezza)
     participant = session.exec(
         select(User).where(User.trip_id == trip.id, User.account_id == current_account.id)
     ).first()
@@ -438,11 +506,9 @@ def vote_proposal(
     
     status = "VOTING"
     
-    # Se tutti i partecipanti hanno votato
     if total_voters >= trip.num_people:
         status = "CONSENSUS_REACHED"
         
-        # Troviamo la proposta vincente
         proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
         best_p = None
         max_s = -999999
@@ -462,7 +528,6 @@ def vote_proposal(
             session.commit()
             session.refresh(trip)
             
-            # Genera itinerario
             generate_itinerary_content(trip, best_p, session)
         
     return {

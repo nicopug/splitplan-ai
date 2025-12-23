@@ -12,20 +12,19 @@ class Account(SQLModel, table=True):
 
 class TripBase(SQLModel):
     name: str
-    destination: str
-    trip_type: str  # "SOLO", "COUPLE", "FRIENDS", "FAMILY"
-    budget: float
-    start_date: str
-    end_date: str
+    # Rendiamo questi campi opzionali (= "") per evitare l'errore 422 alla creazione
+    destination: str = "" 
+    trip_type: str 
+    budget: float = 0.0
+    start_date: str = ""
+    end_date: str = ""
     description: Optional[str] = None
     
-    # Campi aggiuntivi per la gestione
     num_people: int = 1
     budget_per_person: float = 0.0
     must_have: Optional[str] = ""
     must_avoid: Optional[str] = ""
     
-    # Campi per la conferma prenotazione
     accommodation: Optional[str] = None
     accommodation_location: Optional[str] = None
     flight_cost: Optional[float] = 0.0
@@ -33,15 +32,13 @@ class TripBase(SQLModel):
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
     
-    # Stato del viaggio
-    status: str = "PLANNING" # PLANNING, VOTING, BOOKED
+    status: str = "PLANNING"
     winning_proposal_id: Optional[int] = None
     destination_iata: Optional[str] = None
-    departure_airport: Optional[str] = None # Codice IATA partenza (es. ROM)
+    departure_airport: Optional[str] = None 
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    # Relazioni
     users: List["User"] = Relationship(back_populates="trip")
     proposals: List["Proposal"] = Relationship(back_populates="trip")
     itinerary_items: List["ItineraryItem"] = Relationship(back_populates="trip")
@@ -55,10 +52,7 @@ class UserBase(SQLModel):
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     trip_id: Optional[int] = Field(default=None, foreign_key="trip.id")
-    
-    # --- QUESTA È LA PARTE CHE MANCAVA ---
     account_id: Optional[int] = Field(default=None, foreign_key="account.id")
-    # -------------------------------------
     
     trip: Optional[Trip] = Relationship(back_populates="users")
     votes: List["Vote"] = Relationship(back_populates="user")
@@ -80,7 +74,7 @@ class Vote(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: int = Field(foreign_key="proposal.id")
     user_id: int = Field(foreign_key="user.id")
-    score: int # 1-5
+    score: int 
     
     proposal: Optional[Proposal] = Relationship(back_populates="votes")
     user: Optional[User] = Relationship(back_populates="votes")
@@ -90,9 +84,9 @@ class ItineraryItem(SQLModel, table=True):
     trip_id: int = Field(foreign_key="trip.id")
     title: str
     description: Optional[str] = None
-    start_time: str # ISO Format
+    start_time: str 
     end_time: Optional[str] = None
-    type: str # ACTIVITY, FOOD, CHECKIN, FLIGHT
+    type: str 
     
     trip: Optional[Trip] = Relationship(back_populates="itinerary_items")
 

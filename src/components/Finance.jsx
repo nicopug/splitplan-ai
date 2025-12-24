@@ -143,13 +143,18 @@ const Finance = ({ trip }) => {
                         <p className="text-center text-muted">Nessuna spesa registrata.</p>
                     ) : (
                         expenses.map(exp => (
-                            <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'white', borderRadius: '12px', marginBottom: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
-                                <div>
-                                    <strong>{exp.title}</strong>
-                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>Pagato da {getUserName(exp.payer_id)}</div>
+                            <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'white', borderRadius: '12px', marginBottom: '0.5rem', boxShadow: 'var(--shadow-sm)', alignItems: 'center' }}>
+                                <div style={{ textAlign: 'left' }}>
+                                    {/* QUI HO MODIFICATO PER USARE description INVECE DI title */}
+                                    <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+                                        {exp.description}
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                        Pagato da <span style={{ fontWeight: '600' }}>{getUserName(exp.payer_id)}</span>
+                                    </div>
                                 </div>
                                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary-blue)' }}>
-                                    €{exp.amount}
+                                    €{exp.amount.toFixed(2)}
                                 </div>
                             </div>
                         ))
@@ -170,7 +175,7 @@ const Finance = ({ trip }) => {
                                     </div>
                                     <span><strong>{getUserName(b.debtor_id)}</strong> deve a <strong>{getUserName(b.creditor_id)}</strong></span>
                                 </div>
-                                <strong style={{ fontSize: '1.5rem' }}>€{b.amount}</strong>
+                                <strong style={{ fontSize: '1.5rem' }}>€{b.amount.toFixed(2)}</strong>
                             </div>
                         ))
                     )}

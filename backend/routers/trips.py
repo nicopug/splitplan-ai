@@ -175,8 +175,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             if not exists:
                 new_user = User(name=name, trip_id=trip.id, is_organizer=False)
                 session.add(new_user)
-        session.commit()
-    
+    session.commit()
+
     # --- LOGICA INTELLIGENTE OPENROUTER ---
     if ai_client:
         try:
@@ -192,7 +192,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 "departure_iata_normalized": "XXX", 
                 "proposals": [
                     {{
-                        "destination": "City, Country",
+                        "destination": "Città, Paese",
                         "destination_iata": "XXX",
                         "description": "2 short sentences",
                         "price_estimate": 1000,
@@ -228,7 +228,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     destination_iata=p.get("destination_iata"),
                     description=p["description"],
                     price_estimate=p["price_estimate"],
-                    image_url=img_url 
+                    image_url=img_url
                 )
                 session.add(new_prop)
             
@@ -292,23 +292,23 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                 response_format={ "type": "json_object" }
             )
             
-            # Parsing flessibile della risposta (array diretto o dentro chiave)
+            # Parsing flessibile
             res_content = completion.choices[0].message.content
             res_json = json.loads(res_content)
             items = res_json.get("itinerary") if isinstance(res_json, dict) and "itinerary" in res_json else res_json
-            if isinstance(items, dict): items = list(items.values())[0] # Fallback estremo
+            if isinstance(items, dict): items = list(items.values())[0]
 
-            # Pulisce itinerario esistente
+            # Pulizia e inserimento
             session.exec(SQLModel.metadata.tables['itineraryitem'].delete().where(SQLModel.metadata.tables['itineraryitem'].c.trip_id == trip.id))
             
-            for i in items:
+            for item in items:
                 session.add(ItineraryItem(
                     trip_id=trip.id, 
-                    title=i["title"], 
-                    description=i.get("description"), 
-                    start_time=i["start_time"], 
-                    end_time=i.get("end_time"), 
-                    type=i.get("type", "ACTIVITY")
+                    title=item["title"], 
+                    description=item.get("description"), 
+                    start_time=item["start_time"], 
+                    end_time=item.get("end_time"), 
+                    type=item.get("type", "ACTIVITY")
                 ))
             session.commit()
             return
@@ -317,12 +317,12 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             print(f"[Itinerary Gen Failed] Error: {e}")
 
     # Mock Fallback Itinerary
-    mock_it = [
+    mock_items = [
         ItineraryItem(trip_id=trip.id, title="Arrivo e Check-in", description=f"Sistemazione presso {trip.accommodation}", start_time=f"{trip.start_date}T14:30:00", type="CHECKIN"),
         ItineraryItem(trip_id=trip.id, title="Esplorazione Quartiere", description="Primo contatto con la città", start_time=f"{trip.start_date}T16:00:00", type="ACTIVITY"),
         ItineraryItem(trip_id=trip.id, title="Cena di Benvenuto", description="Cena in un tipico locale vicino all'hotel", start_time=f"{trip.start_date}T20:30:00", type="FOOD"),
     ]
-    for i in mock_it: session.add(i)
+    for i in mock_items: session.add(i)
     session.commit()
 
 @router.post("/{trip_id}/confirm-hotel")
@@ -344,7 +344,9 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
     if not proposal:
         proposal = Proposal(destination=trip.destination, trip_id=trip.id, price_estimate=0, description="")
     
+    # --- QUI MANTENIAMO ATTIVA LA GENERAZIONE ITINERARIO ---
     generate_itinerary_content(trip, proposal, session)
+    
     return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
 
 @router.post("/vote/{proposal_id}")
@@ -353,28 +355,26 @@ def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_s
     proposal = session.get(Proposal, proposal_id)
     if not proposal: raise HTTPException(status_code=404, detail="Proposta non trovata")
     
-    # Identificazione automatica tramite token JWT
     participant = session.exec(select(User).where(User.trip_id == proposal.trip_id, User.account_id == current_account.id)).first()
     if not participant:
         raise HTTPException(status_code=403, detail="Non sei autorizzato a votare per questo viaggio")
 
-    existing_vote = session.exec(select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)).first()
-    if existing_vote:
-        existing_vote.score = score
-        session.add(existing_vote)
+    existing = session.exec(select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)).first()
+    if existing:
+        existing.score = score
+        session.add(existing)
     else:
         session.add(Vote(proposal_id=proposal_id, user_id=participant.id, score=score))
     session.commit()
     
-    # Calcolo dei votanti unici
     trip = session.get(Trip, proposal.trip_id)
     total_voters = session.exec(select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)).one()
     
     status = "VOTING"
     if total_voters >= trip.num_people:
         status = "CONSENSUS_REACHED"
-        all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
         
+        all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
         best_p = None
         max_score = -1
         for p in all_props:
@@ -389,13 +389,16 @@ def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_s
             trip.status = "BOOKED"
             session.add(trip)
             session.commit()
-            generate_itinerary_content(trip, best_p, session)
             
-    return {"status": "voted", "current_voters": total_voters, "required": trip.num_people}
+            # --- MODIFICA APPLICATA: DISATTIVATO PER EVITARE TIMEOUT ---
+            # generate_itinerary_content(trip, best_p, session)
+            # --------------------------------------------------------
+            
+    return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status}
 
 @router.post("/{trip_id}/simulate-votes")
 def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Simula i voti mancanti per raggiungere il consenso (Demo mode)"""
+    """Simula i voti mancanti (Demo)"""
     trip = session.get(Trip, trip_id)
     if not trip: raise HTTPException(status_code=404)
         
@@ -409,14 +412,30 @@ def simulate_votes(trip_id: int, session: Session = Depends(get_session), curren
         session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
     session.commit()
     
-    return vote_proposal(proposals[0].id, 1, session, current_account)
+    # Ricalcolo manuale status per simulazione
+    total_voters = session.exec(select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)).one()
+    if total_voters >= trip.num_people:
+        trip.status = "BOOKED"
+        trip.winning_proposal_id = proposals[0].id
+        trip.destination = proposals[0].destination
+        session.add(trip)
+        session.commit()
+        # --- MODIFICA APPLICATA: DISATTIVATO ANCHE QUI ---
+        # generate_itinerary_content(trip, proposals[0], session)
+        # ------------------------------------------------
+        
+    return {"status": "simulated"}
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
-def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
+def get_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    if not session.exec(select(User).where(User.trip_id == trip_id, User.account_id == current_account.id)).first():
+         raise HTTPException(status_code=403, detail="Access denied")
     return session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
 
 @router.get("/{trip_id}/participants", response_model=List[User])
-def get_participants(trip_id: int, session: Session = Depends(get_session)):
+def get_participants(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    if not session.exec(select(User).where(User.trip_id == trip_id, User.account_id == current_account.id)).first():
+         raise HTTPException(status_code=403, detail="Access denied")
     return session.exec(select(User).where(User.trip_id == trip_id)).all()
 
 @router.post("/{trip_id}/chat")

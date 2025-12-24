@@ -12,40 +12,31 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         setLoadingProposalId(proposalId);
         try {
             // Passiamo 0 come userId (il backend lo ignora e usa il token sicuro)
-            // Score 1 è sufficiente per registrare la preferenza
             const res = await voteProposal(proposalId, 0, 1);
 
             setVotedId(proposalId);
 
-            // Aggiorniamo le statistiche (utile per i gruppi)
             if (res.votes_count !== undefined) {
                 setStats({ count: res.votes_count, total: res.required });
             }
 
-            // Se il viaggio passa a BOOKED (scelta confermata), andiamo avanti
+            // Se il viaggio passa a BOOKED o CONSENSUS
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
                 if (!isSolo) {
-                    // Solo se è un gruppo mostriamo l'alert, altrimenti è fastidioso
                     alert("Consenso raggiunto! Si procede.");
                 }
-                onVoteComplete(); // Passa alla Dashboard / Step successivo
+                onVoteComplete();
             } else {
-                // Caso Gruppo: Voto registrato ma mancano altri partecipanti
                 alert(`Voto registrato! (${res.votes_count}/${res.required})`);
             }
         } catch (e) {
-            // Gestione errori (es. utente non autorizzato o già votato)
             if (e.message.includes("403")) {
                 alert("Non sei autorizzato a votare in questo viaggio.");
             } else {
-                console.error(e);
-                // Se da errore spesso è perché ha già votato, proviamo comunque ad aggiornare la UI
                 alert("Preferenza salvata.");
                 setVotedId(proposalId);
             }
         } finally {
-            // Se non è un viaggio in solitaria, togliamo il caricamento per permettere altre azioni
-            // Se è SOLO, lasciamo il caricamento finché la pagina non cambia
             if (!isSolo) {
                 setLoadingProposalId(null);
             }
@@ -99,12 +90,8 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                         />
                         <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                {/* PREZZO RIMOSSO QUI */}
                                 <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{prop.destination}</h3>
-                                {prop.price_estimate > 0 && (
-                                    <span style={{ background: '#f0f0f0', padding: '0.25rem 0.75rem', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem', color: '#555' }}>
-                                        ~€{prop.price_estimate}
-                                    </span>
-                                )}
                             </div>
                             <p style={{ color: '#666', marginBottom: '1.5rem', flex: 1 }}>{prop.description}</p>
 
@@ -112,19 +99,17 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                 onClick={() => handleVote(prop.id)}
                                 className={`btn ${votedId === prop.id ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                disabled={loadingProposalId !== null} // Disabilita se sta caricando
+                                disabled={loadingProposalId !== null}
                             >
                                 {loadingProposalId === prop.id ? (
-                                    // Stato Caricamento
                                     <>
                                         <span className="spinner"></span>
                                         {isSolo ? 'Conferma...' : 'Invio...'}
                                     </>
                                 ) : (
-                                    // Stato Normale
                                     isSolo
-                                        ? "Scegli e Procedi ➡️" // Testo per SOLO
-                                        : (votedId === prop.id ? 'Votato ✅' : 'Vota Questa 👍') // Testo per GRUPPO
+                                        ? "Scegli e Procedi ➡️"
+                                        : (votedId === prop.id ? 'Votato ✅' : 'Vota Questa 👍')
                                 )}
                             </button>
                         </div>

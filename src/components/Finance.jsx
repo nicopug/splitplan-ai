@@ -24,7 +24,7 @@ const Finance = ({ trip }) => {
             setBalances(bal);
             setParticipants(parts);
 
-            // Set default payer to first participant (usually organizer)
+            // Set default payer to first participant if available
             if (parts.length > 0 && !payerId) {
                 setPayerId(parts[0].id);
             }
@@ -39,6 +39,10 @@ const Finance = ({ trip }) => {
 
     const handleAddExpense = async (e) => {
         e.preventDefault();
+        if (!payerId) {
+            alert("Seleziona chi ha pagato!");
+            return;
+        }
         try {
             await addExpense({
                 trip_id: trip.id,
@@ -89,25 +93,58 @@ const Finance = ({ trip }) => {
 
             {/* Form */}
             {showForm && (
-                <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem' }}>
+                <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', boxShadow: 'var(--shadow-md)' }}>
                     <form onSubmit={handleAddExpense}>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold' }}>Cosa?</label>
-                            <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" style={{ width: '100%', padding: '0.5rem' }} />
+                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
+                            <input
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                required
+                                placeholder="es. Cena Sushi"
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold' }}>Quanto (€)?</label>
-                            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="100" style={{ width: '100%', padding: '0.5rem' }} />
+                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={e => setAmount(e.target.value)}
+                                required
+                                placeholder="100"
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
                         </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold' }}>Chi ha pagato?</label>
-                            <select value={payerId} onChange={e => setPayerId(e.target.value)} style={{ width: '100%', padding: '0.5rem' }}>
+
+                        {/* --- MENU A TENDINA FIXATO --- */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
+                            <select
+                                value={payerId}
+                                onChange={e => setPayerId(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.8rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ddd',
+                                    background: 'white',  // Sfondo bianco forzato
+                                    color: '#333',        // Testo scuro forzato
+                                    fontSize: '1rem',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="" disabled>Seleziona una persona...</option>
                                 {participants.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                    <option key={p.id} value={p.id} style={{ color: 'black' }}>
+                                        {p.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva</button>
+                        {/* ----------------------------- */}
+
+                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
                     </form>
                 </div>
             )}
@@ -142,7 +179,6 @@ const Finance = ({ trip }) => {
                             <div key={idx} style={{ padding: '1.5rem', background: '#fff3cd', borderRadius: '16px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     <div style={{ width: '40px', height: '40px', background: '#ffc107', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                                        {/* Simple Initials or ID */}
                                         {getUserName(b.debtor_id).substring(0, 2).toUpperCase()}
                                     </div>
                                     <span><strong>{getUserName(b.debtor_id)}</strong> deve a <strong>{getUserName(b.creditor_id)}</strong></span>

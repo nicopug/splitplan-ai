@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { voteProposal, simulateVotes, getTrip, getParticipants } from '../api';
+import { voteProposal, simulateVotes } from '../api';
 
 const Voting = ({ proposals, trip, onVoteComplete }) => {
     const [votedId, setVotedId] = useState(null);
@@ -7,34 +7,45 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
     const isSolo = trip.trip_type === 'SOLO';
     const [loadingProposalId, setLoadingProposalId] = useState(null);
 
-    // Gestione del voto sicuro
+    // Gestione del voto / scelta
     const handleVote = async (proposalId) => {
         setLoadingProposalId(proposalId);
         try {
-            // userId 0 perché il backend lo ricava dal token
+            // Passiamo 0 come userId (il backend lo ignora e usa il token sicuro)
+            // Score 1 è sufficiente per registrare la preferenza
             const res = await voteProposal(proposalId, 0, 1);
-            setVotedId(proposalId);
-            setStats({ count: res.votes_count || res.current_voters, total: res.required });
 
-            // Se il viaggio passa a BOOKED o CONSENSUS
+            setVotedId(proposalId);
+
+            // Aggiorniamo le statistiche (utile per i gruppi)
+            if (res.votes_count !== undefined) {
+                setStats({ count: res.votes_count, total: res.required });
+            }
+
+            // Se il viaggio passa a BOOKED (scelta confermata), andiamo avanti
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
                 if (!isSolo) {
-                    alert("Consenso raggiunto! Generazione itinerario in corso...");
+                    // Solo se è un gruppo mostriamo l'alert, altrimenti è fastidioso
+                    alert("Consenso raggiunto! Si procede.");
                 }
-                // Per i viaggi SOLO non mostriamo alert, il cambio schermata è immediato/fluido
-                onVoteComplete();
+                onVoteComplete(); // Passa alla Dashboard / Step successivo
             } else {
-                alert(`Voto registrato con successo! (${res.votes_count || res.current_voters}/${res.required})`);
+                // Caso Gruppo: Voto registrato ma mancano altri partecipanti
+                alert(`Voto registrato! (${res.votes_count}/${res.required})`);
             }
         } catch (e) {
+            // Gestione errori (es. utente non autorizzato o già votato)
             if (e.message.includes("403")) {
                 alert("Non sei autorizzato a votare in questo viaggio.");
             } else {
-                alert("Voto registrato o aggiornato.");
+                console.error(e);
+                // Se da errore spesso è perché ha già votato, proviamo comunque ad aggiornare la UI
+                alert("Preferenza salvata.");
                 setVotedId(proposalId);
             }
         } finally {
-            // Non togliamo il loading se è SOLO, perché la pagina si ricaricherà
+            // Se non è un viaggio in solitaria, togliamo il caricamento per permettere altre azioni
+            // Se è SOLO, lasciamo il caricamento finché la pagina non cambia
             if (!isSolo) {
                 setLoadingProposalId(null);
             }
@@ -45,7 +56,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         if (!confirm("Vuoi simulare il voto degli altri partecipanti per demo?")) return;
         try {
             await simulateVotes(trip.id);
-            alert("Voti simulati! Itinerario in arrivo...");
+            alert("Voti simulati! Il viaggio è confermato.");
             onVoteComplete();
         } catch (e) {
             alert("Errore simulazione: " + e.message);
@@ -62,16 +73,16 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                         <p className="text-muted">
                             Il gruppo deve raggiungere il consenso.
                             <br />
-                            <strong>Stato attuale: {stats.count} su {stats.total} voti.</strong>
+                            <strong>Voti attuali: {stats.count} su {stats.total}.</strong>
                         </p>
                     </div>
                 )}
 
-                {/* Pulsante Demo visibile solo se mancano voti e non è SOLO */}
+                {/* Pulsante Demo visibile solo se è un gruppo e mancano voti */}
                 {!isSolo && stats.count > 0 && stats.count < stats.total && (
                     <button
                         onClick={handleSimulate}
-                        style={{ marginTop: '1rem', background: '#ccc', color: '#333', border: 'none', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer' }}
+                        style={{ marginTop: '1rem', background: '#e0e0e0', color: '#333', border: 'none', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer' }}
                     >
                         ⚡ Demo: Simula Voti Mancanti
                     </button>
@@ -90,7 +101,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                 <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{prop.destination}</h3>
                                 {prop.price_estimate > 0 && (
-                                    <span style={{ background: '#eee', padding: '0.25rem 0.75rem', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                    <span style={{ background: '#f0f0f0', padding: '0.25rem 0.75rem', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem', color: '#555' }}>
                                         ~€{prop.price_estimate}
                                     </span>
                                 )}
@@ -101,19 +112,19 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                 onClick={() => handleVote(prop.id)}
                                 className={`btn ${votedId === prop.id ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                disabled={loadingProposalId !== null}
+                                disabled={loadingProposalId !== null} // Disabilita se sta caricando
                             >
                                 {loadingProposalId === prop.id ? (
-                                    // STATO CARICAMENTO (Rotellina)
+                                    // Stato Caricamento
                                     <>
                                         <span className="spinner"></span>
-                                        {isSolo ? 'Generazione...' : 'Invio...'}
+                                        {isSolo ? 'Conferma...' : 'Invio...'}
                                     </>
                                 ) : (
-                                    // STATO NORMALE
+                                    // Stato Normale
                                     isSolo
-                                        ? "Genera Itinerario 🗺️"  // Testo per VIAGGI SOLO
-                                        : (votedId === prop.id ? 'Il tuo Voto ✅' : 'Vota Questa 👍') // Testo per GRUPPI
+                                        ? "Scegli e Procedi ➡️" // Testo per SOLO
+                                        : (votedId === prop.id ? 'Votato ✅' : 'Vota Questa 👍') // Testo per GRUPPO
                                 )}
                             </button>
                         </div>

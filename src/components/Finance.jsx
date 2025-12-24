@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { addExpense, getExpenses, getBalances, getParticipants } from '../api';
 
 const Finance = ({ trip }) => {
-    const [tab, setTab] = useState('list'); // 'list' or 'balances'
+    const [tab, setTab] = useState('list');
     const [expenses, setExpenses] = useState([]);
     const [balances, setBalances] = useState([]);
     const [participants, setParticipants] = useState([]);
@@ -24,8 +24,8 @@ const Finance = ({ trip }) => {
             setBalances(bal);
             setParticipants(parts);
 
-            // Set default payer to first participant if available
-            if (parts.length > 0 && !payerId) {
+            // Se ci sono partecipanti, seleziona il primo di default
+            if (parts && parts.length > 0 && !payerId) {
                 setPayerId(parts[0].id);
             }
         } catch (e) {
@@ -40,7 +40,7 @@ const Finance = ({ trip }) => {
     const handleAddExpense = async (e) => {
         e.preventDefault();
         if (!payerId) {
-            alert("Seleziona chi ha pagato!");
+            alert("Devi selezionare chi ha pagato!");
             return;
         }
         try {
@@ -54,7 +54,7 @@ const Finance = ({ trip }) => {
             setShowForm(false);
             setTitle('');
             setAmount('');
-            fetchData(); // Refresh
+            fetchData();
         } catch (error) {
             alert("Errore: " + error.message);
         }
@@ -70,16 +70,10 @@ const Finance = ({ trip }) => {
             <h2 className="text-center" style={{ marginBottom: '2rem' }}>Spese & Bilancio 💸</h2>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '1rem' }}>
-                <button
-                    onClick={() => setTab('list')}
-                    className={tab === 'list' ? 'btn btn-primary' : 'btn btn-secondary'}
-                >
+                <button onClick={() => setTab('list')} className={tab === 'list' ? 'btn btn-primary' : 'btn btn-secondary'}>
                     Lista Movimenti 🧾
                 </button>
-                <button
-                    onClick={() => setTab('balances')}
-                    className={tab === 'balances' ? 'btn btn-primary' : 'btn btn-secondary'}
-                >
+                <button onClick={() => setTab('balances')} className={tab === 'balances' ? 'btn btn-primary' : 'btn btn-secondary'}>
                     Chi deve a Chi? ⚖️
                 </button>
             </div>
@@ -94,58 +88,51 @@ const Finance = ({ trip }) => {
             {/* Form */}
             {showForm && (
                 <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', boxShadow: 'var(--shadow-md)' }}>
-                    <form onSubmit={handleAddExpense}>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
-                            <input
-                                value={title}
-                                onChange={e => setTitle(e.target.value)}
-                                required
-                                placeholder="es. Cena Sushi"
-                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                            />
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
-                            <input
-                                type="number"
-                                value={amount}
-                                onChange={e => setAmount(e.target.value)}
-                                required
-                                placeholder="100"
-                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                            />
-                        </div>
 
-                        {/* --- MENU A TENDINA FIXATO --- */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
-                            <select
-                                value={payerId}
-                                onChange={e => setPayerId(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.8rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ddd',
-                                    background: 'white',  // Sfondo bianco forzato
-                                    color: '#333',        // Testo scuro forzato
-                                    fontSize: '1rem',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <option value="" disabled>Seleziona una persona...</option>
-                                {participants.map(p => (
-                                    <option key={p.id} value={p.id} style={{ color: 'black' }}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                            </select>
+                    {/* CONTROLLO DI SICUREZZA: SE NON CI SONO PARTECIPANTI */}
+                    {participants.length === 0 ? (
+                        <div style={{ textAlign: 'center', color: '#dc3545', padding: '1rem' }}>
+                            <strong>⚠️ Nessun partecipante trovato in questo viaggio.</strong>
+                            <p style={{ fontSize: '0.9rem' }}>Impossibile aggiungere spese. Prova a creare un nuovo viaggio.</p>
                         </div>
-                        {/* ----------------------------- */}
+                    ) : (
+                        <form onSubmit={handleAddExpense}>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
+                                <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+                            </div>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
+                                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="100" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+                            </div>
 
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
-                    </form>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
+                                <select
+                                    value={payerId}
+                                    onChange={e => setPayerId(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.8rem',
+                                        borderRadius: '8px',
+                                        border: '1px solid #ddd',
+                                        background: 'white',
+                                        color: '#333',
+                                        fontSize: '1rem',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {participants.map(p => (
+                                        <option key={p.id} value={p.id} style={{ color: 'black' }}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
+                        </form>
+                    )}
                 </div>
             )}
 

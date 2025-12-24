@@ -7,33 +7,37 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
     const isSolo = trip.trip_type === 'SOLO';
     const [loadingProposalId, setLoadingProposalId] = useState(null);
 
-    // Gestione del voto sicuro (L'identità viene presa dal Token, non dal menu a tendina)
+    // Gestione del voto sicuro
     const handleVote = async (proposalId) => {
         setLoadingProposalId(proposalId);
         try {
-            // Passiamo 0 come userId perché il backend ora lo ignora e usa il token sicuro
+            // userId 0 perché il backend lo ricava dal token
             const res = await voteProposal(proposalId, 0, 1);
             setVotedId(proposalId);
             setStats({ count: res.votes_count || res.current_voters, total: res.required });
 
-            // Se il viaggio passa a BOOKED o CONSENSUS, aggiorniamo la dashboard
+            // Se il viaggio passa a BOOKED o CONSENSUS
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
-                alert("Consenso raggiunto! Generazione itinerario in corso...");
+                if (!isSolo) {
+                    alert("Consenso raggiunto! Generazione itinerario in corso...");
+                }
+                // Per i viaggi SOLO non mostriamo alert, il cambio schermata è immediato/fluido
                 onVoteComplete();
             } else {
                 alert(`Voto registrato con successo! (${res.votes_count || res.current_voters}/${res.required})`);
             }
         } catch (e) {
-            // Se l'utente ha già votato o non è autorizzato
             if (e.message.includes("403")) {
                 alert("Non sei autorizzato a votare in questo viaggio.");
             } else {
                 alert("Voto registrato o aggiornato.");
-                // Forziamo un refresh visivo anche se da errore (spesso è solo "già votato")
                 setVotedId(proposalId);
             }
         } finally {
-            setLoadingProposalId(null);
+            // Non togliamo il loading se è SOLO, perché la pagina si ricaricherà
+            if (!isSolo) {
+                setLoadingProposalId(null);
+            }
         }
     };
 
@@ -63,7 +67,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                     </div>
                 )}
 
-                {/* Pulsante Demo visibile solo se mancano voti */}
+                {/* Pulsante Demo visibile solo se mancano voti e non è SOLO */}
                 {!isSolo && stats.count > 0 && stats.count < stats.total && (
                     <button
                         onClick={handleSimulate}
@@ -96,15 +100,20 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                             <button
                                 onClick={() => handleVote(prop.id)}
                                 className={`btn ${votedId === prop.id ? 'btn-secondary' : 'btn-primary'}`}
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                                 disabled={loadingProposalId !== null}
                             >
                                 {loadingProposalId === prop.id ? (
-                                    <span><span className="spinner"></span> Invio...</span>
+                                    // STATO CARICAMENTO (Rotellina)
+                                    <>
+                                        <span className="spinner"></span>
+                                        {isSolo ? 'Generazione...' : 'Invio...'}
+                                    </>
                                 ) : (
-                                    votedId === prop.id
-                                        ? (isSolo ? 'Scelta ✅' : 'Il tuo Voto ✅')
-                                        : (isSolo ? 'Scegli Questa ✨' : 'Vota Questa 👍')
+                                    // STATO NORMALE
+                                    isSolo
+                                        ? "Genera Itinerario 🗺️"  // Testo per VIAGGI SOLO
+                                        : (votedId === prop.id ? 'Il tuo Voto ✅' : 'Vota Questa 👍') // Testo per GRUPPI
                                 )}
                             </button>
                         </div>

@@ -39,23 +39,23 @@ class TripBase(SQLModel):
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    users: List["User"] = Relationship(back_populates="trip")
+    participants: List["Participant"] = Relationship(back_populates="trip")
     proposals: List["Proposal"] = Relationship(back_populates="trip")
     itinerary_items: List["ItineraryItem"] = Relationship(back_populates="trip")
     expenses: List["Expense"] = Relationship(back_populates="trip")
     photos: List["Photo"] = Relationship(back_populates="trip")
 
-class UserBase(SQLModel):
+class ParticipantBase(SQLModel):
     name: str
     is_organizer: bool = False
 
-class User(UserBase, table=True):
+class Participant(ParticipantBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     trip_id: Optional[int] = Field(default=None, foreign_key="trip.id")
     account_id: Optional[int] = Field(default=None, foreign_key="account.id")
     
-    trip: Optional[Trip] = Relationship(back_populates="users")
-    votes: List["Vote"] = Relationship(back_populates="user")
+    trip: Optional[Trip] = Relationship(back_populates="participants")
+    votes: List["Vote"] = Relationship(back_populates="participant")
     expenses: List["Expense"] = Relationship(back_populates="payer")
 
 class Proposal(SQLModel, table=True):
@@ -73,11 +73,10 @@ class Proposal(SQLModel, table=True):
 class Vote(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: int = Field(foreign_key="proposal.id")
-    user_id: int = Field(foreign_key="user.id")
-    score: int 
+    user_id: int = Field(foreign_key="participant.id")
     
     proposal: Optional[Proposal] = Relationship(back_populates="votes")
-    user: Optional[User] = Relationship(back_populates="votes")
+    participant: Optional[Participant] = Relationship(back_populates="votes")
 
 class ItineraryItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -93,13 +92,13 @@ class ItineraryItem(SQLModel, table=True):
 class Expense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     trip_id: int = Field(foreign_key="trip.id")
-    payer_id: int = Field(foreign_key="user.id")
+    payer_id: int = Field(foreign_key="participant.id")
     description: str
     amount: float
     date: str
     
     trip: Optional[Trip] = Relationship(back_populates="expenses")
-    payer: Optional[User] = Relationship(back_populates="expenses")
+    payer: Optional[Participant] = Relationship(back_populates="expenses")
 
 class Photo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

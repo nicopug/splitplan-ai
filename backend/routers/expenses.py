@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+fastapi import APIRouter, Depends, HTTPException, Body
 from sqlmodel import Session, select, func
 from typing import List, Dict, Any
+from datetime import datetime
 import math
 
 from ..database import get_session
-# Cambiato da User a Participant
 from ..models import Trip, Participant, Expense, SQLModel
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -31,7 +31,7 @@ def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
         
-    # 2. Validate Payer (Cambiato in Participant)
+    # 2. Validate Payer
     payer = session.get(Participant, expense_req.payer_id)
     if not payer:
         raise HTTPException(status_code=404, detail="Payer not found")

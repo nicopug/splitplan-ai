@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session, select
 from typing import List, Optional
 from ..database import get_session
-from ..models import Account, User
+from ..models import Account, Participant
 from ..auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token
 from pydantic import EmailStr, BaseModel
 import os
@@ -38,7 +38,7 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     statement = select(Account).where(Account.email == req.email)
     existing = session.exec(statement).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Email gia registrata")
+        raise HTTPException(status_code=400, detail="Email già registrata")
     
     # Create account
     new_account = Account(
@@ -51,7 +51,6 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     session.commit()
     session.refresh(new_account)
 
-    # Send verification email via SMTP (fastapi-mail)
     # Send verification email via SMTP (fastapi-mail)
     smtp_user = os.getenv("SMTP_USER")
     smtp_password = os.getenv("SMTP_PASSWORD")

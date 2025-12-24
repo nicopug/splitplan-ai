@@ -1,8 +1,30 @@
-// Use environment variable or fallback to full URL
-const API_URL = import.meta.env.VITE_API_URL ||
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? "http://localhost:5678"
-        : "https://splitplan-ai.vercel.app/api");
+// Configurazione API URL migliorata
+const getApiUrl = () => {
+    // 1. Priorità: variabile d'ambiente
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+
+    // 2. Fallback basato sull'ambiente
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+
+        // Sviluppo locale
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return "http://localhost:5678";
+        }
+
+        // Produzione su Vercel
+        if (hostname.includes('vercel.app')) {
+            return `${window.location.origin}/api`;
+        }
+    }
+
+    // 3. Fallback finale
+    return "https://splitplan-ai.vercel.app/api";
+};
+
+const API_URL = getApiUrl();
 
 console.log("🔗 API URL:", API_URL);
 
@@ -19,6 +41,21 @@ const getAuthHeadersMultipart = () => {
     return token ? { "Authorization": `Bearer ${token}` } : {};
 };
 
+// Gestione errori migliorata
+const handleResponse = async (response) => {
+    if (!response.ok) {
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch (e) {
+            // Se non riesce a parsare il JSON, usa il messaggio di default
+        }
+        throw new Error(errorMessage);
+    }
+    return response.json();
+};
+
 // --- Trips ---
 
 export const createTrip = async (tripData) => {
@@ -27,16 +64,14 @@ export const createTrip = async (tripData) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(tripData),
     });
-    if (!response.ok) throw new Error("Failed to create trip");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getTrip = async (id) => {
     const response = await fetch(`${API_URL}/trips/${id}`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch trip");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const generateProposals = async (tripId, preferences) => {
@@ -45,8 +80,7 @@ export const generateProposals = async (tripId, preferences) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(preferences)
     });
-    if (!response.ok) throw new Error("Failed to generate options");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const voteProposal = async (proposalId, userId, score) => {
@@ -54,8 +88,7 @@ export const voteProposal = async (proposalId, userId, score) => {
         method: "POST",
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to vote");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const simulateVotes = async (tripId) => {
@@ -63,24 +96,21 @@ export const simulateVotes = async (tripId) => {
         method: "POST",
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to simulate votes");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getItinerary = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/itinerary`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch itinerary");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getParticipants = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/participants`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch participants");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const confirmHotel = async (tripId, hotelData) => {
@@ -89,8 +119,7 @@ export const confirmHotel = async (tripId, hotelData) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(hotelData),
     });
-    if (!response.ok) throw new Error('Failed to confirm hotel');
-    return await response.json();
+    return handleResponse(response);
 };
 
 export const chatWithAI = async (tripId, message, history = []) => {
@@ -99,8 +128,7 @@ export const chatWithAI = async (tripId, message, history = []) => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ message, history }),
     });
-    if (!response.ok) throw new Error("Errore nella chat AI");
-    return response.json();
+    return handleResponse(response);
 };
 
 // --- Expenses ---
@@ -111,24 +139,21 @@ export const addExpense = async (expenseData) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(expenseData),
     });
-    if (!response.ok) throw new Error("Failed to add expense");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getExpenses = async (tripId) => {
     const response = await fetch(`${API_URL}/expenses/${tripId}`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch expenses");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getBalances = async (tripId) => {
     const response = await fetch(`${API_URL}/expenses/${tripId}/balances`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch balances");
-    return response.json();
+    return handleResponse(response);
 };
 
 // --- Photos ---
@@ -142,16 +167,14 @@ export const uploadPhoto = async (tripId, file) => {
         headers: getAuthHeadersMultipart(),
         body: formData
     });
-    if (!response.ok) throw new Error("Failed to upload photo");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const getPhotos = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/photos`, {
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to fetch photos");
-    return response.json();
+    return handleResponse(response);
 };
 
 export const deletePhoto = async (photoId) => {
@@ -159,8 +182,7 @@ export const deletePhoto = async (photoId) => {
         method: "DELETE",
         headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Failed to delete photo");
-    return response.json();
+    return handleResponse(response);
 };
 
 // --- Auth & Users ---
@@ -171,20 +193,7 @@ export const register = async (userData) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
     });
-    if (!response.ok) {
-        const text = await response.text();
-        try {
-            const error = JSON.parse(text);
-            throw new Error(error.detail || "Registration failed");
-        } catch (e) {
-            console.error("Failed to parse error response:", text);
-            if (e instanceof SyntaxError) {
-                throw new Error(`Request failed with ${response.status}: ${text.substring(0, 100)}...`);
-            }
-            throw e;
-        }
-    }
-    return response.json();
+    return handleResponse(response);
 };
 
 export const login = async (credentials) => {
@@ -193,20 +202,12 @@ export const login = async (credentials) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
     });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Login failed");
-    }
-    return response.json();
+    return handleResponse(response);
 };
 
 export const verifyEmail = async (token) => {
     const response = await fetch(`${API_URL}/users/verify-email?token=${token}`);
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Verification failed");
-    }
-    return response.json();
+    return handleResponse(response);
 };
 
 export const toggleSubscription = async (email) => {
@@ -215,6 +216,5 @@ export const toggleSubscription = async (email) => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ email }),
     });
-    if (!response.ok) throw new Error("Failed to toggle subscription");
-    return response.json();
+    return handleResponse(response);
 };

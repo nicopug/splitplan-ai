@@ -6,7 +6,7 @@ import json
 import requests
 import random
 from datetime import datetime
-# Usiamo l'SDK Ufficiale Google
+# SDK Ufficiale Google (Assicurati di avere google-genai in requirements.txt)
 from google import genai
 from dotenv import load_dotenv
 
@@ -21,14 +21,14 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
-# Modello Google (Flash è il più veloce)
-AI_MODEL = "gemini-2.0-flash-exp"
+# USIAMO LA VERSIONE STABILE 1.5 FLASH
+AI_MODEL = "gemini-1.5-flash"
 
 if GOOGLE_API_KEY:
     print(f"[OK] System: Google Gemini Client initialized.")
     ai_client = genai.Client(api_key=GOOGLE_API_KEY)
 else:
-    print(f"[WARNING] GOOGLE_API_KEY not found. AI features will use Mock Fallback.")
+    print(f"[WARNING] GOOGLE_API_KEY not found. Running in Mock Mode.")
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -145,7 +145,8 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
 
 @router.post("/{trip_id}/generate-proposals", response_model=List[Proposal])
 def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Genera 3 proposte e normalizza la partenza IATA tramite AI o dizionario manuale"""
+    """Genera 3 proposte e salva correttamente tutti i partecipanti nel DB"""
+    # Verifica accesso
     participant = session.exec(select(User).where(User.trip_id == trip_id, User.account_id == current_account.id)).first()
     if not participant:
         raise HTTPException(status_code=403, detail="Azione non autorizzata")
@@ -154,6 +155,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
         
+    # Aggiorna i dati del viaggio
     trip.budget_per_person = prefs.budget / prefs.num_people
     trip.num_people = prefs.num_people
     trip.start_date = prefs.start_date
@@ -163,13 +165,20 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
     trip.must_avoid = prefs.must_avoid
     session.add(trip)
     
+    # --- FIX PARTECIPANTI: SALVATAGGIO NEL DB ---
+    # 1. Assicuriamoci che l'organizzatore sia nella lista partecipanti
+    # (È già stato creato in create_trip, ma per sicurezza verifichiamo)
+    # 2. Aggiungiamo gli amici specificati nel form
     if prefs.participant_names:
         for name in prefs.participant_names:
+            # Controlla se esiste già un utente con questo nome per questo viaggio
             exists = session.exec(select(User).where(User.trip_id == trip_id, User.name == name)).first()
             if not exists:
                 new_user = User(name=name, trip_id=trip.id, is_organizer=False)
                 session.add(new_user)
+    
     session.commit()
+    # --------------------------------------------
 
     # --- LOGICA INTELLIGENTE GOOGLE GEMINI ---
     if ai_client:
@@ -177,7 +186,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             prompt = f"""
             Act as a Travel Agent. 
             TASK 1: Analyze the Departure City: "{prefs.departure_airport}". Identify the 3-letter IATA code.
-            TASK 2: Generate 3 travel proposals for: {prefs.destination}.
+            TASK 2: Generate 3 distinct travel proposals for: {prefs.destination}.
             Total Budget: {prefs.budget} EUR, {prefs.num_people} people, from {prefs.start_date} to {prefs.end_date}.
             Must include: {prefs.must_have}. Avoid: {prefs.must_avoid}. Vibe: {prefs.vibe}.
 
@@ -186,7 +195,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 "departure_iata_normalized": "XXX", 
                 "proposals": [
                     {{
-                        "destination": "Città, Paese",
+                        "destination": "City, Country",
                         "destination_iata": "XXX",
                         "description": "2 short sentences",
                         "price_estimate": 1000,
@@ -210,6 +219,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 trip.departure_airport = data["departure_iata_normalized"].upper()
                 session.add(trip)
 
+            # Rimuove vecchie proposte e aggiunge le nuove
             existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
             for e in existing: session.delete(e)
             
@@ -234,8 +244,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         except Exception as e:
             print(f"[AI Error] Proposals generation failed: {e}")
 
-    # --- FALLBACK LOGIC MANUALE (MOCK) ---
-    print("AI non disponibile o fallita. Uso Mock Data.")
+    # --- FALLBACK LOGICA MANUALE (MOCK) ---
+    print("AI indisponibile o fallita. Uso Mock Data.")
     iata_mapping = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
     trip.departure_airport = iata_mapping.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
     
@@ -346,34 +356,31 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
 def vote_proposal(
     proposal_id: int, 
     score: int, 
-    user_id: Optional[int] = None, # Ora useremo questo se presente!
+    # user_id opzionale: se presente lo usiamo (modalità demo), altrimenti usiamo account
+    user_id: Optional[int] = None, 
     session: Session = Depends(get_session), 
     current_account: Account = Depends(get_current_user)
 ):
-    """Registra il voto. Supporta modalità DEMO (user_id manuale) o SICURA (token)."""
+    """Registra il voto."""
     proposal = session.get(Proposal, proposal_id)
     if not proposal: raise HTTPException(status_code=404, detail="Proposta non trovata")
     
+    # Identificazione Partecipante (Ibrida: Demo vs Sicura)
     participant = None
-
-    # --- LOGICA IBRIDA DEMO/SICUREZZA ---
-    if user_id and user_id > 0:
-        # 1. MODALITÀ DEMO: Ci fidiamo dell'ID mandato dal menu a tendina
-        # (Utile per testare il gruppo da un solo schermo)
+    
+    if user_id: 
+        # Modalità Demo/Gruppo: ci fidiamo dell'ID manuale (se appartiene al viaggio)
         participant = session.get(User, user_id)
-        # Verifica minima: l'utente deve appartenere a QUESTO viaggio
         if participant and participant.trip_id != proposal.trip_id:
-            raise HTTPException(status_code=403, detail="Questo utente non appartiene a questo viaggio")
+             raise HTTPException(status_code=403, detail="Utente non valido per questo viaggio")
     else:
-        # 2. MODALITÀ SICURA: Usiamo il token dell'account loggato
-        participant = session.exec(
-            select(User).where(User.trip_id == proposal.trip_id, User.account_id == current_account.id)
-        ).first()
-
+        # Modalità Sicura: usiamo l'account loggato
+        participant = session.exec(select(User).where(User.trip_id == proposal.trip_id, User.account_id == current_account.id)).first()
+    
     if not participant:
-        raise HTTPException(status_code=403, detail="Partecipante non trovato o non autorizzato")
+        raise HTTPException(status_code=403, detail="Non sei un partecipante autorizzato o non trovato")
 
-    # Inserimento/Aggiornamento voto
+    # Gestione Voto
     existing = session.exec(select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)).first()
     if existing:
         existing.score = score
@@ -382,6 +389,7 @@ def vote_proposal(
         session.add(Vote(proposal_id=proposal_id, user_id=participant.id, score=score))
     session.commit()
     
+    # Calcolo Consenso
     trip = session.get(Trip, proposal.trip_id)
     total_voters = session.exec(select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)).one()
     
@@ -389,13 +397,7 @@ def vote_proposal(
     if total_voters >= trip.num_people:
         status = "CONSENSUS_REACHED"
         all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
-        best_p = None
-        max_score = -1
-        for p in all_props:
-            sum_score = session.exec(select(func.sum(Vote.score)).where(Vote.proposal_id == p.id)).one() or 0
-            if sum_score > max_score:
-                max_score = sum_score
-                best_p = p
+        best_p = max(all_props, key=lambda p: session.exec(select(func.sum(Vote.score)).where(Vote.proposal_id == p.id)).one() or 0)
         
         if best_p:
             trip.winning_proposal_id = best_p.id
@@ -403,9 +405,11 @@ def vote_proposal(
             trip.status = "BOOKED"
             session.add(trip)
             session.commit()
-            # Generazione disattivata per evitare timeout, si fa al confirm_hotel
             
-    return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status}
+            # DISATTIVATO PER EVITARE TIMEOUT VERCEL (si fa al confirm_hotel)
+            # generate_itinerary_content(trip, best_p, session)
+            
+    return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status, "votes_count": total_voters}
 
 @router.post("/{trip_id}/simulate-votes")
 def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -416,14 +420,18 @@ def simulate_votes(trip_id: int, session: Session = Depends(get_session), curren
     proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
     if not proposals: raise HTTPException(status_code=400, detail="Genera proposte prima")
         
-    voted_user_ids = select(Vote.user_id).join(Proposal).where(Proposal.trip_id == trip_id)
-    missing_voters = session.exec(select(User).where(User.trip_id == trip_id, User.id.not_in(voted_user_ids))).all()
+    voted_user_ids = select(Vote.user_id).join(Proposal).where(Proposal.trip_id == trip.id)
+    missing_voters = session.exec(select(User).where(User.trip_id == trip.id, User.id.not_in(voted_user_ids))).all()
     
+    if not missing_voters:
+        return {"status": "already_voted"}
+
     for u in missing_voters:
         session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
     session.commit()
     
-    return vote_proposal(proposals[0].id, 1, session, current_account)
+    # Passiamo l'ID del primo utente mancante per simulare il voto finale
+    return vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=missing_voters[0].id)
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
 def get_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -464,7 +472,7 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
     RESTITUISCI SEMPRE UN JSON VALIDO: {{ "reply": "Testo", "commands": [] }}
     """
     
-    if not ai_client: return {"reply": "AI non configurata.", "itinerary": itinerary}
+    if not ai_client: return {"reply": "AI non attiva.", "itinerary": itinerary}
     
     try:
         # Chiamata Google SDK per la Chat

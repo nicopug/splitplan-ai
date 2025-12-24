@@ -1,45 +1,68 @@
-import React, { useState } from 'react';
-import { voteProposal, simulateVotes } from '../api';
+import React, { useState, useEffect } from 'react';
+import { voteProposal, simulateVotes, getParticipants } from '../api';
 
 const Voting = ({ proposals, trip, onVoteComplete }) => {
     const [votedId, setVotedId] = useState(null);
     const [stats, setStats] = useState({ count: 0, total: trip.num_people });
     const isSolo = trip.trip_type === 'SOLO';
+
+    // Stati per la gestione del menu a tendina
+    const [participants, setParticipants] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
     const [loadingProposalId, setLoadingProposalId] = useState(null);
 
-    // Gestione del voto / scelta
+    // Carichiamo i partecipanti appena si apre la pagina
+    useEffect(() => {
+        const loadParticipants = async () => {
+            try {
+                const parts = await getParticipants(trip.id);
+                setParticipants(parts);
+                // Seleziona automaticamente il primo utente (solitamente l'organizzatore)
+                if (parts.length > 0) setSelectedUser(parts[0].id);
+            } catch (e) {
+                console.error("Error loading participants", e);
+            }
+        };
+        loadParticipants();
+    }, [trip.id]);
+
     const handleVote = async (proposalId) => {
+        // Se è un gruppo, devi aver selezionato un utente dal menu
+        if (!selectedUser && !isSolo) {
+            alert("Seleziona chi sta votando dal menu a tendina!");
+            return;
+        }
+
+        // Se è SOLO usa il primo (e unico) partecipante, altrimenti usa quello scelto nel menu
+        const voterId = isSolo ? (participants[0]?.id) : selectedUser;
+
+        if (!voterId) {
+            alert("Errore: Partecipante non trovato.");
+            return;
+        }
+
         setLoadingProposalId(proposalId);
         try {
-            // Passiamo 0 come userId (il backend lo ignora e usa il token sicuro)
-            const res = await voteProposal(proposalId, 0, 1);
+            // Passiamo voterId esplicito al backend
+            const res = await voteProposal(proposalId, voterId, 1);
 
             setVotedId(proposalId);
-
             if (res.votes_count !== undefined) {
                 setStats({ count: res.votes_count, total: res.required });
             }
 
-            // Se il viaggio passa a BOOKED o CONSENSUS
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
-                if (!isSolo) {
-                    alert("Consenso raggiunto! Si procede.");
-                }
+                if (!isSolo) alert("Consenso raggiunto! Si procede.");
                 onVoteComplete();
             } else {
-                alert(`Voto registrato! (${res.votes_count}/${res.required})`);
+                // Recuperiamo il nome di chi ha votato per il feedback
+                const voterName = participants.find(p => p.id == voterId)?.name || 'Utente';
+                alert(`Voto di ${voterName} registrato! (${res.votes_count}/${res.required})`);
             }
         } catch (e) {
-            if (e.message.includes("403")) {
-                alert("Non sei autorizzato a votare in questo viaggio.");
-            } else {
-                alert("Preferenza salvata.");
-                setVotedId(proposalId);
-            }
+            alert("Errore voto: " + e.message);
         } finally {
-            if (!isSolo) {
-                setLoadingProposalId(null);
-            }
+            if (!isSolo) setLoadingProposalId(null);
         }
     };
 
@@ -61,15 +84,27 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
                 {!isSolo && (
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <p className="text-muted">
-                            Il gruppo deve raggiungere il consenso.
-                            <br />
-                            <strong>Voti attuali: {stats.count} su {stats.total}.</strong>
-                        </p>
+                        <p className="text-muted">Il gruppo deve raggiungere il consenso. ({stats.count}/{stats.total} voti)</p>
+
+                        {/* --- MENU A TENDINA PER CAMBIARE UTENTE --- */}
+                        <div style={{ background: '#f0f4f8', padding: '1rem', borderRadius: '12px', display: 'inline-block', marginTop: '1rem' }}>
+                            <label style={{ marginRight: '1rem', fontWeight: 'bold' }}>Chi sta votando? 🗳️</label>
+                            <select
+                                value={selectedUser || ''}
+                                onChange={(e) => {
+                                    setSelectedUser(parseInt(e.target.value));
+                                    setVotedId(null); // Resetta la selezione visiva quando cambi utente
+                                }}
+                                style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #ccc', minWidth: '150px' }}
+                            >
+                                {participants.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 )}
 
-                {/* Pulsante Demo visibile solo se è un gruppo e mancano voti */}
                 {!isSolo && stats.count > 0 && stats.count < stats.total && (
                     <button
                         onClick={handleSimulate}
@@ -90,7 +125,6 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                         />
                         <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                {/* PREZZO RIMOSSO QUI */}
                                 <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{prop.destination}</h3>
                             </div>
                             <p style={{ color: '#666', marginBottom: '1.5rem', flex: 1 }}>{prop.description}</p>

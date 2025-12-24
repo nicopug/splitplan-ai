@@ -343,15 +343,37 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
     return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
 
 @router.post("/vote/{proposal_id}")
-def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Registra il voto. Determina il vincitore se tutti i partecipanti hanno votato."""
+def vote_proposal(
+    proposal_id: int, 
+    score: int, 
+    user_id: Optional[int] = None, # Ora useremo questo se presente!
+    session: Session = Depends(get_session), 
+    current_account: Account = Depends(get_current_user)
+):
+    """Registra il voto. Supporta modalità DEMO (user_id manuale) o SICURA (token)."""
     proposal = session.get(Proposal, proposal_id)
     if not proposal: raise HTTPException(status_code=404, detail="Proposta non trovata")
     
-    participant = session.exec(select(User).where(User.trip_id == proposal.trip_id, User.account_id == current_account.id)).first()
-    if not participant:
-        raise HTTPException(status_code=403, detail="Non sei autorizzato a votare per questo viaggio")
+    participant = None
 
+    # --- LOGICA IBRIDA DEMO/SICUREZZA ---
+    if user_id and user_id > 0:
+        # 1. MODALITÀ DEMO: Ci fidiamo dell'ID mandato dal menu a tendina
+        # (Utile per testare il gruppo da un solo schermo)
+        participant = session.get(User, user_id)
+        # Verifica minima: l'utente deve appartenere a QUESTO viaggio
+        if participant and participant.trip_id != proposal.trip_id:
+            raise HTTPException(status_code=403, detail="Questo utente non appartiene a questo viaggio")
+    else:
+        # 2. MODALITÀ SICURA: Usiamo il token dell'account loggato
+        participant = session.exec(
+            select(User).where(User.trip_id == proposal.trip_id, User.account_id == current_account.id)
+        ).first()
+
+    if not participant:
+        raise HTTPException(status_code=403, detail="Partecipante non trovato o non autorizzato")
+
+    # Inserimento/Aggiornamento voto
     existing = session.exec(select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)).first()
     if existing:
         existing.score = score
@@ -366,7 +388,6 @@ def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_s
     status = "VOTING"
     if total_voters >= trip.num_people:
         status = "CONSENSUS_REACHED"
-        
         all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
         best_p = None
         max_score = -1
@@ -382,9 +403,7 @@ def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_s
             trip.status = "BOOKED"
             session.add(trip)
             session.commit()
-            
-            # GENERAZIONE DISATTIVATA QUI PER EVITARE TIMEOUT
-            # generate_itinerary_content(trip, best_p, session)
+            # Generazione disattivata per evitare timeout, si fa al confirm_hotel
             
     return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status}
 

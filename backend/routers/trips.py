@@ -6,7 +6,8 @@ import json
 import requests
 import random
 from datetime import datetime
-from openai import OpenAI
+# Usiamo l'SDK Ufficiale Google
+from google import genai
 from dotenv import load_dotenv
 
 from ..database import get_session
@@ -16,25 +17,18 @@ from ..models import Trip, TripBase, User, UserBase, Proposal, Vote, ItineraryIt
 # Caricamento variabili ambiente
 load_dotenv()
 
-# --- CONFIGURAZIONE OPENROUTER ---
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+# --- CONFIGURAZIONE GOOGLE GEMINI ---
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
-# Modello scelto su OpenRouter
-AI_MODEL = "google/gemini-2.0-flash-001" 
+# Modello Google (Flash è il più veloce)
+AI_MODEL = "gemini-2.0-flash-exp" 
 
-if OPENROUTER_API_KEY:
-    print(f"[OK] System: OpenRouter Client initialized.")
-    ai_client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=OPENROUTER_API_KEY,
-        default_headers={
-            "HTTP-Referer": "https://splitplan-ai.vercel.app", 
-            "X-Title": "SplitPlan AI Professional",
-        }
-    )
+if GOOGLE_API_KEY:
+    print(f"[OK] System: Google Gemini Client initialized.")
+    ai_client = genai.Client(api_key=GOOGLE_API_KEY)
 else:
-    print(f"[WARNING] System: OPENROUTER_API_KEY missing. Running in Mock/Manual mode.")
+    print(f"[WARNING] GOOGLE_API_KEY not found. AI features will use Mock Fallback.")
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -75,7 +69,7 @@ def get_coordinates(address: str):
             "format": "json",
             "limit": 1
         }
-        headers = {'User-Agent': 'SplitPlanApp/1.0 (contact: alessiopuglise9@gmail.com)'} 
+        headers = {'User-Agent': 'SplitPlanApp/1.0'} 
         response = requests.get(url, params=params, headers=headers, timeout=5)
         data = response.json()
         if data:
@@ -177,7 +171,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 session.add(new_user)
     session.commit()
 
-    # --- LOGICA INTELLIGENTE OPENROUTER ---
+    # --- LOGICA INTELLIGENTE GOOGLE GEMINI ---
     if ai_client:
         try:
             prompt = f"""
@@ -203,13 +197,14 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             THE RESPONSE MUST BE IN ITALIAN.
             """
             
-            completion = ai_client.chat.completions.create(
+            # Chiamata Google SDK
+            response = ai_client.models.generate_content(
                 model=AI_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                response_format={ "type": "json_object" }
+                contents=prompt
             )
             
-            data = json.loads(completion.choices[0].message.content)
+            content = response.text.replace("```json", "").replace("```", "").strip()
+            data = json.loads(content)
             
             if data.get("departure_iata_normalized"):
                 trip.departure_airport = data["departure_iata_normalized"].upper()
@@ -228,7 +223,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     destination_iata=p.get("destination_iata"),
                     description=p["description"],
                     price_estimate=p["price_estimate"],
-                    image_url=img_url
+                    image_url=img_url 
                 )
                 session.add(new_prop)
             
@@ -286,30 +281,28 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             ITALIAN LANGUAGE.
             """
             
-            completion = ai_client.chat.completions.create(
+            # Chiamata Google SDK
+            response = ai_client.models.generate_content(
                 model=AI_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                response_format={ "type": "json_object" }
+                contents=prompt
             )
             
-            # Parsing flessibile
-            res_content = completion.choices[0].message.content
-            res_json = json.loads(res_content)
-            items = res_json.get("itinerary") if isinstance(res_json, dict) and "itinerary" in res_json else res_json
-            if isinstance(items, dict): items = list(items.values())[0]
-
-            # Pulizia e inserimento
+            content = response.text.replace("```json", "").replace("```", "").strip()
+            items_data = json.loads(content)
+            
+            # Pulisce itinerario esistente
             session.exec(SQLModel.metadata.tables['itineraryitem'].delete().where(SQLModel.metadata.tables['itineraryitem'].c.trip_id == trip.id))
             
-            for item in items:
-                session.add(ItineraryItem(
+            for item in items_data:
+                db_item = ItineraryItem(
                     trip_id=trip.id, 
                     title=item["title"], 
                     description=item.get("description"), 
                     start_time=item["start_time"], 
                     end_time=item.get("end_time"), 
                     type=item.get("type", "ACTIVITY")
-                ))
+                )
+                session.add(db_item)
             session.commit()
             return
 
@@ -344,7 +337,7 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
     if not proposal:
         proposal = Proposal(destination=trip.destination, trip_id=trip.id, price_estimate=0, description="")
     
-    # --- QUI MANTENIAMO ATTIVA LA GENERAZIONE ITINERARIO ---
+    # QUI GENERIAMO L'ITINERARIO
     generate_itinerary_content(trip, proposal, session)
     
     return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
@@ -390,9 +383,8 @@ def vote_proposal(proposal_id: int, score: int, session: Session = Depends(get_s
             session.add(trip)
             session.commit()
             
-            # --- MODIFICA APPLICATA: DISATTIVATO PER EVITARE TIMEOUT ---
+            # GENERAZIONE DISATTIVATA QUI PER EVITARE TIMEOUT
             # generate_itinerary_content(trip, best_p, session)
-            # --------------------------------------------------------
             
     return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status}
 
@@ -412,19 +404,7 @@ def simulate_votes(trip_id: int, session: Session = Depends(get_session), curren
         session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
     session.commit()
     
-    # Ricalcolo manuale status per simulazione
-    total_voters = session.exec(select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)).one()
-    if total_voters >= trip.num_people:
-        trip.status = "BOOKED"
-        trip.winning_proposal_id = proposals[0].id
-        trip.destination = proposals[0].destination
-        session.add(trip)
-        session.commit()
-        # --- MODIFICA APPLICATA: DISATTIVATO ANCHE QUI ---
-        # generate_itinerary_content(trip, proposals[0], session)
-        # ------------------------------------------------
-        
-    return {"status": "simulated"}
+    return vote_proposal(proposals[0].id, 1, session, current_account)
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
 def get_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -468,12 +448,13 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
     if not ai_client: return {"reply": "AI non configurata.", "itinerary": itinerary}
     
     try:
-        completion = ai_client.chat.completions.create(
+        # Chiamata Google SDK per la Chat
+        response = ai_client.models.generate_content(
             model=AI_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            response_format={ "type": "json_object" }
+            contents=prompt
         )
-        data = json.loads(completion.choices[0].message.content)
+        content = response.text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(content)
         
         reply = data.get("reply", "Ho aggiornato l'itinerario.")
         commands = data.get("commands", [])

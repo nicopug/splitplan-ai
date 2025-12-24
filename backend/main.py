@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import create_db_and_tables
-from .routers import trips, photos, users
+from .routers import trips, photos, users, expenses, itinerary
 
 # --- CONFIGURAZIONE APP ---
 # root_path="/api" è fondamentale per il deployment su Vercel
@@ -27,6 +27,8 @@ app.add_middleware(
 app.include_router(trips.router)
 app.include_router(photos.router)
 app.include_router(users.router)
+app.include_router(expenses.router)
+app.include_router(itinerary.router)
 
 # --- AVVIO AUTOMATICO DB ---
 @app.on_event("startup")

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, status
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
 import os
 import json
@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 
 from ..database import get_session
 from ..auth import get_current_user
-# Importiamo Participant invece di User
 from ..models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account
 
 # Caricamento variabili ambiente
@@ -128,6 +127,7 @@ def create_trip(trip_data: TripBase, session: Session = Depends(get_session), cu
         return {"trip_id": db_trip.id, "trip": db_trip}
     except Exception as e:
         session.rollback()
+        print(f"[ERROR] create_trip: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{trip_id}", response_model=Trip)
@@ -146,91 +146,109 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
 @router.post("/{trip_id}/generate-proposals", response_model=List[Proposal])
 def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Genera 3 proposte e salva tutti i partecipanti nel Database"""
-    # Verifica autorizzazione
-    check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
-    if not check: raise HTTPException(status_code=403)
+    try:
+        # Verifica autorizzazione
+        check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
+        if not check: 
+            raise HTTPException(status_code=403, detail="Non autorizzato")
 
-    trip = session.get(Trip, trip_id)
-    if not trip: raise HTTPException(status_code=404)
+        trip = session.get(Trip, trip_id)
+        if not trip: 
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        # Aggiornamento dati viaggio
+        trip.budget_per_person = prefs.budget / prefs.num_people
+        trip.num_people = prefs.num_people
+        trip.start_date = prefs.start_date
+        trip.end_date = prefs.end_date
+        trip.departure_airport = prefs.departure_airport 
+        trip.must_have = prefs.must_have
+        trip.must_avoid = prefs.must_avoid
+        session.add(trip)
         
-    # Aggiornamento dati viaggio
-    trip.budget_per_person = prefs.budget / prefs.num_people
-    trip.num_people = prefs.num_people
-    trip.start_date = prefs.start_date
-    trip.end_date = prefs.end_date
-    trip.departure_airport = prefs.departure_airport 
-    trip.must_have = prefs.must_have
-    trip.must_avoid = prefs.must_avoid
-    session.add(trip)
-    
-    # SALVATAGGIO PARTECIPANTI EXTRA
-    if prefs.participant_names:
-        for name in prefs.participant_names:
-            exists = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.name == name)).first()
-            if not exists:
-                session.add(Participant(name=name, trip_id=trip.id, is_organizer=False))
-    session.commit()
+        # SALVATAGGIO PARTECIPANTI EXTRA
+        if prefs.participant_names:
+            for name in prefs.participant_names:
+                exists = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.name == name)).first()
+                if not exists:
+                    session.add(Participant(name=name, trip_id=trip.id, is_organizer=False))
+        session.commit()
 
-    # --- GENERAZIONE AI GOOGLE ---
-    if ai_client:
-        try:
-            prompt = f"""
-            Agisci come un Travel Agent esperto. 
-            TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
-            TASK 2: Genera 3 proposte per: {prefs.destination}.
-            Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
-            Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
+        # --- GENERAZIONE AI GOOGLE ---
+        if ai_client:
+            try:
+                prompt = f"""
+                Agisci come un Travel Agent esperto. 
+                TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
+                TASK 2: Genera 3 proposte per: {prefs.destination}.
+                Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
+                Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
 
-            RESTITUISCI SOLO JSON:
-            {{
-                "departure_iata_normalized": "XXX",
-                "proposals": [
-                    {{"destination": "Città, Nazione", "destination_iata": "XXX", "description": "...", "price_estimate": 1000, "image_search_term": "keyword"}}
-                ]
-            }}
-            LINGUA: ITALIANO.
-            """
-            
-            response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
-            data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
-            
-            if data.get("departure_iata_normalized"):
-                trip.departure_airport = data["departure_iata_normalized"].upper()
-                session.add(trip)
+                RESTITUISCI SOLO JSON:
+                {{
+                    "departure_iata_normalized": "XXX",
+                    "proposals": [
+                        {{"destination": "Città, Nazione", "destination_iata": "XXX", "description": "...", "price_estimate": 1000, "image_search_term": "keyword"}}
+                    ]
+                }}
+                LINGUA: ITALIANO.
+                """
+                
+                response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+                data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
+                
+                if data.get("departure_iata_normalized"):
+                    trip.departure_airport = data["departure_iata_normalized"].upper()
+                    session.add(trip)
 
-            existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
-            for e in existing: session.delete(e)
-            
-            for p in data.get("proposals", []):
-                search = p.get("image_search_term") or p.get("destination")
-                img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true"
-                session.add(Proposal(trip_id=trip_id, destination=p["destination"], destination_iata=p.get("destination_iata"), description=p["description"], price_estimate=p["price_estimate"], image_url=img_url))
-            
-            trip.status = "VOTING"
-            session.commit()
-            return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+                # Elimina proposte esistenti
+                existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+                for e in existing: 
+                    session.delete(e)
+                
+                # Crea nuove proposte
+                for p in data.get("proposals", []):
+                    search = p.get("image_search_term") or p.get("destination")
+                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true"
+                    session.add(Proposal(
+                        trip_id=trip_id, 
+                        destination=p["destination"], 
+                        destination_iata=p.get("destination_iata"), 
+                        description=p["description"], 
+                        price_estimate=p["price_estimate"], 
+                        image_url=img_url
+                    ))
+                
+                trip.status = "VOTING"
+                session.commit()
+                return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
-        except Exception as e:
-            print(f"[AI Error] Generazione fallita: {e}")
+            except Exception as e:
+                print(f"[AI Error] Generazione fallita: {e}")
 
-    # --- FALLBACK MANUALE (MOCK) ---
-    print("AI fallita. Uso Mock Data con 3 opzioni.")
-    iata_map = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
-    trip.departure_airport = iata_map.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
-    
-    mock_options = [
-        Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description="Opzione equilibrata.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
-        Proposal(trip_id=trip_id, destination=f"{prefs.destination} Budget", destination_iata="LHR", price_estimate=prefs.budget * 0.7, description="Viaggio economico.", image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"),
-        Proposal(trip_id=trip_id, destination=f"{prefs.destination} Luxury", destination_iata="CDG", price_estimate=prefs.budget * 1.5, description="Esperienza premium.", image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c")
-    ]
-    
-    existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
-    for e in existing: session.delete(e)
-    for o in mock_options: session.add(o)
-    
-    trip.status = "VOTING"
-    session.commit()
-    return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+        # --- FALLBACK MANUALE (MOCK) ---
+        print("AI fallita. Uso Mock Data con 3 opzioni.")
+        iata_map = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
+        trip.departure_airport = iata_map.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
+        
+        mock_options = [
+            Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description="Opzione equilibrata.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
+            Proposal(trip_id=trip_id, destination=f"{prefs.destination} Budget", destination_iata="LHR", price_estimate=prefs.budget * 0.7, description="Viaggio economico.", image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"),
+            Proposal(trip_id=trip_id, destination=f"{prefs.destination} Luxury", destination_iata="CDG", price_estimate=prefs.budget * 1.5, description="Esperienza premium.", image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c")
+        ]
+        
+        existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+        for e in existing: session.delete(e)
+        for o in mock_options: session.add(o)
+        
+        trip.status = "VOTING"
+        session.commit()
+        return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+        
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] generate_proposals: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore nella generazione: {str(e)}")
 
 def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session):
     """Genera l'itinerario finale integrando nomi reali da OSM"""
@@ -256,13 +274,16 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             1. JSON ARRAY. 
             2. Includi Check-in, Pasti e Attività.
             3. Lingua: Italiano.
-            FORMATO: [{{ "title": "..", "description": "..", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY" }}]
+            FORMATO: [{{"title": "..", "description": "..", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY"}}]
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
             items_data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
             
-            session.exec(SQLModel.metadata.tables['itineraryitem'].delete().where(SQLModel.metadata.tables['itineraryitem'].c.trip_id == trip.id))
+            # Elimina itinerario esistente usando delete statement
+            session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
+            session.commit()
+            
             for item in items_data:
                 session.add(ItineraryItem(trip_id=trip.id, **item))
             session.commit()
@@ -271,6 +292,9 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             print(f"[AI Error] Itinerario fallito: {e}")
 
     # Mock Fallback Itinerary
+    session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
+    session.commit()
+    
     mock_it = [
         ItineraryItem(trip_id=trip.id, title="Arrivo e Check-in", description=f"Check-in presso {trip.accommodation}", start_time=f"{trip.start_date}T14:30:00", type="CHECKIN"),
         ItineraryItem(trip_id=trip.id, title="Esplorazione Centro", description="Primo contatto con la città", start_time=f"{trip.start_date}T16:30:00", type="ACTIVITY"),
@@ -281,24 +305,30 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
 @router.post("/{trip_id}/confirm-hotel")
 def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Salva la logica hotel e genera l'itinerario"""
-    trip = session.get(Trip, trip_id)
-    if not trip: raise HTTPException(status_code=404)
-    
-    trip.accommodation = hotel_data.hotel_name
-    trip.accommodation_location = hotel_data.hotel_address
-    trip.flight_cost = hotel_data.flight_cost
-    trip.hotel_cost = hotel_data.hotel_cost
-    trip.arrival_time = hotel_data.arrival_time
-    trip.return_time = hotel_data.return_time
-    session.add(trip)
-    session.commit()
-    
-    proposal = session.get(Proposal, trip.winning_proposal_id)
-    if not proposal:
-        proposal = Proposal(destination=trip.destination, trip_id=trip.id, price_estimate=0, description="")
-    
-    generate_itinerary_content(trip, proposal, session)
-    return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip: 
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+        
+        trip.accommodation = hotel_data.hotel_name
+        trip.accommodation_location = hotel_data.hotel_address
+        trip.flight_cost = hotel_data.flight_cost
+        trip.hotel_cost = hotel_data.hotel_cost
+        trip.arrival_time = hotel_data.arrival_time
+        trip.return_time = hotel_data.return_time
+        session.add(trip)
+        session.commit()
+        
+        proposal = session.get(Proposal, trip.winning_proposal_id)
+        if not proposal:
+            proposal = Proposal(destination=trip.destination, trip_id=trip.id, price_estimate=0, description="")
+        
+        generate_itinerary_content(trip, proposal, session)
+        return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] confirm_hotel: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/vote/{proposal_id}")
 def vote_proposal(
@@ -309,55 +339,134 @@ def vote_proposal(
     current_account: Account = Depends(get_current_user)
 ):
     """Registra il voto (Demo mode con user_id o Secure con token)"""
-    proposal = session.get(Proposal, proposal_id)
-    if not proposal: raise HTTPException(status_code=404)
-    
-    participant = None
-    if user_id and user_id > 0:
-        participant = session.get(Participant, user_id)
-    else:
-        participant = session.exec(select(Participant).where(Participant.trip_id == proposal.trip_id, Participant.account_id == current_account.id)).first()
-    
-    if not participant: raise HTTPException(status_code=403, detail="Non autorizzato")
-
-    existing = session.exec(select(Vote).where(Vote.proposal_id == proposal_id, Vote.user_id == participant.id)).first()
-    if existing:
-        existing.score = score
-        session.add(existing)
-    else:
-        session.add(Vote(proposal_id=proposal_id, user_id=participant.id, score=score))
-    session.commit()
-    
-    trip = session.get(Trip, proposal.trip_id)
-    total_voters = session.exec(select(func.count(func.distinct(Vote.user_id))).join(Proposal).where(Proposal.trip_id == trip.id)).one()
-    
-    if total_voters >= trip.num_people:
-        all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
-        best_p = max(all_props, key=lambda p: session.exec(select(func.sum(Vote.score)).where(Vote.proposal_id == p.id)).one() or 0)
+    try:
+        proposal = session.get(Proposal, proposal_id)
+        if not proposal: 
+            raise HTTPException(status_code=404, detail="Proposta non trovata")
         
-        trip.winning_proposal_id = best_p.id
-        trip.destination = best_p.destination
-        trip.status = "BOOKED"
-        session.add(trip)
+        # Determina il partecipante
+        participant = None
+        if user_id and user_id > 0:
+            participant = session.get(Participant, user_id)
+        else:
+            participant = session.exec(
+                select(Participant).where(
+                    Participant.trip_id == proposal.trip_id, 
+                    Participant.account_id == current_account.id
+                )
+            ).first()
+        
+        if not participant: 
+            raise HTTPException(status_code=403, detail="Partecipante non trovato")
+
+        # Registra o aggiorna voto
+        existing = session.exec(
+            select(Vote).where(
+                Vote.proposal_id == proposal_id, 
+                Vote.user_id == participant.id
+            )
+        ).first()
+        
+        if existing:
+            existing.score = score
+            session.add(existing)
+        else:
+            session.add(Vote(proposal_id=proposal_id, user_id=participant.id, score=score))
+        
         session.commit()
+        
+        # Ottieni il viaggio
+        trip = session.get(Trip, proposal.trip_id)
+        if not trip:
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+        
+        # Conta i votanti unici
+        total_voters_query = select(func.count(func.distinct(Vote.user_id))).join(
+            Proposal
+        ).where(Proposal.trip_id == trip.id)
+        
+        total_voters = session.exec(total_voters_query).one() or 0
+        
+        print(f"[DEBUG] Voti: {total_voters}/{trip.num_people}")
+        
+        # Verifica consenso raggiunto
+        if total_voters >= trip.num_people:
+            all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
             
-    return {"status": "voted", "current_voters": total_voters, "required": trip.num_people, "trip_status": trip.status, "votes_count": total_voters}
+            # Calcola punteggi
+            best_p = None
+            best_score = -1
+            
+            for p in all_props:
+                score_query = select(func.sum(Vote.score)).where(Vote.proposal_id == p.id)
+                total_score = session.exec(score_query).one() or 0
+                
+                if total_score > best_score:
+                    best_score = total_score
+                    best_p = p
+            
+            if best_p:
+                trip.winning_proposal_id = best_p.id
+                trip.destination = best_p.destination
+                trip.destination_iata = best_p.destination_iata
+                trip.status = "BOOKED"
+                session.add(trip)
+                session.commit()
+                print(f"[SUCCESS] Consenso raggiunto! Vincitore: {best_p.destination}")
+        
+        return {
+            "status": "voted", 
+            "current_voters": total_voters, 
+            "required": trip.num_people, 
+            "trip_status": trip.status, 
+            "votes_count": total_voters
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] vote_proposal: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Errore nel voto: {str(e)}")
 
 @router.post("/{trip_id}/simulate-votes")
 def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Simula i voti per raggiungere il consenso (Demo mode)"""
-    trip = session.get(Trip, trip_id)
-    proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
-    if not proposals: return {"error": "Genera proposte prima"}
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip:
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+        if not proposals: 
+            return {"error": "Genera proposte prima"}
         
-    voted_ids = select(Vote.user_id).join(Proposal).where(Proposal.trip_id == trip.id)
-    missing = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.id.not_in(voted_ids))).all()
-    
-    for u in missing:
-        session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
-    session.commit()
-    
-    return vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=missing[0].id if missing else None)
+        # Trova chi ha già votato
+        voted_ids_query = select(Vote.user_id).join(Proposal).where(Proposal.trip_id == trip.id)
+        voted_ids = [row for row in session.exec(voted_ids_query)]
+        
+        # Trova chi manca
+        missing = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip.id, 
+                Participant.id.not_in(voted_ids) if voted_ids else True
+            )
+        ).all()
+        
+        # Aggiungi voti simulati
+        for u in missing:
+            session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
+        session.commit()
+        
+        # Ricalcola il consenso
+        return vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=missing[0].id if missing else None)
+        
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] simulate_votes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
 def get_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -368,35 +477,38 @@ def get_participants(trip_id: int, session: Session = Depends(get_session), curr
     """Restituisce i partecipanti al viaggio in formato pulito per evitare loop JSON"""
     # Verifica accesso
     check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
-    if not check: raise HTTPException(status_code=403)
+    if not check: 
+        raise HTTPException(status_code=403, detail="Non autorizzato")
     
     results = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
-    # TRICK: restituiamo una lista di dizionari invece che oggetti SQLModel 
-    # per evitare che il frontend cerchi di caricare tutto il database ricorsivamente
     return [{"id": p.id, "name": p.name, "is_organizer": p.is_organizer} for p in results]
 
 @router.post("/{trip_id}/chat")
 def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Chat AI avanzata: può aggiungere o eliminare item dall'itinerario"""
-    trip = session.get(Trip, trip_id)
-    itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
-    
-    prompt = f"""
-    Sei SplitPlan Assistant. Viaggio: {trip.name} ({trip.destination}).
-    ITINERARIO: {json.dumps([i.model_dump() for i in itinerary])}
-    UTENTE: "{req.message}"
-    
-    ISTRUZIONI:
-    1. Rispondi cordialmente.
-    2. Se richiesto, genera comandi JSON in 'commands':
-       - ADD: {{ "action": "ADD", "item": {{ "title": "..", "description": "..", "start_time": "ISO8601", "type": "ACTIVITY" }} }}
-       - DELETE: {{ "action": "DELETE", "id": 123 }}
-    RISPONDI JSON: {{ "reply": "...", "commands": [] }}
-    """
-    
-    if not ai_client: return {"reply": "AI non disponibile.", "itinerary": []}
-    
     try:
+        trip = session.get(Trip, trip_id)
+        if not trip:
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
+        
+        prompt = f"""
+        Sei SplitPlan Assistant. Viaggio: {trip.name} ({trip.destination}).
+        ITINERARIO: {json.dumps([i.model_dump() for i in itinerary])}
+        UTENTE: "{req.message}"
+        
+        ISTRUZIONI:
+        1. Rispondi cordialmente.
+        2. Se richiesto, genera comandi JSON in 'commands':
+           - ADD: {{"action": "ADD", "item": {{"title": "..", "description": "..", "start_time": "ISO8601", "type": "ACTIVITY"}}}}
+           - DELETE: {{"action": "DELETE", "id": 123}}
+        RISPONDI JSON: {{"reply": "...", "commands": []}}
+        """
+        
+        if not ai_client: 
+            return {"reply": "AI non disponibile.", "itinerary": []}
+        
         response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
         data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
         
@@ -405,11 +517,14 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
                 session.add(ItineraryItem(trip_id=trip_id, **cmd["item"]))
             elif cmd["action"] == "DELETE":
                 item = session.get(ItineraryItem, cmd["id"])
-                if item and item.trip_id == trip_id: session.delete(item)
+                if item and item.trip_id == trip_id: 
+                    session.delete(item)
         
         session.commit()
         updated = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
         return {"reply": data["reply"], "itinerary": updated}
+        
     except Exception as e:
+        session.rollback()
         print(f"[Chat Error] {e}")
-        raise HTTPException(status_code=500, detail="Errore elaborazione chat")
+        raise HTTPException(status_code=500, detail=f"Errore elaborazione chat: {str(e)}")

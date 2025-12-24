@@ -22,7 +22,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
 # Modello Google (Flash è il più veloce)
-AI_MODEL = "gemini-1.5-flash-001" 
+AI_MODEL = "gemini-2.5-flash"
 
 if GOOGLE_API_KEY:
     print(f"[OK] System: Google Gemini Client initialized.")

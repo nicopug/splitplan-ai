@@ -12,7 +12,6 @@ class Account(SQLModel, table=True):
 
 class TripBase(SQLModel):
     name: str
-    # Rendiamo questi campi opzionali (= "") per evitare l'errore 422 alla creazione
     destination: str = "" 
     trip_type: str 
     budget: float = 0.0
@@ -24,6 +23,7 @@ class TripBase(SQLModel):
     budget_per_person: float = 0.0
     must_have: Optional[str] = ""
     must_avoid: Optional[str] = ""
+    vibe: Optional[str] = ""  # Aggiunto per coerenza con l'AI
     
     accommodation: Optional[str] = None
     accommodation_location: Optional[str] = None
@@ -74,6 +74,7 @@ class Vote(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: int = Field(foreign_key="proposal.id")
     user_id: int = Field(foreign_key="participant.id")
+    score: int = Field(default=1)  # <--- ECCO IL CAMPO MANCANTE CHE CAUSAVA L'ERRORE!
     
     proposal: Optional[Proposal] = Relationship(back_populates="votes")
     participant: Optional[Participant] = Relationship(back_populates="votes")

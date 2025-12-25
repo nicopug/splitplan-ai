@@ -38,6 +38,7 @@ class TripBase(SQLModel):
     winning_proposal_id: Optional[int] = None
     destination_iata: Optional[str] = None
     departure_airport: Optional[str] = None 
+    departure_city: Optional[str] = None
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

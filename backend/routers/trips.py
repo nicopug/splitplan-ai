@@ -100,6 +100,18 @@ def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
 
+@router.get("/migrate-db-departure")
+def migrate_db_departure(session: Session = Depends(get_session)):
+    """Aggiunge la colonna departure_city alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS departure_city VARCHAR;"))
+        session.commit()
+        return {"status": "success", "message": "Colonna departure_city aggiunta con successo."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
 # --- ENDPOINTS CORE ---
 
 @router.post("/", response_model=Dict)
@@ -162,6 +174,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         trip.start_date = prefs.start_date
         trip.end_date = prefs.end_date
         trip.departure_airport = prefs.departure_airport 
+        trip.departure_city = prefs.departure_airport
         trip.must_have = prefs.must_have
         trip.must_avoid = prefs.must_avoid
         session.add(trip)

@@ -12,10 +12,9 @@ const Pricing = ({ user }) => {
             borderRadius: '20px',
             fontSize: '0.9rem',
             fontWeight: 'bold',
-            marginTop: '1rem',
             display: 'inline-block'
         }}>
-            ✨ Il tuo Piano
+            Il tuo Piano
         </div>
     );
     return (
@@ -43,7 +42,9 @@ const Pricing = ({ user }) => {
                             <li style={{ marginBottom: '1rem' }}>✅ Prenotazioni Integrate</li>
                             <li style={{ marginBottom: '1rem' }}>✅ Chat di Gruppo</li>
                         </ul>
-                        {isLoggedIn && !isPremium && <PlanBadge />}
+                        <div style={{ textAlign: 'center' }}>
+                            {isLoggedIn && !isPremium && <PlanBadge />}
+                        </div>
                         {!isLoggedIn && null}
                         {isLoggedIn && isPremium && null}
                     </div>
@@ -83,10 +84,12 @@ const Pricing = ({ user }) => {
                             <li style={{ marginBottom: '1rem' }}>✅ Assistenza AI Prioritaria</li>
                             <li style={{ marginBottom: '1rem' }}>✅ Export Video Ricordi</li>
                         </ul>
-                        {isLoggedIn && isPremium && <PlanBadge />}
-                        {isLoggedIn && !isPremium && (
-                            <button className="btn btn-accent" style={{ width: '100%' }}>Passa a Premium</button>
-                        )}
+                        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                            {isLoggedIn && isPremium && <PlanBadge />}
+                            {isLoggedIn && !isPremium && (
+                                <button className="btn btn-accent" style={{ width: '100%' }}>Passa a Premium</button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

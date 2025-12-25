@@ -51,7 +51,7 @@ const Logistics = ({ trip }) => {
                 <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #00a698' }}>
                     <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
                     <p style={{ margin: '1rem 0', color: '#666' }}>
-                        Cerca voli diretti da <strong>{origin}</strong> a <strong>{dest}</strong> per {numPeople} persone.
+                        Cerca voli diretti da <strong>{origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
                     </p>
                     <a
                         href={flightLink}

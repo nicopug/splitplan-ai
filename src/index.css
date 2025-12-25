@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
 
 /* Custom CSS Variables (mantieni per compatibilità con codice esistente) */
 :root {
@@ -154,10 +154,11 @@
 
   /* Glass Effect */
   .auth-glass-card {
-    @apply bg-white bg-opacity-70 backdrop-blur-lg border border-white border-opacity-30 rounded-lg md:rounded-2xl;
+    @apply bg-white/70 backdrop-blur-lg border border-white/30 rounded-lg md:rounded-2xl;
     box-shadow: var(--shadow-lg);
   }
 }
+
 
 /* Utility Classes */
 @layer utilities {
@@ -167,8 +168,9 @@
 
   /* Spinner Animation */
   .spinner {
-    @apply border-2 border-white border-opacity-30 border-t-white rounded-full w-5 h-5 animate-spin inline-block mr-2;
+    @apply border-2 border-white/30 border-t-white rounded-full w-5 h-5 animate-spin inline-block mr-2;
   }
+
 
   /* Text Muted */
   .text-muted {

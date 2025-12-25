@@ -1,12 +1,28 @@
 import React from 'react';
 
-const Pricing = () => {
+const Pricing = ({ user }) => {
+    const isPremium = user?.is_subscribed;
+    const isLoggedIn = !!user;
+
+    const PlanBadge = () => (
+        <div style={{
+            background: 'var(--primary-blue)',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            borderRadius: '20px',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            marginTop: '1rem',
+            display: 'inline-block'
+        }}>
+            ✨ Il tuo Piano
+        </div>
+    );
     return (
         <section id="pricing" className="section">
             <div className="container">
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
                     <h2>Scegli il tuo piano</h2>
-                    <p>Inizia gratis, paga solo se vuoi superpoteri.</p>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
                     {/* Free Plan */}
@@ -27,7 +43,9 @@ const Pricing = () => {
                             <li style={{ marginBottom: '1rem' }}>✅ Prenotazioni Integrate</li>
                             <li style={{ marginBottom: '1rem' }}>✅ Chat di Gruppo</li>
                         </ul>
-                        <button className="btn btn-secondary" style={{ width: '100%' }}>Inizia Gratis</button>
+                        {isLoggedIn && !isPremium && <PlanBadge />}
+                        {!isLoggedIn && null}
+                        {isLoggedIn && isPremium && null}
                     </div>
 
                     {/* Premium Plan */}
@@ -65,7 +83,10 @@ const Pricing = () => {
                             <li style={{ marginBottom: '1rem' }}>✅ Assistenza AI Prioritaria</li>
                             <li style={{ marginBottom: '1rem' }}>✅ Export Video Ricordi</li>
                         </ul>
-                        <button className="btn btn-accent" style={{ width: '100%' }}>Passa a Premium</button>
+                        {isLoggedIn && isPremium && <PlanBadge />}
+                        {isLoggedIn && !isPremium && (
+                            <button className="btn btn-accent" style={{ width: '100%' }}>Passa a Premium</button>
+                        )}
                     </div>
                 </div>
             </div>

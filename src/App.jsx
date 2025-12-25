@@ -14,14 +14,14 @@ import Toast from './components/Toast';
 import Modal from './components/Modal';
 
 
-function Landing() {
+function Landing({ user }) {
   return (
     <>
       <Hero />
       <PainPoints />
       <Solution />
       <Features />
-      <Pricing />
+      <Pricing user={user} />
       <Footer />
     </>
   );
@@ -43,7 +43,7 @@ function App() {
       <Modal />
       <Navbar user={user} />
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Landing user={user} />} />
         <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />

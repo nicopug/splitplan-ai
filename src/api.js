@@ -218,3 +218,21 @@ export const toggleSubscription = async (email) => {
     });
     return handleResponse(response);
 };
+
+export const forgotPassword = async (email) => {
+    const response = await fetch(`${API_URL}/users/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+};
+
+export const resetPassword = async (token, new_password) => {
+    const response = await fetch(`${API_URL}/users/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, new_password }),
+    });
+    return handleResponse(response);
+};

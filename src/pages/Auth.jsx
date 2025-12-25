@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { register, login, verifyEmail, toggleSubscription } from '../api';
+import { register, login, verifyEmail, toggleSubscription, forgotPassword } from '../api';
+
 import './Auth.css';
 
 const Auth = () => {
@@ -16,6 +17,8 @@ const Auth = () => {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showForgot, setShowForgot] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
     const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
 
     const navigate = useNavigate();
@@ -80,6 +83,21 @@ const Auth = () => {
             window.location.reload();
         } catch (err) {
             setError("Errore durante l'attivazione: " + err.message);
+        }
+    };
+
+    const handleForgotSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+        setLoading(true);
+        try {
+            const res = await forgotPassword(forgotEmail);
+            setMessage(res.message);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -152,6 +170,43 @@ const Auth = () => {
                             </ul>
                             <button onClick={() => handlePlanChoice(true)} className="btn btn-primary btn-full" style={{ fontSize: '0.9rem' }}>Attiva Premium</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (showForgot) {
+
+        return (
+            <div className="auth-container">
+                <div className="auth-glass-card">
+                    <h2>Recupero Password</h2>
+                    <p className="auth-subtitle">Inserisci la tua email per ricevere il link di reset</p>
+
+                    {error && <div className="auth-error">{error}</div>}
+                    {message && <div className="auth-success">{message}</div>}
+
+                    {!message && (
+                        <form onSubmit={handleForgotSubmit} className="auth-form">
+                            <div className="auth-field">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    value={forgotEmail}
+                                    onChange={e => setForgotEmail(e.target.value)}
+                                    required
+                                    placeholder="mario@esempio.it"
+                                />
+                            </div>
+                            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                                {loading ? 'Invio...' : 'Invia Link di Reset'}
+                            </button>
+                        </form>
+                    )}
+
+                    <div className="auth-switch" style={{ marginTop: '1.5rem' }}>
+                        <span onClick={() => setShowForgot(false)}>Torna al Login</span>
                     </div>
                 </div>
             </div>
@@ -247,6 +302,21 @@ const Auth = () => {
                     <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                         {loading ? 'Caricamento...' : (isLogin ? 'Accedi' : 'Registrati')}
                     </button>
+
+                    {isLogin && (
+                        <div className="auth-forgot-link" style={{ textAlign: 'right', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                            <span
+                                onClick={() => {
+                                    setShowForgot(true);
+                                    setError('');
+                                    setMessage('');
+                                }}
+                                style={{ color: 'var(--primary-blue)', cursor: 'pointer', opacity: 0.8 }}
+                            >
+                                Password dimenticata?
+                            </span>
+                        </div>
+                    )}
                 </form>
 
                 <div className="auth-switch">

@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List, Optional
 from ..database import get_session
 from ..models import Account, Participant
-from ..auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token
+from ..auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token
 from pydantic import EmailStr, BaseModel
 import os
 from dotenv import load_dotenv
@@ -26,6 +26,13 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 @router.get("/test-register")
 async def test_register():
@@ -188,3 +195,89 @@ async def toggle_subscription(email: str = Body(..., embed=True), session: Sessi
     session.refresh(account)
     
     return {"is_subscribed": account.is_subscribed}
+
+@router.post("/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends(get_session)):
+    statement = select(Account).where(Account.email == req.email)
+    account = session.exec(statement).first()
+    
+    if not account:
+        return {"message": "Se l'email è registrata, riceverai un link di reset."}
+    
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if smtp_user and smtp_password:
+        try:
+            reset_token = create_reset_token(email=req.email)
+            frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
+            reset_url = f"{frontend_url}/reset-password?token={reset_token}"
+            
+            message = MessageSchema(
+                subject="Reset della password SplitPlan",
+                recipients=[req.email],
+                body=f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h1 style="color: #23599E;">Reset Password</h1>
+                        <p>Ciao <strong>{account.name}</strong>,</p>
+                        <p>Abbiamo ricevuto una richiesta di reset per la tua password. Clicca il pulsante qui sotto per impostarne una nuova:</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_url}" 
+                               style="background: #E87C3E; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 8px; font-weight: bold;">
+                                Reimposta Password
+                            </a>
+                        </div>
+                        <p style="color: #666; font-size: 0.9em;">Il link scadrà tra 1 ora.</p>
+                        <p style="color: #666; font-size: 0.9em;">
+                            Se non riesci a cliccare il pulsante, copia e incolla questo link nel browser:<br/>
+                            <a href="{reset_url}">{reset_url}</a>
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+                        <p style="color: #999; font-size: 0.8em;">
+                            Se non hai richiesto tu il reset, ignora questa email.
+                        </p>
+                    </div>
+                """,
+                subtype=MessageType.html
+            )
+            
+            conf = ConnectionConfig(
+                MAIL_USERNAME=smtp_user,
+                MAIL_PASSWORD=smtp_password,
+                MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
+                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
+                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+                MAIL_STARTTLS=True,
+                MAIL_SSL_TLS=False,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True
+            )
+
+            fm = FastMail(conf)
+            await fm.send_message(message)
+            
+        except Exception as e:
+            print(f"[ERROR] Reset Password Email failed: {e}")
+            raise HTTPException(status_code=500, detail="Errore nell'invio dell'email di reset")
+            
+    return {"message": "Email di reset inviata correttamente."}
+
+@router.post("/reset-password")
+async def reset_password(req: ResetPasswordRequest, session: Session = Depends(get_session)):
+    payload = decode_token(req.token)
+    if not payload or payload.get("type") != "reset":
+        raise HTTPException(status_code=400, detail="Token non valido o scaduto")
+    
+    email = payload.get("sub")
+    statement = select(Account).where(Account.email == email)
+    account = session.exec(statement).first()
+    
+    if not account:
+        raise HTTPException(status_code=404, detail="Account non trovato")
+    
+    account.hashed_password = get_password_hash(req.new_password)
+    session.add(account)
+    session.commit()
+    
+    return {"message": "Password aggiornata con successo! Ora puoi accedere."}

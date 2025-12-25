@@ -30,6 +30,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def create_verification_token(email: str):
     return create_access_token(data={"sub": email, "type": "verification"}, expires_delta=timedelta(hours=24))
 
+def create_reset_token(email: str):
+    return create_access_token(data={"sub": email, "type": "reset"}, expires_delta=timedelta(hours=1))
+
+
 def decode_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

@@ -9,8 +9,10 @@ import Pricing from './components/Pricing';
 import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
+
 
 function Landing() {
   return (
@@ -43,7 +45,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
         <Route path="/trip/:id" element={<Dashboard />} />
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

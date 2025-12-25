@@ -9,6 +9,8 @@ class Account(SQLModel, table=True):
     surname: str
     is_verified: bool = False
     is_subscribed: bool = False
+    reset_in_progress: bool = False
+
 
 class TripBase(SQLModel):
     name: str

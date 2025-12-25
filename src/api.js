@@ -236,3 +236,12 @@ export const resetPassword = async (token, new_password) => {
     });
     return handleResponse(response);
 };
+
+export const validateResetToken = async (token) => {
+    const response = await fetch(`${API_URL}/users/validate-reset-token?token=${token}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+    return handleResponse(response);
+};
+

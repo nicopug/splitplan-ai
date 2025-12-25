@@ -148,6 +148,26 @@ async def verify_email(token: str, session: Session = Depends(get_session)):
     
     return {"message": "Email verificata con successo!"}
 
+@router.get("/validate-reset-token")
+async def validate_reset_token(token: str, session: Session = Depends(get_session)):
+    payload = decode_token(token)
+    if not payload or payload.get("type") != "reset":
+        raise HTTPException(status_code=400, detail="Token non valido o scaduto")
+    
+    email = payload.get("sub")
+    statement = select(Account).where(Account.email == email)
+    account = session.exec(statement).first()
+    
+    if not account:
+        raise HTTPException(status_code=404, detail="Account non trovato")
+    
+    # Una volta che il link viene "cliccato" (validato), blocchiamo la vecchia password
+    account.reset_in_progress = True
+    session.add(account)
+    session.commit()
+    
+    return {"message": "Token valido. Prosegui con il reset."}
+
 @router.post("/login")
 async def login(req: LoginRequest, session: Session = Depends(get_session)):
     statement = select(Account).where(Account.email == req.email)
@@ -156,6 +176,9 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
     if not account or not verify_password(req.password, account.hashed_password):
         raise HTTPException(status_code=401, detail="Email o password non corretti")
     
+    if account.reset_in_progress:
+        raise HTTPException(status_code=403, detail="Reset della password in corso. Usa il link inviato via email.")
+
     if not account.is_verified:
         raise HTTPException(status_code=403, detail="Profilo non verificato. Controlla la tua email.")
     
@@ -256,12 +279,15 @@ async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends
 
             fm = FastMail(conf)
             await fm.send_message(message)
+            return {"message": "Email di reset inviata correttamente."}
             
         except Exception as e:
             print(f"[ERROR] Reset Password Email failed: {e}")
             raise HTTPException(status_code=500, detail="Errore nell'invio dell'email di reset")
-            
-    return {"message": "Email di reset inviata correttamente."}
+    else:
+        print("[ERROR] SMTP Credentials missing!")
+        raise HTTPException(status_code=500, detail="Configurazione email mancante sul server")
+
 
 @router.post("/reset-password")
 async def reset_password(req: ResetPasswordRequest, session: Session = Depends(get_session)):
@@ -277,6 +303,7 @@ async def reset_password(req: ResetPasswordRequest, session: Session = Depends(g
         raise HTTPException(status_code=404, detail="Account non trovato")
     
     account.hashed_password = get_password_hash(req.new_password)
+    account.reset_in_progress = False # Sblocchiamo l'accesso con la nuova password
     session.add(account)
     session.commit()
     

@@ -1,177 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables (mantieni per compatibilità con codice esistente) */
 :root {
-  /* Brand Colors extracted/inspired by logo */
   --primary-blue: #23599e;
   --secondary-blue: #aecede;
   --accent-orange: #f48c06;
   --accent-green: #2ca02c;
   --dark-navy: #1a2a3a;
-
-  /* Backgrounds */
   --bg-creme: #fbf8ef;
-  /* Extracted background */
   --bg-white: #ffffff;
   --bg-soft-gray: #f5f5f5;
-
-  /* Text */
   --text-main: #2d3436;
   --text-muted: #636e72;
   --text-light: #fbf8ef;
-
-  /* Spacing & Layout */
   --container-width: 1200px;
   --header-height: 80px;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-
-  /* Shadows */
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* Base Styles con Tailwind */
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-creme);
-  color: var(--text-main);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    @apply font-sans antialiased leading-relaxed;
+    background-color: var(--bg-creme);
+    color: var(--text-main);
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: 'Outfit', sans-serif;
-  /* Setup in HTML later */
-  color: var(--primary-blue);
-  line-height: 1.2;
-  margin-bottom: 1rem;
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading leading-tight mb-4;
+    font-family: 'Outfit', sans-serif;
+    color: var(--primary-blue);
+  }
 
-h1 {
-  font-size: 3.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-h2 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-h3 {
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-p {
-  margin-bottom: 1.5rem;
-  font-size: 1.125rem;
-  color: var(--text-muted);
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.2s ease;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  font-family: inherit;
-}
-
-/* Utilities */
-.container {
-  max-width: var(--container-width);
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary {
-  background: var(--primary-blue);
-  color: white;
-}
-
-.btn-secondary {
-  background: white;
-  color: var(--primary-blue);
-  border: 2px solid var(--primary-blue);
-}
-
-.btn-accent {
-  background: var(--accent-orange);
-  color: white;
-}
-
-.section {
-  padding: 5rem 0;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-@media (max-width: 768px) {
   h1 {
-    font-size: 2.5rem;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight;
   }
 
   h2 {
-    font-size: 2rem;
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight;
   }
 
-  .grid-2,
-  .grid-3 {
-    grid-template-columns: 1fr;
+  h3 {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  p {
+    @apply mb-6 text-base md:text-lg;
+    color: var(--text-muted);
+  }
+
+  a {
+    @apply no-underline transition-all duration-200;
+    color: inherit;
+  }
+
+  button {
+    @apply cursor-pointer border-0;
+    font-family: inherit;
   }
 }
 
+/* Component Styles */
+@layer components {
+
+  /* Container Responsive */
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn:hover:not(:disabled) {
+    @apply -translate-y-0.5 shadow-md;
+  }
+
+  .btn-primary {
+    background: var(--primary-blue);
+    @apply text-white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply opacity-90;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--primary-blue);
+    @apply border-2;
+    border-color: var(--primary-blue);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--primary-blue);
+    @apply text-white;
+  }
+
+  .btn-accent {
+    background: var(--accent-orange);
+    @apply text-white;
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    @apply opacity-90;
+  }
+
+  /* Sections */
+  .section {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  /* Text Utilities */
+  .text-center {
+    @apply text-center;
+  }
+
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  /* Grid Responsive */
+  .grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12;
+  }
+
+  .grid-3 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-lg md:rounded-xl lg:rounded-2xl p-4 md:p-6;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Glass Effect */
+  .auth-glass-card {
+    @apply bg-white bg-opacity-70 backdrop-blur-lg border border-white border-opacity-30 rounded-lg md:rounded-2xl;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-blue to-accent-orange bg-clip-text text-transparent;
+  }
+
+  /* Spinner Animation */
+  .spinner {
+    @apply border-2 border-white border-opacity-30 border-t-white rounded-full w-5 h-5 animate-spin inline-block mr-2;
+  }
+
+  /* Text Muted */
+  .text-muted {
+    color: var(--text-muted);
+  }
+}
+
+/* Animations */
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -182,14 +187,9 @@ button {
   }
 }
 
-.spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top: 3px solid white;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  margin-right: 10px;
-  vertical-align: middle;
+/* Mobile Fixes */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
 }

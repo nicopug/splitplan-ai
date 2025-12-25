@@ -20,6 +20,7 @@ const Auth = () => {
     const [showForgot, setShowForgot] = useState(false);
     const [forgotEmail, setForgotEmail] = useState('');
     const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
+    const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -266,15 +267,24 @@ const Auth = () => {
 
                     <div className="auth-field">
                         <label>Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                        />
-                        {!isLogin && formData.password && (
+                        <div className="password-input-wrapper">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                placeholder="••••••••"
+                            />
+                            <button
+                                type="button"
+                                className="toggle-password"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                        </div>
+                        {formData.password && !isLogin && (
                             <div className="strength-meter">
                                 <div
                                     className="strength-bar"
@@ -288,14 +298,23 @@ const Auth = () => {
                     {!isLogin && (
                         <div className="auth-field">
                             <label>Conferma Password</label>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                placeholder="••••••••"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                            />
+                            <div className="password-input-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
                         </div>
                     )}
 

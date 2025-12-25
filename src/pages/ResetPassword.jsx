@@ -16,6 +16,7 @@ const ResetPassword = () => {
     const [message, setMessage] = useState('');
     const [isValidating, setIsValidating] = useState(true);
     const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
+    const [showPassword, setShowPassword] = useState(false);
 
     const validatePassword = (pass) => {
         let score = 0;
@@ -107,16 +108,25 @@ const ResetPassword = () => {
                     <form onSubmit={handleSubmit} className="auth-form">
                         <div className="auth-field">
                             <label>Nuova Password</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={e => {
-                                    setPassword(e.target.value);
-                                    validatePassword(e.target.value);
-                                }}
-                                required
-                                placeholder="••••••••"
-                            />
+                            <div className="password-input-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={e => {
+                                        setPassword(e.target.value);
+                                        validatePassword(e.target.value);
+                                    }}
+                                    required
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
                             {password && (
                                 <div className="strength-meter">
                                     <div
@@ -129,13 +139,22 @@ const ResetPassword = () => {
                         </div>
                         <div className="auth-field">
                             <label>Conferma Nuova Password</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={e => setConfirmPassword(e.target.value)}
-                                required
-                                placeholder="••••••••"
-                            />
+                            <div className="password-input-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                             {loading ? 'Aggiornamento...' : 'Aggiorna Password'}

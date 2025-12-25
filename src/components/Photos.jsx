@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { uploadPhoto, getPhotos, deletePhoto } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useModal } from '../context/ModalContext';
 
 const Photos = ({ trip }) => {
     const { showToast } = useToast();
+    const { showConfirm } = useModal();
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState(null); // Stato per la foto ingrandita
@@ -27,7 +29,11 @@ const Photos = ({ trip }) => {
     };
 
     const handleDelete = async (photoId) => {
-        if (!window.confirm("Sei sicuro di voler eliminare questa foto?")) return;
+        const confirmed = await showConfirm(
+            "Elimina Foto",
+            "Sei sicuro di voler eliminare questa foto? L'azione è irreversibile."
+        );
+        if (!confirmed) return;
 
         try {
             await deletePhoto(photoId);
@@ -40,6 +46,7 @@ const Photos = ({ trip }) => {
             showToast("Errore nell'eliminazione della foto: " + error.message, "error");
         }
     };
+
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];

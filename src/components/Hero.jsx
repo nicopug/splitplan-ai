@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { createTrip } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { useModal } from '../context/ModalContext';
 
 const Hero = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
+    const { showPrompt } = useModal();
     const [user, setUser] = useState(null);
     const [showTypeSelection, setShowTypeSelection] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -27,7 +29,12 @@ const Hero = () => {
 
     const handleCreateTrip = async (type) => {
         setShowTypeSelection(false);
-        const tripName = prompt(type === 'SOLO' ? "Nome della tua avventura solitaria?" : "Nome del viaggio di gruppo?");
+
+        const title = type === 'SOLO' ? "Nuova Avventura Solitaria" : "Nuovo Viaggio di Gruppo";
+        const message = type === 'SOLO' ? "Come vuoi chiamare la tua avventura?" : "Che nome diamo a questo viaggio?";
+        const placeholder = type === 'SOLO' ? "Es: Il mio cammino" : "Es: Estate 2024 Corfù";
+
+        const tripName = await showPrompt(title, message, placeholder);
         if (!tripName) return;
 
         setLoading(true);
@@ -44,6 +51,7 @@ const Hero = () => {
             setLoading(false);
         }
     };
+
 
 
     return (

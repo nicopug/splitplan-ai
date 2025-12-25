@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { voteProposal, simulateVotes, getParticipants } from '../api';
+import { voteProposal, getParticipants } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useModal } from '../context/ModalContext';
 
 const Voting = ({ proposals, trip, onVoteComplete }) => {
     const { showToast } = useToast();
+    const { showConfirm } = useModal();
     const [votedId, setVotedId] = useState(null);
     const [stats, setStats] = useState({ count: 0, total: trip.num_people });
     const isSolo = trip.trip_type === 'SOLO';
@@ -61,17 +63,6 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         }
     };
 
-    const handleSimulate = async () => {
-        if (!confirm("Vuoi simulare il voto degli altri partecipanti per demo?")) return;
-        try {
-            await simulateVotes(trip.id);
-            showToast("Voti simulati! Il viaggio è confermato.", "success");
-            onVoteComplete();
-        } catch (e) {
-            showToast("Errore simulazione: " + e.message, "error");
-        }
-    };
-
 
     return (
         <div className="section py-8 md:py-12">
@@ -109,20 +100,10 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                     ))}
                                 </select>
                             </div>
-
-                            {/* Simulate Button */}
-                            {stats.count > 0 && stats.count < stats.total && (
-                                <button
-                                    onClick={handleSimulate}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 
-                                             rounded-full text-sm font-medium text-gray-700 transition-colors"
-                                >
-                                    ⚡ Demo: Simula Voti Mancanti
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>
+
 
                 {/* Proposals Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">

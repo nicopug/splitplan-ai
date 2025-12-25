@@ -314,6 +314,10 @@ async def reset_password(req: ResetPasswordRequest, session: Session = Depends(g
     if not account:
         raise HTTPException(status_code=404, detail="Account non trovato")
     
+    # Verifichiamo che la nuova password non sia uguale alla vecchia
+    if verify_password(req.new_password, account.hashed_password):
+        raise HTTPException(status_code=400, detail="La nuova password non può essere uguale a quella attuale")
+    
     account.hashed_password = get_password_hash(req.new_password)
     account.reset_in_progress = False # Sblocchiamo l'accesso con la nuova password
     session.add(account)

@@ -15,6 +15,24 @@ const ResetPassword = () => {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [isValidating, setIsValidating] = useState(true);
+    const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
+
+    const validatePassword = (pass) => {
+        let score = 0;
+        if (pass.length > 8) score++;
+        if (/[A-Z]/.test(pass)) score++;
+        if (/[0-9]/.test(pass)) score++;
+        if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+        const labels = ['Troppo debole', 'Debole', 'Media', 'Forte', 'Molto Forte'];
+        const colors = ['#ff4d4d', '#ffa64d', '#ffdb4d', '#99ff33', '#00ff00'];
+
+        setStrength({
+            score: (score / 4) * 100,
+            label: labels[score],
+            color: colors[score]
+        });
+    };
 
     useEffect(() => {
         const validate = async () => {
@@ -92,10 +110,22 @@ const ResetPassword = () => {
                             <input
                                 type="password"
                                 value={password}
-                                onChange={e => setPassword(e.target.value)}
+                                onChange={e => {
+                                    setPassword(e.target.value);
+                                    validatePassword(e.target.value);
+                                }}
                                 required
                                 placeholder="••••••••"
                             />
+                            {password && (
+                                <div className="strength-meter">
+                                    <div
+                                        className="strength-bar"
+                                        style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
+                                    ></div>
+                                    <span style={{ color: strength.color }}>{strength.label}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="auth-field">
                             <label>Conferma Nuova Password</label>

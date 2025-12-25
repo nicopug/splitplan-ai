@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { voteProposal, simulateVotes, getParticipants } from '../api';
+import { useToast } from '../context/ToastContext';
 
 const Voting = ({ proposals, trip, onVoteComplete }) => {
+    const { showToast } = useToast();
     const [votedId, setVotedId] = useState(null);
     const [stats, setStats] = useState({ count: 0, total: trip.num_people });
     const isSolo = trip.trip_type === 'SOLO';
@@ -25,14 +27,14 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
-            alert("Seleziona chi sta votando dal menu a tendina!");
+            showToast("Seleziona chi sta votando dal menu a tendina!", "info");
             return;
         }
 
         const voterId = isSolo ? (participants[0]?.id) : selectedUser;
 
         if (!voterId) {
-            alert("Errore: Partecipante non trovato.");
+            showToast("Errore: Partecipante non trovato.", "error");
             return;
         }
 
@@ -46,14 +48,14 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
             }
 
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
-                if (!isSolo) alert("Consenso raggiunto! Si procede.");
+                if (!isSolo) showToast("Consenso raggiunto! Si procede.", "success");
                 onVoteComplete();
             } else {
                 const voterName = participants.find(p => p.id == voterId)?.name || 'Utente';
-                alert(`Voto di ${voterName} registrato! (${res.votes_count}/${res.required})`);
+                showToast(`Voto di ${voterName} registrato! (${res.votes_count}/${res.required})`, "success");
             }
         } catch (e) {
-            alert("Errore voto: " + e.message);
+            showToast("Errore voto: " + e.message, "error");
         } finally {
             if (!isSolo) setLoadingProposalId(null);
         }
@@ -63,12 +65,13 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         if (!confirm("Vuoi simulare il voto degli altri partecipanti per demo?")) return;
         try {
             await simulateVotes(trip.id);
-            alert("Voti simulati! Il viaggio è confermato.");
+            showToast("Voti simulati! Il viaggio è confermato.", "success");
             onVoteComplete();
         } catch (e) {
-            alert("Errore simulazione: " + e.message);
+            showToast("Errore simulazione: " + e.message, "error");
         }
     };
+
 
     return (
         <div className="section py-8 md:py-12">

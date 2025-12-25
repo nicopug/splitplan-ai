@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { addExpense, getExpenses, getBalances, getParticipants } from '../api';
+import { useToast } from '../context/ToastContext';
 
 const Finance = ({ trip }) => {
+    const { showToast } = useToast();
     const [tab, setTab] = useState('list');
     const [expenses, setExpenses] = useState([]);
     const [balances, setBalances] = useState([]);
@@ -40,7 +42,7 @@ const Finance = ({ trip }) => {
     const handleAddExpense = async (e) => {
         e.preventDefault();
         if (!payerId) {
-            alert("Devi selezionare chi ha pagato!");
+            showToast("Devi selezionare chi ha pagato!", "info");
             return;
         }
         try {
@@ -54,11 +56,13 @@ const Finance = ({ trip }) => {
             setShowForm(false);
             setTitle('');
             setAmount('');
+            showToast("Spesa aggiunta correttamente! 💸", "success");
             fetchData();
         } catch (error) {
-            alert("Errore: " + error.message);
+            showToast("Errore: " + error.message, "error");
         }
     };
+
 
     const getUserName = (id) => {
         const u = participants.find(p => p.id === id);

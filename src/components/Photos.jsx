@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { uploadPhoto, getPhotos, deletePhoto } from '../api';
+import { useToast } from '../context/ToastContext';
 
 const Photos = ({ trip }) => {
+    const { showToast } = useToast();
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState(null); // Stato per la foto ingrandita
@@ -33,8 +35,9 @@ const Photos = ({ trip }) => {
             if (selectedPhoto && selectedPhoto.id === photoId) {
                 setSelectedPhoto(null); // Chiudi se elimini la foto aperta
             }
+            showToast("Foto eliminata con successo.", "success");
         } catch (error) {
-            alert("Errore nell'eliminazione della foto: " + error.message);
+            showToast("Errore nell'eliminazione della foto: " + error.message, "error");
         }
     };
 
@@ -46,12 +49,14 @@ const Photos = ({ trip }) => {
         try {
             await uploadPhoto(trip.id, file);
             await fetchPhotos(); // Refresh list
+            showToast("Foto caricata con successo!", "success");
         } catch (error) {
-            alert("Errore nel caricamento della foto: " + error.message);
+            showToast("Errore nel caricamento della foto: " + error.message, "error");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="container section">

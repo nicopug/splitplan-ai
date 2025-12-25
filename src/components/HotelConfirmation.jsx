@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { confirmHotel } from '../api';
+import { useToast } from '../context/ToastContext';
 
 const HotelConfirmation = ({ trip, onConfirm }) => {
+    const { showToast } = useToast();
     const [hotelName, setHotelName] = useState('');
     const [hotelAddress, setHotelAddress] = useState('');
     const [flightCost, setFlightCost] = useState('');
@@ -22,14 +24,16 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                 arrival_time: arrivalTime,
                 return_time: returnTime
             });
+            showToast("Logistica confermata! Itinerario generato. ✨", "success");
             onConfirm(); // Refresh trip
         } catch (error) {
             console.error("Error confirming hotel:", error);
-            alert("Errore nella conferma dell'hotel.");
+            showToast("Errore nella conferma dell'hotel.", "error");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="section container" style={{ marginTop: '2rem' }}>

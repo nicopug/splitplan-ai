@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createTrip } from '../api';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const Hero = () => {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [user, setUser] = useState(null);
     const [showTypeSelection, setShowTypeSelection] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -34,13 +36,15 @@ const Hero = () => {
                 name: tripName,
                 trip_type: type
             });
+            showToast("Viaggio creato con successo! ✈️", "success");
             navigate(`/trip/${data.trip_id}`);
         } catch (error) {
-            alert("Errore: " + error.message);
+            showToast("Errore: " + error.message, "error");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <header className="section pt-8 pb-12 md:pt-12 md:pb-24 relative overflow-hidden">

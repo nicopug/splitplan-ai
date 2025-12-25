@@ -25,10 +25,14 @@ function Landing() {
   )
 }
 
+import Toast from './components/Toast'
+
 function App() {
   return (
     <>
+      <Toast />
       <Routes>
+
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={
           <>

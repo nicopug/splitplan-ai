@@ -10,10 +10,12 @@ import HotelConfirmation from '../components/HotelConfirmation';
 import Photos from '../components/Photos';
 import Chatbot from '../components/Chatbot';
 import Budget from '../components/Budget';
+import { useToast } from '../context/ToastContext';
 
 const Dashboard = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [trip, setTrip] = useState(null);
     const [proposals, setProposals] = useState([]);
     const [itinerary, setItinerary] = useState([]);
@@ -58,7 +60,7 @@ const Dashboard = () => {
             setProposals(props);
             setTrip(prev => ({ ...prev, status: 'VOTING', num_people: surveyData.num_people }));
         } catch (e) {
-            alert("Errore generazione: " + e.message);
+            showToast("Errore generazione: " + e.message, "error");
         } finally {
             setIsGenerating(false);
         }
@@ -68,8 +70,9 @@ const Dashboard = () => {
         setLoading(true);
         await fetchTrip();
         setLoading(false);
-        alert("🎉 Viaggio Confermato!");
+        showToast("🎉 Viaggio Confermato!", "success");
     };
+
 
     if (loading) return <div className="section text-center">Caricamento in corso... ⏳</div>;
     if (!trip) return <div className="section text-center">Viaggio non trovato 😕</div>;

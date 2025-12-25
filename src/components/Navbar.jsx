@@ -4,6 +4,7 @@ import logo from '../assets/logo_splitplan.jpg';
 
 const Navbar = () => {
     const [user, setUser] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -14,44 +15,173 @@ const Navbar = () => {
         }
     }, []);
 
+    // Chiudi menu quando cambia pagina
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
         navigate('/');
+        setMobileMenuOpen(false);
     };
 
     return (
-        <nav style={{ height: 'var(--header-height)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem' }}>
-            <div className="logo" style={{ display: 'flex', alignItems: 'center' }}>
-                <Link to="/">
-                    <img src={logo} alt="SplitPlan Logo" style={{ height: '60px', width: 'auto', mixBlendMode: 'multiply', filter: 'brightness(1.05) contrast(1.05)' }} />
-                </Link>
-            </div>
-            <div className="links" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                {location.pathname === '/' && (
-                    <>
-                        <a href="#how-it-works" style={{ fontWeight: '500' }}>Come Funziona</a>
-                        <a href="#features" style={{ fontWeight: '500' }}>Funzionalità</a>
-                        <a href="#pricing" style={{ fontWeight: '500' }}>Prezzi</a>
-                    </>
-                )}
+        <nav className="sticky top-0 z-50 bg-bg-creme border-b border-gray-200 backdrop-blur-sm bg-opacity-95">
+            <div className="container">
+                <div className="flex items-center justify-between h-20 md:h-24">
 
-                {user ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ fontWeight: '600', color: 'var(--primary-blue)' }}>
-                            Ciao, {user.name} {user.is_subscribed ? '💎' : ''}
-                        </span>
-                        <button onClick={handleLogout} className="btn-secondary" style={{ padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.9rem' }}>
-                            Esci
-                        </button>
-                    </div>
-                ) : (
-                    <Link to="/auth" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}>
-                        Accedi
+                    {/* Logo */}
+                    <Link to="/" className="flex items-center">
+                        <img
+                            src={logo}
+                            alt="SplitPlan Logo"
+                            className="h-12 md:h-16 w-auto mix-blend-multiply hover:scale-105 transition-transform"
+                        />
                     </Link>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-8">
+                        {location.pathname === '/' && (
+                            <>
+                                <a
+                                    href="#how-it-works"
+                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
+                                >
+                                    Come Funziona
+                                </a>
+                                <a
+                                    href="#features"
+                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
+                                >
+                                    Funzionalità
+                                </a>
+                                <a
+                                    href="#pricing"
+                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
+                                >
+                                    Prezzi
+                                </a>
+                            </>
+                        )}
+
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <span className="font-semibold text-primary-blue flex items-center gap-2">
+                                    Ciao, {user.name}
+                                    {user.is_subscribed && <span className="text-xl">💎</span>}
+                                </span>
+                                <button
+                                    onClick={handleLogout}
+                                    className="btn-secondary px-4 py-2 text-sm rounded-lg"
+                                >
+                                    Esci
+                                </button>
+                            </div>
+                        ) : (
+                            <Link to="/auth" className="btn btn-primary px-6 py-2.5 text-base">
+                                Accedi
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        aria-label="Toggle menu"
+                    >
+                        <svg
+                            className="w-6 h-6 text-text-main"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            {mobileMenuOpen ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            )}
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Mobile Menu Dropdown */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-gray-200 py-4 animate-slideDown">
+                        <div className="flex flex-col gap-4">
+
+                            {location.pathname === '/' && (
+                                <>
+                                    <a
+                                        href="#how-it-works"
+                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        Come Funziona
+                                    </a>
+                                    <a
+                                        href="#features"
+                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        Funzionalità
+                                    </a>
+                                    <a
+                                        href="#pricing"
+                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        Prezzi
+                                    </a>
+                                    <div className="border-t border-gray-200 my-2"></div>
+                                </>
+                            )}
+
+                            {user ? (
+                                <>
+                                    <div className="px-4 py-2">
+                                        <span className="font-semibold text-primary-blue flex items-center gap-2">
+                                            Ciao, {user.name}
+                                            {user.is_subscribed && <span className="text-xl">💎</span>}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="mx-4 btn-secondary px-4 py-2 text-sm rounded-lg text-center"
+                                    >
+                                        Esci
+                                    </button>
+                                </>
+                            ) : (
+                                <Link
+                                    to="/auth"
+                                    className="mx-4 btn btn-primary px-6 py-2.5 text-center"
+                                >
+                                    Accedi
+                                </Link>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
+
+            {/* Inline Animation */}
+            <style jsx>{`
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .animate-slideDown {
+                    animation: slideDown 0.2s ease-out;
+                }
+            `}</style>
         </nav>
     );
 };

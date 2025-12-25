@@ -9,6 +9,7 @@ const Finance = ({ trip }) => {
     const [balances, setBalances] = useState([]);
     const [participants, setParticipants] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -16,6 +17,7 @@ const Finance = ({ trip }) => {
     const [payerId, setPayerId] = useState('');
 
     const fetchData = async () => {
+        setLoading(true);
         try {
             const [exp, bal, parts] = await Promise.all([
                 getExpenses(trip.id),
@@ -32,12 +34,18 @@ const Finance = ({ trip }) => {
             }
         } catch (e) {
             console.error(e);
+            showToast("Errore nel caricamento dei dati: " + e.message, "error");
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-    }, [trip.id]);
+        if (trip?.id) {
+            fetchData();
+        }
+    }, [trip?.id]);
+
 
     const handleAddExpense = async (e) => {
         e.preventDefault();
@@ -73,72 +81,83 @@ const Finance = ({ trip }) => {
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem' }}>Spese & Bilancio 💸</h2>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '1rem' }}>
-                <button onClick={() => setTab('list')} className={tab === 'list' ? 'btn btn-primary' : 'btn btn-secondary'}>
-                    Lista Movimenti 🧾
-                </button>
-                <button onClick={() => setTab('balances')} className={tab === 'balances' ? 'btn btn-primary' : 'btn btn-secondary'}>
-                    Chi deve a Chi? ⚖️
-                </button>
-            </div>
-
-            {/* Add Expense Button */}
-            <div className="text-center" style={{ marginBottom: '2rem' }}>
-                <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ background: 'var(--accent-orange)' }}>
-                    + Aggiungi Spesa
-                </button>
-            </div>
-
-            {/* Form */}
-            {showForm && (
-                <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', boxShadow: 'var(--shadow-md)' }}>
-
-                    {/* CONTROLLO DI SICUREZZA: SE NON CI SONO PARTECIPANTI */}
-                    {participants.length === 0 ? (
-                        <div style={{ textAlign: 'center', color: '#dc3545', padding: '1rem' }}>
-                            <strong>⚠️ Nessun partecipante trovato in questo viaggio.</strong>
-                            <p style={{ fontSize: '0.9rem' }}>Impossibile aggiungere spese. Prova a creare un nuovo viaggio.</p>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleAddExpense}>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
-                                <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
-                            </div>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
-                                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="100" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
-                            </div>
-
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
-                                <select
-                                    value={payerId}
-                                    onChange={e => setPayerId(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.8rem',
-                                        borderRadius: '8px',
-                                        border: '1px solid #ddd',
-                                        background: 'white',
-                                        color: '#333',
-                                        fontSize: '1rem',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    {participants.map(p => (
-                                        <option key={p.id} value={p.id} style={{ color: 'black' }}>
-                                            {p.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
-                        </form>
-                    )}
+            {loading ? (
+                <div className="text-center py-12">
+                    <div className="spinner-large" style={{ margin: '0 auto 1.5rem' }}></div>
+                    <p className="text-muted">Recupero dati finanziari...</p>
                 </div>
+            ) : (
+                <>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '1rem' }}>
+                        <button onClick={() => setTab('list')} className={tab === 'list' ? 'btn btn-primary' : 'btn btn-secondary'}>
+                            Lista Movimenti 🧾
+                        </button>
+                        <button onClick={() => setTab('balances')} className={tab === 'balances' ? 'btn btn-primary' : 'btn btn-secondary'}>
+                            Chi deve a Chi? ⚖️
+                        </button>
+                    </div>
+
+                    {/* Add Expense Button */}
+                    <div className="text-center" style={{ marginBottom: '2rem' }}>
+                        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ background: 'var(--accent-orange)' }}>
+                            {showForm ? 'Chiudi Form' : '+ Aggiungi Spesa'}
+                        </button>
+                    </div>
+
+                    {/* Form */}
+                    {showForm && (
+                        <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', boxShadow: 'var(--shadow-md)' }}>
+
+                            {/* CONTROLLO DI SICUREZZA: SE NON CI SONO PARTECIPANTI */}
+                            {participants.length === 0 ? (
+                                <div style={{ textAlign: 'center', color: '#dc3545', padding: '1rem' }}>
+                                    <strong>⚠️ Nessun partecipante trovato in questo viaggio.</strong>
+                                    <p style={{ fontSize: '0.9rem' }}>Impossibile aggiungere spese. Prova a ricaricare la pagina o verificare i partecipanti.</p>
+                                    <button onClick={fetchData} className="btn btn-secondary btn-sm mt-3">Riprova 🔄</button>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleAddExpense}>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
+                                        <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+                                    </div>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
+                                        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="100" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+                                    </div>
+
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
+                                        <select
+                                            value={payerId}
+                                            onChange={e => setPayerId(e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.8rem',
+                                                borderRadius: '8px',
+                                                border: '1px solid #ddd',
+                                                background: 'white',
+                                                color: '#333',
+                                                fontSize: '1rem',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {participants.map(p => (
+                                                <option key={p.id} value={p.id} style={{ color: 'black' }}>
+                                                    {p.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
+                                </form>
+                            )}
+                        </div>
+                    )}
+                </>
             )}
+
 
             {/* Content */}
             {tab === 'list' && (

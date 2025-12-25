@@ -32,7 +32,7 @@ const Hero = () => {
 
         const title = type === 'SOLO' ? "Nuova Avventura Solitaria" : "Nuovo Viaggio di Gruppo";
         const message = type === 'SOLO' ? "Come vuoi chiamare la tua avventura?" : "Che nome diamo a questo viaggio?";
-        const placeholder = type === 'SOLO' ? "Es: Il mio cammino" : "Es: Estate 2024 Corfù";
+        const placeholder = type === 'SOLO' ? "Es: Il mio viaggio" : "Es: Weekend a Parigi";
 
         const tripName = await showPrompt(title, message, placeholder);
         if (!tripName) return;

@@ -8,6 +8,7 @@ from pydantic import EmailStr, BaseModel
 import os
 from dotenv import load_dotenv
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+from sqlalchemy import text
 
 load_dotenv()
 
@@ -37,6 +38,17 @@ class ResetPasswordRequest(BaseModel):
 @router.get("/test-register")
 async def test_register():
     return {"message": "Endpoint raggiungibile!"}
+
+@router.get("/migrate-db-security")
+async def migrate_db_security(session: Session = Depends(get_session)):
+    try:
+        # Aggiungiamo la colonna reset_in_progress alla tabella account
+        # Usiamo text() per eseguire SQL grezzo
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS reset_in_progress BOOLEAN DEFAULT FALSE;"))
+        session.commit()
+        return {"message": "Migrazione completata con successo! La colonna reset_in_progress è stata aggiunta."}
+    except Exception as e:
+        return {"error": str(e), "message": "Potrebbe essere che la colonna esiste già o c'è un errore di connessione."}
 
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):

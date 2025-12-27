@@ -157,7 +157,18 @@
     @apply bg-white/70 backdrop-blur-lg border border-white/30 rounded-lg md:rounded-2xl;
     box-shadow: var(--shadow-lg);
   }
+
+  .premium-card-offset {
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .premium-card-offset {
+      margin-top: -20px !important;
+    }
+  }
 }
+
 
 
 /* Utility Classes */

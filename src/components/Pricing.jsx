@@ -23,15 +23,16 @@ const Pricing = ({ user }) => {
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
                     <h2>Scegli il tuo piano</h2>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                <div className="grid-2" style={{ justifyContent: 'center', maxWidth: '800px', margin: '0 auto' }}>
                     {/* Free Plan */}
                     <div style={{
                         background: 'white',
                         padding: '3rem 2rem',
                         borderRadius: '24px',
                         border: '1px solid #e0e0e0',
-                        flex: '1',
-                        maxWidth: '350px'
+                        width: '100%',
+                        maxWidth: '350px',
+                        margin: '0 auto'
                     }}>
                         <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Viaggiatore</h3>
                         <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
@@ -45,21 +46,19 @@ const Pricing = ({ user }) => {
                         <div style={{ textAlign: 'center' }}>
                             {isLoggedIn && !isPremium && <PlanBadge />}
                         </div>
-                        {!isLoggedIn && null}
-                        {isLoggedIn && isPremium && null}
                     </div>
 
                     {/* Premium Plan */}
-                    <div style={{
+                    <div className="premium-card-offset" style={{
                         background: 'var(--dark-navy)',
                         padding: '3rem 2rem',
                         borderRadius: '24px',
                         boxShadow: 'var(--shadow-lg)',
-                        flex: '1',
+                        width: '100%',
                         maxWidth: '350px',
                         position: 'relative',
                         color: 'white',
-                        marginTop: '-20px'
+                        margin: '0 auto'
                     }}>
                         <div style={{
                             position: 'absolute',
@@ -71,7 +70,8 @@ const Pricing = ({ user }) => {
                             padding: '0.25rem 1rem',
                             borderRadius: '20px',
                             fontSize: '0.8rem',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
                         }}>
                             CONSIGLIATO
                         </div>
@@ -92,6 +92,7 @@ const Pricing = ({ user }) => {
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
     );

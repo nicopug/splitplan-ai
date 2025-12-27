@@ -148,7 +148,7 @@ const Auth = () => {
                     <p style={{ marginBottom: '2.5rem', opacity: 0.8 }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
 
                     <div className="plans-grid">
-                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0' }}>
+                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0', margin: '0 auto', width: '100%' }}>
                             <div>
                                 <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Viaggiatore</h3>
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
@@ -163,8 +163,8 @@ const Auth = () => {
                             <button onClick={() => handlePlanChoice(false)} className="btn btn-secondary btn-full">Seleziona</button>
                         </div>
 
-                        <div className="plan-card premium" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white' }}>
-                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>CONSIGLIATO</div>
+                        <div className="plan-card premium premium-card-offset" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white', margin: '0 auto', width: '100%' }}>
+                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>CONSIGLIATO</div>
                             <div>
                                 <h3 style={{ fontSize: '1.5rem', color: 'white' }}>L'Organizzatore</h3>
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
@@ -179,6 +179,7 @@ const Auth = () => {
                             <button onClick={() => handlePlanChoice(true)} className="btn btn-accent btn-full">Attiva Premium</button>
                         </div>
                     </div>
+
                 </div>
             </div>
         );

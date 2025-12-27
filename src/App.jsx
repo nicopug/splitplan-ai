@@ -29,16 +29,45 @@ function Landing({ user }) {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   return (
     <div className="min-h-screen bg-bg-light">
+      {!isOnline && (
+        <div style={{
+          background: 'var(--accent-orange)',
+          color: 'white',
+          textAlign: 'center',
+          padding: '0.5rem',
+          fontSize: '0.85rem',
+          fontWeight: 'bold',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999
+        }}>
+          📴 Modalità Offline - Stai visualizzando i dati salvati
+        </div>
+      )}
       <Toast />
       <Modal />
       <Navbar user={user} />

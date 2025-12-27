@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
 @import "leaflet/dist/leaflet.css";
+@config "../tailwind.config.js";
 
 
 /* Custom CSS Variables (mantieni per compatibilità con codice esistente) */

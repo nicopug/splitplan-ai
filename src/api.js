@@ -68,10 +68,20 @@ export const createTrip = async (tripData) => {
 };
 
 export const getTrip = async (id) => {
-    const response = await fetch(`${API_URL}/trips/${id}`, {
-        headers: getAuthHeaders()
-    });
-    return handleResponse(response);
+    try {
+        const response = await fetch(`${API_URL}/trips/${id}`, {
+            headers: getAuthHeaders()
+        });
+        const data = await handleResponse(response);
+        // Cache successful response
+        localStorage.setItem(`cached_trip_${id}`, JSON.stringify(data));
+        return data;
+    } catch (error) {
+        console.warn("Using cached trip data due to error:", error);
+        const cached = localStorage.getItem(`cached_trip_${id}`);
+        if (cached) return JSON.parse(cached);
+        throw error;
+    }
 };
 
 export const generateProposals = async (tripId, preferences) => {
@@ -100,10 +110,20 @@ export const simulateVotes = async (tripId) => {
 };
 
 export const getItinerary = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/itinerary`, {
-        headers: getAuthHeaders()
-    });
-    return handleResponse(response);
+    try {
+        const response = await fetch(`${API_URL}/trips/${tripId}/itinerary`, {
+            headers: getAuthHeaders()
+        });
+        const data = await handleResponse(response);
+        // Cache successful response
+        localStorage.setItem(`cached_itinerary_${tripId}`, JSON.stringify(data));
+        return data;
+    } catch (error) {
+        console.warn("Using cached itinerary data due to error:", error);
+        const cached = localStorage.getItem(`cached_itinerary_${tripId}`);
+        if (cached) return JSON.parse(cached);
+        throw error;
+    }
 };
 
 export const optimizeItinerary = async (tripId) => {

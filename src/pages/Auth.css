@@ -148,3 +148,38 @@
     font-size: 0.75rem;
     font-weight: 600;
 }
+
+/* Plan Selection Responsive Styles */
+.auth-glass-card.plan-selection {
+    max-width: 900px;
+    padding: 2rem;
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+    .plans-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.plan-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.plan-card.premium {
+    box-shadow: 0 10px 25px rgba(35, 89, 158, 0.1);
+}

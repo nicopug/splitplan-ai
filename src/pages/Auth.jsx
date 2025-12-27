@@ -144,38 +144,46 @@ const Auth = () => {
         return (
             <div className="auth-container">
                 <div className="auth-glass-card plan-selection">
-                    <h2>Scegli il tuo Piano</h2>
-                    <p style={{ marginBottom: '2rem' }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
+                    <h2 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>Scegli il tuo Piano</h2>
+                    <p style={{ marginBottom: '2.5rem', opacity: 0.8 }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
 
-                    <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', textAlign: 'left' }}>
-                        <div className="plan-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.5)', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)' }}>Base (Free)</h3>
-                            <p className="price" style={{ fontSize: '1.5rem', fontWeight: '700', margin: '0.5rem 0' }}>€0</p>
-                            <ul style={{ paddingLeft: '1.2rem', fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
-                                <li>Pianificazione condivisa</li>
-                                <li>Votazione destinazione</li>
-                                <li>Gestione spese base</li>
-                            </ul>
-                            <button onClick={() => handlePlanChoice(false)} className="btn btn-secondary btn-full" style={{ fontSize: '0.9rem' }}>Seleziona</button>
+                    <div className="plans-grid">
+                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0' }}>
+                            <div>
+                                <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Viaggiatore</h3>
+                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
+                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>Tutto l'essenziale per organizzare.</p>
+                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Pianificazione AI Base</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Itinerari Smart</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Prenotazioni Integrate</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Chat di Gruppo</li>
+                                </ul>
+                            </div>
+                            <button onClick={() => handlePlanChoice(false)} className="btn btn-secondary btn-full">Seleziona</button>
                         </div>
 
-                        <div className="plan-card premium" style={{ padding: '1.5rem', background: 'rgba(35, 89, 158, 0.05)', borderRadius: '16px', border: '2px solid var(--primary-blue)', position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: '-12px', right: '10px', background: 'var(--primary-blue)', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem' }}>CONSIGLIATO</div>
-                            <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-blue)' }}>Premium 💎</h3>
-                            <p className="price" style={{ fontSize: '1.5rem', fontWeight: '700', margin: '0.5rem 0' }}>€9.99</p>
-                            <ul style={{ paddingLeft: '1.2rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                                <li>Tutto quello che c'è in Base</li>
-                                <li><b>Link Deep Booking & Skyscanner</b></li>
-                                <li>Supporto IA Prioritario</li>
-                                <li>Foto del viaggio illimitate</li>
-                            </ul>
-                            <button onClick={() => handlePlanChoice(true)} className="btn btn-primary btn-full" style={{ fontSize: '0.9rem' }}>Attiva Premium</button>
+                        <div className="plan-card premium" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white' }}>
+                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>CONSIGLIATO</div>
+                            <div>
+                                <h3 style={{ fontSize: '1.5rem', color: 'white' }}>L'Organizzatore</h3>
+                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
+                                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>Per chi vuole il controllo totale.</p>
+                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ CFO del Viaggio</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Budget Guard (Alert Spese)</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Assistenza AI Prioritaria</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✅ Export Video Ricordi</li>
+                                </ul>
+                            </div>
+                            <button onClick={() => handlePlanChoice(true)} className="btn btn-accent btn-full">Attiva Premium</button>
                         </div>
                     </div>
                 </div>
             </div>
         );
     }
+
 
     if (showForgot) {
 

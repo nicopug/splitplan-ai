@@ -90,6 +90,8 @@ class ItineraryItem(SQLModel, table=True):
     start_time: str 
     end_time: Optional[str] = None
     type: str 
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     
     trip: Optional[Trip] = Relationship(back_populates="itinerary_items")
 

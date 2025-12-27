@@ -100,17 +100,81 @@ def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
 
-@router.get("/migrate-db-departure")
-def migrate_db_departure(session: Session = Depends(get_session)):
-    """Aggiunge la colonna departure_city alla tabella trip"""
+@router.get("/migrate-db-coords")
+def migrate_db_coords(session: Session = Depends(get_session)):
+    """Aggiunge lat/lon alla tabella itineraryitem"""
     from sqlalchemy import text
     try:
-        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS departure_city VARCHAR;"))
+        session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS latitude FLOAT;"))
+        session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;"))
         session.commit()
-        return {"status": "success", "message": "Colonna departure_city aggiunta con successo."}
+        return {"status": "success", "message": "Colonne coordinate aggiunte."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
+
+@router.post("/{trip_id}/optimize")
+def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
+    try:
+        trip = session.get(Trip, trip_id)
+        items = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
+        
+        if len(items) < 3:
+            return {"status": "skipped", "message": "Troppi pochi elementi per ottimizzare."}
+
+        # Raggruppa per giorno
+        by_day = {}
+        for item in items:
+            day = item.start_time.split('T')[0]
+            if day not in by_day: by_day[day] = []
+            by_day[day].append(item)
+
+        total_updated = 0
+        for day, day_items in by_day.items():
+            # Separa checkin/checkout (fissi)
+            fixed = [i for i in day_items if i.type in ['CHECKIN', 'CHECKOUT']]
+            to_optimize = [i for i in day_items if i.type not in ['CHECKIN', 'CHECKOUT'] and i.latitude and i.longitude]
+            
+            if not to_optimize: continue
+
+            # Algoritmo Nearest Neighbor partendo dall'hotel (se disponibile) o dal primo elemento
+            start_lat, start_lon = None, None
+            if trip.accommodation_location:
+                 start_lat, start_lon = get_coordinates(trip.accommodation_location)
+            
+            if not start_lat and fixed:
+                start_lat, start_lon = fixed[0].latitude, fixed[0].longitude
+
+            curr_lat, curr_lon = start_lat or 0, start_lon or 0
+            ordered = []
+            pool = to_optimize[:]
+
+            while pool:
+                best_idx = 0
+                min_dist = float('inf')
+                for idx, p in enumerate(pool):
+                    dist = ((p.latitude - curr_lat)**2 + (p.longitude - curr_lon)**2)**0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        best_idx = idx
+                
+                next_item = pool.pop(best_idx)
+                ordered.append(next_item)
+                curr_lat, curr_lon = next_item.latitude, next_item.longitude
+
+            # Aggiorna gli orari (mantenendo lo slot originale ma in ordine nuovo)
+            times = sorted([i.start_time for i in to_optimize])
+            for i, item in enumerate(ordered):
+                item.start_time = times[i]
+                session.add(item)
+                total_updated += 1
+        
+        session.commit()
+        return {"status": "success", "updated_count": total_updated}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- ENDPOINTS CORE ---
 
@@ -276,18 +340,20 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             # OSM: Recupero locali reali
             hotel_lat, hotel_lon = get_coordinates(f"{trip.accommodation}, {proposal.destination}")
             real_places = get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
-            places_prompt = f"USA QUESTI NOMI REALI PER I PASTI: {', '.join(real_places[:10])}" if real_places else ""
+            places_prompt = f"USA OBBLIGATORIAMENTE QUESTI NOMI REALI PER I PASTI (NON SCRIVERE 'PRANZO IN ZONA' O SIMILI): {', '.join(real_places[:12])}" if real_places else "Cerca di inventare nomi di fantasia realistici o usa locali famosi della zona, NON usare frasi generiche come 'Pasto in ristorante locale'."
 
             prompt = f"""
             Crea un itinerario di {num_days} giorni a {proposal.destination}. Hotel: {trip.accommodation}.
             {places_prompt}
             Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
             
-            REGOLE:
+            REGOLE CRITICHE:
             1. JSON ARRAY. 
-            2. Includi Check-in, Pasti e Attività.
-            3. Lingua: Italiano.
-            FORMATO: [{{"title": "..", "description": "..", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY"}}]
+            2. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante specifico.
+            3. Ogni attività DEVE essere un luogo preciso (es. 'Museo del Prado' non 'Giro al museo').
+            4. Se non hai nomi reali da OSM, usa la tua conoscenza per suggerire locali reali e famosi a {proposal.destination}.
+            5. Lingua: Italiano.
+            FORMATO: [{{"title": "Nome Locale o Attività", "description": "Cosa fare/cosa mangiare", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN"}}]
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -298,7 +364,9 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             session.commit()
             
             for item in items_data:
-                session.add(ItineraryItem(trip_id=trip.id, **item))
+                # Tenta di geocodificare l'attività per futura ottimizzazione
+                lat, lon = get_coordinates(f"{item['title']}, {proposal.destination}")
+                session.add(ItineraryItem(trip_id=trip.id, latitude=lat, longitude=lon, **item))
             session.commit()
             return
         except Exception as e:

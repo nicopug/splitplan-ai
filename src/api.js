@@ -106,6 +106,14 @@ export const getItinerary = async (tripId) => {
     return handleResponse(response);
 };
 
+export const optimizeItinerary = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/optimize`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 export const getParticipants = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/participants`, {
         headers: getAuthHeaders()

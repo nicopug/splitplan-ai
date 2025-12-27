@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -10,6 +10,7 @@ import HotelConfirmation from '../components/HotelConfirmation';
 import Photos from '../components/Photos';
 import Chatbot from '../components/Chatbot';
 import Budget from '../components/Budget';
+import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 
 const Dashboard = () => {
@@ -71,6 +72,17 @@ const Dashboard = () => {
         await fetchTrip();
         setLoading(false);
         showToast("🎉 Viaggio Confermato!", "success");
+    };
+
+    const handleOptimize = async () => {
+        try {
+            await optimizeItinerary(id);
+            const items = await getItinerary(id);
+            setItinerary(items);
+            showToast("✨ Itinerario ottimizzato!", "success");
+        } catch (e) {
+            showToast("Errore ottimizzazione: " + e.message, "error");
+        }
     };
 
 
@@ -164,6 +176,21 @@ const Dashboard = () => {
 
                             {/* Itinerary Section: Full for everyone */}
                             <div className="container" style={{ marginTop: '2rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                    {itinerary.length > 0 && (
+                                        <button
+                                            onClick={handleOptimize}
+                                            className="btn btn-secondary"
+                                            style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                                        >
+                                            Ottimizza Percorsi ✨
+                                        </button>
+                                    )}
+                                </div>
+
+                                <Map items={itinerary} hotelLocation={trip.accommodation_location} />
+
                                 <Timeline items={itinerary} />
 
                                 {!user?.is_subscribed && (

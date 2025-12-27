@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { estimateBudget, updateTrip } from '../api';
+import { useToast } from '../context/ToastContext';
 
-const Budget = ({ trip }) => {
+const Budget = ({ trip, onUpdate }) => {
+    const { showToast } = useToast();
+    const [isEstimating, setIsEstimating] = useState(false);
+    const [estimation, setEstimation] = useState(null);
+
     // Calculate budget breakdown
     const totalBudget = (trip.budget_per_person || 0) * (trip.num_people || 1);
     const flightCost = trip.flight_cost || 0;
@@ -10,9 +16,83 @@ const Budget = ({ trip }) => {
     const isOverBudget = remaining < 0;
     const percentUsed = totalBudget > 0 ? Math.min((fixedCosts / totalBudget) * 100, 100) : 0;
 
+    const handleEstimate = async () => {
+        setIsEstimating(true);
+        try {
+            const data = await estimateBudget(trip.id);
+            setEstimation(data);
+            showToast("✅ Stima AI completata!", "success");
+        } catch (e) {
+            showToast("Errore stima: " + e.message, "error");
+        } finally {
+            setIsEstimating(false);
+        }
+    };
+
+    const handleApplyBudget = async () => {
+        if (!estimation) return;
+        try {
+            await updateTrip(trip.id, { budget_per_person: estimation.total_estimated_per_person });
+            if (onUpdate) onUpdate();
+            setEstimation(null);
+            showToast("✨ Budget aggiornato!", "success");
+        } catch (e) {
+            showToast("Errore aggiornamento: " + e.message, "error");
+        }
+    };
+
     return (
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem' }}>Gestione Budget 💰</h2>
+
+            <div style={{ maxWidth: '600px', margin: '0 auto 2rem', textAlign: 'center' }}>
+                <button
+                    onClick={handleEstimate}
+                    disabled={isEstimating}
+                    className="btn btn-secondary"
+                    style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                    {isEstimating ? '🤖 Analizzando costi...' : '🤖 Stima costi con AI (Pasti, Trasporti, etc.)'}
+                </button>
+            </div>
+
+            {estimation && (
+                <div style={{
+                    background: 'rgba(35, 89, 158, 0.05)',
+                    border: '2px dashed var(--primary-blue)',
+                    borderRadius: '24px',
+                    padding: '2rem',
+                    maxWidth: '600px',
+                    margin: '0 auto 2rem'
+                }}>
+                    <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-blue)', marginBottom: '1rem' }}>Suggertimento AI per {trip.destination}</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div className="stat-card">
+                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Pasto (Medio)</span>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.daily_meal_mid}</div>
+                        </div>
+                        <div className="stat-card">
+                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Trasporti / giorno</span>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.daily_transport}</div>
+                        </div>
+                        <div className="stat-card">
+                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Caffè & Drink</span>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.coffee_drinks}</div>
+                        </div>
+                        <div className="stat-card" style={{ border: '1px solid var(--primary-blue)' }}>
+                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Totale Suggerito</span>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person}</div>
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginBottom: '1.5rem', borderLeft: '4px solid var(--primary-blue)', paddingLeft: '1rem' }}>
+                        "{estimation.advice}"
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button onClick={handleApplyBudget} className="btn btn-primary" style={{ flex: 1 }}>Applica questo Budget</button>
+                        <button onClick={() => setEstimation(null)} className="btn btn-secondary" style={{ flex: 0.5 }}>Ignora</button>
+                    </div>
+                </div>
+            )}
 
             {/* Budget Overview Card */}
             <div style={{

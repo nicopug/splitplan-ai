@@ -21,7 +21,7 @@ const Footer = () => {
                     </div>
                     <div>
                         <h4 style={{ color: 'white' }}>Contatti</h4>
-                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>hello@splitplan.app</p>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>alessiopuglie09@gmail.com</p>
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                         </div>
                     </div>

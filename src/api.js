@@ -159,6 +159,23 @@ export const chatWithAI = async (tripId, message, history = []) => {
     return handleResponse(response);
 };
 
+export const estimateBudget = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/estimate-budget`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const updateTrip = async (tripId, updates) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates)
+    });
+    return handleResponse(response);
+};
+
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {

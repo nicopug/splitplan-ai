@@ -265,7 +265,7 @@ const Dashboard = () => {
             {view === 'BUDGET' && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                     {user?.is_subscribed ? (
-                        <Budget trip={trip} />
+                        <Budget trip={trip} onUpdate={fetchTrip} />
                     ) : (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div className="premium-teaser" style={{

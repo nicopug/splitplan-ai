@@ -176,6 +176,40 @@ def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), cu
         session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/{trip_id}/estimate-budget")
+def estimate_budget(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Stima i costi della vita locale tramite AI"""
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip: 
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        if not ai_client:
+            return {"suggestion": "AI non disponibile", "breakdown": {}}
+
+        prompt = f"""
+        Analizza i costi di viaggio per: {trip.destination}.
+        Dati: {trip.num_people} persone, dal {trip.start_date} al {trip.end_date}.
+        
+        RESTITUISCI SOLO JSON:
+        {{
+            "daily_meal_mid": 30.0,
+            "daily_meal_cheap": 15.0,
+            "daily_transport": 10.0,
+            "coffee_drinks": 8.0,
+            "total_estimated_per_person": 500.0,
+            "advice": "Breve consiglio sulla città..."
+        }}
+        LINGUA: ITALIANO.
+        """
+        
+        response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+        data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
+        return data
+    except Exception as e:
+        print(f"[AI Error] Stima budget fallita: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- ENDPOINTS CORE ---
 
 @router.post("/", response_model=Dict)
@@ -218,6 +252,31 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
         raise HTTPException(status_code=403, detail="Non partecipi a questo viaggio")
         
     return trip
+
+@router.patch("/{trip_id}")
+def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Aggiorna parzialmente i dati di un viaggio"""
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip: 
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+        
+        # Verifica autorizzazione (solo partecipanti)
+        check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
+        if not check: 
+            raise HTTPException(status_code=403, detail="Non autorizzato")
+
+        for key, value in updates.items():
+            if hasattr(trip, key):
+                setattr(trip, key, value)
+        
+        session.add(trip)
+        session.commit()
+        session.refresh(trip)
+        return trip
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/generate-proposals", response_model=List[Proposal])
 def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):

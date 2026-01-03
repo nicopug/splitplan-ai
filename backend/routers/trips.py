@@ -345,7 +345,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true"
+                    seed = random.randint(1, 1000000)
+                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true&seed={seed}"
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
@@ -412,7 +413,8 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             3. Ogni attività DEVE essere un luogo preciso (es. 'Museo del Prado' non 'Giro al museo').
             4. Se non hai nomi reali da OSM, usa la tua conoscenza per suggerire locali reali e famosi a {proposal.destination}.
             5. Lingua: Italiano.
-            FORMATO: [{{"title": "Nome Locale o Attività", "description": "Cosa fare/cosa mangiare", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN"}}]
+            FORMATO: [{{"title": "Nome Locale o Attività", "description": "Cosa fare/cosa mangiare", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 0.0, "lon": 0.0}}]
+            NOTE: Fornisci coordinate lat/lon il più precise possibile per ogni luogo.
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -423,10 +425,18 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             session.commit()
             
             for item in items_data:
-                # Tenta di geocodificare l'attività per futura ottimizzazione
-                lat, lon = get_coordinates(f"{item['title']}, {proposal.destination}")
-                session.add(ItineraryItem(trip_id=trip.id, latitude=lat, longitude=lon, **item))
+                # Usa le coordinate fornite dall'AI invece di fare 20 chiamate OSM lente
+                lat = item.get("lat")
+                lon = item.get("lon")
+                # Se mancano o sono 0, fallback solo per questo specifico item (raro)
+                if not lat or lat == 0:
+                    lat, lon = get_coordinates(f"{item['title']}, {proposal.destination}")
+                
+                # Rimuovi chiavi lat/lon dal dizionario per evitare doppioni nel costruttore
+                clean_item = {k: v for k, v in item.items() if k not in ["lat", "lon"]}
+                session.add(ItineraryItem(trip_id=trip.id, latitude=lat, longitude=lon, **clean_item))
             session.commit()
+            print(f"[System] Itinerary for Trip {trip.id} generated successfully (Optimized).")
             return
         except Exception as e:
             print(f"[AI Error] Itinerario fallito: {e}")

@@ -324,7 +324,13 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 {{
                     "departure_iata_normalized": "XXX",
                     "proposals": [
-                        {{"destination": "Città, Nazione", "destination_iata": "XXX", "description": "...", "price_estimate": 1000, "image_search_term": "keyword"}}
+                        {{
+                            "destination": "Città, Nazione", 
+                            "destination_iata": "XXX", 
+                            "description": "Una descrizione completa, dettagliata ed emozionante di almeno 40-60 parole che riassuma l'itinerario e i luoghi principali. NON troncare il testo con '...'.", 
+                            "price_estimate": 1000, 
+                            "image_search_term": "keyword di ricerca per l'immagine"
+                        }}
                     ]
                 }}
                 LINGUA: ITALIANO.
@@ -346,9 +352,9 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 for p in data.get("proposals", []):
                     search = p.get("destination") or "travel"
                     seed = random.randint(1, 1000000)
-                    # Use a more descriptive prompt and flux model for better reliability
-                    prompt_encoded = f"{search.replace(' ', '%20')}%20scenic%20city%20landmark%20professional%20photography%20no%20text"
-                    img_url = f"https://pollinations.ai/p/{prompt_encoded}?width=1080&height=720&seed={seed}&model=flux&nologo=true"
+                    # Use the stable image.pollinations.ai endpoint with a clean prompt
+                    clean_search = search.replace(' ', '%20')
+                    img_url = f"https://image.pollinations.ai/prompt/{clean_search}%20city%20landmark%20scenic%20landscape?width=1080&height=720&nologo=true&seed={seed}"
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 

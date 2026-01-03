@@ -129,7 +129,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
                             {/* Content */}
                             <div className="p-5 md:p-6 flex-1 flex flex-col">
-                                <p className="text-text-muted text-sm md:text-base mb-4 flex-1 line-clamp-3">
+                                <p className="text-text-muted text-sm md:text-base mb-4 flex-1" style={{ minHeight: '4.5rem' }}>
                                     {prop.description}
                                 </p>
 

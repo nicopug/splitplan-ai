@@ -344,9 +344,11 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
-                    search = p.get("image_search_term") or p.get("destination")
+                    search = p.get("destination") or "travel"
                     seed = random.randint(1, 1000000)
-                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true&seed={seed}"
+                    # Use a more descriptive prompt and flux model for better reliability
+                    prompt_encoded = f"{search.replace(' ', '%20')}%20scenic%20city%20landmark%20professional%20photography%20no%20text"
+                    img_url = f"https://pollinations.ai/p/{prompt_encoded}?width=1080&height=720&seed={seed}&model=flux&nologo=true"
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 

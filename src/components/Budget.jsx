@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { estimateBudget, updateTrip } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useModal } from '../context/ModalContext';
 
 const Budget = ({ trip, onUpdate }) => {
     const { showToast } = useToast();
+    const { showConfirm } = useModal();
     const [isEstimating, setIsEstimating] = useState(false);
     const [estimation, setEstimation] = useState(null);
     const [showSimulation, setShowSimulation] = useState(false);
@@ -11,17 +13,23 @@ const Budget = ({ trip, onUpdate }) => {
     // Calculate budget breakdown
     const numPeople = trip.num_people || 1;
     const totalBudget = (trip.budget_per_person || 0) * numPeople;
+
+    // Costs
     const flightCost = trip.flight_cost || 0;
     const hotelCost = trip.hotel_cost || 0;
-    const fixedCosts = flightCost + hotelCost;
 
-    // AI Forecast inclusion
+    // AI Forecast inclusion (now treated as a dedicated expense simulated or semi-permanent)
+    const [appliedAIExpense, setAppliedAIExpense] = useState(0);
+
     const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
-    const totalSpent = fixedCosts + simulatedCosts;
 
-    const remaining = totalBudget - totalSpent;
+    // Total spent includes flight, hotel and any APPLIED AI expense
+    const currentSpent = flightCost + hotelCost + appliedAIExpense;
+    const totalSpentWithSim = currentSpent + (showSimulation ? simulatedCosts : 0);
+
+    const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
     const isOverBudget = remaining < 0;
-    const percentUsed = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+    const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
 
     const handleEstimate = async () => {
         setIsEstimating(true);
@@ -37,18 +45,19 @@ const Budget = ({ trip, onUpdate }) => {
         }
     };
 
-    const handleApplyBudget = async () => {
+    const handleApplyAsExpense = async () => {
         if (!estimation) return;
-        if (!window.confirm(`Stai per sovrascrivere il tuo budget massimo attuale (€${totalBudget}) con la stima AI (€${estimation.total_estimated_per_person * numPeople}). Continuare?`)) return;
 
-        try {
-            await updateTrip(trip.id, { budget_per_person: estimation.total_estimated_per_person });
-            if (onUpdate) onUpdate();
+        const confirmed = await showConfirm(
+            "Conferma Spesa Prevista 🤖",
+            `Vuoi aggiungere la stima AI di €${estimation.total_estimated_per_person * numPeople} come spesa prevista? Verrà sottratta dal tuo budget rimanente.`
+        );
+
+        if (confirmed) {
+            setAppliedAIExpense(estimation.total_estimated_per_person * numPeople);
             setEstimation(null);
             setShowSimulation(false);
-            showToast("✨ Budget aggiornato!", "success");
-        } catch (e) {
-            showToast("Errore aggiornamento: " + e.message, "error");
+            showToast("✨ Spesa aggiunta alla proiezione!", "success");
         }
     };
 
@@ -100,13 +109,12 @@ const Budget = ({ trip, onUpdate }) => {
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                         <button
-                            onClick={() => setShowSimulation(!showSimulation)}
-                            className={`btn ${showSimulation ? 'btn-primary' : 'btn-secondary'}`}
-                            style={{ flex: 1 }}
+                            onClick={handleApplyAsExpense}
+                            className="btn btn-primary"
+                            style={{ flex: 1.5, background: 'var(--primary-blue)' }}
                         >
-                            {showSimulation ? '❌ Rimuovi Simulazione' : '📊 Simula nel Grafico'}
+                            ➕ Applica come Spesa
                         </button>
-                        <button onClick={handleApplyBudget} className="btn btn-secondary" style={{ flex: 1 }}>Aggiorna Budget Massimo</button>
                         <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5 }}>Chiudi</button>
                     </div>
                 </div>
@@ -136,7 +144,7 @@ const Budget = ({ trip, onUpdate }) => {
                     <div style={{
                         background: '#e9ecef',
                         borderRadius: '10px',
-                        height: '20px',
+                        height: '24px',
                         overflow: 'hidden',
                         position: 'relative'
                     }}>
@@ -144,13 +152,26 @@ const Budget = ({ trip, onUpdate }) => {
                         <div style={{
                             background: 'var(--primary-blue)',
                             height: '100%',
-                            width: `${Math.min((fixedCosts / totalBudget) * 100, 100)}%`,
+                            width: `${Math.min((flightCost + hotelCost / totalBudget) * 100, 100)}%`,
                             position: 'absolute',
                             left: 0,
                             top: 0,
                             transition: 'width 0.5s ease',
-                            zIndex: 2
+                            zIndex: 3
                         }} />
+                        {/* Applied AI Expenses */}
+                        {appliedAIExpense > 0 && (
+                            <div style={{
+                                background: '#37b24d',
+                                height: '100%',
+                                width: `${Math.min((appliedAIExpense / totalBudget) * 100, 100)}%`,
+                                position: 'absolute',
+                                left: `${Math.min(((flightCost + hotelCost) / totalBudget) * 100, 100)}%`,
+                                top: 0,
+                                transition: 'width 0.5s ease',
+                                zIndex: 2
+                            }} />
+                        )}
                         {/* Simulated Costs (AI) */}
                         {showSimulation && (
                             <div style={{
@@ -158,29 +179,18 @@ const Budget = ({ trip, onUpdate }) => {
                                 height: '100%',
                                 width: `${Math.min((simulatedCosts / totalBudget) * 100, 100)}%`,
                                 position: 'absolute',
-                                left: `${Math.min((fixedCosts / totalBudget) * 100, 100)}%`,
+                                left: `${Math.min(((flightCost + hotelCost + appliedAIExpense) / totalBudget) * 100, 100)}%`,
                                 top: 0,
                                 transition: 'width 0.5s ease',
                                 zIndex: 1
                             }} />
                         )}
-                        {/* Over-budget background if needed */}
-                        {isOverBudget && (
-                            <div style={{
-                                background: '#dc3545',
-                                height: '100%',
-                                width: '100%',
-                                position: 'absolute',
-                                left: 0,
-                                top: 0,
-                                opacity: 0.3
-                            }} />
-                        )}
                     </div>
-                    {showSimulation && (
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    {(showSimulation || appliedAIExpense > 0) && (
+                        <div style={{ marginTop: '0.8rem', fontSize: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--primary-blue)', borderRadius: '2px' }} /> Prenotato</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: '#ffd43b', borderRadius: '2px' }} /> Stima Spese Locali</span>
+                            {appliedAIExpense > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: '#37b24d', borderRadius: '2px' }} /> Spesa Prevista</span>}
+                            {showSimulation && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: '#ffd43b', borderRadius: '2px' }} /> Simulazione AI</span>}
                         </div>
                     )}
                 </div>
@@ -221,6 +231,23 @@ const Budget = ({ trip, onUpdate }) => {
                         <span style={{ fontWeight: 'bold', color: '#155724' }}>- €{hotelCost.toFixed(2)}</span>
                     </div>
 
+                    {appliedAIExpense > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '1rem',
+                            background: 'rgba(55, 178, 77, 0.1)',
+                            borderRadius: '12px',
+                            border: '1px solid #37b24d'
+                        }}>
+                            <span>🤖 Spesa Prevista AI</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: 'bold', color: '#2b8a3e' }}>- €{appliedAIExpense.toFixed(2)}</span>
+                                <button onClick={() => setAppliedAIExpense(0)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#666' }}>✕</button>
+                            </div>
+                        </div>
+                    )}
+
                     {showSimulation && (
                         <div style={{
                             display: 'flex',
@@ -230,7 +257,7 @@ const Budget = ({ trip, onUpdate }) => {
                             borderRadius: '12px',
                             border: '1px dashed #fab005'
                         }}>
-                            <span>🤖 Stima Vitto/Trasporti (AI)</span>
+                            <span>🔍 Simulazione AI</span>
                             <span style={{ fontWeight: 'bold', color: '#856404' }}>- €{simulatedCosts.toFixed(2)}</span>
                         </div>
                     )}

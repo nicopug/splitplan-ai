@@ -187,19 +187,30 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
         if not ai_client:
             return {"suggestion": "AI non disponibile", "breakdown": {}}
 
+        # Calcolo durata viaggio
+        days = (trip.end_date - trip.start_date).days + 1
+        
         prompt = f"""
-        Analizza i costi di viaggio per: {trip.destination}.
-        Dati: {trip.num_people} persone, dal {trip.start_date} al {trip.end_date}.
+        Analizza i costi di vita locale (esclusi voli e hotel) per un viaggio a: {trip.destination}.
+        Dati: {trip.num_people} persona/e, durata {days} giorni.
+        
+        Fornisci una stima REALISTICA e ONESTA per una persona (viaggiatore medio, non lussuoso):
+        1. Pasti (colazione, pranzo veloce, cena in trattoria): ca. 35-50€/giorno a Parigi, meno altrove.
+        2. Trasporti locali (abbonamento metro/bus): ca. 5-10€/giorno.
+        3. Piccole spese (caffè, acqua, snack, 1 museo): ca. 15-20€/giorno.
+        
+        Importante: Sii onesto. Se la città è economica (es. Est Europa), i costi devono rifletterlo (es. 30€ totali al giorno). Non gonfiare i prezzi.
         
         RESTITUISCI SOLO JSON:
         {{
-            "daily_meal_mid": 30.0,
-            "daily_meal_cheap": 15.0,
+            "daily_meal_mid": 35.0,
+            "daily_meal_cheap": 20.0,
             "daily_transport": 10.0,
-            "coffee_drinks": 8.0,
-            "total_estimated_per_person": 500.0,
-            "advice": "Breve consiglio sulla città..."
+            "coffee_drinks": 10.0,
+            "total_estimated_per_person": 0.0, 
+            "advice": "Consiglio pratico per risparmiare in questa specifica città..."
         }}
+        Nota: 'total_estimated_per_person' DEVE essere la somma giornaliera realistica (es. 60€) moltiplicata per {days} giorni.
         LINGUA: ITALIANO.
         """
         

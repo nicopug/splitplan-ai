@@ -428,18 +428,21 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             places_prompt = f"USA OBBLIGATORIAMENTE QUESTI NOMI REALI PER I PASTI (NON SCRIVERE 'PRANZO IN ZONA' O SIMILI): {', '.join(real_places[:12])}" if real_places else "Cerca di inventare nomi di fantasia realistici o usa locali famosi della zona, NON usare frasi generiche come 'Pasto in ristorante locale'."
 
             prompt = f"""
-            Crea un itinerario di {num_days} giorni a {proposal.destination}. Hotel: {trip.accommodation}.
+            Crea un itinerario di {num_days} giorni a {proposal.destination}. 
+            Alloggio confermato: {trip.accommodation} (Coordinate: {hotel_lat}, {hotel_lon}).
             {places_prompt}
             Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
             
-            REGOLE CRITICHE:
+            REGOLE CRITICHE PER LA MAPPA:
             1. JSON ARRAY. 
-            2. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante specifico.
-            3. Ogni attività DEVE essere un luogo preciso (es. 'Museo del Prado' non 'Giro al museo').
-            4. Se non hai nomi reali da OSM, usa la tua conoscenza per suggerire locali reali e famosi a {proposal.destination}.
-            5. Lingua: Italiano.
-            FORMATO: [{{"title": "Nome Locale o Attività", "description": "Cosa fare/cosa mangiare", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 0.0, "lon": 0.0}}]
-            NOTE: Fornisci coordinate lat/lon il più precise possibile per ogni luogo.
+            2. Fornisci COORDINATE GPS (lat, lon) PRECISE per ogni singolo punto.
+            3. Gli spostamenti devono essere logici e vicini tra loro nello stesso giorno.
+            4. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante REALE esistente.
+            5. Ogni attività DEVE essere un luogo preciso (es. 'Torre Eiffel', non 'Giro in centro').
+            6. Lingua: Italiano.
+            
+            FORMATO: [{{"title": "Nome Locale", "description": "Dettagli", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8584, "lon": 2.2945}}]
+            Importante: Non inventare coordinate a caso. Usa la tua conoscenza aggiornata di {proposal.destination}.
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)

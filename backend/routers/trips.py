@@ -368,10 +368,12 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    # Pulizia pulita delle tag: toglie spazi e assicura virgole singole
-                    tags = ",".join([t.strip().lower() for t in search.split(",") if t.strip()])
+                    # Prepariamo le tag per LoremFlickr (separandole con la virgola per accuratezza)
+                    tags = search.replace(" ", ",").lower()
                     seed = random.randint(1, 10000)
-                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(tags)}?lock={seed}"
+                    # Usiamo LoremFlickr senza /all e permettendo le virgole nell'encoding
+                    encoded_tags = urllib.parse.quote(tags, safe=',')
+                    img_url = f"https://loremflickr.com/1080/720/{encoded_tags}?lock={seed}"
                     
                     session.add(Proposal(
                         trip_id=trip_id, 

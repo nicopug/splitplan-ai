@@ -336,7 +336,6 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 TASK 2: Genera 3 proposte per: {prefs.destination}.
                 Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
-
                 RESTITUISCI SOLO JSON:
                 {{
                     "departure_iata_normalized": "XXX",
@@ -350,7 +349,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                         }}
                     ]
                 }}
-                NOTE: Il campo 'image_search_term' deve essere un monumento o luogo iconico specifico per aiutare la ricerca immagini (es. 'Colosseo' per Roma, non solo 'Roma').
+                NOTE: Il campo 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE per monumenti o luoghi iconici (es. 'Colosseum,Rome' per Roma).
                 LINGUA: ITALIANO.
                 """
                 
@@ -369,9 +368,11 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
+                    # Prepariamo le tag per LoremFlickr (separandole con la virgola per accuratezza)
+                    tags = search.replace(" ", ",").lower()
                     seed = random.randint(1, 10000)
-                    # Aggiungiamo un seed per avere immagini diverse e forziamo la ricerca su landmark
-                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(search)},landmark/all?lock={seed}"
+                    # Usiamo LoremFlickr senza /all per essere più flessibili sui risultati
+                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(tags)}?lock={seed}"
                     
                     session.add(Proposal(
                         trip_id=trip_id, 

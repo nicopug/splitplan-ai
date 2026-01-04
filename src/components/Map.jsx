@@ -27,7 +27,7 @@ function ChangeView({ bounds }) {
     return null;
 }
 
-const Map = ({ items, hotelLocation }) => {
+const Map = ({ items, hotelLat, hotelLon }) => {
     // Red marker for the hotel
     const RedIcon = L.divIcon({
         className: 'custom-hotel-marker',
@@ -61,11 +61,10 @@ const Map = ({ items, hotelLocation }) => {
     // Bounds calculation including hotel if present
     let allPoints = [...polylinePositions];
 
-    const hotelParsed = hotelLocation ? hotelLocation.split(',').map(Number) : null;
-    const hasHotelCoords = hotelParsed && hotelParsed.length === 2 && !isNaN(hotelParsed[0]);
+    const hasHotelCoords = hotelLat && hotelLon;
 
     if (hasHotelCoords) {
-        allPoints.push(hotelParsed);
+        allPoints.push([hotelLat, hotelLon]);
     }
 
     const bounds = allPoints.length > 0 ? allPoints : [[45, 9]]; // Default to Italy if empty
@@ -86,7 +85,7 @@ const Map = ({ items, hotelLocation }) => {
 
                 {/* Hotel Marker (Red) */}
                 {hasHotelCoords && (
-                    <Marker position={hotelParsed} icon={RedIcon}>
+                    <Marker position={[hotelLat, hotelLon]} icon={RedIcon}>
                         <Popup>
                             <strong>🏨 Il Tuo Hotel</strong><br />
                             Punto di riferimento per il viaggio

@@ -29,6 +29,8 @@ class TripBase(SQLModel):
     
     accommodation: Optional[str] = None
     accommodation_location: Optional[str] = None
+    hotel_latitude: Optional[float] = None
+    hotel_longitude: Optional[float] = None
     flight_cost: Optional[float] = 0.0
     hotel_cost: Optional[float] = 0.0
     arrival_time: Optional[str] = None

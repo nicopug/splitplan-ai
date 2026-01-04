@@ -180,7 +180,11 @@ const Dashboard = () => {
                                     <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
                                 </div>
 
-                                <Map items={itinerary} hotelLocation={trip.accommodation_location} />
+                                <Map
+                                    items={itinerary}
+                                    hotelLat={trip.hotel_latitude}
+                                    hotelLon={trip.hotel_longitude}
+                                />
 
                                 <Timeline items={itinerary} />
 

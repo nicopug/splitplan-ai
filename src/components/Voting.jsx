@@ -120,6 +120,10 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                     src={prop.image_url}
                                     alt={prop.destination}
                                     className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
+                                    }}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                                 <h3 className="absolute bottom-4 left-4 text-white text-xl md:text-2xl font-bold drop-shadow-lg">

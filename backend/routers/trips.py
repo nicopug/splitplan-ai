@@ -362,10 +362,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    # URL Encoding robusto per evitare immagini rotte
-                    encoded_search = urllib.parse.quote(f"{search} travel photography scenic")
-                    seed = random.randint(1, 1000000)
-                    img_url = f"https://image.pollinations.ai/prompt/{encoded_search}?width=1080&height=720&nologo=true&seed={seed}"
+                    # LoremFlickr è molto più stabile e non ha limiti anonimi
+                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(search)},travel/all"
                     
                     session.add(Proposal(
                         trip_id=trip_id, 

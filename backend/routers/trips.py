@@ -351,10 +351,11 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("destination") or "travel"
-                    seed = random.randint(1, 1000000)
-                    # Use the stable image.pollinations.ai endpoint with a clean prompt
-                    clean_search = search.replace(' ', '%20')
-                    img_url = f"https://image.pollinations.ai/prompt/{clean_search}%20city%20landmark%20scenic%20landscape?width=1080&height=720&nologo=true&seed={seed}"
+                    seed = random.randint(1, 10000)
+                    # Use LoremFlickr for high-quality, stable travel photos without rate limits
+                    # The 'lock' parameter ensures the same image is returned for the same seed
+                    clean_search = search.replace(' ', ',').lower()
+                    img_url = f"https://loremflickr.com/1080/720/{clean_search},travel,scenic/all?lock={seed}"
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 

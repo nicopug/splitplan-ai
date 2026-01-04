@@ -418,10 +418,15 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
     
     if ai_client:
         try:
-            d1 = datetime.strptime(trip.start_date, "%Y-%m-%d")
-            d2 = datetime.strptime(trip.end_date, "%Y-%m-%d")
+            # Tenta conversione robusta (supporta YYYY-MM-DD e ISO con T)
+            d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
+            d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
             num_days = abs((d2 - d1).days) + 1
+        except Exception as e:
+            print(f"[Warning] Date parsing failed: {e}. Using fallback.")
+            num_days = 5 # Fallback ragionevole
             
+        try:
             # OSM: Recupero locali reali
             hotel_lat, hotel_lon = get_coordinates(f"{trip.accommodation}, {proposal.destination}")
             real_places = get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []

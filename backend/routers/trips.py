@@ -22,7 +22,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
 # Modello stabile di Google
-AI_MODEL = "gemini-2.5-flash" 
+AI_MODEL = "gemini-2.0-flash-exp" 
 
 if GOOGLE_API_KEY:
     print(f"[OK] System: Google Gemini Client initialized.")
@@ -187,8 +187,13 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
         if not ai_client:
             return {"suggestion": "AI non disponibile", "breakdown": {}}
 
-        # Calcolo durata viaggio
-        days = (trip.end_date - trip.start_date).days + 1
+        # Calcolo durata viaggio (conversione stringhe in date)
+        try:
+            d1 = datetime.fromisoformat(trip.start_date)
+            d2 = datetime.fromisoformat(trip.end_date)
+            days = (d2 - d1).days + 1
+        except:
+            days = 7 # Fallback se le date sono malformate
         
         prompt = f"""
         Analizza i costi di vita locale (esclusi voli e hotel) per un viaggio a: {trip.destination}.

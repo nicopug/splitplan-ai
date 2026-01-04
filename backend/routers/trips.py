@@ -102,15 +102,13 @@ def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
 
 @router.get("/migrate-db-coords")
 def migrate_db_coords(session: Session = Depends(get_session)):
-    """Aggiunge lat/lon a itineraryitem e hotel_lat/lon a trip"""
+    """Aggiunge lat/lon alla tabella itineraryitem"""
     from sqlalchemy import text
     try:
         session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS latitude FLOAT;"))
         session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;"))
-        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS hotel_latitude FLOAT;"))
-        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS hotel_longitude FLOAT;"))
         session.commit()
-        return {"status": "success", "message": "Database migrato con successo."}
+        return {"status": "success", "message": "Colonne coordinate aggiunte."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
@@ -189,34 +187,18 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
         if not ai_client:
             return {"suggestion": "AI non disponibile", "breakdown": {}}
 
-        # Calcolo durata viaggio (conversione stringhe in date)
-        try:
-            d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
-            d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
-            days = abs((d2 - d1).days) + 1
-        except:
-            days = 7 # Fallback
-            
         prompt = f"""
-        Analizza i costi di vita locale (esclusi voli e hotel) per un viaggio a: {trip.destination}.
-        Dati: {trip.num_people} persona/e, durata {days} giorni.
-        
-        Fornisci una stima REALISTICA e ONESTA per una persona (viaggiatore medio, non lussuoso):
-        1. Pasti (colazione, pranzo veloce, cena in trattoria): ca. 35-50€/giorno.
-        2. Trasporti locali: ca. 5-10€/giorno.
-        3. Piccole spese: ca. 10-15€/giorno.
-        
-        Importante: Se la città è economica (es. Est Europa), i costi devono rifletterlo. 
-        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni.
+        Analizza i costi di viaggio per: {trip.destination}.
+        Dati: {trip.num_people} persone, dal {trip.start_date} al {trip.end_date}.
         
         RESTITUISCI SOLO JSON:
         {{
-            "daily_meal_mid": 35.0,
-            "daily_meal_cheap": 20.0,
+            "daily_meal_mid": 30.0,
+            "daily_meal_cheap": 15.0,
             "daily_transport": 10.0,
-            "coffee_drinks": 10.0,
-            "total_estimated_per_person": 0.0, 
-            "advice": "Un consiglio utile..."
+            "coffee_drinks": 8.0,
+            "total_estimated_per_person": 500.0,
+            "advice": "Breve consiglio sulla città..."
         }}
         LINGUA: ITALIANO.
         """
@@ -364,8 +346,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
                     seed = random.randint(1, 1000000)
-                    # Pollinations optimization: cleaner URL and high quality
-                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=1080&height=720&nologo=true&seed={seed}"
+                    img_url = f"https://image.pollinations.ai/prompt/{search.replace(' ', '%20')}%20travel%20scenic?width=800&height=600&nologo=true&seed={seed}"
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
@@ -412,36 +393,28 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
     
     if ai_client:
         try:
-            # Tenta conversione robusta delle date
-            try:
-                d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
-                d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
-                num_days = abs((d2 - d1).days) + 1
-            except Exception as e:
-                print(f"[Warning] Date parsing failed in itinerary: {e}")
-                num_days = 5 # Fallback
+            d1 = datetime.strptime(trip.start_date, "%Y-%m-%d")
+            d2 = datetime.strptime(trip.end_date, "%Y-%m-%d")
+            num_days = abs((d2 - d1).days) + 1
             
-            # Recupero locali reali (usa le coordinate hotel salvate)
-            hotel_lat = trip.hotel_latitude
-            hotel_lon = trip.hotel_longitude
-            
+            # OSM: Recupero locali reali
+            hotel_lat, hotel_lon = get_coordinates(f"{trip.accommodation}, {proposal.destination}")
             real_places = get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
             places_prompt = f"USA OBBLIGATORIAMENTE QUESTI NOMI REALI PER I PASTI (NON SCRIVERE 'PRANZO IN ZONA' O SIMILI): {', '.join(real_places[:12])}" if real_places else "Cerca di inventare nomi di fantasia realistici o usa locali famosi della zona, NON usare frasi generiche come 'Pasto in ristorante locale'."
 
             prompt = f"""
-            Crea un itinerario di {num_days} giorni a {proposal.destination}. 
-            Alloggio: {trip.accommodation} (Coordinate Hotel: {hotel_lat}, {hotel_lon}).
+            Crea un itinerario di {num_days} giorni a {proposal.destination}. Hotel: {trip.accommodation}.
             {places_prompt}
             Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
             
-            REGOLE CRITICHE PER LA MAPPA:
+            REGOLE CRITICHE:
             1. JSON ARRAY. 
-            2. Fornisci COORDINATE GPS (lat, lon) PRECISE per ogni singolo luogo.
-            3. Gli spostamenti devono essere geograficamente logici e vicini all'hotel quando possibile.
-            4. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante REALE.
-            5. Ogni attività DEVE essere un luogo preciso (es. 'Torre Eiffel' non 'Giro al museo').
-            6. Lingua: Italiano.
-            FORMATO: [{{"title": "Nome Locale", "description": "Dettagli", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8584, "lon": 2.2945}}]
+            2. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante specifico.
+            3. Ogni attività DEVE essere un luogo preciso (es. 'Museo del Prado' non 'Giro al museo').
+            4. Se non hai nomi reali da OSM, usa la tua conoscenza per suggerire locali reali e famosi a {proposal.destination}.
+            5. Lingua: Italiano.
+            FORMATO: [{{"title": "Nome Locale o Attività", "description": "Cosa fare/cosa mangiare", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 0.0, "lon": 0.0}}]
+            NOTE: Fornisci coordinate lat/lon il più precise possibile per ogni luogo.
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -493,12 +466,6 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
         trip.hotel_cost = hotel_data.hotel_cost
         trip.arrival_time = hotel_data.arrival_time
         trip.return_time = hotel_data.return_time
-        
-        # Recupero automatico coordinate hotel
-        lat, lon = get_coordinates(f"{hotel_data.hotel_name}, {hotel_data.hotel_address}")
-        trip.hotel_latitude = lat
-        trip.hotel_longitude = lon
-        
         session.add(trip)
         session.commit()
         

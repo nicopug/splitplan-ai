@@ -10,7 +10,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     # Use PostgreSQL (Supabase)
     print(f"[OK] Using PostgreSQL: {DATABASE_URL[:30]}...")
-    engine = create_engine(DATABASE_URL, echo=False)
+    # Add common pooling options for serverless
+    engine = create_engine(
+        DATABASE_URL, 
+        echo=False,
+        pool_pre_ping=True,  # Checks connection before using it
+        pool_recycle=300      # Recreates connections every 5 mins
+    )
 else:
     # Fallback to SQLite for local development
     print("[WARNING] DATABASE_URL not found, using SQLite fallback (IN-MEMORY)")

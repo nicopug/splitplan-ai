@@ -28,14 +28,28 @@ function ChangeView({ bounds }) {
 }
 
 const Map = ({ items, hotelLocation }) => {
-    // Red icon for the hotel
-    const RedIcon = L.icon({
-        iconUrl: icon,
-        shadowUrl: iconShadow,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        className: 'marker-red' // We'll style this via CSS filter
+    // Red marker for the hotel
+    const RedIcon = L.divIcon({
+        className: 'custom-hotel-marker',
+        html: `
+            <div style="
+                background-color: #e63946;
+                width: 24px;
+                height: 24px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                border: 2px solid white;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <div style="width: 10px; height: 10px; background: white; border-radius: 50%; transform: rotate(45deg);"></div>
+            </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
     });
 
     // Filter items with valid coordinates
@@ -58,13 +72,6 @@ const Map = ({ items, hotelLocation }) => {
 
     return (
         <div style={{ height: '400px', width: '100%', borderRadius: '24px', overflow: 'hidden', boxShadow: 'var(--shadow-md)', marginBottom: '2rem', border: '1px solid #e0e0e0' }}>
-            <style>
-                {`
-                .marker-red {
-                    filter: hue-rotate(120deg) saturate(3) brightness(0.8);
-                }
-                `}
-            </style>
             <MapContainer
                 center={bounds[0]}
                 zoom={13}

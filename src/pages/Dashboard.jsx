@@ -176,17 +176,8 @@ const Dashboard = () => {
 
                             {/* Itinerary Section: Full for everyone */}
                             <div className="container" style={{ marginTop: '2rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1.5rem' }}>
                                     <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
-                                    {itinerary.length > 0 && (
-                                        <button
-                                            onClick={handleOptimize}
-                                            className="btn btn-secondary"
-                                            style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                                        >
-                                            Ottimizza Percorsi ✨
-                                        </button>
-                                    )}
                                 </div>
 
                                 <Map items={itinerary} hotelLocation={trip.accommodation_location} />

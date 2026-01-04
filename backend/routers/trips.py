@@ -341,9 +341,16 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 {{
                     "departure_iata_normalized": "XXX",
                     "proposals": [
-                        {{"destination": "Città, Nazione", "destination_iata": "XXX", "description": "...", "price_estimate": 1000, "image_search_term": "keyword"}}
+                        {{
+                            "destination": "Città, Nazione", 
+                            "destination_iata": "XXX", 
+                            "description": "...", 
+                            "price_estimate": 1000, 
+                            "image_search_term": "Eiffel Tower Paris"
+                        }}
                     ]
                 }}
+                NOTE: Il campo 'image_search_term' deve essere un monumento o luogo iconico specifico per aiutare la ricerca immagini (es. 'Colosseo' per Roma, non solo 'Roma').
                 LINGUA: ITALIANO.
                 """
                 
@@ -362,8 +369,9 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    # LoremFlickr è molto più stabile e non ha limiti anonimi
-                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(search)},travel/all"
+                    seed = random.randint(1, 10000)
+                    # Aggiungiamo un seed per avere immagini diverse e forziamo la ricerca su landmark
+                    img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(search)},landmark/all?lock={seed}"
                     
                     session.add(Proposal(
                         trip_id=trip_id, 

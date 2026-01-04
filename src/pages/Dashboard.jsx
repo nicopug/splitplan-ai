@@ -184,6 +184,7 @@ const Dashboard = () => {
                                     items={itinerary}
                                     hotelLat={trip.hotel_latitude}
                                     hotelLon={trip.hotel_longitude}
+                                    startDate={trip.start_date}
                                 />
 
                                 <Timeline items={itinerary} />

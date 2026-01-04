@@ -368,10 +368,9 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    # Prepariamo le tag per LoremFlickr (separandole con la virgola per accuratezza)
-                    tags = search.replace(" ", ",").lower()
+                    # Pulizia pulita delle tag: toglie spazi e assicura virgole singole
+                    tags = ",".join([t.strip().lower() for t in search.split(",") if t.strip()])
                     seed = random.randint(1, 10000)
-                    # Usiamo LoremFlickr senza /all per essere più flessibili sui risultati
                     img_url = f"https://loremflickr.com/1080/720/{urllib.parse.quote(tags)}?lock={seed}"
                     
                     session.add(Proposal(

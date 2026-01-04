@@ -27,7 +27,7 @@ function ChangeView({ bounds }) {
     return null;
 }
 
-const Map = ({ items, hotelLat, hotelLon }) => {
+const Map = ({ items, hotelLat, hotelLon, startDate }) => {
     // Red marker for the hotel
     const RedIcon = L.divIcon({
         className: 'custom-hotel-marker',
@@ -51,6 +51,20 @@ const Map = ({ items, hotelLat, hotelLon }) => {
         iconAnchor: [12, 24],
         popupAnchor: [0, -24]
     });
+
+    // Function to calculate Day X from startDate
+    const getDayNumber = (itemDate) => {
+        if (!startDate || !itemDate) return null;
+        try {
+            const start = new Date(startDate.split('T')[0]);
+            const current = new Date(itemDate.split('T')[0]);
+            const diffTime = Math.abs(current - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays + 1;
+        } catch (e) {
+            return null;
+        }
+    };
 
     // Filter items with valid coordinates
     const mapItems = items.filter(i => i.latitude && i.longitude);
@@ -94,14 +108,17 @@ const Map = ({ items, hotelLat, hotelLon }) => {
                 )}
 
                 {/* Itinerary Markers (Blue) */}
-                {mapItems.map((item, idx) => (
-                    <Marker key={idx} position={[item.latitude, item.longitude]}>
-                        <Popup>
-                            <strong>{item.title}</strong><br />
-                            {item.description}
-                        </Popup>
-                    </Marker>
-                ))}
+                {mapItems.map((item, idx) => {
+                    const dayNum = getDayNumber(item.start_time);
+                    return (
+                        <Marker key={idx} position={[item.latitude, item.longitude]}>
+                            <Popup>
+                                <strong>{item.title} {dayNum ? `(Giorno ${dayNum})` : ''}</strong><br />
+                                {item.description}
+                            </Popup>
+                        </Marker>
+                    );
+                })}
 
                 {polylinePositions.length > 1 && (
                     <Polyline positions={polylinePositions} color="var(--primary-blue)" weight={3} opacity={0.6} dashArray="10, 10" />

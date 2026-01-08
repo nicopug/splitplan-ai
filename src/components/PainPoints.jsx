@@ -5,7 +5,7 @@ const PainPoints = () => {
         <section className="section" style={{ background: 'var(--bg-white)' }}>
             <div className="container">
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
-                    <h2 style={{ fontSize: '2rem' }}>Basta con il Caos Organizzativo 🤯</h2>
+                    <h2 style={{ fontSize: '2rem' }}>Basta con il Caos Organizzativo</h2>
                     <p>Organizzare un viaggio non dovrebbe essere un secondo lavoro.</p>
                 </div>
                 <div className="grid-3">

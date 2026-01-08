@@ -10,7 +10,7 @@ const Features = () => {
                         <li style={{ marginBottom: '2rem' }}>
                             <h4 style={{ color: 'var(--accent-orange)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>Mediatore Sociale AI</h4>
                             <p style={{ color: 'rgba(255,255,255,0.8)' }}>
-                                Non siamo solo un motore di ricerca (come Skyscanner). Siamo l'amico smart che mette tutti d'accordo.
+                                Non siamo solo un motore di ricerca (come Skyscanner). Siamo l'amico che mette tutti d'accordo.
                             </p>
                         </li>
                         <li style={{ marginBottom: '2rem' }}>

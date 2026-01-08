@@ -678,6 +678,7 @@ def get_participants(trip_id: int, session: Session = Depends(get_session), curr
 @router.post("/{trip_id}/chat")
 def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Chat AI evoluta: gestisce contesto temporale, history e comandi multipli"""
+    import re
     try:
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -688,14 +689,14 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         # Preparazione Cronologia (ultimi 5 messaggi per contesto)
         history_text = ""
         if req.history:
-            history_text = "\n".join([f"{m['role'].upper()}: {m['text']}" for m in req.history[-5:]])
+            history_text = "\n".join([f"{m.get('role', 'user').upper()}: {m.get('text', '')}" for m in req.history[-5:]])
 
         prompt = f"""
         Sei SplitPlan Assistant, un esperto Travel Agent. 
         VIAGGIO: {trip.name} a {trip.destination}
-        DATE: dal {trip.start_date} al {trip.end_date} (FORMATO ISO)
+        DATE: dal {trip.start_date} al {trip.end_date}
         
-        ITINERARIO ATTUALE:
+        ITINERARIO ATTUALE (Lista di oggetti JSON con ID, Titolo, Orario):
         {json.dumps([i.model_dump() for i in itinerary], indent=2)}
         
         CRONOLOGIA RECENTE:
@@ -703,19 +704,17 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         
         RICHIESTA UTENTE: "{req.message}"
         
-        ISTRUZIONI CRITICHE:
+        ISTRUZIONI:
         1. Rispondi cordialmente in ITALIANO.
-        2. Se l'utente chiede di aggiungere, modificare o eliminare attività, usa la lista 'commands'.
-        3. AZIONI DISPONIBILI:
-           - ADD: {{"action": "ADD", "item": {{"title": "Titolo Breve", "description": "..", "start_time": "YYYY-MM-DDTHH:MM:SS", "type": "ACTIVITY|FOOD|TRANSPORT|CHECKIN"}}}}
+        2. Se l'utente vuole CAMBIARE o SPOSTARE qualcosa, devi fare DELETE dell'item corrente (usando il suo ID) e ADD di quello nuovo con i dati corretti.
+        3. Se l'utente vuole aggiungere attività ricorrenti (es. ogni mattina), crea un comando ADD per ogni giorno del viaggio.
+        4. AZIONI:
+           - ADD: {{"action": "ADD", "item": {{"title": "..", "description": "..", "start_time": "ISO8601", "type": "ACTIVITY|FOOD|TRANSPORT"}}}}
            - DELETE: {{"action": "DELETE", "id": 123}}
-        4. RICHIESTE MULTIGIORNO (es. "Tutte le mattine spiaggia"): Genera UN comando ADD per OGNI SINGOLO GIORNO del viaggio nel range di date indicato sopra.
-        5. Se l'utente vuole cambiare un'attività esistente, fai DELETE del vecchio ID e ADD del nuovo.
-        6. SEGUI RIGOROSAMENTE LE DATE DEL VIAGGIO ({trip.start_date} al {trip.end_date}).
         
-        RISPONDI SEMPRE E SOLO IN FORMATO JSON:
+        RISPONDI SEMPRE E SOLO IN JSON (senza testo fuori dal blocco):
         {{
-            "reply": "Messaggio di conferma per l'utente",
+            "reply": "Messaggio di conferma",
             "commands": []
         }}
         """
@@ -724,20 +723,19 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
             return {"reply": "AI non disponibile.", "itinerary": [i.model_dump() for i in itinerary]}
         
         response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+        raw_text = response.text.strip()
         
-        # Pulizia robusta del JSON
-        clean_text = response.text.strip()
-        if "```json" in clean_text:
-            clean_text = clean_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in clean_text:
-            clean_text = clean_text.split("```")[1].split("```")[0].strip()
+        print(f"[DEBUG] Raw AI Response: {raw_text}")
+        
+        # Estrazione JSON tramite Regex (più robusta)
+        json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+        if not json_match:
+            return {"reply": "Scusa, non sono riuscito a elaborare la modifica. Prova a chiedermelo in modo diverso.", "itinerary": [i.model_dump() for i in itinerary]}
         
         try:
-            data = json.loads(clean_text)
-        except Exception as json_err:
-            print(f"[JSON Error] Fallback parsing per: {clean_text}")
-            # Se Gemini fallisce il formato, proviamo a estrarre solo il testo
-            return {"reply": "Scusa, ho avuto un problema tecnico nel generare i comandi. Puoi riprovare con una richiesta più semplice?", "itinerary": itinerary}
+            data = json.loads(json_match.group())
+        except:
+            return {"reply": "C'è stato un errore nel formato della risposta AI. Riprova tra un istante.", "itinerary": [i.model_dump() for i in itinerary]}
 
         # Esecuzione Comandi
         for cmd in data.get("commands", []):
@@ -751,14 +749,22 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
                         item = session.get(ItineraryItem, item_id)
                         if item and item.trip_id == trip_id: 
                             session.delete(item)
-            except Exception as cmd_err:
-                print(f"[CMD Error] Errore comando {cmd}: {cmd_err}")
+            except Exception as e:
+                print(f"[CMD Error] {e}")
         
         session.commit()
         
-        # Recupero itinerario aggiornato
+        # Recupero e SERIAZIONE ESPLICITA per evitare errori Vercel/FastAPI
         updated = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
-        return {"reply": data.get("reply", "Itinerario aggiornato!"), "itinerary": updated}
+        return {
+            "reply": data.get("reply", "Itinerario aggiornato!"), 
+            "itinerary": [i.model_dump() for i in updated]
+        }
+        
+    except Exception as e:
+        session.rollback()
+        print(f"[Chat Error] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         session.rollback()

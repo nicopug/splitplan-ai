@@ -677,7 +677,7 @@ def get_participants(trip_id: int, session: Session = Depends(get_session), curr
 
 @router.post("/{trip_id}/chat")
 def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Chat AI avanzata: può aggiungere o eliminare item dall'itinerario"""
+    """Chat AI evoluta: gestisce contesto temporale, history e comandi multipli"""
     try:
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -685,36 +685,80 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
             
         itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
         
+        # Preparazione Cronologia (ultimi 5 messaggi per contesto)
+        history_text = ""
+        if req.history:
+            history_text = "\n".join([f"{m['role'].upper()}: {m['text']}" for m in req.history[-5:]])
+
         prompt = f"""
-        Sei SplitPlan Assistant. Viaggio: {trip.name} ({trip.destination}).
-        ITINERARIO: {json.dumps([i.model_dump() for i in itinerary])}
-        UTENTE: "{req.message}"
+        Sei SplitPlan Assistant, un esperto Travel Agent. 
+        VIAGGIO: {trip.name} a {trip.destination}
+        DATE: dal {trip.start_date} al {trip.end_date} (FORMATO ISO)
         
-        ISTRUZIONI:
-        1. Rispondi cordialmente.
-        2. Se richiesto, genera comandi JSON in 'commands':
-           - ADD: {{"action": "ADD", "item": {{"title": "..", "description": "..", "start_time": "ISO8601", "type": "ACTIVITY"}}}}
+        ITINERARIO ATTUALE:
+        {json.dumps([i.model_dump() for i in itinerary], indent=2)}
+        
+        CRONOLOGIA RECENTE:
+        {history_text}
+        
+        RICHIESTA UTENTE: "{req.message}"
+        
+        ISTRUZIONI CRITICHE:
+        1. Rispondi cordialmente in ITALIANO.
+        2. Se l'utente chiede di aggiungere, modificare o eliminare attività, usa la lista 'commands'.
+        3. AZIONI DISPONIBILI:
+           - ADD: {{"action": "ADD", "item": {{"title": "Titolo Breve", "description": "..", "start_time": "YYYY-MM-DDTHH:MM:SS", "type": "ACTIVITY|FOOD|TRANSPORT|CHECKIN"}}}}
            - DELETE: {{"action": "DELETE", "id": 123}}
-        RISPONDI JSON: {{"reply": "...", "commands": []}}
+        4. RICHIESTE MULTIGIORNO (es. "Tutte le mattine spiaggia"): Genera UN comando ADD per OGNI SINGOLO GIORNO del viaggio nel range di date indicato sopra.
+        5. Se l'utente vuole cambiare un'attività esistente, fai DELETE del vecchio ID e ADD del nuovo.
+        6. SEGUI RIGOROSAMENTE LE DATE DEL VIAGGIO ({trip.start_date} al {trip.end_date}).
+        
+        RISPONDI SEMPRE E SOLO IN FORMATO JSON:
+        {{
+            "reply": "Messaggio di conferma per l'utente",
+            "commands": []
+        }}
         """
         
         if not ai_client: 
-            return {"reply": "AI non disponibile.", "itinerary": []}
+            return {"reply": "AI non disponibile.", "itinerary": [i.model_dump() for i in itinerary]}
         
         response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
-        data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
         
+        # Pulizia robusta del JSON
+        clean_text = response.text.strip()
+        if "```json" in clean_text:
+            clean_text = clean_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in clean_text:
+            clean_text = clean_text.split("```")[1].split("```")[0].strip()
+        
+        try:
+            data = json.loads(clean_text)
+        except Exception as json_err:
+            print(f"[JSON Error] Fallback parsing per: {clean_text}")
+            # Se Gemini fallisce il formato, proviamo a estrarre solo il testo
+            return {"reply": "Scusa, ho avuto un problema tecnico nel generare i comandi. Puoi riprovare con una richiesta più semplice?", "itinerary": itinerary}
+
+        # Esecuzione Comandi
         for cmd in data.get("commands", []):
-            if cmd["action"] == "ADD":
-                session.add(ItineraryItem(trip_id=trip_id, **cmd["item"]))
-            elif cmd["action"] == "DELETE":
-                item = session.get(ItineraryItem, cmd["id"])
-                if item and item.trip_id == trip_id: 
-                    session.delete(item)
+            try:
+                if cmd["action"] == "ADD":
+                    new_item = ItineraryItem(trip_id=trip_id, **cmd["item"])
+                    session.add(new_item)
+                elif cmd["action"] == "DELETE":
+                    item_id = cmd.get("id")
+                    if item_id:
+                        item = session.get(ItineraryItem, item_id)
+                        if item and item.trip_id == trip_id: 
+                            session.delete(item)
+            except Exception as cmd_err:
+                print(f"[CMD Error] Errore comando {cmd}: {cmd_err}")
         
         session.commit()
+        
+        # Recupero itinerario aggiornato
         updated = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
-        return {"reply": data["reply"], "itinerary": updated}
+        return {"reply": data.get("reply", "Itinerario aggiornato!"), "itinerary": updated}
         
     except Exception as e:
         session.rollback()

@@ -707,8 +707,9 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         ISTRUZIONI:
         1. Rispondi cordialmente in ITALIANO.
         2. Se l'utente vuole CAMBIARE o SPOSTARE qualcosa, devi fare DELETE dell'item corrente (usando il suo ID) e ADD di quello nuovo con i dati corretti.
-        3. Se l'utente vuole aggiungere attività ricorrenti (es. ogni mattina), crea un comando ADD per ogni giorno del viaggio.
-        4. AZIONI:
+        3. IMPORTANTE: Se riorganizzi l'itinerario, assicurati di NON PERDERE attività. Se cancelli un giorno per spostarlo, devi RIGENERARE tutte le attività di quel giorno.
+        4. Se l'utente vuole aggiungere attività ricorrenti (es. ogni mattina), crea un comando ADD per ogni giorno del viaggio.
+        5. AZIONI:
            - ADD: {{"action": "ADD", "item": {{"title": "..", "description": "..", "start_time": "ISO8601", "type": "ACTIVITY|FOOD|TRANSPORT"}}}}
            - DELETE: {{"action": "DELETE", "id": 123}}
         
@@ -741,7 +742,12 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         for cmd in data.get("commands", []):
             try:
                 if cmd["action"] == "ADD":
-                    new_item = ItineraryItem(trip_id=trip_id, **cmd["item"])
+                    # Pulizia dei dati per evitare errori di argomenti multipli (es. trip_id)
+                    item_data = cmd["item"].copy()
+                    item_data.pop("id", None)
+                    item_data.pop("trip_id", None)
+                    
+                    new_item = ItineraryItem(trip_id=trip_id, **item_data)
                     session.add(new_item)
                 elif cmd["action"] == "DELETE":
                     item_id = cmd.get("id")
@@ -750,7 +756,7 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
                         if item and item.trip_id == trip_id: 
                             session.delete(item)
             except Exception as e:
-                print(f"[CMD Error] {e}")
+                print(f"[CMD Error] Fallito comando {cmd.get('action')}: {e}")
         
         session.commit()
         

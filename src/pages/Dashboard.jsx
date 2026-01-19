@@ -166,12 +166,12 @@ const Dashboard = () => {
                         <>
                             {/* Premium Section: Links */}
                             {user?.is_subscribed && (
-                                <>
-                                    <Logistics trip={trip} />
-                                    {!trip.accommodation && (
-                                        <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
-                                    )}
-                                </>
+                                <Logistics trip={trip} />
+                            )}
+
+                            {/* Hotel Form: Visible to everyone to complete the itinerary */}
+                            {!trip.accommodation && (
+                                <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
                             )}
 
                             {/* Itinerary Section: Full for everyone */}
@@ -203,7 +203,7 @@ const Dashboard = () => {
                                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💎</div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Sblocca il Potenziale Completo</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Ora puoi vedere l'intero itinerario! Passa a <b>Premium</b> per sbloccare i link di prenotazione diretti (Skyscanner/Booking) e caricare foto illimitate.
+                                            Passa a <b>Premium</b> per sbloccare i link di prenotazione diretti (Skyscanner/Booking) e gestire il budget.
                                         </p>
                                         <button
                                             onClick={() => navigate('/auth')}

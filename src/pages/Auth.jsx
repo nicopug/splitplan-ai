@@ -130,7 +130,7 @@ const Auth = () => {
                     email: formData.email,
                     password: formData.password
                 });
-                setMessage("Registrazione completata! Ora puoi accedere.");
+                setMessage("Registrazione completata! Controlla la tua email per verificare l'account prima di accedere.");
                 setIsLogin(true);
             }
         } catch (err) {

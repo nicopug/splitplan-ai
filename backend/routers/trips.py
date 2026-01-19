@@ -335,7 +335,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
                 TASK 2: Genera 3 proposte UNICHE per: {prefs.destination}. 
                 Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico). 
-                SE la destinazione è una singola città (es. Parigi), usa titoli creativi (es. 'Parigi Bohemienne', 'Parigi dei Musei') per differenziarle.
+                SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne', 'Parigi Segreta') per differenziarle.
                 Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 RESTITUISCI SOLO JSON:
@@ -343,15 +343,19 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     "departure_iata_normalized": "XXX",
                     "proposals": [
                         {{
-                            "destination": "Città, Nazione", 
+                            "destination": "Titolo Creativo (es. Parigi dei Musei)", 
                             "destination_iata": "XXX", 
+                            "destination_english": "Paris",
                             "description": "...", 
                             "price_estimate": 1000, 
-                            "image_search_term": "Eiffel Tower Paris"
+                            "image_search_term": "louvre,museum"
                         }}
                     ]
                 }}
-                NOTE: Il campo 'image_search_term' deve contenere 1 o 2 monumenti iconic in INGLESE e DEVE essere diverso per ogni proposta.
+                NOTE: 
+                - 'destination' deve essere il TITOLO CREATIVO (unico per ogni proposta).
+                - 'destination_english' deve essere il nome della città principale in INGLESE.
+                - 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE specifiche per quel tema.
                 LINGUA: ITALIANO.
                 """
                 
@@ -369,14 +373,18 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
-                    search = p.get("image_search_term") or p.get("destination")
-                    destination_clean = p["destination"].split(",")[0].strip()
-                    # Curiamo le tag: includiamo SEMPRE la destinazione e termini "travel,scenic" per evitare immagini casuali (es. gatti turchi per Parigi)
-                    curated_tags = f"{search},{destination_clean},travel,scenic".lower().replace(" ", ",")
+                    search = p.get("image_search_term") or ""
+                    dest_en = p.get("destination_english") or ""
+                    # Prepariamo tag pulite in INGLESE per LoremFlickr
+                    curated_tags = f"{dest_en},{search},travel".lower().replace(" ", ",")
+                    # Pulizia virgole doppie o vuote
+                    tag_list = [t.strip() for t in curated_tags.split(",") if t.strip()]
+                    final_tags = ",".join(tag_list[:3]) # Limitiamo a 3 tag per massima compatibilità
+                    
                     seed = random.randint(1, 10000)
-                    # Usiamo LoremFlickr con tags sicuri e lock per varietà
-                    encoded_tags = urllib.parse.quote(curated_tags, safe=',')
-                    img_url = f"https://loremflickr.com/1080/720/{encoded_tags}?lock={seed}"
+                    encoded_tags = urllib.parse.quote(final_tags, safe=',')
+                    # Usiamo /all per forzare la precisione dei tag
+                    img_url = f"https://loremflickr.com/1080/720/{encoded_tags}/all?lock={seed}"
                     
                     session.add(Proposal(
                         trip_id=trip_id, 

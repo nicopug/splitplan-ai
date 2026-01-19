@@ -3,11 +3,7 @@ import React from 'react';
 const Timeline = ({ items }) => {
     // Safety Check for Null/Undefined items
     if (!items || !Array.isArray(items) || items.length === 0) {
-        return (
-            <div className="container section text-center">
-                <p>Nessun itinerario disponibile al momento.</p>
-            </div>
-        );
+        return null;
     }
 
     // Group by Day (Safely)

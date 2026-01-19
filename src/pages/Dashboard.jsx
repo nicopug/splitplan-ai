@@ -164,32 +164,14 @@ const Dashboard = () => {
 
                     {trip.status === 'BOOKED' && (
                         <>
-                            {/* Premium Section: Links */}
+                            {/* 1. Logistics (Premium only) */}
                             {user?.is_subscribed && (
                                 <Logistics trip={trip} />
                             )}
 
-                            {/* Hotel Form: Visible to everyone to complete the itinerary */}
-                            {!trip.accommodation && (
-                                <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
-                            )}
-
-                            {/* Itinerary Section: Full for everyone */}
-                            <div className="container" style={{ marginTop: '2rem' }}>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
-                                </div>
-
-                                <Map
-                                    items={itinerary}
-                                    hotelLat={trip.hotel_latitude}
-                                    hotelLon={trip.hotel_longitude}
-                                    startDate={trip.start_date}
-                                />
-
-                                <Timeline items={itinerary} />
-
-                                {!user?.is_subscribed && (
+                            {/* 2. Premium Teaser (Base only) - Moved UP */}
+                            {!user?.is_subscribed && (
+                                <div className="container" style={{ marginTop: '2rem' }}>
                                     <div className="premium-teaser-inline" style={{
                                         background: 'rgba(255,255,255,0.6)',
                                         backdropFilter: 'blur(10px)',
@@ -197,8 +179,7 @@ const Dashboard = () => {
                                         borderRadius: '24px',
                                         textAlign: 'center',
                                         border: '1px solid rgba(35, 89, 158, 0.2)',
-                                        marginTop: '2rem',
-                                        marginBottom: '4rem'
+                                        marginBottom: '2rem'
                                     }}>
                                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💎</div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Sblocca il Potenziale Completo</h3>
@@ -212,8 +193,31 @@ const Dashboard = () => {
                                             Attiva Premium ora
                                         </button>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
+
+                            {/* 3. Hotel Form: Visible to everyone to complete the itinerary */}
+                            {!trip.accommodation && (
+                                <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
+                            )}
+
+                            {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
+                            {trip.accommodation && itinerary && itinerary.length > 0 && (
+                                <div className="container" style={{ marginTop: '2rem' }}>
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                    </div>
+
+                                    <Map
+                                        items={itinerary}
+                                        hotelLat={trip.hotel_latitude}
+                                        hotelLon={trip.hotel_longitude}
+                                        startDate={trip.start_date}
+                                    />
+
+                                    <Timeline items={itinerary} />
+                                </div>
+                            )}
                         </>
                     )}
                 </>

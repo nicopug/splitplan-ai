@@ -455,36 +455,46 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             {places_prompt}
             Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
             
-            REGOLE CRITICHE PER LA MAPPA:
-            1. JSON ARRAY. 
-            2. Fornisci COORDINATE GPS (lat, lon) PRECISE per ogni singolo luogo.
-            3. Gli spostamenti devono essere geograficamente logici e vicini all'hotel quando possibile.
-            4. Ogni pasto (Pranzo/Cena) DEVE avere il nome di un ristorante REALE.
-            5. Ogni attività DEVE essere un luogo preciso (es. 'Torre Eiffel' non 'Giro al museo').
-            6. Lingua: Italiano.
-            FORMATO: [{{"title": "Nome Locale", "description": "Dettagli", "start_time": "ISO8601", "end_time": "ISO8601", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8584, "lon": 2.2945}}]
+            REGOLE CRITICHE DI TIMING E LOGICA:
+            1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).
+            2. ORARI REALI: 
+               - Colazione: 08:00 - 09:00
+               - Attività Mattina: 09:30 - 12:30
+               - Pranzo: 13:00 - 14:30
+               - Attività Pomeriggio: 15:00 - 18:30
+               - Cena: 20:00 - 22:00
+            3. TRASPORTI: Il primo giorno inizia DOPO l'ora di arrivo ({trip.arrival_time or '14:00'}). L'ultimo giorno finisce PRIMA dell'ora di ritorno ({trip.return_time or '18:00'}).
+            4. DURATA: Ogni attività deve durare almeno 1.5 - 2 ore.
+            5. JSON ARRAY: Restituisci un array di oggetti.
+            6. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.
+            7. LINGUA: Italiano.
+
+            FORMATO: [{{"title": "Nome Locale", "description": "Dettagli", "start_time": "YYYY-MM-DDTHH:mm:ss", "end_time": "YYYY-MM-DDTHH:mm:ss", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8584, "lon": 2.2945}}]
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
             items_data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
             
-            # Elimina itinerario esistente usando delete statement
+            # Ordiniamo gli item per start_time prima di salvarli per garantire coerenza
+            try:
+                items_data.sort(key=lambda x: x.get("start_time", ""))
+            except:
+                pass
+
+            # Elimina itinerario esistente
             session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
             session.commit()
             
             for item in items_data:
-                # Usa le coordinate fornite dall'AI invece di fare 20 chiamate OSM lente
                 lat = item.get("lat")
                 lon = item.get("lon")
-                # Se mancano o sono 0, fallback solo per questo specifico item (raro)
                 if not lat or lat == 0:
                     lat, lon = get_coordinates(f"{item['title']}, {proposal.destination}")
                 
-                # Rimuovi chiavi lat/lon dal dizionario per evitare doppioni nel costruttore
                 clean_item = {k: v for k, v in item.items() if k not in ["lat", "lon"]}
                 session.add(ItineraryItem(trip_id=trip.id, latitude=lat, longitude=lon, **clean_item))
             session.commit()
-            print(f"[System] Itinerary for Trip {trip.id} generated successfully (Optimized).")
+            print(f"[System] Itinerary for Trip {trip.id} generated correctly and sorted.")
             return
         except Exception as e:
             print(f"[AI Error] Itinerario fallito: {e}")

@@ -41,6 +41,7 @@ class TripBase(SQLModel):
     destination_iata: Optional[str] = None
     departure_airport: Optional[str] = None 
     departure_city: Optional[str] = None
+    real_destination: Optional[str] = ""
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -71,6 +72,7 @@ class Proposal(SQLModel, table=True):
     description: str
     price_estimate: float
     image_url: str
+    real_destination: Optional[str] = ""
     
     trip: Optional[Trip] = Relationship(back_populates="proposals")
     votes: List["Vote"] = Relationship(back_populates="proposal")

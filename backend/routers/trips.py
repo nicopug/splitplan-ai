@@ -389,9 +389,10 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
-                        destination_iata=p.get("destination_iata"), 
-                        description=p["description"], 
-                        price_estimate=p["price_estimate"], 
+                        real_destination=dest_en, # Salviamo il nome reale (es. Paris)
+                        destination_iata=p.get("destination_iata"),
+                        description=p["description"],
+                        price_estimate=p["price_estimate"],
                         image_url=img_url
                     ))
                 
@@ -611,6 +612,7 @@ def vote_proposal(
             if best_p:
                 trip.winning_proposal_id = best_p.id
                 trip.destination = best_p.destination
+                trip.real_destination = best_p.real_destination # Copiamo il nome reale
                 trip.destination_iata = best_p.destination_iata
                 trip.status = "BOOKED"
                 session.add(trip)

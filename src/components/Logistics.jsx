@@ -21,7 +21,8 @@ const Logistics = ({ trip }) => {
     const dest = trip.destination_iata || "JFK";
 
     // Safety check for destination name
-    const destName = trip.destination ? trip.destination : "Destinazione";
+    // Usiamo real_destination (es. "Paris") per i link di ricerca, destination (titolo creativo) solo come fallback
+    const destName = trip.real_destination || trip.destination || "Destinazione";
 
     const start = formatDate(trip.start_date);
     const end = formatDate(trip.end_date);

@@ -34,8 +34,7 @@ const Timeline = ({ items }) => {
     const sortedDates = Object.keys(grouped).sort();
 
     return (
-        <div className="container section">
-            <h2 className="text-center" style={{ marginBottom: '2rem' }}>Il Tuo Itinerario 🗺️</h2>
+        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
 
             <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
                 {/* Vertical Line */}

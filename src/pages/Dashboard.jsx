@@ -247,7 +247,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Vuoi modificare il tuo itinerario semplicemente parlando? I nostri utenti <b>Premium</b>
+                                    Vuoi modificare il tuo itinerario semplicemente parlando? I nostri utenti <b>Premium </b>
                                     possono usare l'AI per aggiungere, spostare o rimuovere attività istantaneamente.
                                 </p>
                                 <button
@@ -280,7 +280,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Gestione Budget Avanzata</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Tieni traccia del tuo budget di viaggio! Gli utenti <b>Premium</b>
+                                    Tieni traccia del tuo budget di viaggio! Gli utenti <b>Premium </b>
                                     possono vedere quanto hanno speso per volo e hotel, e quanto rimane per attività e pasti.
                                 </p>
                                 <button

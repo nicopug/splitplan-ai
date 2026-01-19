@@ -333,7 +333,9 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 prompt = f"""
                 Agisci come un Travel Agent esperto. 
                 TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
-                TASK 2: Genera 3 proposte per: {prefs.destination}.
+                TASK 2: Genera 3 proposte UNICHE per: {prefs.destination}. 
+                Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico). 
+                SE la destinazione è una singola città (es. Parigi), usa titoli creativi (es. 'Parigi Bohemienne', 'Parigi dei Musei') per differenziarle.
                 Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 RESTITUISCI SOLO JSON:
@@ -349,7 +351,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                         }}
                     ]
                 }}
-                NOTE: Il campo 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE per monumenti o luoghi iconici (es. 'Colosseum,Rome' per Roma).
+                NOTE: Il campo 'image_search_term' deve contenere 1 o 2 monumenti iconic in INGLESE e DEVE essere diverso per ogni proposta.
                 LINGUA: ITALIANO.
                 """
                 
@@ -368,11 +370,12 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 # Crea nuove proposte
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or p.get("destination")
-                    # Prepariamo le tag per LoremFlickr (separandole con la virgola per accuratezza)
-                    tags = search.replace(" ", ",").lower()
+                    destination_clean = p["destination"].split(",")[0].strip()
+                    # Curiamo le tag: includiamo SEMPRE la destinazione e termini "travel,scenic" per evitare immagini casuali (es. gatti turchi per Parigi)
+                    curated_tags = f"{search},{destination_clean},travel,scenic".lower().replace(" ", ",")
                     seed = random.randint(1, 10000)
-                    # Usiamo LoremFlickr senza /all e permettendo le virgole nell'encoding
-                    encoded_tags = urllib.parse.quote(tags, safe=',')
+                    # Usiamo LoremFlickr con tags sicuri e lock per varietà
+                    encoded_tags = urllib.parse.quote(curated_tags, safe=',')
                     img_url = f"https://loremflickr.com/1080/720/{encoded_tags}?lock={seed}"
                     
                     session.add(Proposal(

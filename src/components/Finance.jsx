@@ -5,9 +5,9 @@ import { useToast } from '../context/ToastContext';
 const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
     const { showToast } = useToast();
     const [tab, setTab] = useState('list');
-    const [expenses, setExpenses] = useState(readOnly ? sharedExpenses : []);
+    const [expenses, setExpenses] = useState((readOnly && sharedExpenses) ? sharedExpenses : []);
     const [balances, setBalances] = useState([]);
-    const [participants, setParticipants] = useState(readOnly ? sharedParticipants : []);
+    const [participants, setParticipants] = useState((readOnly && sharedParticipants) ? sharedParticipants : []);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(!readOnly);
 

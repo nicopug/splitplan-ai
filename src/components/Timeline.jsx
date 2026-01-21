@@ -7,15 +7,15 @@ const Timeline = ({ items }) => {
     }
 
     // Group by Day (Safely)
-    const grouped = items.reduce((acc, item) => {
+    const grouped = (items || []).reduce((acc, item) => {
+        if (!item) return acc;
         try {
             let date = "Data Sconosciuta";
             if (item.start_time) {
                 // Handle "YYYY-MM-DDTHH:mm:ss" vs just "YYYY-MM-DD"
-                if (item.start_time.includes('T')) {
+                if (typeof item.start_time === 'string' && item.start_time.includes('T')) {
                     date = item.start_time.split('T')[0];
                 } else {
-                    // Try parsing
                     const d = new Date(item.start_time);
                     if (!isNaN(d.getTime())) {
                         date = d.toISOString().split('T')[0];

@@ -6,7 +6,7 @@ import { useModal } from '../context/ModalContext';
 const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
     const { showToast } = useToast();
     const { showConfirm } = useModal();
-    const [photos, setPhotos] = useState(readOnly ? sharedPhotos : []);
+    const [photos, setPhotos] = useState((readOnly && sharedPhotos) ? sharedPhotos : []);
     const [loading, setLoading] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState(null); // Stato per la foto ingrandita
     const fileInputRef = useRef(null);

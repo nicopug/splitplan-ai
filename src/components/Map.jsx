@@ -7,27 +7,43 @@ import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
 // Component to auto-center map when items change
 function ChangeView({ bounds }) {
     const map = useMap();
     useEffect(() => {
         if (bounds && bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50] });
+            try {
+                if (bounds.length === 1) {
+                    map.setView(bounds[0], map.getZoom());
+                } else {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } catch (e) {
+                console.warn("Map view update failed", e);
+            }
         }
     }, [bounds, map]);
     return null;
 }
 
-const Map = ({ items, hotelLat, hotelLon, startDate }) => {
+const Map = ({ items = [], hotelLat, hotelLon, startDate }) => {
+    // Fix for default marker icons inside the component to avoid SSR/Initial load issues
+    useEffect(() => {
+        if (typeof L !== 'undefined' && L.icon) {
+            try {
+                const DefaultIcon = L.icon({
+                    iconUrl: icon,
+                    shadowUrl: iconShadow,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+                L.Marker.prototype.options.icon = DefaultIcon;
+            } catch (e) {
+                console.warn("Leaflet icon setup failed", e);
+            }
+        }
+    }, []);
+
     // Red marker for the hotel
     const RedIcon = L.divIcon({
         className: 'custom-hotel-marker',
@@ -54,20 +70,27 @@ const Map = ({ items, hotelLat, hotelLon, startDate }) => {
 
     // Function to calculate Day X from startDate
     const getDayNumber = (itemDate) => {
-        if (!startDate || !itemDate) return null;
+        if (!startDate || !itemDate || typeof startDate !== 'string' || typeof itemDate !== 'string') return null;
         try {
-            const start = new Date(startDate.split('T')[0]);
-            const current = new Date(itemDate.split('T')[0]);
+            const startPart = startDate.split('T')[0];
+            const currentPart = itemDate.split('T')[0];
+            if (!startPart || !currentPart) return null;
+
+            const start = new Date(startPart);
+            const current = new Date(currentPart);
+            if (isNaN(start.getTime()) || isNaN(current.getTime())) return null;
+
             const diffTime = Math.abs(current - start);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             return diffDays + 1;
         } catch (e) {
+            console.warn("getDayNumber error", e);
             return null;
         }
     };
 
     // Filter items with valid coordinates
-    const mapItems = items.filter(i => i.latitude && i.longitude);
+    const mapItems = (items || []).filter(i => i && i.latitude && i.longitude);
 
     // Initial positions for polyline
     const polylinePositions = mapItems.map(i => [i.latitude, i.longitude]);

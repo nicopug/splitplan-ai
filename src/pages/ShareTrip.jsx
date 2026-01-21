@@ -36,9 +36,20 @@ const ShareTrip = () => {
 
     if (error || !data) return (
         <div className="section text-center" style={{ paddingTop: '10rem' }}>
-            <h2 className="text-error">Oops! Viaggio non trovato 😕</h2>
-            <p className="text-muted">Il link potrebbe essere scaduto o non valido.</p>
-            <Link to="/" className="btn btn-primary mt-4">Torna alla Home</Link>
+            <h2 className="text-error">Oops! Qualcosa è andato storto 😕</h2>
+            <p className="text-muted">{error || "Il link potrebbe essere scaduto o non valido."}</p>
+
+            {error && (
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid #ddd' }}>
+                    <strong>Dettaglio Tecnico:</strong> {error}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                <button onClick={() => window.location.reload()} className="btn btn-secondary">Riprova 🔄</button>
+                <Link to="/" className="btn btn-primary">Torna alla Home</Link>
+            </div>
+            <p style={{ marginTop: '2rem', fontSize: '0.7rem', opacity: 0.5 }}>Build ID: sharing-v2-debug</p>
         </div>
     );
 

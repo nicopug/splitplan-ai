@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from ..database import get_session
 from ..auth import get_current_user
-from ..models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account
+from ..models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account, Expense, Photo
 
 # Caricamento variabili ambiente
 load_dotenv()
@@ -305,11 +305,13 @@ def generate_share_token(trip_id: int, session: Session = Depends(get_session), 
 
 @router.get("/share/{token}")
 def get_shared_trip(token: str, session: Session = Depends(get_session)):
-    """Recupera i dati del viaggio tramite token pubblico (read-only)"""
+    print(f"[DEBUG] get_shared_trip: Token ricevuto = {token}")
     trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
     if not trip:
+        print(f"[DEBUG] get_shared_trip: Viaggio non trovato nel DB per token {token}")
         raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
         
+    print(f"[DEBUG] get_shared_trip: Viaggio trovato! ID = {trip.id}")
     # Recuperiamo anche i dati correlati necessari per la visualizzazione
     itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip.id).order_by(ItineraryItem.start_time)).all()
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip.id)).all()
@@ -318,10 +320,10 @@ def get_shared_trip(token: str, session: Session = Depends(get_session)):
     
     # Prepariamo un oggetto di risposta che includa tutto il necessario
     return {
-        "trip": trip,
-        "itinerary": itinerary,
+        "trip": trip.model_dump(exclude={"participants", "proposals", "itinerary_items", "expenses", "photos"}),
+        "itinerary": [i.model_dump() for i in itinerary],
         "expenses": [e.model_dump() for e in expenses],
-        "photos": photos,
+        "photos": [p.model_dump() for p in photos],
         "participants": [{"id": p.id, "name": p.name} for p in participants]
     }
 

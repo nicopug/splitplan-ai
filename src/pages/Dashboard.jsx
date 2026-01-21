@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -86,6 +86,17 @@ const Dashboard = () => {
     };
 
 
+    const handleShare = async () => {
+        try {
+            const res = await generateShareLink(id);
+            const shareUrl = `${window.location.origin}/share/${res.share_token}`;
+            await navigator.clipboard.writeText(shareUrl);
+            showToast("🔗 Link di condivisione copiato negli appunti!", "success");
+        } catch (e) {
+            showToast("Errore condivisione: " + e.message, "error");
+        }
+    };
+
     if (loading) return <div className="section text-center">Caricamento in corso... ⏳</div>;
     if (!trip) return <div className="section text-center">Viaggio non trovato 😕</div>;
 
@@ -110,6 +121,28 @@ const Dashboard = () => {
                             </span>
                         </div>
                     )}
+
+                    <div style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                        <button
+                            onClick={handleShare}
+                            style={{
+                                background: 'white',
+                                color: 'var(--accent-orange)',
+                                padding: '0.4rem 1rem',
+                                borderRadius: '20px',
+                                border: 'none',
+                                fontSize: '0.85rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                        >
+                            🔗 Condividi Viaggio (Sola Lettura)
+                        </button>
+                    </div>
 
                     <div style={{ marginTop: '1rem' }}>
                         <button

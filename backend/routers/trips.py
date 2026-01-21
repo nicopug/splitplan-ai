@@ -7,6 +7,7 @@ import requests
 import random
 import urllib.parse
 from datetime import datetime, date
+import secrets
 # SDK Ufficiale Google
 from google import genai
 from dotenv import load_dotenv
@@ -110,6 +111,18 @@ def migrate_db_coords(session: Session = Depends(get_session)):
         session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;"))
         session.commit()
         return {"status": "success", "message": "Colonne coordinate aggiunte."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.get("/migrate-share-token")
+def migrate_share_token(session: Session = Depends(get_session)):
+    """Aggiunge share_token alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS share_token VARCHAR;"))
+        session.commit()
+        return {"status": "success", "message": "Colonna share_token aggiunta."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
@@ -269,6 +282,48 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
         raise HTTPException(status_code=403, detail="Non partecipi a questo viaggio")
         
     return trip
+
+@router.post("/{trip_id}/share")
+def generate_share_token(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Genera o restituisce il token di condivisione del viaggio"""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+    
+    # Verifica che l'utente sia l'organizzatore
+    participant = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
+    if not participant or not participant.is_organizer:
+        raise HTTPException(status_code=403, detail="Solo l'organizzatore può generare il link di condivisione")
+    
+    if not trip.share_token:
+        trip.share_token = secrets.token_urlsafe(16)
+        session.add(trip)
+        session.commit()
+        session.refresh(trip)
+        
+    return {"share_token": trip.share_token}
+
+@router.get("/share/{token}")
+def get_shared_trip(token: str, session: Session = Depends(get_session)):
+    """Recupera i dati del viaggio tramite token pubblico (read-only)"""
+    trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
+        
+    # Recuperiamo anche i dati correlati necessari per la visualizzazione
+    itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip.id).order_by(ItineraryItem.start_time)).all()
+    expenses = session.exec(select(Expense).where(Expense.trip_id == trip.id)).all()
+    photos = session.exec(select(Photo).where(Photo.trip_id == trip.id)).all()
+    participants = session.exec(select(Participant).where(Participant.trip_id == trip.id)).all()
+    
+    # Prepariamo un oggetto di risposta che includa tutto il necessario
+    return {
+        "trip": trip,
+        "itinerary": itinerary,
+        "expenses": [e.model_dump() for e in expenses],
+        "photos": photos,
+        "participants": [{"id": p.id, "name": p.name} for p in participants]
+    }
 
 @router.patch("/{trip_id}")
 def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):

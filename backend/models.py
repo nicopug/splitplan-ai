@@ -42,6 +42,7 @@ class TripBase(SQLModel):
     departure_airport: Optional[str] = None 
     departure_city: Optional[str] = None
     real_destination: Optional[str] = ""
+    share_token: Optional[str] = Field(default=None, index=True)
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

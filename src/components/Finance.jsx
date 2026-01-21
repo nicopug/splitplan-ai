@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { addExpense, getExpenses, getBalances, getParticipants } from '../api';
 import { useToast } from '../context/ToastContext';
 
-const Finance = ({ trip }) => {
+const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
     const { showToast } = useToast();
     const [tab, setTab] = useState('list');
-    const [expenses, setExpenses] = useState([]);
+    const [expenses, setExpenses] = useState(readOnly ? sharedExpenses : []);
     const [balances, setBalances] = useState([]);
-    const [participants, setParticipants] = useState([]);
+    const [participants, setParticipants] = useState(readOnly ? sharedParticipants : []);
     const [showForm, setShowForm] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!readOnly);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -41,10 +41,62 @@ const Finance = ({ trip }) => {
     };
 
     useEffect(() => {
-        if (trip?.id) {
+        if (trip?.id && !readOnly) {
             fetchData();
+        } else if (readOnly) {
+            // Se in sola lettura, calcoliamo solo i bilanci dai dati passati
+            calculateBalancesLocally();
         }
-    }, [trip?.id]);
+    }, [trip?.id, readOnly]);
+
+    const calculateBalancesLocally = () => {
+        if (!expenses.length || !participants.length) return;
+
+        const balancesMap = { ...participants.reduce((acc, p) => ({ ...acc, [p.id]: 0.0 }), {}) };
+        const userMap = { ...participants.reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {}) };
+
+        expenses.forEach(exp => {
+            if (balancesMap[exp.payer_id] !== undefined) {
+                balancesMap[exp.payer_id] += exp.amount;
+            }
+            const splitAmount = exp.amount / participants.length;
+            participants.forEach(p => {
+                balancesMap[p.id] -= splitAmount;
+            });
+        });
+
+        const debtors = [];
+        const creditors = [];
+        Object.entries(balancesMap).forEach(([uid, bal]) => {
+            const rounded = Math.round(bal * 100) / 100;
+            if (rounded < -0.01) debtors.push({ id: parseInt(uid), amount: -rounded });
+            else if (rounded > 0.01) creditors.push({ id: parseInt(uid), amount: rounded });
+        });
+
+        debtors.sort((a, b) => b.amount - a.amount);
+        creditors.sort((a, b) => b.amount - a.amount);
+
+        const settlements = [];
+        let i = 0, j = 0;
+        const d_copy = JSON.parse(JSON.stringify(debtors));
+        const c_copy = JSON.parse(JSON.stringify(creditors));
+
+        while (i < d_copy.length && j < c_copy.length) {
+            const amount = Math.min(d_copy[i].amount, c_copy[j].amount);
+            if (amount > 0) {
+                settlements.push({
+                    debtor_id: d_copy[i].id,
+                    creditor_id: c_copy[j].id,
+                    amount: Math.round(amount * 100) / 100
+                });
+            }
+            d_copy[i].amount -= amount;
+            c_copy[j].amount -= amount;
+            if (d_copy[i].amount < 0.01) i++;
+            if (c_copy[j].amount < 0.01) j++;
+        }
+        setBalances(settlements);
+    };
 
 
     const handleAddExpense = async (e) => {
@@ -98,11 +150,13 @@ const Finance = ({ trip }) => {
                     </div>
 
                     {/* Add Expense Button */}
-                    <div className="text-center" style={{ marginBottom: '2rem' }}>
-                        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ background: 'var(--accent-orange)' }}>
-                            {showForm ? 'Chiudi Form' : '+ Aggiungi Spesa'}
-                        </button>
-                    </div>
+                    {!readOnly && (
+                        <div className="text-center" style={{ marginBottom: '2rem' }}>
+                            <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ background: 'var(--accent-orange)' }}>
+                                {showForm ? 'Chiudi Form' : '+ Aggiungi Spesa'}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Form */}
                     {showForm && (

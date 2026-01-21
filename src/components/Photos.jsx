@@ -3,10 +3,10 @@ import { uploadPhoto, getPhotos, deletePhoto } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
-const Photos = ({ trip }) => {
+const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
     const { showToast } = useToast();
     const { showConfirm } = useModal();
-    const [photos, setPhotos] = useState([]);
+    const [photos, setPhotos] = useState(readOnly ? sharedPhotos : []);
     const [loading, setLoading] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState(null); // Stato per la foto ingrandita
     const fileInputRef = useRef(null);
@@ -21,8 +21,10 @@ const Photos = ({ trip }) => {
     };
 
     useEffect(() => {
-        fetchPhotos();
-    }, [trip.id]);
+        if (!readOnly) {
+            fetchPhotos();
+        }
+    }, [trip.id, readOnly]);
 
     const handleUploadClick = () => {
         fileInputRef.current.click();
@@ -71,14 +73,16 @@ const Photos = ({ trip }) => {
                 <h2>Foto del viaggio 📸</h2>
                 <p>Cattura e condividi i momenti migliori con il tuo gruppo.</p>
 
-                <button
-                    onClick={handleUploadClick}
-                    className="btn btn-primary"
-                    disabled={loading}
-                    style={{ background: 'var(--accent-orange)', marginTop: '1rem' }}
-                >
-                    {loading ? 'Caricamento... ⏳' : '+ Aggiungi Foto'}
-                </button>
+                {!readOnly && (
+                    <button
+                        onClick={handleUploadClick}
+                        className="btn btn-primary"
+                        disabled={loading}
+                        style={{ background: 'var(--accent-orange)', marginTop: '1rem' }}
+                    >
+                        {loading ? 'Caricamento... ⏳' : '+ Aggiungi Foto'}
+                    </button>
+                )}
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -121,35 +125,37 @@ const Photos = ({ trip }) => {
                                     objectFit: 'cover' // Mantiene la griglia ordinata
                                 }}
                             />
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Evita di aprire la foto quando cancelli
-                                    handleDelete(photo.id);
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '8px',
-                                    right: '8px',
-                                    background: 'rgba(0,0,0,0.5)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: '32px',
-                                    height: '32px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    fontSize: '1.2rem',
-                                    transition: 'background 0.2s',
-                                    zIndex: 10
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)'}
-                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
-                                title="Elimina foto"
-                            >
-                                ×
-                            </button>
+                            {!readOnly && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Evita di aprire la foto quando cancelli
+                                        handleDelete(photo.id);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '8px',
+                                        right: '8px',
+                                        background: 'rgba(0,0,0,0.5)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        width: '32px',
+                                        height: '32px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        fontSize: '1.2rem',
+                                        transition: 'background 0.2s',
+                                        zIndex: 10
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+                                    title="Elimina foto"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>

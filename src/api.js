@@ -176,6 +176,22 @@ export const updateTrip = async (tripId, updates) => {
     return handleResponse(response);
 };
 
+export const generateShareLink = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/share`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const getSharedTrip = async (token) => {
+    const response = await fetch(`${API_URL}/trips/share/${token}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+    });
+    return handleResponse(response);
+};
+
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {

@@ -114,12 +114,9 @@ const Auth = () => {
                 localStorage.setItem('token', res.access_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
-                if (res.user.is_subscribed) {
-                    navigate('/');
-                    window.location.reload();
-                } else {
-                    setShowPlanSelection(true);
-                }
+                // Redirect directly to home, plan selection is optional/upgradable later
+                navigate('/');
+                window.location.reload();
             } else {
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');

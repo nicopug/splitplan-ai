@@ -202,29 +202,28 @@ const Dashboard = () => {
                                 <Logistics trip={trip} />
                             )}
 
-                            {/* 2. Premium Teaser (Base only) - Moved UP */}
-                            {!user?.is_subscribed && (
+                            {/* Registration/Login CTA for Guests */}
+                            {!user && (
                                 <div className="container" style={{ marginTop: '2rem' }}>
-                                    <div className="premium-teaser-inline" style={{
-                                        background: 'rgba(255,255,255,0.6)',
+                                    <div style={{
+                                        background: 'rgba(255,255,255,0.8)',
                                         backdropFilter: 'blur(10px)',
                                         padding: '2.5rem',
                                         borderRadius: '24px',
                                         textAlign: 'center',
-                                        border: '1px solid rgba(35, 89, 158, 0.2)',
-                                        marginBottom: '2rem'
+                                        border: '1px solid var(--primary-blue)',
+                                        marginBottom: '2rem',
+                                        boxShadow: 'var(--shadow-md)'
                                     }}>
-                                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💎</div>
-                                        <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Sblocca il Potenziale Completo</h3>
+                                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🌍</div>
+                                        <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Passa a <b>Premium</b> per sbloccare i link di prenotazione diretti (Skyscanner/Booking) e gestire il budget.
+                                            Accedi o Registrati per sbloccare l'itinerario completo, la gestione budget e la chat AI.
                                         </p>
-                                        <button
-                                            onClick={() => navigate('/auth')}
-                                            className="btn btn-primary"
-                                        >
-                                            Attiva Premium ora
-                                        </button>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                            <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
+                                            <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -258,7 +257,29 @@ const Dashboard = () => {
 
             {view === 'CHAT' && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    {user?.is_subscribed ? (
+                    {!user ? (
+                        <div className="container" style={{ marginTop: '2rem' }}>
+                            <div style={{
+                                background: 'rgba(255,255,255,0.8)',
+                                backdropFilter: 'blur(10px)',
+                                padding: '3rem',
+                                borderRadius: '24px',
+                                textAlign: 'center',
+                                border: '1px solid var(--primary-blue)',
+                                boxShadow: 'var(--shadow-lg)'
+                            }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🤖</div>
+                                <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
+                                <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
+                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
+                                </p>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                    <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
+                                    <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : user?.is_subscribed ? (
                         <Chatbot
                             tripId={id}
                             onItineraryUpdate={(newItinerary) => setItinerary(newItinerary)}
@@ -280,14 +301,13 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Vuoi modificare il tuo itinerario semplicemente parlando? I nostri utenti <b>Premium </b>
-                                    possono usare l'AI per aggiungere, spostare o rimuovere attività istantaneamente.
+                                    I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
                                 </p>
                                 <button
                                     onClick={() => navigate('/auth')}
                                     className="btn btn-primary"
                                 >
-                                    Sblocca Chatbot AI
+                                    Scopri Premium
                                 </button>
                             </div>
                         </div>
@@ -297,7 +317,29 @@ const Dashboard = () => {
 
             {view === 'BUDGET' && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    {user?.is_subscribed ? (
+                    {!user ? (
+                        <div className="container" style={{ marginTop: '2rem' }}>
+                            <div style={{
+                                background: 'rgba(255,255,255,0.8)',
+                                backdropFilter: 'blur(10px)',
+                                padding: '3rem',
+                                borderRadius: '24px',
+                                textAlign: 'center',
+                                border: '1px solid var(--primary-blue)',
+                                boxShadow: 'var(--shadow-lg)'
+                            }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💰</div>
+                                <h2 style={{ color: 'var(--primary-blue)' }}>Gestione Budget Avanzata</h2>
+                                <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
+                                    Tieni traccia del tuo budget di viaggio in tempo reale. Accedi o Registrati per gestire le tue spese in modo professionale.
+                                </p>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                    <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
+                                    <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : user?.is_subscribed ? (
                         <Budget trip={trip} onUpdate={fetchTrip} />
                     ) : (
                         <div className="container" style={{ marginTop: '2rem' }}>
@@ -313,14 +355,13 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Gestione Budget Avanzata</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Tieni traccia del tuo budget di viaggio! Gli utenti <b>Premium </b>
-                                    possono vedere quanto hanno speso per volo e hotel, e quanto rimane per attività e pasti.
+                                    Gli utenti <b>Premium</b> possono vedere quanto hanno speso per volo e hotel, e monitorare quanto rimane per attività e pasti.
                                 </p>
                                 <button
                                     onClick={() => navigate('/auth')}
                                     className="btn btn-primary"
                                 >
-                                    Sblocca Gestione Budget
+                                    Scopri Premium
                                 </button>
                             </div>
                         </div>

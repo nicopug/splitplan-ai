@@ -12,6 +12,18 @@ const ShareTrip = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [view, setView] = useState('TRIP');
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Error parsing user from localStorage", e);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -146,11 +158,13 @@ const ShareTrip = () => {
                     )}
                 </div>
 
-                <div className="section text-center py-12" style={{ background: '#f8f9fa', marginTop: '4rem' }}>
-                    <h3>Vuoi organizzare il tuo prossimo viaggio così?</h3>
-                    <p className="mb-6">Crea viaggi, dividi le spese e genera itinerari AI con SplitPlan.</p>
-                    <Link to="/auth" className="btn btn-primary">Registrati Gratis</Link>
-                </div>
+                {!user && (
+                    <div className="section text-center py-12" style={{ background: '#f8f9fa', marginTop: '4rem' }}>
+                        <h3>Vuoi organizzare il tuo prossimo viaggio così?</h3>
+                        <p className="mb-6">Crea viaggi, dividi le spese e genera itinerari AI con SplitPlan.</p>
+                        <Link to="/auth" className="btn btn-primary">Registrati Gratis</Link>
+                    </div>
+                )}
             </div>
         );
     } catch (renderError) {

@@ -142,6 +142,7 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
                 style={{ height: '100%', width: '100%' }}
             >
                 <TileLayer
+                    key={isPremium ? 'premium' : 'standard'}
                     url={isPremium ? premiumTileUrl : standardTileUrl}
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 />
@@ -159,13 +160,30 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
 
                 {mapItems.map((item, idx) => {
                     const dayNum = getDayNumber(item.start_time);
-                    // Determine emoji based on type
+
+                    // Improved Emoji Detection
                     let emoji = '📍';
                     const type = item.type?.toUpperCase();
+                    const title = item.title?.toLowerCase() || "";
+                    const desc = item.description?.toLowerCase() || "";
+                    const text = `${title} ${desc}`;
+
                     if (type === 'FLIGHT') emoji = '✈️';
-                    if (type === 'ACTIVITY') emoji = '🎡';
-                    if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE') emoji = '🍕';
-                    if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY') emoji = '🏨';
+                    else if (type === 'ACTIVITY') emoji = '🎡';
+                    else if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
+                        text.includes('ristorante') || text.includes('cena') || text.includes('pranzo') ||
+                        text.includes('colazione') || text.includes('bistro') || text.includes('sushi') ||
+                        text.includes('pizza') || text.includes('drink')) {
+                        emoji = '🍕';
+                    }
+                    else if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN' ||
+                        text.includes('hotel') || text.includes('alloggio') || text.includes('stay') ||
+                        text.includes('camera') || text.includes('check-in')) {
+                        emoji = '🏨';
+                    }
+                    else if (text.includes('museo') || text.includes('piazza') || text.includes('tour') || text.includes('visita')) {
+                        emoji = '🏛️';
+                    }
 
                     return (
                         <Marker

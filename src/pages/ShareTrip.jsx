@@ -150,6 +150,7 @@ const ShareTrip = () => {
                                     hotelLat={trip?.hotel_latitude}
                                     hotelLon={trip?.hotel_longitude}
                                     startDate={trip?.start_date}
+                                    isPremium={false}
                                 />
                             </div>
                             <Timeline items={itinerary} />

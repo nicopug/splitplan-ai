@@ -166,37 +166,54 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
         const desc = item.description?.toLowerCase() || "";
         const text = `${title} ${desc}`;
 
-        if (type === 'FLIGHT') emoji = '✈️';
-        else if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
+        // 1. Flights (Highest priority)
+        if (type === 'FLIGHT' || text.includes('volo') || text.includes('aereo')) return '✈️';
+
+        // 2. Food & Drink
+        if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
             text.includes('ristorante') || text.includes('cena') || text.includes('pranzo') ||
             text.includes('colazione') || text.includes('bistro') || text.includes('sushi') ||
-            text.includes('pizza') || text.includes('drink') || text.includes('aperitivo')) {
-            emoji = '🍕';
+            text.includes('pizza') || text.includes('drink') || text.includes('aperitivo') || text.includes('pub')) {
+            return '🍕';
         }
-        else if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN' ||
-            text.includes('hotel') || text.includes('alloggio') || text.includes('stay') ||
-            text.includes('camera') || text.includes('check-in')) {
-            emoji = '🏨';
+
+        // 3. Water Activities (Beach, Sea, Boat, Waterpark)
+        if (text.includes('crociera') || text.includes('cruise') || text.includes('traghetto') || text.includes('ferry') || text.includes('barca') || text.includes('boat') || text.includes('battello') || text.includes('fiume') || text.includes('river')) {
+            return '🚢';
         }
-        else if (text.includes('museo') || text.includes('museum') || text.includes('galleria') || text.includes('mostra') || text.includes('esposizione')) {
-            emoji = '🏛️';
+        if (text.includes('spiaggia') || text.includes('beach') || text.includes('mare') || text.includes('lido') || text.includes('sabbia') || text.includes('waterpark') || text.includes('acquapark') || text.includes('aquaventure')) {
+            return '🏖️';
         }
-        else if (text.includes('spiaggia') || text.includes('beach') || text.includes('mare') || text.includes('lido') || text.includes('sabbia')) {
-            emoji = '🏖️';
+
+        // 4. Culture & Landmarks
+        if (text.includes('museo') || text.includes('museum') || text.includes('galleria') || text.includes('mostra') || text.includes('esposizione')) {
+            return '🏛️';
         }
-        else if (text.includes('parco') || text.includes('park') || text.includes('giardino') || text.includes('natura') || text.includes('bosco') || text.includes('montagna') || text.includes('nature')) {
-            emoji = '🌳';
+        if (text.includes('piazza') || text.includes('monumento') || text.includes('monument') || text.includes('castello') || text.includes('castle') || text.includes('torre') || text.includes('tower') || text.includes('palazzo') || text.includes('duomo') || text.includes('chiesa')) {
+            return '🗼';
         }
-        else if (text.includes('crociera') || text.includes('cruise') || text.includes('traghetto') || text.includes('ferry') || text.includes('barca') || text.includes('boat') || text.includes('battello') || text.includes('fiume') || text.includes('river')) {
-            emoji = '🚢';
+
+        // 5. Accommodation (Lower priority for keyword to avoid false positives in desc)
+        if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN') {
+            return '🏨';
         }
-        else if (text.includes('piazza') || text.includes('monumento') || text.includes('monument') || text.includes('castello') || text.includes('castle') || text.includes('torre') || text.includes('tower') || text.includes('palazzo') || text.includes('duomo') || text.includes('chiesa')) {
-            emoji = '🗼';
+        // Only trigger hotel by keyword if it's in the title
+        if (title.includes('hotel') || title.includes('alloggio') || title.includes('b&b') || title.includes('resort')) {
+            return '🏨';
         }
-        else if (text.includes('stazione') || text.includes('station') || text.includes('bus') || text.includes('treno') || text.includes('metro') || text.includes('aeroporto')) {
-            emoji = '🚆';
+
+        // 6. Nature & Parks (Avoid 'park' as it triggers on 'waterpark' which is handled above)
+        if (text.includes('natura') || text.includes('bosco') || text.includes('montagna') || text.includes('nature') || title.includes('parco') || (text.includes('park') && !text.includes('water'))) {
+            return '🌳';
         }
-        else if (type === 'ACTIVITY') emoji = '�';
+
+        // 7. Transport
+        if (text.includes('stazione') || text.includes('station') || text.includes('bus') || text.includes('treno') || text.includes('metro') || text.includes('aeroporto')) {
+            return '🚆';
+        }
+
+        // 8. Generic Activity
+        if (type === 'ACTIVITY' || text.includes('tour') || text.includes('visita') || text.includes('escursione')) return '🎡';
 
         return emoji;
     };

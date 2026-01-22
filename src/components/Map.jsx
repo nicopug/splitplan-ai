@@ -167,11 +167,10 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
         const text = `${title} ${desc}`;
 
         if (type === 'FLIGHT') emoji = '✈️';
-        else if (type === 'ACTIVITY') emoji = '🎡';
         else if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
             text.includes('ristorante') || text.includes('cena') || text.includes('pranzo') ||
             text.includes('colazione') || text.includes('bistro') || text.includes('sushi') ||
-            text.includes('pizza') || text.includes('drink')) {
+            text.includes('pizza') || text.includes('drink') || text.includes('aperitivo')) {
             emoji = '🍕';
         }
         else if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN' ||
@@ -179,9 +178,20 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
             text.includes('camera') || text.includes('check-in')) {
             emoji = '🏨';
         }
-        else if (text.includes('museo') || text.includes('piazza') || text.includes('tour') || text.includes('visita')) {
+        else if (text.includes('museo') || text.includes('museum') || text.includes('galleria') || text.includes('mostra') || text.includes('esposizione')) {
             emoji = '🏛️';
         }
+        else if (text.includes('parco') || text.includes('park') || text.includes('giardino') || text.includes('natura') || text.includes('spiaggia') || text.includes('beach') || text.includes('mare') || text.includes('bosco')) {
+            emoji = '🌳';
+        }
+        else if (text.includes('piazza') || text.includes('monumento') || text.includes('monument') || text.includes('castello') || text.includes('castle') || text.includes('torre') || text.includes('tower') || text.includes('palazzo') || text.includes('duomo') || text.includes('chiesa')) {
+            emoji = '🗼';
+        }
+        else if (text.includes('stazione') || text.includes('station') || text.includes('bus') || text.includes('treno') || text.includes('metro') || text.includes('aeroporto')) {
+            emoji = '🚆';
+        }
+        else if (type === 'ACTIVITY') emoji = '�';
+
         return emoji;
     };
 

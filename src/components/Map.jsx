@@ -74,17 +74,17 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
         html: `
             <div style="
                 background-color: #e63946;
-                width: ${isPremium ? '30px' : '24px'};
-                height: ${isPremium ? '30px' : '24px'};
+                width: ${isPremium ? '36px' : '24px'};
+                height: ${isPremium ? '36px' : '24px'};
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
                 border: 2px solid white;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
                 display: flex;
                 align-items: center;
                 justify-content: center;
             ">
-                <div style="width: 10px; height: 10px; background: white; border-radius: 50%; transform: rotate(45deg); font-size: 12px; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(45deg); font-size: ${isPremium ? '18px' : '12px'};">
                     ${isPremium ? '🏨' : ''}
                 </div>
             </div>
@@ -161,9 +161,11 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
                     const dayNum = getDayNumber(item.start_time);
                     // Determine emoji based on type
                     let emoji = '📍';
-                    if (item.type === 'FLIGHT') emoji = '✈️';
-                    if (item.type === 'ACTIVITY') emoji = '🎡';
-                    if (item.type === 'FOOD') emoji = '🍕';
+                    const type = item.type?.toUpperCase();
+                    if (type === 'FLIGHT') emoji = '✈️';
+                    if (type === 'ACTIVITY') emoji = '🎡';
+                    if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE') emoji = '🍕';
+                    if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY') emoji = '🏨';
 
                     return (
                         <Marker

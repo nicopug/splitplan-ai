@@ -223,7 +223,13 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
                     return (
                         <Marker key={gIdx} position={[group.lat, group.lon]} icon={iconToUse}>
                             <Popup>
-                                <div style={{ maxWidth: '250px' }}>
+                                <div style={{
+                                    maxWidth: '250px',
+                                    maxHeight: '350px',
+                                    overflowY: 'auto',
+                                    paddingRight: '10px',
+                                    scrollbarWidth: 'thin'
+                                }}>
                                     {group.isHotel && (
                                         <div style={{ marginBottom: sortedItems.length > 0 ? '8px' : '0', borderBottom: sortedItems.length > 0 ? '1px solid #eee' : 'none', paddingBottom: sortedItems.length > 0 ? '8px' : '0' }}>
                                             <strong>🏨 Il Tuo Hotel</strong>

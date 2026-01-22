@@ -237,6 +237,22 @@ export const getBalances = async (tripId) => {
     return handleResponse(response);
 };
 
+export const deleteExpense = async (expenseId) => {
+    const response = await fetch(`${API_URL}/expenses/${expenseId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const migrateExpenses = async () => {
+    const response = await fetch(`${API_URL}/expenses/migrate-schema`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 // --- Photos ---
 
 export const uploadPhoto = async (tripId, file) => {

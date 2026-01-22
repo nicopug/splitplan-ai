@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { addExpense, getExpenses, getBalances, getParticipants } from '../api';
+import React, { useState, useEffect, useMemo } from 'react';
+import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 
 const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
     const { showToast } = useToast();
-    const [tab, setTab] = useState('list');
+    const [tab, setTab] = useState('summary');
     const [expenses, setExpenses] = useState((readOnly && sharedExpenses) ? sharedExpenses : []);
     const [balances, setBalances] = useState([]);
     const [participants, setParticipants] = useState((readOnly && sharedParticipants) ? sharedParticipants : []);
@@ -15,10 +15,24 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const [title, setTitle] = useState('');
     const [amount, setAmount] = useState('');
     const [payerId, setPayerId] = useState('');
+    const [category, setCategory] = useState('Food');
+
+    const categories = [
+        { id: 'Food', label: 'Cibo & Drink', icon: '🍕' },
+        { id: 'Transport', label: 'Trasporti', icon: '🚗' },
+        { id: 'Lodging', label: 'Alloggio', icon: '🏨' },
+        { id: 'Activity', label: 'Attività', icon: '🎡' },
+        { id: 'Shopping', label: 'Shopping', icon: '🛍️' },
+        { id: 'Other', label: 'Altro', icon: '📦' }
+    ];
 
     const fetchData = async () => {
+        if (readOnly) return;
         setLoading(true);
         try {
+            // First run migration silently just in case
+            try { await migrateExpenses(); } catch (e) { }
+
             const [exp, bal, parts] = await Promise.all([
                 getExpenses(trip.id),
                 getBalances(trip.id),
@@ -28,13 +42,12 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             setBalances(bal);
             setParticipants(parts);
 
-            // Se ci sono partecipanti, seleziona il primo di default
             if (parts && parts.length > 0 && !payerId) {
                 setPayerId(parts[0].id);
             }
         } catch (e) {
             console.error(e);
-            showToast("Errore nel caricamento dei dati: " + e.message, "error");
+            showToast("Errore nel caricamento: " + e.message, "error");
         } finally {
             setLoading(false);
         }
@@ -44,7 +57,6 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         if (trip?.id && !readOnly) {
             fetchData();
         } else if (readOnly) {
-            // Se in sola lettura, calcoliamo solo i bilanci dai dati passati
             calculateBalancesLocally();
         }
     }, [trip?.id, readOnly]);
@@ -53,7 +65,6 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         if (!expenses.length || !participants.length) return;
 
         const balancesMap = { ...participants.reduce((acc, p) => ({ ...acc, [p.id]: 0.0 }), {}) };
-        const userMap = { ...participants.reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {}) };
 
         expenses.forEach(exp => {
             if (balancesMap[exp.payer_id] !== undefined) {
@@ -98,11 +109,10 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         setBalances(settlements);
     };
 
-
     const handleAddExpense = async (e) => {
         e.preventDefault();
         if (!payerId) {
-            showToast("Devi selezionare chi ha pagato!", "info");
+            showToast("Seleziona chi ha pagato!", "info");
             return;
         }
         try {
@@ -111,153 +121,352 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                 title,
                 amount: parseFloat(amount),
                 payer_id: parseInt(payerId),
-                category: "General"
+                category
             });
             setShowForm(false);
             setTitle('');
             setAmount('');
-            showToast("Spesa aggiunta correttamente! 💸", "success");
+            showToast("Spesa aggiunta! 💸", "success");
             fetchData();
         } catch (error) {
             showToast("Errore: " + error.message, "error");
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm("Sei sicuro di voler eliminare questa spesa?")) return;
+        try {
+            await deleteExpense(id);
+            showToast("Spesa eliminata", "success");
+            fetchData();
+        } catch (error) {
+            showToast("Errore durante l'eliminazione", "error");
+        }
+    };
 
     const getUserName = (id) => {
         const u = participants.find(p => p.id === id);
         return u ? u.name : `User ${id}`;
     };
 
+    const getCategoryIcon = (cat) => {
+        const c = categories.find(it => it.id === cat);
+        return c ? c.icon : '💸';
+    };
+
+    const stats = useMemo(() => {
+        const total = expenses.reduce((acc, exp) => acc + exp.amount, 0);
+        const perPerson = participants.length > 0 ? total / participants.length : 0;
+        return { total, perPerson };
+    }, [expenses, participants]);
+
     return (
         <div className="container section">
-            <h2 className="text-center" style={{ marginBottom: '2rem' }}>Spese & Bilancio 💸</h2>
+            <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Gestione Spese 💸
+            </h2>
+
+            {/* Global Stats Dashboard */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                marginBottom: '2rem',
+                background: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(10px)',
+                padding: '1.5rem',
+                borderRadius: '24px',
+                border: '1px solid rgba(255,255,255,0.3)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+            }}>
+                <div style={{ textAlign: 'center', borderRight: '1px solid #eee' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Totale Speso</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{stats.total.toFixed(2)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>A persona</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-orange)' }}>€{stats.perPerson.toFixed(2)}</div>
+                </div>
+            </div>
 
             {loading ? (
                 <div className="text-center py-12">
                     <div className="spinner-large" style={{ margin: '0 auto 1.5rem' }}></div>
-                    <p className="text-muted">Recupero dati finanziari...</p>
+                    <p className="text-muted">Analisi finanziaria in corso...</p>
                 </div>
             ) : (
                 <>
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '1rem' }}>
-                        <button onClick={() => setTab('list')} className={tab === 'list' ? 'btn btn-primary' : 'btn btn-secondary'}>
-                            Lista Movimenti 🧾
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '0.5rem', background: '#f1f5f9', padding: '0.4rem', borderRadius: '14px', width: 'fit-content', margin: '0 auto 2rem' }}>
+                        <button
+                            onClick={() => setTab('summary')}
+                            className="nav-tab-minimal"
+                            style={{
+                                background: tab === 'summary' ? 'white' : 'transparent',
+                                boxShadow: tab === 'summary' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                                color: tab === 'summary' ? '#2562eb' : '#64748b'
+                            }}
+                        >
+                            Bilanci ⚖️
                         </button>
-                        <button onClick={() => setTab('balances')} className={tab === 'balances' ? 'btn btn-primary' : 'btn btn-secondary'}>
-                            Chi deve a Chi? ⚖️
+                        <button
+                            onClick={() => setTab('list')}
+                            className="nav-tab-minimal"
+                            style={{
+                                background: tab === 'list' ? 'white' : 'transparent',
+                                boxShadow: tab === 'list' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                                color: tab === 'list' ? '#2562eb' : '#64748b'
+                            }}
+                        >
+                            Lista 🧾
                         </button>
                     </div>
 
-                    {/* Add Expense Button */}
                     {!readOnly && (
                         <div className="text-center" style={{ marginBottom: '2rem' }}>
-                            <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ background: 'var(--accent-orange)' }}>
-                                {showForm ? 'Chiudi Form' : '+ Aggiungi Spesa'}
+                            <button onClick={() => setShowForm(!showForm)} className="btn-modern-primary">
+                                {showForm ? 'Annulla' : '+ Nuova Spesa'}
                             </button>
                         </div>
                     )}
 
-                    {/* Form */}
                     {showForm && (
-                        <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', boxShadow: 'var(--shadow-md)' }}>
+                        <div className="glass-card" style={{ maxWidth: '450px', margin: '0 auto 2.5rem', padding: '2rem' }}>
+                            <form onSubmit={handleAddExpense}>
+                                <div style={{ marginBottom: '1.2rem' }}>
+                                    <label className="form-label-modern">Cosa?</label>
+                                    <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" className="form-input-modern" />
+                                </div>
+                                <div style={{ marginBottom: '1.2rem' }}>
+                                    <label className="form-label-modern">Quanto (€)?</label>
+                                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="form-input-modern" />
+                                </div>
+                                <div style={{ marginBottom: '1.2rem' }}>
+                                    <label className="form-label-modern">Categoria</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                                        {categories.map(cat => (
+                                            <div
+                                                key={cat.id}
+                                                onClick={() => setCategory(cat.id)}
+                                                style={{
+                                                    padding: '0.6rem',
+                                                    border: '1px solid',
+                                                    borderColor: category === cat.id ? 'var(--primary-blue)' : '#eee',
+                                                    background: category === cat.id ? '#eff6ff' : 'white',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.8rem',
+                                                    cursor: 'pointer',
+                                                    textAlign: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '1.2rem', display: 'block' }}>{cat.icon}</span>
+                                                {cat.label}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label className="form-label-modern">Chi ha pagato?</label>
+                                    <select value={payerId} onChange={e => setPayerId(e.target.value)} className="form-input-modern">
+                                        {participants.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <button type="submit" className="btn-modern-primary" style={{ width: '100%' }}>Aggiungi Spesa 💸</button>
+                            </form>
+                        </div>
+                    )}
 
-                            {/* CONTROLLO DI SICUREZZA: SE NON CI SONO PARTECIPANTI */}
-                            {participants.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: '#dc3545', padding: '1rem' }}>
-                                    <strong>⚠️ Nessun partecipante trovato in questo viaggio.</strong>
-                                    <p style={{ fontSize: '0.9rem' }}>Impossibile aggiungere spese. Prova a ricaricare la pagina o verificare i partecipanti.</p>
-                                    <button onClick={fetchData} className="btn btn-secondary btn-sm mt-3">Riprova 🔄</button>
+                    {tab === 'list' && (
+                        <div className="animate-in">
+                            {expenses.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧾</div>
+                                    <p className="text-muted">Ancora nessuna spesa registrata.</p>
                                 </div>
                             ) : (
-                                <form onSubmit={handleAddExpense}>
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Cosa?</label>
-                                        <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+                                [...expenses].reverse().map(exp => (
+                                    <div key={exp.id} className="expense-card-premium">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: '#f8fafc',
+                                                borderRadius: '16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.5rem',
+                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                                            }}>
+                                                {getCategoryIcon(exp.category)}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '700', fontSize: '1.05rem', color: '#1e293b' }}>{exp.description}</div>
+                                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                    Pagato da <span style={{ color: '#0f172a', fontWeight: '600' }}>{getUserName(exp.payer_id)}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <div style={{ fontWeight: '800', fontSize: '1.1rem', color: '#2563eb' }}>€{exp.amount.toFixed(2)}</div>
+                                                {!readOnly && (
+                                                    <button
+                                                        onClick={() => handleDelete(exp.id)}
+                                                        style={{ background: 'none', border: 'none', color: '#ef4444', padding: '5px', cursor: 'pointer', opacity: 0.6 }}
+                                                        title="Elimina"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Quanto (€)?</label>
-                                        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="100" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }} />
-                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
 
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Chi ha pagato?</label>
-                                        <select
-                                            value={payerId}
-                                            onChange={e => setPayerId(e.target.value)}
-                                            style={{
-                                                width: '100%',
-                                                padding: '0.8rem',
-                                                borderRadius: '8px',
-                                                border: '1px solid #ddd',
-                                                background: 'white',
-                                                color: '#333',
-                                                fontSize: '1rem',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            {participants.map(p => (
-                                                <option key={p.id} value={p.id} style={{ color: 'black' }}>
-                                                    {p.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                    {tab === 'summary' && (
+                        <div className="animate-in">
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>💰 Bilancio Debiti/Crediti</h3>
+                            {balances.length === 0 ? (
+                                <div className="text-center py-12 glass-card">
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+                                    <p style={{ fontWeight: '600', color: '#0f172a' }}>Tutti in pari!</p>
+                                    <p className="text-muted" style={{ fontSize: '0.9rem' }}>Nessuno deve soldi a nessuno.</p>
+                                </div>
+                            ) : (
+                                balances.map((b, idx) => (
+                                    <div key={idx} className="balance-card-premium">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div className="user-avatar-mini" style={{ background: '#3b82f6' }}>
+                                                {getUserName(b.debtor_id).substring(0, 1).toUpperCase()}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: '0.95rem' }}>
+                                                    <strong>{getUserName(b.debtor_id)}</strong>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                    deve dare a <strong>{getUserName(b.creditor_id)}</strong>
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#ef4444' }}>
+                                                €{b.amount.toFixed(2)}
+                                            </div>
+                                        </div>
                                     </div>
+                                ))
+                            )}
 
-                                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Salva Spesa</button>
-                                </form>
+                            {!readOnly && (
+                                <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#eff6ff', borderRadius: '16px', border: '1px dashed #3b82f6' }}>
+                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>💡 Tip di SplitPlan AI</h4>
+                                    <p style={{ fontSize: '0.85rem', color: '#1e40af', lineHeight: '1.4' }}>
+                                        I bilanci vengono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}
                 </>
             )}
 
-
-            {/* Content */}
-            {tab === 'list' && (
-                <div>
-                    {expenses.length === 0 ? (
-                        <p className="text-center text-muted">Nessuna spesa registrata.</p>
-                    ) : (
-                        expenses.map(exp => (
-                            <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'white', borderRadius: '12px', marginBottom: '0.5rem', boxShadow: 'var(--shadow-sm)', alignItems: 'center' }}>
-                                <div style={{ textAlign: 'left' }}>
-                                    {/* QUI HO MODIFICATO PER USARE description INVECE DI title */}
-                                    <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
-                                        {exp.description}
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                                        Pagato da <span style={{ fontWeight: '600' }}>{getUserName(exp.payer_id)}</span>
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary-blue)' }}>
-                                    €{exp.amount.toFixed(2)}
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
-
-            {tab === 'balances' && (
-                <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    {balances.length === 0 ? (
-                        <p className="text-center">Tutti in pari! 🎉</p>
-                    ) : (
-                        balances.map((b, idx) => (
-                            <div key={idx} style={{ padding: '1.5rem', background: '#fff3cd', borderRadius: '16px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ width: '40px', height: '40px', background: '#ffc107', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                                        {getUserName(b.debtor_id).substring(0, 2).toUpperCase()}
-                                    </div>
-                                    <span><strong>{getUserName(b.debtor_id)}</strong> deve a <strong>{getUserName(b.creditor_id)}</strong></span>
-                                </div>
-                                <strong style={{ fontSize: '1.5rem' }}>€{b.amount.toFixed(2)}</strong>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
+            <style>{`
+                .nav-tab-minimal {
+                    padding: 0.5rem 1.5rem;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-modern-primary {
+                    background: #2563eb;
+                    color: white;
+                    padding: 0.8rem 2rem;
+                    border: none;
+                    border-radius: 16px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+                }
+                .btn-modern-primary:hover {
+                    background: #1d4ed8;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+                }
+                .glass-card {
+                    background: rgba(255, 255, 255, 0.8);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 24px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+                }
+                .form-label-modern {
+                    display: block;
+                    font-weight: 700;
+                    margin-bottom: 0.6rem;
+                    font-size: 0.9rem;
+                    color: #475569;
+                }
+                .form-input-modern {
+                    width: 100%;
+                    padding: 0.9rem 1.2rem;
+                    border-radius: 14px;
+                    border: 1px solid #e2e8f0;
+                    background: white;
+                    font-size: 1rem;
+                    transition: all 0.2s;
+                }
+                .form-input-modern:focus {
+                    border-color: #3b82f6;
+                    outline: none;
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                }
+                .expense-card-premium {
+                    background: white;
+                    padding: 1.2rem;
+                    border-radius: 20px;
+                    margin-bottom: 1rem;
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    transition: all 0.2s;
+                }
+                .expense-card-premium:hover {
+                    transform: translateX(4px);
+                    border-color: #e2e8f0;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+                }
+                .balance-card-premium {
+                    background: #fff;
+                    padding: 1.2rem;
+                    border-radius: 20px;
+                    margin-bottom: 0.8rem;
+                    border-left: 5px solid #ef4444;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+                }
+                .user-avatar-mini {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 12px;
+                    display: flex;
+                    alignItems: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                }
+                .animate-in {
+                    animation: slideUp 0.4s ease-out;
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(10px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

@@ -107,6 +107,7 @@ class Expense(SQLModel, table=True):
     description: str
     amount: float
     date: str
+    category: str = "General"
     
     trip: Optional[Trip] = Relationship(back_populates="expenses")
     payer: Optional[Participant] = Relationship(back_populates="expenses")

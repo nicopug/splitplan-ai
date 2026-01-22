@@ -42,6 +42,7 @@ def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends
         payer_id=expense_req.payer_id,
         description=expense_req.title,
         amount=expense_req.amount,
+        category=expense_req.category,
         date=str(datetime.now())
     )
     session.add(db_expense)
@@ -109,3 +110,24 @@ def get_balances(trip_id: int, session: Session = Depends(get_session)):
         if creditor['amount'] < 0.01: j += 1
             
     return settlements
+
+@router.delete("/{expense_id}")
+def delete_expense(expense_id: int, session: Session = Depends(get_session)):
+    expense = session.get(Expense, expense_id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    session.delete(expense)
+    session.commit()
+    return {"status": "ok"}
+
+@router.post("/migrate-schema")
+def migrate_schema(session: Session = Depends(get_session)):
+    """Temporary endpoint to add category column if missing"""
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE expense ADD COLUMN category VARCHAR DEFAULT 'General'"))
+        session.commit()
+        return {"status": "migration success"}
+    except Exception as e:
+        session.rollback()
+        return {"status": "ignored", "detail": str(e)}

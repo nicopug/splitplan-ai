@@ -181,8 +181,14 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
         else if (text.includes('museo') || text.includes('museum') || text.includes('galleria') || text.includes('mostra') || text.includes('esposizione')) {
             emoji = '🏛️';
         }
-        else if (text.includes('parco') || text.includes('park') || text.includes('giardino') || text.includes('natura') || text.includes('spiaggia') || text.includes('beach') || text.includes('mare') || text.includes('bosco')) {
+        else if (text.includes('spiaggia') || text.includes('beach') || text.includes('mare') || text.includes('lido') || text.includes('sabbia')) {
+            emoji = '🏖️';
+        }
+        else if (text.includes('parco') || text.includes('park') || text.includes('giardino') || text.includes('natura') || text.includes('bosco') || text.includes('montagna') || text.includes('nature')) {
             emoji = '🌳';
+        }
+        else if (text.includes('crociera') || text.includes('cruise') || text.includes('traghetto') || text.includes('ferry') || text.includes('barca') || text.includes('boat') || text.includes('battello') || text.includes('fiume') || text.includes('river')) {
+            emoji = '🚢';
         }
         else if (text.includes('piazza') || text.includes('monumento') || text.includes('monument') || text.includes('castello') || text.includes('castle') || text.includes('torre') || text.includes('tower') || text.includes('palazzo') || text.includes('duomo') || text.includes('chiesa')) {
             emoji = '🗼';

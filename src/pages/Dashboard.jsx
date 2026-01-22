@@ -102,7 +102,33 @@ const Dashboard = () => {
 
     return (
         <div style={{ paddingTop: 'var(--header-height)' }}>
-            <div style={{ background: 'var(--primary-blue)', color: 'white', padding: '3rem 0', textAlign: 'center', position: 'relative' }}>
+            {!user && (
+                <div style={{
+                    background: 'var(--accent-orange)',
+                    color: 'white',
+                    padding: '0.7rem',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                    position: 'fixed',
+                    top: 'var(--header-height)',
+                    left: 0,
+                    right: 0,
+                    zIndex: 100
+                }}>
+                    👋 Sei in modalità Sola Lettura.
+                </div>
+            )}
+
+            <div style={{
+                background: 'var(--primary-blue)',
+                color: 'white',
+                padding: '3rem 0',
+                textAlign: 'center',
+                position: 'relative',
+                marginTop: !user ? '2.5rem' : 0
+            }}>
                 <div className="container">
                     <span style={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Dashboard Viaggio</span>
                     <h1 style={{ color: 'white', marginBottom: 0 }}>{trip.name}</h1>
@@ -122,29 +148,31 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    <div style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-                        <button
-                            onClick={handleShare}
-                            style={{
-                                background: 'white',
-                                color: 'var(--accent-orange)',
-                                padding: '0.4rem 1rem',
-                                borderRadius: '20px',
-                                border: 'none',
-                                fontSize: '0.85rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                                transition: 'all 0.2s',
-                            }}
-                            onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-                        >
-                            🔗 Condividi Viaggio (Sola Lettura)
-                        </button>
-                    </div>
+                    {user && (
+                        <div style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                            <button
+                                onClick={handleShare}
+                                style={{
+                                    background: 'white',
+                                    color: 'var(--accent-orange)',
+                                    padding: '0.4rem 1rem',
+                                    borderRadius: '20px',
+                                    border: 'none',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                    transition: 'all 0.2s',
+                                }}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                            >
+                                🔗 Condividi Viaggio (Sola Lettura)
+                            </button>
+                        </div>
+                    )}
 
-                    <div style={{ marginTop: '1rem' }}>
+                    <div style={{ marginTop: user ? '1rem' : '1.5rem' }}>
                         <button
                             onClick={() => setView('TRIP')}
                             style={{ background: view === 'TRIP' ? 'white' : 'transparent', color: view === 'TRIP' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}
@@ -167,7 +195,7 @@ const Dashboard = () => {
                                 Budget 💰
                             </button>
                         )}
-                        {trip.trip_type !== 'SOLO' && (
+                        {user && trip.trip_type !== 'SOLO' && (
                             <button
                                 onClick={() => setView('FINANCE')}
                                 style={{ background: view === 'FINANCE' ? 'white' : 'transparent', color: view === 'FINANCE' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}

@@ -72,11 +72,21 @@ export const getTrip = async (id) => {
         const response = await fetch(`${API_URL}/trips/${id}`, {
             headers: getAuthHeaders()
         });
+
+        if (response.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem(`cached_trip_${id}`);
+        }
+
         const data = await handleResponse(response);
-        // Cache successful response
         localStorage.setItem(`cached_trip_${id}`, JSON.stringify(data));
         return data;
     } catch (error) {
+        // Don't use cache if it was an authentication/authorization error
+        if (error.message.includes("401") || error.message.includes("403") || error.message.includes("Not authenticated")) {
+            throw error;
+        }
         console.warn("Using cached trip data due to error:", error);
         const cached = localStorage.getItem(`cached_trip_${id}`);
         if (cached) return JSON.parse(cached);
@@ -114,11 +124,21 @@ export const getItinerary = async (tripId) => {
         const response = await fetch(`${API_URL}/trips/${tripId}/itinerary`, {
             headers: getAuthHeaders()
         });
+
+        if (response.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem(`cached_itinerary_${tripId}`);
+        }
+
         const data = await handleResponse(response);
-        // Cache successful response
         localStorage.setItem(`cached_itinerary_${tripId}`, JSON.stringify(data));
         return data;
     } catch (error) {
+        // Don't use cache if it was an authentication/authorization error
+        if (error.message.includes("401") || error.message.includes("403") || error.message.includes("Not authenticated")) {
+            throw error;
+        }
         console.warn("Using cached itinerary data due to error:", error);
         const cached = localStorage.getItem(`cached_itinerary_${tripId}`);
         if (cached) return JSON.parse(cached);

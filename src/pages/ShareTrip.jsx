@@ -111,12 +111,6 @@ const ShareTrip = () => {
                                 Itinerario 🗺️
                             </button>
                             <button
-                                onClick={() => setView('FINANCE')}
-                                style={{ background: view === 'FINANCE' ? 'white' : 'transparent', color: view === 'FINANCE' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
-                            >
-                                Spese 💸
-                            </button>
-                            <button
                                 onClick={() => setView('PHOTOS')}
                                 style={{ background: view === 'PHOTOS' ? 'white' : 'transparent', color: view === 'PHOTOS' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
                             >
@@ -160,10 +154,6 @@ const ShareTrip = () => {
                             </div>
                             <Timeline items={itinerary} />
                         </>
-                    )}
-
-                    {view === 'FINANCE' && (
-                        <Finance trip={trip} readOnly={true} sharedExpenses={expenses} sharedParticipants={participants} />
                     )}
 
                     {view === 'PHOTOS' && (

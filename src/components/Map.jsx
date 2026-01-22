@@ -117,14 +117,73 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
 
     const mapItems = (items || []).filter(i => i && i.latitude && i.longitude);
     const polylinePositions = mapItems.map(i => [i.latitude, i.longitude]);
-    let allPoints = [...polylinePositions];
-    const hasHotelCoords = hotelLat && hotelLon;
-    if (hasHotelCoords) allPoints.push([hotelLat, hotelLon]);
+
+    // Grouping logic to avoid overlapping
+    const groups = {}; // Key: "lat,lon"
+
+    // Add itinerary items to groups
+    mapItems.forEach(item => {
+        const key = `${item.latitude.toFixed(6)},${item.longitude.toFixed(6)}`;
+        if (!groups[key]) {
+            groups[key] = {
+                lat: item.latitude,
+                lon: item.longitude,
+                items: [],
+                isHotel: false
+            };
+        }
+        groups[key].items.push(item);
+    });
+
+    // Add hotel to groups (or mark existing group as hotel)
+    if (hotelLat && hotelLon) {
+        const hKey = `${hotelLat.toFixed(6)},${hotelLon.toFixed(6)}`;
+        if (!groups[hKey]) {
+            groups[hKey] = {
+                lat: hotelLat,
+                lon: hotelLon,
+                items: [],
+                isHotel: true
+            };
+        } else {
+            groups[hKey].isHotel = true;
+        }
+    }
+
+    const groupList = Object.values(groups);
+    const allPoints = groupList.map(g => [g.lat, g.lon]);
     const bounds = allPoints.length > 0 ? allPoints : [[45, 9]];
 
-    // Airbnb/Premium Tile Layer: CartoDB Positron
+    // Tile layers
     const premiumTileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
     const standardTileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    // Helper to get emoji for an item
+    const getItemEmoji = (item) => {
+        let emoji = '📍';
+        const type = item.type?.toUpperCase();
+        const title = item.title?.toLowerCase() || "";
+        const desc = item.description?.toLowerCase() || "";
+        const text = `${title} ${desc}`;
+
+        if (type === 'FLIGHT') emoji = '✈️';
+        else if (type === 'ACTIVITY') emoji = '🎡';
+        else if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
+            text.includes('ristorante') || text.includes('cena') || text.includes('pranzo') ||
+            text.includes('colazione') || text.includes('bistro') || text.includes('sushi') ||
+            text.includes('pizza') || text.includes('drink')) {
+            emoji = '🍕';
+        }
+        else if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN' ||
+            text.includes('hotel') || text.includes('alloggio') || text.includes('stay') ||
+            text.includes('camera') || text.includes('check-in')) {
+            emoji = '🏨';
+        }
+        else if (text.includes('museo') || text.includes('piazza') || text.includes('tour') || text.includes('visita')) {
+            emoji = '🏛️';
+        }
+        return emoji;
+    };
 
     return (
         <div style={{
@@ -149,51 +208,41 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
 
                 <ChangeView bounds={bounds} />
 
-                {hasHotelCoords && (
-                    <Marker position={[hotelLat, hotelLon]} icon={RedIcon}>
-                        <Popup>
-                            <strong>🏨 Il Tuo Hotel</strong><br />
-                            Punto di riferimento per il viaggio
-                        </Popup>
-                    </Marker>
-                )}
+                {groupList.map((group, gIdx) => {
+                    const sortedItems = [...group.items].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
-                {mapItems.map((item, idx) => {
-                    const dayNum = getDayNumber(item.start_time);
-
-                    // Improved Emoji Detection
-                    let emoji = '📍';
-                    const type = item.type?.toUpperCase();
-                    const title = item.title?.toLowerCase() || "";
-                    const desc = item.description?.toLowerCase() || "";
-                    const text = `${title} ${desc}`;
-
-                    if (type === 'FLIGHT') emoji = '✈️';
-                    else if (type === 'ACTIVITY') emoji = '🎡';
-                    else if (type === 'FOOD' || type === 'RESTAURANT' || type === 'BAR' || type === 'CAFE' || type === 'MEAL' ||
-                        text.includes('ristorante') || text.includes('cena') || text.includes('pranzo') ||
-                        text.includes('colazione') || text.includes('bistro') || text.includes('sushi') ||
-                        text.includes('pizza') || text.includes('drink')) {
-                        emoji = '🍕';
-                    }
-                    else if (type === 'ACCOMMODATION' || type === 'HOTEL' || type === 'STAY' || type === 'CHECKIN' ||
-                        text.includes('hotel') || text.includes('alloggio') || text.includes('stay') ||
-                        text.includes('camera') || text.includes('check-in')) {
-                        emoji = '🏨';
-                    }
-                    else if (text.includes('museo') || text.includes('piazza') || text.includes('tour') || text.includes('visita')) {
-                        emoji = '🏛️';
+                    // Icon logic
+                    let iconToUse;
+                    if (group.isHotel) {
+                        iconToUse = RedIcon;
+                    } else if (isPremium) {
+                        const firstEmoji = getItemEmoji(sortedItems[0]);
+                        iconToUse = getPremiumIcon(firstEmoji);
                     }
 
                     return (
-                        <Marker
-                            key={idx}
-                            position={[item.latitude, item.longitude]}
-                            icon={isPremium ? getPremiumIcon(emoji) : undefined}
-                        >
+                        <Marker key={gIdx} position={[group.lat, group.lon]} icon={iconToUse}>
                             <Popup>
-                                <strong>{item.title} {dayNum ? `(Giorno ${dayNum})` : ''}</strong><br />
-                                {item.description}
+                                <div style={{ maxWidth: '250px' }}>
+                                    {group.isHotel && (
+                                        <div style={{ marginBottom: sortedItems.length > 0 ? '8px' : '0', borderBottom: sortedItems.length > 0 ? '1px solid #eee' : 'none', paddingBottom: sortedItems.length > 0 ? '8px' : '0' }}>
+                                            <strong>🏨 Il Tuo Hotel</strong>
+                                        </div>
+                                    )}
+                                    {sortedItems.map((item, iIdx) => {
+                                        const dayNum = getDayNumber(item.start_time);
+                                        const time = new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                        return (
+                                            <div key={iIdx} style={{ marginBottom: iIdx === sortedItems.length - 1 ? 0 : '10px' }}>
+                                                <div style={{ fontWeight: 'bold', color: 'var(--primary-blue)', fontSize: '0.9rem' }}>
+                                                    {dayNum ? `Giorno ${dayNum}` : ''} • {time}
+                                                </div>
+                                                <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{item.title}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '2px' }}>{item.description}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </Popup>
                         </Marker>
                     );

@@ -31,6 +31,41 @@ const Budget = ({ trip, onUpdate }) => {
         fetchExpenses();
     }, [trip?.id]);
 
+    const handleApplyAsExpense = async () => {
+        if (!estimation) return;
+        const confirmed = await showConfirm(
+            "Conferma Spesa Prevista 🤖",
+            `Vuoi aggiungere la stima AI di €${(estimation.total_estimated_per_person * stats.numPeople).toFixed(2)} come spesa prevista?`
+        );
+        if (confirmed) {
+            setAppliedAIExpense(estimation.total_estimated_per_person * stats.numPeople);
+            setEstimation(null);
+            setShowSimulation(false);
+            showToast("✨ Proiezione aggiornata!", "success");
+        }
+    };
+
+    const handleRemoveAI = () => {
+        setAppliedAIExpense(0);
+        setEstimation(null);
+        setShowSimulation(false);
+        showToast("Proiezione rimossa", "info");
+    };
+
+    const handleEstimate = async () => {
+        setIsEstimating(true);
+        try {
+            const data = await estimateBudget(trip.id);
+            setEstimation(data);
+            setShowSimulation(true);
+            showToast("✅ Stima AI completata!", "success");
+        } catch (e) {
+            showToast("Errore stima: " + e.message, "error");
+        } finally {
+            setIsEstimating(false);
+        }
+    };
+
     // Calculate analytics
     const stats = useMemo(() => {
         const numPeople = trip.num_people || 1;
@@ -55,8 +90,8 @@ const Budget = ({ trip, onUpdate }) => {
         const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
         const totalSpentWithSim = currentSpent + simulatedCosts;
 
-        const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
-        const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
+        const remaining = totalBudget - totalSpentWithSim;
+        const percentUsed = totalBudget > 0 ? Math.min((totalSpentWithSim / totalBudget) * 100, 100) : 0;
 
         const categories = Object.entries(categoryMap).map(([id, amount]) => ({
             id,
@@ -75,13 +110,26 @@ const Budget = ({ trip, onUpdate }) => {
                                 id === 'Flight' ? '#0ea5e9' : '#94a3b8'
         })).sort((a, b) => b.amount - a.amount);
 
+        // Add AI projection if active
+        const aiCost = appliedAIExpense + simulatedCosts;
+        if (aiCost > 0) {
+            categories.push({
+                id: 'AI_Simulation',
+                amount: aiCost,
+                label: 'Simulazione AI',
+                color: '#fbbf24', // Amber/Yellow
+                isSimulation: true,
+                onRemove: handleRemoveAI
+            });
+        }
+
         // Add 'Remaining' as a category if it's positive and there is a total budget
         if (remaining > 0 && totalBudget > 0) {
             categories.push({
                 id: 'Remaining',
                 amount: remaining,
                 label: 'Disponibile',
-                color: '#f1f5f9', // Very light gray for the "empty" part of the donut
+                color: '#f1f5f9',
                 isRemaining: true
             });
         }
@@ -100,34 +148,6 @@ const Budget = ({ trip, onUpdate }) => {
             simulatedCosts
         };
     }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation]);
-
-    const handleEstimate = async () => {
-        setIsEstimating(true);
-        try {
-            const data = await estimateBudget(trip.id);
-            setEstimation(data);
-            setShowSimulation(true);
-            showToast("✅ Stima AI completata!", "success");
-        } catch (e) {
-            showToast("Errore stima: " + e.message, "error");
-        } finally {
-            setIsEstimating(false);
-        }
-    };
-
-    const handleApplyAsExpense = async () => {
-        if (!estimation) return;
-        const confirmed = await showConfirm(
-            "Conferma Spesa Prevista 🤖",
-            `Vuoi aggiungere la stima AI di €${(estimation.total_estimated_per_person * stats.numPeople).toFixed(2)} come spesa prevista?`
-        );
-        if (confirmed) {
-            setAppliedAIExpense(estimation.total_estimated_per_person * stats.numPeople);
-            setEstimation(null);
-            setShowSimulation(false);
-            showToast("✨ Proiezione aggiornata!", "success");
-        }
-    };
 
     // Custom Donut Chart Component
     const DonutChart = ({ data }) => {
@@ -246,6 +266,28 @@ const Budget = ({ trip, onUpdate }) => {
                                             <span style={{ fontWeight: cat.isRemaining ? '500' : '600', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
                                                 {cat.label}
                                             </span>
+                                            {cat.isSimulation && (
+                                                <button
+                                                    onClick={cat.onRemove}
+                                                    style={{
+                                                        border: 'none',
+                                                        background: '#fee2e2',
+                                                        color: '#ef4444',
+                                                        borderRadius: '50%',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '10px',
+                                                        cursor: 'pointer',
+                                                        marginLeft: '4px'
+                                                    }}
+                                                    title="Rimuovi proiezione"
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
                                         </div>
                                         <div style={{ fontWeight: '700', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
                                             €{cat.amount.toFixed(2)}
@@ -283,9 +325,9 @@ const Budget = ({ trip, onUpdate }) => {
                             }} />
                         </div>
                         <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem', fontStyle: 'italic' }}>
-                            {stats.percentUsed > 80 ? '⚠️ Attenzione! Hai quasi esaurito il budget prefissato.' :
-                                stats.percentUsed > 50 ? '🏗️ Sei a metà del budget. Gestisci bene le prossime spese!' :
-                                    '🌟 Ottimo lavoro, il budget è ancora ampiamente sotto controllo.'}
+                            {stats.percentUsed > 80 ? 'Attenzione! Hai quasi esaurito il budget prefissato.' :
+                                stats.percentUsed > 50 ? 'Sei a metà del budget. Gestisci bene le prossime spese!' :
+                                    'Ottimo lavoro, il budget è ancora ampiamente sotto controllo.'}
                         </p>
                     </div>
 

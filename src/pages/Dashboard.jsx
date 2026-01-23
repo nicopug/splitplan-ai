@@ -121,94 +121,114 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <div style={{
-                background: 'var(--primary-blue)',
+            <div className="mesh-gradient" style={{
                 color: 'white',
-                padding: '3rem 0',
+                padding: '4rem 0',
                 textAlign: 'center',
                 position: 'relative',
-                marginTop: !user ? '2.5rem' : 0
+                marginTop: !user ? '2.5rem' : 0,
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
             }}>
-                <div className="container">
-                    <span style={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Dashboard Viaggio</span>
-                    <h1 style={{ color: 'white', marginBottom: 0 }}>{trip.name}</h1>
+                <div className="container animate-fade-in">
+                    <span style={{
+                        opacity: 0.9,
+                        textTransform: 'uppercase',
+                        letterSpacing: '2px',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        color: 'rgba(255,255,255,0.8)'
+                    }}>Dashboard Viaggio</span>
+                    <h1 style={{
+                        color: 'white',
+                        marginBottom: '0.5rem',
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: '800',
+                        fontSize: '3.5rem',
+                        textShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}>{trip.name}</h1>
 
                     {user && (
                         <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                            <span style={{
-                                background: user.is_subscribed ? 'linear-gradient(45deg, #ffd700, #ffa500)' : '#ddd',
-                                color: user.is_subscribed ? 'black' : '#666',
-                                padding: '2px 10px',
-                                borderRadius: '10px',
+                            <span className="glass-panel" style={{
+                                background: user.is_subscribed ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.2)',
+                                color: user.is_subscribed ? 'black' : 'white',
+                                padding: '4px 14px',
+                                borderRadius: '12px',
                                 fontSize: '0.75rem',
-                                fontWeight: 'bold'
+                                fontWeight: '800',
+                                letterSpacing: '0.5px',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                             }}>
-                                {user.is_subscribed ? 'PREMIUM ABBONATO 💎' : 'UTENTE FREE'}
+                                {user.is_subscribed ? '💎 PREMIUM ABBONATO' : 'UTENTE FREE'}
                             </span>
                         </div>
                     )}
 
                     {user && (
-                        <div style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                        <div style={{ marginTop: '1.5rem', marginBottom: '2rem' }}>
                             <button
                                 onClick={handleShare}
+                                className="hover-scale hover-glow"
                                 style={{
-                                    background: 'white',
-                                    color: 'var(--accent-orange)',
-                                    padding: '0.4rem 1rem',
-                                    borderRadius: '20px',
-                                    border: 'none',
+                                    background: 'rgba(255,255,255,0.15)',
+                                    backdropFilter: 'blur(10px)',
+                                    color: 'white',
+                                    padding: '0.6rem 1.5rem',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255,255,255,0.3)',
                                     fontSize: '0.85rem',
-                                    fontWeight: 'bold',
+                                    fontWeight: '700',
                                     cursor: 'pointer',
-                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.2s',
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                    transition: 'all 0.3s ease',
                                 }}
-                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
                             >
-                                🔗 Condividi Viaggio (Sola Lettura)
+                                🔗 Condividi Viaggio
                             </button>
                         </div>
                     )}
 
-                    <div style={{ marginTop: user ? '1rem' : '1.5rem' }}>
-                        <button
-                            onClick={() => setView('TRIP')}
-                            style={{ background: view === 'TRIP' ? 'white' : 'transparent', color: view === 'TRIP' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}
-                        >
-                            Viaggio 🗺️
-                        </button>
-                        {trip.status === 'BOOKED' && (
-                            <button
-                                onClick={() => setView('CHAT')}
-                                style={{ background: view === 'CHAT' ? 'white' : 'transparent', color: view === 'CHAT' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}
-                            >
-                                Chat AI 🤖
-                            </button>
-                        )}
-                        {trip.status === 'BOOKED' && (
-                            <button
-                                onClick={() => setView('BUDGET')}
-                                style={{ background: view === 'BUDGET' ? 'white' : 'transparent', color: view === 'BUDGET' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}
-                            >
-                                Budget 💰
-                            </button>
-                        )}
-                        {user && trip.trip_type !== 'SOLO' && (
-                            <button
-                                onClick={() => setView('FINANCE')}
-                                style={{ background: view === 'FINANCE' ? 'white' : 'transparent', color: view === 'FINANCE' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', marginRight: '0.5rem', cursor: 'pointer' }}
-                            >
-                                CFO & Spese 💸
-                            </button>
-                        )}
-                        <button
-                            onClick={() => setView('PHOTOS')}
-                            style={{ background: view === 'PHOTOS' ? 'white' : 'transparent', color: view === 'PHOTOS' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
-                        >
-                            Foto del viaggio 📸
-                        </button>
+                    <div style={{
+                        marginTop: '2rem',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem'
+                    }}>
+                        {[
+                            { id: 'TRIP', label: 'Viaggio', icon: '🗺️' },
+                            { id: 'CHAT', label: 'Chat AI', icon: '🤖', condition: trip.status === 'BOOKED' },
+                            { id: 'BUDGET', label: 'Budget', icon: '💰', condition: trip.status === 'BOOKED' },
+                            { id: 'FINANCE', label: 'CFO & Spese', icon: '💸', condition: user && trip.trip_type !== 'SOLO' },
+                            { id: 'PHOTOS', label: 'Foto', icon: '📸' }
+                        ].map(btn => (
+                            (!btn.hasOwnProperty('condition') || btn.condition) && (
+                                <button
+                                    key={btn.id}
+                                    onClick={() => setView(btn.id)}
+                                    className="hover-lift"
+                                    style={{
+                                        background: view === btn.id ? 'white' : 'rgba(255,255,255,0.1)',
+                                        backdropFilter: view === btn.id ? 'none' : 'blur(5px)',
+                                        color: view === btn.id ? 'var(--primary-blue)' : 'white',
+                                        padding: '0.6rem 1.2rem',
+                                        borderRadius: '14px',
+                                        border: view === btn.id ? '1px solid white' : '1px solid rgba(255,255,255,0.2)',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        fontWeight: '700',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        boxShadow: view === btn.id ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    {btn.label} {btn.icon}
+                                </button>
+                            )
+                        ))}
                     </div>
                 </div>
             </div>

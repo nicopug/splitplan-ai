@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { estimateBudget, updateTrip } from '../api';
+import React, { useState, useEffect, useMemo } from 'react';
+import { estimateBudget, updateTrip, getExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
@@ -9,34 +9,93 @@ const Budget = ({ trip, onUpdate }) => {
     const [isEstimating, setIsEstimating] = useState(false);
     const [estimation, setEstimation] = useState(null);
     const [showSimulation, setShowSimulation] = useState(false);
+    const [realExpenses, setRealExpenses] = useState([]);
+    const [loadingExpenses, setLoadingExpenses] = useState(true);
 
-    // Calculate budget breakdown
-    const numPeople = trip.num_people || 1;
-    const totalBudget = (trip.budget_per_person || 0) * numPeople;
-
-    // Costs
-    const flightCost = trip.flight_cost || 0;
-    const hotelCost = trip.hotel_cost || 0;
-
-    // AI Forecast inclusion (now treated as a dedicated expense simulated or semi-permanent)
+    // AI Forecast inclusion
     const [appliedAIExpense, setAppliedAIExpense] = useState(0);
 
-    const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
+    // Fetch real expenses from CFO tab
+    useEffect(() => {
+        const fetchExpenses = async () => {
+            if (!trip?.id) return;
+            try {
+                const data = await getExpenses(trip.id);
+                setRealExpenses(data || []);
+            } catch (e) {
+                console.error("Error fetching expenses for budget:", e);
+            } finally {
+                setLoadingExpenses(false);
+            }
+        };
+        fetchExpenses();
+    }, [trip?.id]);
 
-    // Total spent includes flight, hotel and any APPLIED AI expense
-    const currentSpent = flightCost + hotelCost + appliedAIExpense;
-    const totalSpentWithSim = currentSpent + (showSimulation ? simulatedCosts : 0);
+    // Calculate analytics
+    const stats = useMemo(() => {
+        const numPeople = trip.num_people || 1;
+        const totalBudget = (trip.budget_per_person || 0) * numPeople;
+        const flightCost = trip.flight_cost || 0;
+        const hotelCost = trip.hotel_cost || 0;
 
-    const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
-    const isOverBudget = remaining < 0;
-    const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
+        const realTotal = realExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+        // Group by category for chart
+        const categoryMap = realExpenses.reduce((acc, exp) => {
+            const cat = exp.category || 'Other';
+            acc[cat] = (acc[cat] || 0) + exp.amount;
+            return acc;
+        }, {});
+
+        // Add fixed categories if they have costs
+        if (flightCost > 0) categoryMap['Flight'] = (categoryMap['Flight'] || 0) + flightCost;
+        if (hotelCost > 0) categoryMap['Lodging'] = (categoryMap['Lodging'] || 0) + hotelCost;
+
+        const categories = Object.entries(categoryMap).map(([id, amount]) => ({
+            id,
+            amount,
+            label: id === 'Food' ? 'Cibo' :
+                id === 'Transport' ? 'Trasporti' :
+                    id === 'Lodging' ? 'Alloggio' :
+                        id === 'Activity' ? 'Attività' :
+                            id === 'Shopping' ? 'Shopping' :
+                                id === 'Flight' ? 'Volo' : 'Altro',
+            color: id === 'Food' ? '#3b82f6' :
+                id === 'Transport' ? '#f59e0b' :
+                    id === 'Lodging' ? '#10b981' :
+                        id === 'Activity' ? '#8b5cf6' :
+                            id === 'Shopping' ? '#ec4899' :
+                                id === 'Flight' ? '#0ea5e9' : '#94a3b8'
+        })).sort((a, b) => b.amount - a.amount);
+
+        const currentSpent = flightCost + hotelCost + appliedAIExpense + realTotal;
+        const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
+        const totalSpentWithSim = currentSpent + simulatedCosts;
+
+        const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
+        const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
+
+        return {
+            totalBudget,
+            numPeople,
+            flightCost,
+            hotelCost,
+            realTotal,
+            currentSpent,
+            remaining,
+            percentUsed,
+            categories,
+            isOverBudget: remaining < 0,
+            simulatedCosts
+        };
+    }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation]);
 
     const handleEstimate = async () => {
         setIsEstimating(true);
         try {
             const data = await estimateBudget(trip.id);
             setEstimation(data);
-            setShowSimulation(true); // Auto-simulate impact
+            setShowSimulation(true);
             showToast("✅ Stima AI completata!", "success");
         } catch (e) {
             showToast("Errore stima: " + e.message, "error");
@@ -47,287 +106,219 @@ const Budget = ({ trip, onUpdate }) => {
 
     const handleApplyAsExpense = async () => {
         if (!estimation) return;
-
         const confirmed = await showConfirm(
             "Conferma Spesa Prevista 🤖",
-            `Vuoi aggiungere la stima AI di €${estimation.total_estimated_per_person * numPeople} come spesa prevista? Verrà sottratta dal tuo budget rimanente.`
+            `Vuoi aggiungere la stima AI di €${(estimation.total_estimated_per_person * stats.numPeople).toFixed(2)} come spesa prevista?`
         );
-
         if (confirmed) {
-            setAppliedAIExpense(estimation.total_estimated_per_person * numPeople);
+            setAppliedAIExpense(estimation.total_estimated_per_person * stats.numPeople);
             setEstimation(null);
             setShowSimulation(false);
-            showToast("✨ Spesa aggiunta alla proiezione!", "success");
+            showToast("✨ Proiezione aggiornata!", "success");
         }
+    };
+
+    // Custom Donut Chart Component
+    const DonutChart = ({ data }) => {
+        const total = data.reduce((acc, curr) => acc + curr.amount, 0);
+        if (total === 0) return null;
+
+        let currentAngle = -90;
+        const radius = 70;
+        const strokeWidth = 25;
+        const center = 100;
+        const circumference = 2 * Math.PI * radius;
+
+        return (
+            <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
+                <svg viewBox="0 0 200 200" style={{ transform: 'rotate(0deg)' }}>
+                    {data.map((item, i) => {
+                        const percentage = (item.amount / total) * 100;
+                        const dashArray = (percentage * circumference) / 100;
+                        const dashOffset = - (currentAngle + 90) / 360 * circumference; // This is actually complex with SVG
+
+                        // For a simpler donut, we use stroke-dasharray and dashOffset
+                        // But let's use a standard stacked circle approach
+                        const offset = data.slice(0, i).reduce((sum, prev) => sum + (prev.amount / total) * circumference, 0);
+
+                        return (
+                            <circle
+                                key={item.id}
+                                cx={center}
+                                cy={center}
+                                r={radius}
+                                fill="transparent"
+                                stroke={item.color}
+                                strokeWidth={strokeWidth}
+                                strokeDasharray={`${dashArray} ${circumference}`}
+                                strokeDashoffset={-offset}
+                                strokeLinecap="round"
+                                style={{ transition: 'stroke-dashoffset 1s ease' }}
+                            />
+                        );
+                    })}
+                </svg>
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center'
+                }}>
+                    <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: '600' }}>Totale</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{total.toFixed(0)}</div>
+                </div>
+            </div>
+        );
     };
 
     return (
         <div className="container section">
-            <h2 className="text-center" style={{ marginBottom: '2rem' }}>Gestione Budget 💰</h2>
+            <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Analisi Budget 📊
+            </h2>
 
-            <div style={{ maxWidth: '600px', margin: '0 auto 2rem', textAlign: 'center' }}>
-                <button
-                    onClick={handleEstimate}
-                    disabled={isEstimating}
-                    className="btn btn-secondary"
-                    style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                >
-                    {isEstimating ? '🤖 Analizzando costi...' : '🤖 Calcola Costi Locali (Cibo, Trasporti...)'}
-                </button>
-            </div>
-
-            {estimation && (
-                <div style={{
-                    background: 'rgba(35, 89, 158, 0.05)',
-                    border: '2px dashed var(--primary-blue)',
-                    borderRadius: '24px',
-                    padding: '2rem',
-                    maxWidth: '600px',
-                    margin: '0 auto 2rem'
+            {/* Top Cards: Spent vs Remaining */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)' }}>
+                    <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem', fontWeight: '600' }}>Speso Totale</div>
+                    <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>di €{stats.totalBudget.toFixed(0)} piano originale</div>
+                </div>
+                <div className="glass-card" style={{
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                    borderBottom: stats.isOverBudget ? '4px solid #ef4444' : '4px solid #10b981'
                 }}>
-                    <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-blue)', marginBottom: '1rem' }}>Suggerimento AI per {trip.destination}</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div className="stat-card">
-                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Pasto (Medio)</span>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.daily_meal_mid}</div>
-                        </div>
-                        <div className="stat-card">
-                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Trasporti / giorno</span>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.daily_transport}</div>
-                        </div>
-                        <div className="stat-card">
-                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Caffè & Drink</span>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>€{estimation.coffee_drinks}</div>
-                        </div>
-                        <div className="stat-card" style={{ border: '1px solid var(--primary-blue)' }}>
-                            <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Stima Totale Vivibilità</span>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person} / pers.</div>
-                        </div>
+                    <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem', fontWeight: '600' }}>
+                        {stats.isOverBudget ? 'Sforamento' : 'Disponibilità'}
                     </div>
-                    <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginBottom: '1.5rem', borderLeft: '4px solid var(--primary-blue)', paddingLeft: '1rem' }}>
-                        "{estimation.advice}"
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                        <button
-                            onClick={handleApplyAsExpense}
-                            className="btn btn-primary"
-                            style={{ flex: 1.5, background: 'var(--primary-blue)' }}
-                        >
-                            ➕ Applica come Spesa
-                        </button>
-                        <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5 }}>Chiudi</button>
+                    <div style={{
+                        fontSize: '2rem',
+                        fontWeight: '900',
+                        color: stats.isOverBudget ? '#ef4444' : '#10b981'
+                    }}>
+                        €{Math.abs(stats.remaining).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                        {stats.isOverBudget ? 'Sei andato oltre il budget' : 'Ancora spendibili'}
                     </div>
                 </div>
-            )}
+            </div>
 
-            {/* Budget Overview Card */}
-            <div style={{
-                background: 'white',
-                borderRadius: '24px',
-                padding: '2rem',
-                boxShadow: 'var(--shadow-lg)',
-                maxWidth: '600px',
-                margin: '0 auto'
-            }}>
-                {/* Progress Bar */}
-                <div style={{ marginBottom: '2rem' }}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginBottom: '0.5rem',
-                        fontSize: '0.9rem',
-                        color: '#666'
-                    }}>
-                        <span>{showSimulation ? 'Spesa Totale Stimata' : 'Speso Attualmente'}</span>
-                        <span>{percentUsed.toFixed(0)}%</span>
-                    </div>
-                    <div style={{
-                        background: '#e9ecef',
-                        borderRadius: '10px',
-                        height: '24px',
-                        overflow: 'hidden',
-                        position: 'relative'
-                    }}>
-                        {/* Fixed Costs (Flight + Hotel) */}
-                        <div style={{
-                            background: 'var(--primary-blue)',
-                            height: '100%',
-                            width: `${Math.min((flightCost + hotelCost / totalBudget) * 100, 100)}%`,
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            transition: 'width 0.5s ease',
-                            zIndex: 3
-                        }} />
-                        {/* Applied AI Expenses */}
-                        {appliedAIExpense > 0 && (
-                            <div style={{
-                                background: '#37b24d',
-                                height: '100%',
-                                width: `${Math.min((appliedAIExpense / totalBudget) * 100, 100)}%`,
-                                position: 'absolute',
-                                left: `${Math.min(((flightCost + hotelCost) / totalBudget) * 100, 100)}%`,
-                                top: 0,
-                                transition: 'width 0.5s ease',
-                                zIndex: 2
-                            }} />
-                        )}
-                        {/* Simulated Costs (AI) */}
-                        {showSimulation && (
-                            <div style={{
-                                background: '#ffd43b',
-                                height: '100%',
-                                width: `${Math.min((simulatedCosts / totalBudget) * 100, 100)}%`,
-                                position: 'absolute',
-                                left: `${Math.min(((flightCost + hotelCost + appliedAIExpense) / totalBudget) * 100, 100)}%`,
-                                top: 0,
-                                transition: 'width 0.5s ease',
-                                zIndex: 1
-                            }} />
-                        )}
-                    </div>
-                    {(showSimulation || appliedAIExpense > 0) && (
-                        <div style={{ marginTop: '0.8rem', fontSize: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--primary-blue)', borderRadius: '2px' }} /> Prenotato</span>
-                            {appliedAIExpense > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: '#37b24d', borderRadius: '2px' }} /> Spesa Prevista</span>}
-                            {showSimulation && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: '#ffd43b', borderRadius: '2px' }} /> Simulazione AI</span>}
-                        </div>
-                    )}
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'start' }}>
 
-                {/* Budget Items */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '1rem',
-                        background: '#f8f9fa',
-                        borderRadius: '12px',
-                        border: '1px solid #eee'
-                    }}>
-                        <span style={{ fontWeight: 600 }}>📊 IL TUO BUDGET</span>
-                        <span style={{ fontWeight: 'bold', color: 'var(--primary-blue)' }}>€{totalBudget.toFixed(2)}</span>
-                    </div>
+                {/* Left Column: Chart & Categories */}
+                <div className="glass-card" style={{ padding: '2rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Suddivisione Spese 🥧</h3>
 
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '1rem',
-                        background: '#fff3cd',
-                        borderRadius: '12px'
-                    }}>
-                        <span>✈️ Volo</span>
-                        <span style={{ fontWeight: 'bold', color: '#856404' }}>- €{flightCost.toFixed(2)}</span>
-                    </div>
-
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '1rem',
-                        background: '#d4edda',
-                        borderRadius: '12px'
-                    }}>
-                        <span>🏨 Hotel</span>
-                        <span style={{ fontWeight: 'bold', color: '#155724' }}>- €{hotelCost.toFixed(2)}</span>
-                    </div>
-
-                    {appliedAIExpense > 0 && (
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '1rem',
-                            background: 'rgba(55, 178, 77, 0.1)',
-                            borderRadius: '12px',
-                            border: '1px solid #37b24d'
-                        }}>
-                            <span>🤖 Spesa Prevista AI</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ fontWeight: 'bold', color: '#2b8a3e' }}>- €{appliedAIExpense.toFixed(2)}</span>
-                                <button onClick={() => setAppliedAIExpense(0)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#666' }}>✕</button>
+                    {stats.categories.length > 0 ? (
+                        <>
+                            <DonutChart data={stats.categories} />
+                            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                {stats.categories.map(cat => (
+                                    <div key={cat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: cat.color }} />
+                                            <span style={{ fontWeight: '600' }}>{cat.label}</span>
+                                        </div>
+                                        <div style={{ fontWeight: '700' }}>
+                                            €{cat.amount.toFixed(2)}
+                                            <span style={{ fontSize: '0.75rem', color: '#999', marginLeft: '6px' }}>
+                                                ({((cat.amount / stats.currentSpent) * 100).toFixed(0)}%)
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
+                        </>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
+                            <div style={{ fontSize: '3rem' }}>🤔</div>
+                            <p>Ancora nessuna spesa registrata per mostrare il grafico.</p>
                         </div>
                     )}
-
-                    {showSimulation && (
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '1rem',
-                            background: 'rgba(255, 212, 59, 0.2)',
-                            borderRadius: '12px',
-                            border: '1px dashed #fab005'
-                        }}>
-                            <span>🔍 Simulazione AI</span>
-                            <span style={{ fontWeight: 'bold', color: '#856404' }}>- €{simulatedCosts.toFixed(2)}</span>
-                        </div>
-                    )}
-
-                    <hr style={{ border: 'none', borderTop: '2px dashed #ddd', margin: '0.5rem 0' }} />
-
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '1.5rem',
-                        background: isOverBudget ? '#f8d7da' : '#d1ecf1',
-                        borderRadius: '16px',
-                        border: isOverBudget ? '2px solid #dc3545' : '2px solid #0c5460'
-                    }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                            {isOverBudget ? '⚠️ Scoperto Stimato' : '💵 Disponibilità Rimanente'}
-                        </span>
-                        <span style={{
-                            fontWeight: 'bold',
-                            fontSize: '1.3rem',
-                            color: isOverBudget ? '#dc3545' : '#0c5460'
-                        }}>
-                            €{remaining.toFixed(2)}
-                        </span>
-                    </div>
                 </div>
 
-                {/* Over Budget Warning */}
-                {isOverBudget && (
-                    <div style={{
-                        marginTop: '2rem',
-                        padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #dc3545, #c82333)',
-                        color: 'white',
-                        borderRadius: '16px',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚨</div>
-                        <h4 style={{ margin: '0 0 0.5rem', color: 'white' }}>Attenzione: Budget Superato!</h4>
-                        <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                            I costi stimati superano il budget massimo di <strong>€{Math.abs(remaining).toFixed(2)}</strong>.<br />
-                            Considera di rivedere la stima o aumentare il budget.
+                {/* Right Column: AI Projections & Tips */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+                    {/* Progress Bar (Integrated) */}
+                    <div className="glass-card" style={{ padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '1rem' }}>
+                            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Utilizzo Budget 📈</span>
+                            <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
+                        </div>
+                        <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>
+                            <div style={{
+                                background: 'linear-gradient(90deg, #2563eb, #3b82f6)',
+                                height: '100%',
+                                width: `${stats.percentUsed}%`,
+                                transition: 'width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67)'
+                            }} />
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem', fontStyle: 'italic' }}>
+                            {stats.percentUsed > 80 ? '⚠️ Attenzione! Hai quasi esaurito il budget prefissato.' :
+                                stats.percentUsed > 50 ? '🏗️ Sei a metà del budget. Gestisci bene le prossime spese!' :
+                                    '🌟 Ottimo lavoro, il budget è ancora ampiamente sotto controllo.'}
                         </p>
                     </div>
-                )}
 
-                {/* Budget Tips */}
-                {!isOverBudget && remaining > 0 && (
-                    <div style={{
-                        marginTop: '2rem',
-                        padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #28a745, #20c997)',
-                        color: 'white',
-                        borderRadius: '16px',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-                        <h4 style={{ margin: '0 0 0.5rem', color: 'white' }}>Budget in Regola!</h4>
-                        <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                            Hai <strong>€{remaining.toFixed(2)}</strong> disponibili per attività extra e souvenir.<br />
-                            Questo equivale a circa <strong>€{(remaining / numPeople).toFixed(2)}</strong> a persona.
-                        </p>
+                    {/* AI Estimation Section */}
+                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'rgba(37, 99, 235, 0.02)' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🤖 Simulazione AI
+                        </h3>
+                        {!estimation ? (
+                            <>
+                                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1.5rem' }}>
+                                    Vuoi sapere quanto spenderai indicativamente a {trip.destination}? La nostra AI calcola per te il costo della vita locale.
+                                </p>
+                                <button
+                                    onClick={handleEstimate}
+                                    disabled={isEstimating}
+                                    className="btn btn-secondary"
+                                    style={{ width: '100%', padding: '0.8rem' }}
+                                >
+                                    {isEstimating ? '🤖 Analizzando...' : 'Calcola Proiezione'}
+                                </button>
+                            </>
+                        ) : (
+                            <div className="animate-in">
+                                <div style={{ background: 'white', padding: '1rem', borderRadius: '16px', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                        <span style={{ fontSize: '0.8rem' }}>Stima locale / pers:</span>
+                                        <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person}</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
+                                        "{estimation.advice}"
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button onClick={handleApplyAsExpense} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>Applica</button>
+                                    <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5, fontSize: '0.8rem' }}>Chiudi</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
 
-            {/* Info Footer */}
-            <div style={{ textAlign: 'center', marginTop: '1.5rem', opacity: 0.6, fontSize: '0.85rem' }}>
-                <p>💡 Il budget rimanente è calcolato sottraendo i costi fissi {showSimulation ? 'e la stima AI' : ''} dal budget totale.</p>
-            </div>
+            <style>{`
+                .glass-card {
+                    background: white;
+                    border-radius: 24px;
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+                }
+                .animate-in {
+                    animation: fadeIn 0.5s ease-out;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 };

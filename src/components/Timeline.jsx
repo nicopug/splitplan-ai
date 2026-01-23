@@ -34,46 +34,98 @@ const Timeline = ({ items }) => {
     const sortedDates = Object.keys(grouped).sort();
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: '850px', margin: '0 auto', position: 'relative', padding: '1rem' }}>
 
-            <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
-                {/* Vertical Line */}
-                <div style={{ position: 'absolute', left: '20px', top: 0, bottom: 0, width: '4px', background: '#ddd', borderRadius: '2px' }}></div>
+            <div style={{ position: 'relative' }}>
+                {/* Vertical Line with Gradient */}
+                <div style={{
+                    position: 'absolute',
+                    left: '25px',
+                    top: '20px',
+                    bottom: '20px',
+                    width: '4px',
+                    background: 'linear-gradient(to bottom, var(--primary-blue), var(--primary-blue-light))',
+                    borderRadius: '4px',
+                    opacity: 0.3
+                }}></div>
 
                 {sortedDates.map((date, idx) => (
-                    <div key={date} style={{ marginBottom: '2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                            <div style={{ width: '44px', height: '44px', background: 'var(--primary-blue)', borderRadius: '50%', border: '4px solid white', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                    <div key={date} style={{ marginBottom: '3rem', position: 'relative' }} className="animate-fade-in">
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{
+                                width: '54px',
+                                height: '54px',
+                                background: 'white',
+                                borderRadius: '18px',
+                                border: '2px solid var(--primary-blue)',
+                                zIndex: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--primary-blue)',
+                                fontWeight: '800',
+                                fontSize: '1.2rem',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.06)',
+                                fontFamily: "'Outfit', sans-serif"
+                            }}>
                                 {idx + 1}
                             </div>
-                            <h3 style={{ marginLeft: '1rem', margin: 0, background: '#fff', padding: '0.5rem 1rem', borderRadius: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                                Giorno {idx + 1} <span style={{ fontSize: '0.8rem', color: '#666', fontWeight: 'normal' }}>({date})</span>
+                            <h3 style={{
+                                marginLeft: '1.5rem',
+                                margin: 0,
+                                background: 'rgba(255,255,255,0.7)',
+                                backdropFilter: 'blur(10px)',
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255,255,255,0.4)',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
+                                fontFamily: "'Outfit', sans-serif",
+                                fontWeight: '700'
+                            }}>
+                                Giorno {idx + 1} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', marginLeft: '8px' }}>• {new Date(date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                             </h3>
                         </div>
 
-                        <div style={{ marginLeft: '50px' }}>
+                        <div style={{ marginLeft: '65px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {grouped[date].map((item, i) => (
-                                <div key={item.id || i} style={{
+                                <div key={item.id || i} className="hover-lift hover-scale" style={{
                                     background: 'white',
-                                    padding: '1rem',
-                                    borderRadius: '12px',
-                                    marginBottom: '1rem',
-                                    boxShadow: 'var(--shadow-sm)',
-                                    borderLeft: `4px solid ${item.type === 'CHECKIN' ? 'orange' : item.type === 'FOOD' ? 'red' : 'green'}`
+                                    padding: '1.2rem',
+                                    borderRadius: '20px',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+                                    border: '1px solid #f1f5f9',
+                                    borderLeft: `6px solid ${item.type === 'CHECKIN' ? '#f59e0b' : item.type === 'FOOD' ? '#ef4444' : '#10b981'}`,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                                 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <strong style={{ fontSize: '1.1rem' }}>{item.title}</strong>
-                                        <span style={{ fontSize: '0.8rem', background: '#eee', padding: '2px 8px', borderRadius: '4px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.2rem' }}>
+                                                <span style={{ fontSize: '1.1rem' }}>{item.emoji || '📍'}</span>
+                                                <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Outfit', sans-serif" }}>{item.title}</strong>
+                                            </div>
+                                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5' }}>{item.description}</p>
+                                        </div>
+                                        <div style={{
+                                            fontSize: '0.75rem',
+                                            background: '#f8fafc',
+                                            color: '#64748b',
+                                            padding: '4px 10px',
+                                            borderRadius: '8px',
+                                            fontWeight: '700',
+                                            border: '1px solid #e2e8f0',
+                                            whiteSpace: 'nowrap',
+                                            marginLeft: '1rem'
+                                        }}>
                                             {(() => {
                                                 try {
                                                     if (!item.start_time) return "N/A";
                                                     const d = new Date(item.start_time);
-                                                    return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                                    return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
                                                 } catch { return "N/A"; }
                                             })()}
-                                        </span>
+                                        </div>
                                     </div>
-                                    <p style={{ margin: '0.5rem 0 0', color: '#555', fontSize: '0.9rem' }}>{item.description}</p>
                                 </div>
                             ))}
                         </div>

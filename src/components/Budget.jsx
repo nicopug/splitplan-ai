@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { estimateBudget, updateTrip, getExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
@@ -35,30 +35,34 @@ const Budget = ({ trip, onUpdate }) => {
         if (!estimation) return;
         const confirmed = await showConfirm(
             "Conferma Spesa Prevista 🤖",
-            `Vuoi aggiungere la stima AI di €${(estimation.total_estimated_per_person * stats.numPeople).toFixed(2)} come spesa prevista?`
+            `Vuoi aggiungere la stima AI di €${(Number(estimation.total_estimated_per_person) * (trip.num_people || 1)).toFixed(2)} come spesa prevista?`
         );
         if (confirmed) {
-            setAppliedAIExpense(estimation.total_estimated_per_person * stats.numPeople);
+            setAppliedAIExpense(Number(estimation.total_estimated_per_person) * (trip.num_people || 1));
             setEstimation(null);
             setShowSimulation(false);
             showToast("✨ Proiezione aggiornata!", "success");
         }
     };
 
-    const handleRemoveAI = () => {
+    const handleRemoveAI = useCallback(() => {
         setAppliedAIExpense(0);
         setEstimation(null);
         setShowSimulation(false);
         showToast("Proiezione rimossa", "info");
-    };
+    }, []);
 
     const handleEstimate = async () => {
         setIsEstimating(true);
         try {
             const data = await estimateBudget(trip.id);
-            setEstimation(data);
-            setShowSimulation(true);
-            showToast("✅ Stima AI completata!", "success");
+            if (data && data.total_estimated_per_person) {
+                setEstimation(data);
+                setShowSimulation(true);
+                showToast("✅ Stima AI completata!", "success");
+            } else {
+                throw new Error("Dati AI incompleti");
+            }
         } catch (e) {
             showToast("Errore stima: " + e.message, "error");
         } finally {
@@ -87,15 +91,16 @@ const Budget = ({ trip, onUpdate }) => {
         if (hotelCost > 0) categoryMap['Lodging'] = (categoryMap['Lodging'] || 0) + hotelCost;
 
         const currentSpent = flightCost + hotelCost + appliedAIExpense + realTotal;
-        const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
+        const estPerPerson = (estimation && estimation.total_estimated_per_person) ? Number(estimation.total_estimated_per_person) : 0;
+        const simulatedCosts = (showSimulation && estimation) ? (estPerPerson * numPeople) : 0;
         const totalSpentWithSim = currentSpent + simulatedCosts;
 
-        const remaining = totalBudget - totalSpentWithSim;
-        const percentUsed = totalBudget > 0 ? Math.min((totalSpentWithSim / totalBudget) * 100, 100) : 0;
+        const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
+        const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
 
         const categories = Object.entries(categoryMap).map(([id, amount]) => ({
             id,
-            amount,
+            amount: Number(amount),
             label: id === 'Food' ? 'Cibo' :
                 id === 'Transport' ? 'Trasporti' :
                     id === 'Lodging' ? 'Alloggio' :
@@ -110,16 +115,16 @@ const Budget = ({ trip, onUpdate }) => {
                                 id === 'Flight' ? '#0ea5e9' : '#94a3b8'
         })).sort((a, b) => b.amount - a.amount);
 
-        // Add AI projection if active
+        // Add AI projection if active - FORCE CHECK NUMBER
         const aiCost = appliedAIExpense + simulatedCosts;
-        if (aiCost > 0) {
+        if (Number(aiCost) > 0.01) {
             categories.push({
                 id: 'AI_Simulation',
-                amount: aiCost,
+                amount: Number(aiCost),
                 label: 'Simulazione AI',
-                color: '#fbbf24', // Amber/Yellow
+                color: '#f59e0b', // Accent Orange to be visible
                 isSimulation: true,
-                onRemove: handleRemoveAI
+                onRemove: handleRemoveAI // Callback ref
             });
         }
 
@@ -147,11 +152,14 @@ const Budget = ({ trip, onUpdate }) => {
             isOverBudget: remaining < 0,
             simulatedCosts
         };
-    }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation]);
+    }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation, handleRemoveAI]);
 
     // Custom Donut Chart Component
     const DonutChart = ({ data }) => {
-        const total = data.reduce((acc, curr) => acc + curr.amount, 0);
+        // Ensure data is array
+        if (!data || !Array.isArray(data)) return null;
+
+        const total = data.reduce((acc, curr) => acc + (curr.amount || 0), 0);
         if (total === 0) return null;
 
         let currentAngle = -90;
@@ -164,13 +172,12 @@ const Budget = ({ trip, onUpdate }) => {
             <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
                 <svg viewBox="0 0 200 200" style={{ transform: 'rotate(0deg)' }}>
                     {data.map((item, i) => {
-                        const percentage = (item.amount / total) * 100;
+                        const itemAmount = item.amount || 0;
+                        const percentage = (itemAmount / total) * 100;
                         const dashArray = (percentage * circumference) / 100;
-                        const dashOffset = - (currentAngle + 90) / 360 * circumference; // This is actually complex with SVG
 
-                        // For a simpler donut, we use stroke-dasharray and dashOffset
-                        // But let's use a standard stacked circle approach
-                        const offset = data.slice(0, i).reduce((sum, prev) => sum + (prev.amount / total) * circumference, 0);
+                        // Calculate cumulative offset
+                        const offset = data.slice(0, i).reduce((sum, prev) => sum + ((prev.amount || 0) / total) * circumference, 0);
 
                         return (
                             <circle
@@ -183,8 +190,8 @@ const Budget = ({ trip, onUpdate }) => {
                                 strokeWidth={strokeWidth}
                                 strokeDasharray={`${dashArray} ${circumference}`}
                                 strokeDashoffset={-offset}
-                                strokeLinecap="round"
-                                style={{ transition: 'stroke-dashoffset 1s ease' }}
+                                strokeLinecap="butt"
+                                style={{ transition: 'stroke-dashoffset 0.8s ease' }}
                             />
                         );
                     })}
@@ -206,7 +213,7 @@ const Budget = ({ trip, onUpdate }) => {
     return (
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Analisi Budget 📊
+                Analisi Budget
             </h2>
 
             {/* Top Cards: Spent vs Remaining */}
@@ -241,7 +248,7 @@ const Budget = ({ trip, onUpdate }) => {
 
                 {/* Left Column: Chart & Categories */}
                 <div className="glass-card" style={{ padding: '2rem' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Suddivisione Spese 🥧</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Suddivisione Spese</h3>
 
                     {stats.categories.length > 0 ? (
                         <>
@@ -274,14 +281,15 @@ const Budget = ({ trip, onUpdate }) => {
                                                         background: '#fee2e2',
                                                         color: '#ef4444',
                                                         borderRadius: '50%',
-                                                        width: '18px',
-                                                        height: '18px',
+                                                        width: '20px',
+                                                        height: '20px',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         fontSize: '10px',
                                                         cursor: 'pointer',
-                                                        marginLeft: '4px'
+                                                        marginLeft: '8px',
+                                                        fontWeight: 'bold'
                                                     }}
                                                     title="Rimuovi proiezione"
                                                 >
@@ -292,7 +300,7 @@ const Budget = ({ trip, onUpdate }) => {
                                         <div style={{ fontWeight: '700', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
                                             €{cat.amount.toFixed(2)}
                                             <span style={{ fontSize: '0.75rem', color: '#999', marginLeft: '6px' }}>
-                                                ({((cat.amount / stats.totalBudget) * 100).toFixed(0)}%)
+                                                ({(stats.totalBudget > 0 ? (cat.amount / stats.totalBudget) * 100 : 0).toFixed(0)}%)
                                             </span>
                                         </div>
                                     </div>
@@ -313,7 +321,7 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* Progress Bar (Integrated) */}
                     <div className="glass-card" style={{ padding: '2rem' }}>
                         <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Utilizzo Budget 📈</span>
+                            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Utilizzo Budget</span>
                             <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
                         </div>
                         <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>
@@ -334,7 +342,7 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* AI Estimation Section */}
                     <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'rgba(37, 99, 235, 0.02)' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            🤖 Simulazione AI
+                            Simulazione AI
                         </h3>
                         {!estimation ? (
                             <>
@@ -347,7 +355,7 @@ const Budget = ({ trip, onUpdate }) => {
                                     className="btn btn-secondary"
                                     style={{ width: '100%', padding: '0.8rem' }}
                                 >
-                                    {isEstimating ? '🤖 Analizzando...' : 'Calcola Proiezione'}
+                                    {isEstimating ? 'Analizzando...' : 'Calcola Proiezione'}
                                 </button>
                             </>
                         ) : (

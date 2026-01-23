@@ -51,6 +51,13 @@ const Budget = ({ trip, onUpdate }) => {
         if (flightCost > 0) categoryMap['Flight'] = (categoryMap['Flight'] || 0) + flightCost;
         if (hotelCost > 0) categoryMap['Lodging'] = (categoryMap['Lodging'] || 0) + hotelCost;
 
+        const currentSpent = flightCost + hotelCost + appliedAIExpense + realTotal;
+        const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
+        const totalSpentWithSim = currentSpent + simulatedCosts;
+
+        const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
+        const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
+
         const categories = Object.entries(categoryMap).map(([id, amount]) => ({
             id,
             amount,
@@ -68,12 +75,16 @@ const Budget = ({ trip, onUpdate }) => {
                                 id === 'Flight' ? '#0ea5e9' : '#94a3b8'
         })).sort((a, b) => b.amount - a.amount);
 
-        const currentSpent = flightCost + hotelCost + appliedAIExpense + realTotal;
-        const simulatedCosts = (showSimulation && estimation) ? (estimation.total_estimated_per_person * numPeople) : 0;
-        const totalSpentWithSim = currentSpent + simulatedCosts;
-
-        const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
-        const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
+        // Add 'Remaining' as a category if it's positive and there is a total budget
+        if (remaining > 0 && totalBudget > 0) {
+            categories.push({
+                id: 'Remaining',
+                amount: remaining,
+                label: 'Disponibile',
+                color: '#f1f5f9', // Very light gray for the "empty" part of the donut
+                isRemaining: true
+            });
+        }
 
         return {
             totalBudget,
@@ -165,8 +176,8 @@ const Budget = ({ trip, onUpdate }) => {
                     transform: 'translate(-50%, -50%)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: '600' }}>Totale</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{total.toFixed(0)}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: '600' }}>Budget</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{stats.totalBudget.toFixed(0)}</div>
                 </div>
             </div>
         );
@@ -183,7 +194,7 @@ const Budget = ({ trip, onUpdate }) => {
                 <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)' }}>
                     <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem', fontWeight: '600' }}>Speso Totale</div>
                     <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>di €{stats.totalBudget.toFixed(0)} piano originale</div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>di €{stats.totalBudget.toFixed(0)} iniziali</div>
                 </div>
                 <div className="glass-card" style={{
                     padding: '1.5rem',
@@ -217,15 +228,29 @@ const Budget = ({ trip, onUpdate }) => {
                             <DonutChart data={stats.categories} />
                             <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                                 {stats.categories.map(cat => (
-                                    <div key={cat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                    <div key={cat.id} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        fontSize: '0.9rem',
+                                        opacity: cat.isRemaining ? 0.8 : 1
+                                    }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: cat.color }} />
-                                            <span style={{ fontWeight: '600' }}>{cat.label}</span>
+                                            <div style={{
+                                                width: '12px',
+                                                height: '12px',
+                                                borderRadius: '4px',
+                                                background: cat.color,
+                                                border: cat.isRemaining ? '1px dashed #cbd5e1' : 'none'
+                                            }} />
+                                            <span style={{ fontWeight: cat.isRemaining ? '500' : '600', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
+                                                {cat.label}
+                                            </span>
                                         </div>
-                                        <div style={{ fontWeight: '700' }}>
+                                        <div style={{ fontWeight: '700', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
                                             €{cat.amount.toFixed(2)}
                                             <span style={{ fontSize: '0.75rem', color: '#999', marginLeft: '6px' }}>
-                                                ({((cat.amount / stats.currentSpent) * 100).toFixed(0)}%)
+                                                ({((cat.amount / stats.totalBudget) * 100).toFixed(0)}%)
                                             </span>
                                         </div>
                                     </div>

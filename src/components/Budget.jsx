@@ -321,7 +321,7 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* Progress Bar (Integrated) */}
                     <div className="glass-card" style={{ padding: '2rem' }}>
                         <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Utilizzo Budget</span>
+                            <span style={{ fontWeight: '700', fontSize: '1rem' }}>Utilizzo Budget </span>
                             <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
                         </div>
                         <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>

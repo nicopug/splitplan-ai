@@ -163,7 +163,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     return (
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Gestione Spese 💸
+                Gestione Spese
             </h2>
 
             {/* Global Stats Dashboard */}
@@ -329,7 +329,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                     {tab === 'summary' && (
                         <div className="animate-in">
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>💰 Bilancio Debiti/Crediti</h3>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
                             {balances.length === 0 ? (
                                 <div className="text-center py-12 glass-card">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
@@ -361,7 +361,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                             {!readOnly && (
                                 <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#eff6ff', borderRadius: '16px', border: '1px dashed #3b82f6' }}>
-                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>💡 Tip di SplitPlan AI</h4>
+                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>Tip di SplitPlan AI</h4>
                                     <p style={{ fontSize: '0.85rem', color: '#1e40af', lineHeight: '1.4' }}>
                                         I bilanci vengono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.
                                     </p>

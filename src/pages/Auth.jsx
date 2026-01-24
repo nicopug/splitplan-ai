@@ -287,7 +287,7 @@ const Auth = () => {
                                 className="toggle-password"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
-                                {showPassword ? 'Nascondi' : 'Mostra'}
+                                {showPassword ? '👁️' : '👁️‍🗨️'}
                             </button>
                         </div>
                         {formData.password && !isLogin && (

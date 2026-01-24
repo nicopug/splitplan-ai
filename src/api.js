@@ -83,7 +83,6 @@ export const getTrip = async (id) => {
         localStorage.setItem(`cached_trip_${id}`, JSON.stringify(data));
         return data;
     } catch (error) {
-        // Don't use cache if it was an authentication/authorization error
         if (error.message.includes("401") || error.message.includes("403") || error.message.includes("Not authenticated")) {
             throw error;
         }
@@ -135,7 +134,6 @@ export const getItinerary = async (tripId) => {
         localStorage.setItem(`cached_itinerary_${tripId}`, JSON.stringify(data));
         return data;
     } catch (error) {
-        // Don't use cache if it was an authentication/authorization error
         if (error.message.includes("401") || error.message.includes("403") || error.message.includes("Not authenticated")) {
             throw error;
         }
@@ -150,6 +148,15 @@ export const optimizeItinerary = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/optimize`, {
         method: "POST",
         headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const updateItineraryItem = async (itemId, updates) => {
+    const response = await fetch(`${API_URL}/itinerary/items/${itemId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates)
     });
     return handleResponse(response);
 };
@@ -341,4 +348,3 @@ export const validateResetToken = async (token) => {
     });
     return handleResponse(response);
 };
-

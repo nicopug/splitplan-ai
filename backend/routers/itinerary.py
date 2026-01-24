@@ -7,7 +7,7 @@ from ..models import ItineraryItem
 
 router = APIRouter(prefix="/itinerary", tags=["itinerary"])
 
-# Definiamo uno schema locale per la creazione, visto che ItineraryItemBase non esiste in models.py
+# Definiamo uno schema locale per la creazione
 class ItineraryItemCreate(SQLModel):
     title: str
     description: Optional[str] = None
@@ -32,6 +32,26 @@ def add_itinerary_item(trip_id: int, item: ItineraryItemCreate, session: Session
         end_time=item.end_time,
         type=item.type
     )
+    session.add(db_item)
+    session.commit()
+    session.refresh(db_item)
+    return db_item
+
+@router.patch("/items/{item_id}", response_model=ItineraryItem)
+def update_itinerary_item(item_id: int, updates: dict, session: Session = Depends(get_session)):
+    """
+    Aggiorna un singolo elemento dell'itinerario. 
+    Usato principalmente per il Drag & Drop (cambio data/ora).
+    """
+    db_item = session.get(ItineraryItem, item_id)
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Elemento dell'itinerario non trovato")
+    
+    # Applichiamo i cambiamenti ricevuti nel body (es. {"start_time": "..."})
+    for key, value in updates.items():
+        if hasattr(db_item, key):
+            setattr(db_item, key, value)
+            
     session.add(db_item)
     session.commit()
     session.refresh(db_item)

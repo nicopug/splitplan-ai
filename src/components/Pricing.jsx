@@ -26,7 +26,7 @@ const Pricing = ({ user }) => {
                 <div className="grid-2" style={{ justifyContent: 'center', maxWidth: '800px', margin: '0 auto' }}>
                     {/* Free Plan */}
                     <div style={{
-                        background: 'white',
+                        background: 'var(--bg-white)',
                         padding: '3rem 2rem',
                         borderRadius: '24px',
                         border: '1px solid #e0e0e0',
@@ -36,8 +36,8 @@ const Pricing = ({ user }) => {
                     }}>
                         <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Viaggiatore</h3>
                         <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
-                        <p style={{ fontSize: '0.9rem' }}>Tutto l'essenziale per organizzare.</p>
-                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left' }}>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Tutto l'essenziale per organizzare.</p>
+                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)' }}>
                             <li style={{ marginBottom: '1rem' }}>Pianificazione AI Base</li>
                             <li style={{ marginBottom: '1rem' }}>Itinerari Smart</li>
                             <li style={{ marginBottom: '1rem' }}>Prenotazioni Integrate</li>

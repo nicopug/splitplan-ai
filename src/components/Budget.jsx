@@ -203,7 +203,7 @@ const Budget = ({ trip, onUpdate }) => {
                     transform: 'translate(-50%, -50%)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: '600' }}>Budget</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Budget</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{stats.totalBudget.toFixed(0)}</div>
                 </div>
             </div>
@@ -218,17 +218,18 @@ const Budget = ({ trip, onUpdate }) => {
 
             {/* Top Cards: Spent vs Remaining */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem', fontWeight: '600' }}>Speso Totale</div>
+                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)', background: 'var(--bg-white)' }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>Speso Totale</div>
                     <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
                     <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>di €{stats.totalBudget.toFixed(0)} iniziali</div>
                 </div>
                 <div className="glass-card" style={{
                     padding: '1.5rem',
                     textAlign: 'center',
-                    borderBottom: stats.isOverBudget ? '4px solid #ef4444' : '4px solid #10b981'
+                    borderBottom: stats.isOverBudget ? '4px solid #ef4444' : '4px solid #10b981',
+                    background: 'var(--bg-white)'
                 }}>
-                    <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>
                         {stats.isOverBudget ? 'Sforamento' : 'Disponibilità'}
                     </div>
                     <div style={{
@@ -247,7 +248,7 @@ const Budget = ({ trip, onUpdate }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'start' }}>
 
                 {/* Left Column: Chart & Categories */}
-                <div className="glass-card" style={{ padding: '2rem' }}>
+                <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Suddivisione Spese</h3>
 
                     {stats.categories.length > 0 ? (
@@ -319,7 +320,7 @@ const Budget = ({ trip, onUpdate }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                     {/* Progress Bar (Integrated) */}
-                    <div className="glass-card" style={{ padding: '2rem' }}>
+                    <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
                         <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '1rem' }}>
                             <span style={{ fontWeight: '700', fontSize: '1rem', marginRight: '8px' }}>Utilizzo Budget </span>
                             <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
@@ -340,7 +341,7 @@ const Budget = ({ trip, onUpdate }) => {
                     </div>
 
                     {/* AI Estimation Section */}
-                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'rgba(37, 99, 235, 0.02)' }}>
+                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-white)' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             Simulazione AI
                         </h3>
@@ -360,7 +361,7 @@ const Budget = ({ trip, onUpdate }) => {
                             </>
                         ) : (
                             <div className="animate-in">
-                                <div style={{ background: 'white', padding: '1rem', borderRadius: '16px', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                <div style={{ background: 'var(--bg-soft-gray)', padding: '1rem', borderRadius: '16px', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                         <span style={{ fontSize: '0.8rem' }}>Stima locale / pers:</span>
                                         <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person}</span>
@@ -381,7 +382,7 @@ const Budget = ({ trip, onUpdate }) => {
 
             <style>{`
                 .glass-card {
-                    background: white;
+                    background: var(--bg-white);
                     border-radius: 24px;
                     border: 1px solid #f1f5f9;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.04);

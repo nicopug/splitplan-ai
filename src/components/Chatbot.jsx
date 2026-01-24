@@ -54,7 +54,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                 flexDirection: 'column',
                 padding: '0',
                 overflow: 'hidden',
-                background: 'rgba(255, 255, 255, 0.7)',
+                background: 'var(--glass-bg)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 boxShadow: 'var(--shadow-xl)',
                 position: 'relative',
@@ -113,7 +113,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             maxWidth: '80%',
                             padding: '1rem',
                             borderRadius: '16px',
-                            background: msg.role === 'user' ? 'var(--primary-blue)' : 'white',
+                            background: msg.role === 'user' ? 'var(--primary-blue)' : 'var(--bg-white)',
                             color: msg.role === 'user' ? 'white' : 'var(--text-main)',
                             boxShadow: 'var(--shadow-sm)',
                             border: msg.role === 'ai' ? '1px solid rgba(0,0,0,0.05)' : 'none',
@@ -123,7 +123,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                         </div>
                     ))}
                     {loading && (
-                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'white', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
+                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-white)', color: 'var(--text-muted)', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
                             L'AI sta modificando l'itinerario...
                         </div>
                     )}
@@ -164,7 +164,9 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             padding: '0.75rem 1rem',
                             borderRadius: '12px',
                             border: '1px solid #ddd',
-                            outline: 'none'
+                            outline: 'none',
+                            background: 'var(--bg-white)',
+                            color: 'var(--text-main)'
                         }}
                     />
                     <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '0.75rem 1.5rem' }}>

@@ -34,14 +34,14 @@ const Budget = ({ trip, onUpdate }) => {
     const handleApplyAsExpense = async () => {
         if (!estimation) return;
         const confirmed = await showConfirm(
-            "Conferma Spesa Prevista 🤖",
+            "Conferma Spesa Prevista",
             `Vuoi aggiungere la stima AI di €${(Number(estimation.total_estimated_per_person) * (trip.num_people || 1)).toFixed(2)} come spesa prevista?`
         );
         if (confirmed) {
             setAppliedAIExpense(Number(estimation.total_estimated_per_person) * (trip.num_people || 1));
             setEstimation(null);
             setShowSimulation(false);
-            showToast("✨ Proiezione aggiornata!", "success");
+            showToast("Proiezione aggiornata!", "success");
         }
     };
 
@@ -59,7 +59,7 @@ const Budget = ({ trip, onUpdate }) => {
             if (data && data.total_estimated_per_person) {
                 setEstimation(data);
                 setShowSimulation(true);
-                showToast("✅ Stima AI completata!", "success");
+                showToast("Stima AI completata!", "success");
             } else {
                 throw new Error("Dati AI incompleti");
             }

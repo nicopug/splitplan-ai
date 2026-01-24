@@ -43,7 +43,7 @@ const Hero = () => {
                 name: tripName,
                 trip_type: type
             });
-            showToast("Viaggio creato con successo! ✈️", "success");
+            showToast("Viaggio creato con successo!", "success");
             navigate(`/trip/${data.trip_id}`);
         } catch (error) {
             showToast("Errore: " + error.message, "error");
@@ -126,7 +126,7 @@ const Hero = () => {
                                          transform hover:scale-105 active:scale-95"
                             >
                                 <div className="text-5xl md:text-6xl mb-4 transform group-hover:scale-110 transition-transform">
-                                    👯‍♀️
+
                                 </div>
                                 <h3 className="text-lg md:text-xl font-bold mb-2 text-primary-blue group-hover:text-white transition-colors">
                                     In Gruppo
@@ -144,7 +144,7 @@ const Hero = () => {
                                          transform hover:scale-105 active:scale-95"
                             >
                                 <div className="text-5xl md:text-6xl mb-4 transform group-hover:scale-110 transition-transform">
-                                    🎒
+
                                 </div>
                                 <h3 className="text-lg md:text-xl font-bold mb-2 text-accent-orange group-hover:text-white transition-colors">
                                     Da Solo

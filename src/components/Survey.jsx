@@ -55,7 +55,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 {/* Header */}
                 <div className="text-center mb-8 md:mb-12">
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                        Definiamo i dettagli 🎯
+                        Definiamo i dettagli
                     </h2>
                     <p className="text-base md:text-lg text-text-muted">
                         Aiutaci a costruire il viaggio perfetto per {isGroup ? 'il gruppo' : 'te'}.
@@ -70,7 +70,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Destinazione 🌍
+                                    Destinazione
                                 </label>
                                 <input
                                     name="destination"
@@ -86,7 +86,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Aeroporto Partenza 🛫
+                                    Aeroporto Partenza
                                 </label>
                                 <input
                                     name="departure_airport"
@@ -124,7 +124,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold mb-2 text-text-main">
-                                            Numero Persone 👥
+                                            Numero Persone
                                         </label>
                                         <input
                                             name="num_people"
@@ -191,7 +191,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Dal 📅
+                                    Dal
                                 </label>
                                 <input
                                     name="start_date"
@@ -206,7 +206,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Al 📅
+                                    Al
                                 </label>
                                 <input
                                     name="end_date"
@@ -225,7 +225,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Cosa non può mancare? 🛍️
+                                    Cosa non può mancare?
                                 </label>
                                 <textarea
                                     name="must_have"
@@ -240,7 +240,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Cosa vorresti evitare? 🚫
+                                    Cosa vorresti evitare?
                                 </label>
                                 <textarea
                                     name="must_avoid"
@@ -269,7 +269,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     Generazione in corso...
                                 </span>
                             ) : (
-                                isGroup ? 'Crea il Piano e Invita 🚀' : 'Genera Opzioni ✨'
+                                isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'
                             )}
                         </button>
                     </form>

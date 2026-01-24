@@ -151,10 +151,10 @@ const Auth = () => {
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
                                 <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>Tutto l'essenziale per organizzare.</p>
                                 <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Pianificazione AI Base</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Itinerari Smart</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Prenotazioni Integrate</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Chat di Gruppo</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Pianificazione AI Base</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Itinerari Smart</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Prenotazioni Integrate</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Chat di Gruppo</li>
                                 </ul>
                             </div>
                             <button onClick={() => handlePlanChoice(false)} className="btn btn-secondary btn-full">Seleziona</button>
@@ -167,10 +167,10 @@ const Auth = () => {
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
                                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>Per chi vuole il controllo totale.</p>
                                 <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ CFO del Viaggio</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Budget Guard (Alert Spese)</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Assistenza AI Prioritaria</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✅ Export Video Ricordi</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>CFO del Viaggio</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Budget Guard (Alert Spese)</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Assistenza AI Prioritaria</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>Export Video Ricordi</li>
                                 </ul>
                             </div>
                             <button onClick={() => handlePlanChoice(true)} className="btn btn-accent btn-full">Attiva Premium</button>
@@ -287,7 +287,7 @@ const Auth = () => {
                                 className="toggle-password"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
-                                {showPassword ? '👁️' : '👁️‍🗨️'}
+                                {showPassword ? 'Nascondi' : 'Mostra'}
                             </button>
                         </div>
                         {formData.password && !isLogin && (

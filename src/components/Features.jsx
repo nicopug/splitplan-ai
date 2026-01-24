@@ -40,19 +40,19 @@ const Features = () => {
                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', textAlign: 'center' }}>Confronto Veloce</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
                             <span>Booking.com</span>
-                            <span>❌ Solo Hotel</span>
+                            <span>Solo Hotel</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
                             <span>Splitwise</span>
-                            <span>❌ Solo Spese</span>
+                            <span>Solo Spese</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
                             <span>Chat GPT</span>
-                            <span>❌ Solo Testo</span>
+                            <span>Solo Testo</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--accent-orange)', fontWeight: 'bold', paddingTop: '0.5rem' }}>
                             <span>SplitPlan</span>
-                            <span>✅ Tutto Incluso</span>
+                            <span>Tutto Incluso</span>
                         </div>
                     </div>
                 </div>

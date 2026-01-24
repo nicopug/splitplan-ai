@@ -70,7 +70,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
     return (
         <div className="container section">
             <div className="text-center" style={{ marginBottom: '3rem' }}>
-                <h2>Foto del viaggio 📸</h2>
+                <h2>Foto del viaggio</h2>
                 <p>Cattura e condividi i momenti migliori con il tuo gruppo.</p>
 
                 {!readOnly && (
@@ -80,7 +80,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                         disabled={loading}
                         style={{ background: 'var(--accent-orange)', marginTop: '1rem' }}
                     >
-                        {loading ? 'Caricamento... ⏳' : '+ Aggiungi Foto'}
+                        {loading ? 'Caricamento...' : '+ Aggiungi Foto'}
                     </button>
                 )}
                 <input

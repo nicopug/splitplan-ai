@@ -38,10 +38,10 @@ const Pricing = ({ user }) => {
                         <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
                         <p style={{ fontSize: '0.9rem' }}>Tutto l'essenziale per organizzare.</p>
                         <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left' }}>
-                            <li style={{ marginBottom: '1rem' }}>✅ Pianificazione AI Base</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Itinerari Smart</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Prenotazioni Integrate</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Chat di Gruppo</li>
+                            <li style={{ marginBottom: '1rem' }}>Pianificazione AI Base</li>
+                            <li style={{ marginBottom: '1rem' }}>Itinerari Smart</li>
+                            <li style={{ marginBottom: '1rem' }}>Prenotazioni Integrate</li>
+                            <li style={{ marginBottom: '1rem' }}>Chat di Gruppo</li>
                         </ul>
                         <div style={{ textAlign: 'center' }}>
                             {isLoggedIn && !isPremium && <PlanBadge />}
@@ -79,10 +79,10 @@ const Pricing = ({ user }) => {
                         <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
                         <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Per chi vuole il controllo totale.</p>
                         <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left' }}>
-                            <li style={{ marginBottom: '1rem' }}>✅ CFO del Viaggio (Gestione Debiti)</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Budget Guard (Alert Spese)</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Assistenza AI Prioritaria</li>
-                            <li style={{ marginBottom: '1rem' }}>✅ Export Video Ricordi</li>
+                            <li style={{ marginBottom: '1rem' }}>CFO del Viaggio (Gestione Debiti)</li>
+                            <li style={{ marginBottom: '1rem' }}>Budget Guard (Alert Spese)</li>
+                            <li style={{ marginBottom: '1rem' }}>Assistenza AI Prioritaria</li>
+                            <li style={{ marginBottom: '1rem' }}>Export Video Ricordi</li>
                         </ul>
                         <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                             {isLoggedIn && isPremium && <PlanBadge />}

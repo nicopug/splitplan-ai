@@ -70,7 +70,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     alignItems: 'center'
                 }}>
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>Assistente AI 🤖</h3>
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>Assistente AI</h3>
                         <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>Esclusivo per utenti Premium</p>
                     </div>
                     {onClose && (
@@ -124,7 +124,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     ))}
                     {loading && (
                         <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'white', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
-                            L'AI sta modificando l'itinerario... ⏳
+                            L'AI sta modificando l'itinerario...
                         </div>
                     )}
 
@@ -140,7 +140,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             alignItems: 'center',
                             gap: '0.5rem'
                         }}>
-                            <span style={{ fontSize: '1.5rem' }}>💡</span>
+                            <span style={{ fontSize: '1.5rem' }}></span>
                             <p style={{ margin: 0 }}>Puoi chiedere di aggiungere, modificare o eliminare attività nell'itinerario.</p>
                         </div>
                     )}

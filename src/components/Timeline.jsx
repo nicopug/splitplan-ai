@@ -101,7 +101,7 @@ const Timeline = ({ items }) => {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.2rem' }}>
-                                                <span style={{ fontSize: '1.1rem' }}>{item.emoji || '📍'}</span>
+
                                                 <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0f172a', fontFamily: "'Outfit', sans-serif" }}>{item.title}</strong>
                                             </div>
                                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5' }}>{item.description}</p>

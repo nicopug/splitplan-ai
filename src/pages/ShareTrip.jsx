@@ -55,7 +55,7 @@ const ShareTrip = () => {
             right: 0,
             zIndex: 100
         }}>
-            👋 Sei in modalità Sola Lettura.
+            Sei in modalità Sola Lettura.
         </div>
     );
 
@@ -64,7 +64,7 @@ const ShareTrip = () => {
             {banner}
             <div className="section text-center" style={{ paddingTop: '8rem' }}>
                 <div className="spinner-large" style={{ margin: '0 auto' }}></div>
-                <p className="mt-4">Caricamento viaggio... 🌍</p>
+                <p className="mt-4">Caricamento viaggio...</p>
             </div>
         </div>
     );
@@ -73,7 +73,7 @@ const ShareTrip = () => {
         <div style={{ paddingTop: 'var(--header-height, 60px)' }}>
             {banner}
             <div className="section text-center" style={{ paddingTop: '8rem' }}>
-                <h2 className="text-error">Oops! Qualcosa è andato storto 😕</h2>
+                <h2 className="text-error">Oops! Qualcosa è andato storto</h2>
                 <p className="text-muted">{error || "Il link potrebbe essere scaduto o non valido."}</p>
 
                 {error && (
@@ -83,7 +83,7 @@ const ShareTrip = () => {
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
-                    <button onClick={() => window.location.reload()} className="btn btn-secondary">Riprova 🔄</button>
+                    <button onClick={() => window.location.reload()} className="btn btn-secondary">Riprova</button>
                     <Link to="/" className="btn btn-primary">Torna alla Home</Link>
                 </div>
             </div>
@@ -108,13 +108,13 @@ const ShareTrip = () => {
                                 onClick={() => setView('TRIP')}
                                 style={{ background: view === 'TRIP' ? 'white' : 'transparent', color: view === 'TRIP' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
                             >
-                                Itinerario 🗺️
+                                Itinerario
                             </button>
                             <button
                                 onClick={() => setView('PHOTOS')}
                                 style={{ background: view === 'PHOTOS' ? 'white' : 'transparent', color: view === 'PHOTOS' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
                             >
-                                Foto 📸
+                                Foto
                             </button>
                         </div>
                     </div>
@@ -164,7 +164,7 @@ const ShareTrip = () => {
 
                 {!user && (
                     <div className="section text-center py-12" style={{ background: '#f8f9fa', marginTop: '4rem', borderTop: '1px solid #eee' }}>
-                        <h3>Vuoi organizzare il tuo prossimo viaggio così? ✈️</h3>
+                        <h3>Vuoi organizzare il tuo prossimo viaggio così?</h3>
                         <p className="mb-6 text-muted">Crea itinerari AI, dividi le spese e condividi i ricordi con SplitPlan.</p>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                             <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>Registrati Gratis</Link>
@@ -179,7 +179,7 @@ const ShareTrip = () => {
             <div style={{ paddingTop: 'var(--header-height, 60px)' }}>
                 {banner}
                 <div className="section text-center" style={{ paddingTop: '8rem' }}>
-                    <h2 className="text-error">Errore di Rendering 😱</h2>
+                    <h2 className="text-error">Errore di Rendering</h2>
                     <p>C'è stato un errore nel mostrare i dati del viaggio.</p>
                     <div style={{ marginTop: '2rem', padding: '1rem', background: '#fee', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid #fcc', color: '#c00' }}>
                         <strong>Errore:</strong> {renderError.message}

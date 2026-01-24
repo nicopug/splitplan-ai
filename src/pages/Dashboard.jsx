@@ -97,8 +97,8 @@ const Dashboard = () => {
         }
     };
 
-    if (loading) return <div className="section text-center">Caricamento in corso... ⏳</div>;
-    if (!trip) return <div className="section text-center">Viaggio non trovato 😕</div>;
+    if (loading) return <div className="section text-center">Caricamento in corso...</div>;
+    if (!trip) return <div className="section text-center">Viaggio non trovato</div>;
 
     return (
         <div style={{ paddingTop: 'var(--header-height)' }}>
@@ -117,7 +117,7 @@ const Dashboard = () => {
                     right: 0,
                     zIndex: 100
                 }}>
-                    👋 Sei in modalità Sola Lettura.
+                    Sei in modalità Sola Lettura.
                 </div>
             )}
 
@@ -161,7 +161,7 @@ const Dashboard = () => {
                                 border: '1px solid rgba(255,255,255,0.3)',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                             }}>
-                                {user.is_subscribed ? '💎 PREMIUM ABBONATO' : 'UTENTE FREE'}
+                                {user.is_subscribed ? 'PREMIUM ABBONATO' : 'UTENTE FREE'}
                             </span>
                         </div>
                     )}
@@ -185,7 +185,7 @@ const Dashboard = () => {
                                     transition: 'all 0.3s ease',
                                 }}
                             >
-                                🔗 Condividi Viaggio
+                                Condividi Viaggio
                             </button>
                         </div>
                     )}
@@ -198,11 +198,11 @@ const Dashboard = () => {
                         gap: '0.75rem'
                     }}>
                         {[
-                            { id: 'TRIP', label: 'Viaggio', icon: '🗺️' },
-                            { id: 'CHAT', label: 'Chat AI', icon: '🤖', condition: trip.status === 'BOOKED' },
-                            { id: 'BUDGET', label: 'Budget', icon: '💰', condition: trip.status === 'BOOKED' },
-                            { id: 'FINANCE', label: 'CFO & Spese', icon: '💸', condition: user && trip.trip_type !== 'SOLO' },
-                            { id: 'PHOTOS', label: 'Foto', icon: '📸' }
+                            { id: 'TRIP', label: 'Viaggio' },
+                            { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
+                            { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
+                            { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
+                            { id: 'PHOTOS', label: 'Foto' }
                         ].map(btn => (
                             (!btn.hasOwnProperty('condition') || btn.condition) && (
                                 <button
@@ -225,7 +225,7 @@ const Dashboard = () => {
                                         boxShadow: view === btn.id ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
                                     }}
                                 >
-                                    {btn.label} {btn.icon}
+                                    {btn.label}
                                 </button>
                             )
                         ))}
@@ -263,7 +263,7 @@ const Dashboard = () => {
                                         marginBottom: '2rem',
                                         boxShadow: 'var(--shadow-md)'
                                     }}>
-                                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🌍</div>
+                                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
                                             Accedi o Registrati per sbloccare l'itinerario completo, la gestione budget e la chat AI.
@@ -317,7 +317,7 @@ const Dashboard = () => {
                                 border: '1px solid var(--primary-blue)',
                                 boxShadow: 'var(--shadow-lg)'
                             }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🤖</div>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
                                     Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
@@ -347,7 +347,7 @@ const Dashboard = () => {
                                 border: '2px dashed var(--primary-blue)',
                                 boxShadow: 'var(--shadow-lg)'
                             }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
                                     I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
@@ -377,7 +377,7 @@ const Dashboard = () => {
                                 border: '1px solid var(--primary-blue)',
                                 boxShadow: 'var(--shadow-lg)'
                             }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💰</div>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Gestione Budget Avanzata</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
                                     Tieni traccia del tuo budget di viaggio in tempo reale. Accedi o Registrati per gestire le tue spese in modo professionale.
@@ -401,7 +401,7 @@ const Dashboard = () => {
                                 border: '2px dashed var(--primary-blue)',
                                 boxShadow: 'var(--shadow-lg)'
                             }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💎</div>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Gestione Budget Avanzata</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
                                     Gli utenti <b>Premium</b> possono vedere quanto hanno speso per volo e hotel, e monitorare quanto rimane per attività e pasti.

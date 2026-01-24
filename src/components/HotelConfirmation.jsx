@@ -24,7 +24,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                 arrival_time: arrivalTime,
                 return_time: returnTime
             });
-            showToast("Logistica confermata! Itinerario generato. ✨", "success");
+            showToast("Logistica confermata! Itinerario generato.", "success");
             onConfirm(); // Refresh trip
         } catch (error) {
             console.error("Error confirming hotel:", error);
@@ -38,7 +38,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
     return (
         <div className="section container" style={{ marginTop: '2rem' }}>
             <div className="card" style={{ padding: '2rem', borderTop: '4px solid #ff006e' }}>
-                <h3 style={{ color: '#ff006e', textAlign: 'center' }}>Step 2: Conferma Logistica ✈️🏨</h3>
+                <h3 style={{ color: '#ff006e', textAlign: 'center' }}>Step 2: Conferma Logistica</h3>
                 <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#666' }}>
                     Prenota voli e hotel dai link sopra, poi inserisci i dettagli qui.<br />
                     L'AI creerà l'itinerario basandosi sul tuo orario di arrivo e posizione.
@@ -94,7 +94,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Arrivo (Andata) 🛬</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Arrivo (Andata)</label>
                         <input
                             type="time"
                             value={arrivalTime}
@@ -105,7 +105,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Partenza (Ritorno) 🛫</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Partenza (Ritorno)</label>
                         <input
                             type="time"
                             value={returnTime}
@@ -122,7 +122,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                             className="btn"
                             style={{ background: '#ff006e', color: 'white', border: 'none', padding: '1rem', width: '100%' }}
                         >
-                            {loading ? 'Generazione Itinerario...' : 'Salva e Genera Itinerario ✨'}
+                            {loading ? 'Generazione Itinerario...' : 'Salva e Genera Itinerario'}
                         </button>
                     </div>
                 </form>

@@ -28,9 +28,9 @@ const Toast = () => {
                                 toast.type === 'error' ? 'bg-red-100' :
                                     'bg-blue-100'}
                         `}>
-                            {toast.type === 'success' && "✅"}
-                            {toast.type === 'error' && "❌"}
-                            {toast.type === 'info' && "ℹ️"}
+                            {toast.type === 'success' && ""}
+                            {toast.type === 'error' && ""}
+                            {toast.type === 'info' && ""}
                         </div>
                         <p className="font-semibold text-sm md:text-base text-gray-900">{toast.message}</p>
                     </div>

@@ -43,7 +43,7 @@ const Logistics = ({ trip }) => {
     return (
         <div className="section container">
             <div className="text-center" style={{ marginBottom: '2rem' }}>
-                <h2>Logistica & Prenotazioni ✈️🏨</h2>
+                <h2>Logistica & Prenotazioni</h2>
                 <p>I link pronti per prenotare subito, senza impazzire.</p>
             </div>
 
@@ -61,7 +61,7 @@ const Logistics = ({ trip }) => {
                         className="btn"
                         style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                     >
-                        Cerca Voli 🛫
+                        Cerca Voli
                     </a>
                 </div>
 
@@ -78,7 +78,7 @@ const Logistics = ({ trip }) => {
                         className="btn"
                         style={{ background: '#003580', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                     >
-                        Cerca Hotel 🛏️
+                        Cerca Hotel
                     </a>
                 </div>
             </div>

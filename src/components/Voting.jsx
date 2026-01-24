@@ -71,7 +71,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                 {/* Header */}
                 <div className="text-center mb-8 md:mb-12">
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                        {isSolo ? 'Scegli la tua Meta 🌍' : 'Vota la destinazione 📦'}
+                        {isSolo ? 'Scegli la tua Meta' : 'Vota la destinazione'}
                     </h2>
 
                     {!isSolo && (
@@ -83,7 +83,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                             {/* User Selector */}
                             <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
                                 <label className="font-bold text-sm md:text-base text-text-main">
-                                    Chi sta votando? 🗳️
+                                    Chi sta votando?
                                 </label>
                                 <select
                                     value={selectedUser || ''}
@@ -157,8 +157,8 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                                         </>
                                     ) : (
                                         isSolo
-                                            ? "Scegli e Procedi ➡️"
-                                            : (votedId === prop.id ? 'Votato ✅' : 'Vota Questa 👍')
+                                            ? "Scegli e Procedi"
+                                            : (votedId === prop.id ? 'Votato' : 'Vota Questa')
                                     )}
                                 </button>
                             </div>
@@ -169,7 +169,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                 {/* Empty State */}
                 {proposals.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🗺️</div>
+                        <div className="text-6xl mb-4"></div>
                         <p className="text-text-muted text-lg">Nessuna proposta disponibile.</p>
                     </div>
                 )}

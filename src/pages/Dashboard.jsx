@@ -254,7 +254,7 @@ const Dashboard = () => {
                             {!user && (
                                 <div className="container" style={{ marginTop: '2rem' }}>
                                     <div style={{
-                                        background: 'rgba(255,255,255,0.8)',
+                                        background: 'var(--glass-bg)',
                                         backdropFilter: 'blur(10px)',
                                         padding: '2.5rem',
                                         borderRadius: '24px',
@@ -309,7 +309,8 @@ const Dashboard = () => {
                     {!user ? (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div style={{
-                                background: 'rgba(255,255,255,0.8)',
+                                function: 'var(--glass-bg)', // This was background, just placeholder to match
+                                background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '3rem',
                                 borderRadius: '24px',
@@ -339,7 +340,7 @@ const Dashboard = () => {
                     ) : (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div className="premium-teaser" style={{
-                                background: 'rgba(255,255,255,0.8)',
+                                background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '3rem',
                                 borderRadius: '24px',
@@ -369,7 +370,7 @@ const Dashboard = () => {
                     {!user ? (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div style={{
-                                background: 'rgba(255,255,255,0.8)',
+                                background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '3rem',
                                 borderRadius: '24px',
@@ -393,7 +394,7 @@ const Dashboard = () => {
                     ) : (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div className="premium-teaser" style={{
-                                background: 'rgba(255,255,255,0.8)',
+                                background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '3rem',
                                 borderRadius: '24px',

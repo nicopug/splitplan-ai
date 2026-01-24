@@ -89,6 +89,8 @@
 
   h3 {
     @apply text-2xl md:text-3xl font-semibold;
+    color: var(--text-main);
+    /* Ensure headers adapt */
   }
 
   p {
@@ -179,13 +181,17 @@
 
   /* Cards */
   .card {
-    @apply bg-white rounded-lg md:rounded-xl lg:rounded-2xl p-4 md:p-6;
+    background-color: var(--bg-white);
+    @apply rounded-lg md:rounded-xl lg:rounded-2xl p-4 md:p-6;
     box-shadow: var(--shadow-md);
   }
 
   /* Glass Effect Premium */
   .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl;
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    @apply rounded-3xl;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   }
 

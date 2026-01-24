@@ -93,9 +93,10 @@ const Hero = () => {
                         </div>
                     </div>
 
+
                     {/* Visual - Ordine mobile: 1, Desktop: 2 */}
                     <div className="relative order-1 lg:order-2">
-                        <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg transform -rotate-2 hover:rotate-0 transition-transform duration-300 border border-gray-100 overflow-hidden">
+                        <div className="bg-bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg transform -rotate-2 hover:rotate-0 transition-transform duration-300 border border-gray-100 dark:border-white/10 overflow-hidden">
                             <img
                                 src="/app-preview.png"
                                 alt="SplitPlan Dashboard Preview"
@@ -110,7 +111,7 @@ const Hero = () => {
             {/* Type Selection Modal - Responsive */}
             {showTypeSelection && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-                    <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl animate-slideUp">
+                    <div className="bg-bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl animate-slideUp border border-gray-100 dark:border-white/10">
 
                         <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-primary-blue">
                             Come viaggi oggi?

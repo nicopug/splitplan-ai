@@ -7,14 +7,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary-blue': '#23599e',
-        'secondary-blue': '#aecede',
-        'accent-orange': '#f48c06',
-        'accent-green': '#2ca02c',
-        'dark-navy': '#1a2a3a',
-        'bg-creme': '#fbf8ef',
-        'text-main': '#2d3436',
-        'text-muted': '#636e72',
+        'primary-blue': 'var(--primary-blue)',
+        'secondary-blue': 'var(--secondary-blue)',
+        'accent-orange': 'var(--accent-orange)',
+        'accent-green': 'var(--accent-green)',
+        'dark-navy': 'var(--dark-navy)',
+        'bg-creme': 'var(--bg-creme)',
+        'bg-white': 'var(--bg-white)', // Custom white that adapts
+        'text-main': 'var(--text-main)',
+        'text-muted': 'var(--text-muted)',
+        'text-light': 'var(--text-light)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -31,7 +31,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="sticky top-0 z-50 bg-bg-creme border-b border-gray-200 backdrop-blur-sm bg-opacity-95">
+        <nav className="sticky top-0 z-50 bg-bg-creme border-b border-gray-200 dark:border-white/10 backdrop-blur-sm bg-opacity-95">
             <div className="container">
                 <div className="flex items-center justify-between h-20 md:h-24">
 
@@ -41,6 +41,7 @@ const Navbar = () => {
                             src={logo}
                             alt="SplitPlan Logo"
                             className="h-12 md:h-16 w-auto mix-blend-multiply hover:scale-105 transition-transform"
+                            style={{ filter: theme === 'dark' ? 'invert(1) brightness(2)' : 'none' }}
                         />
                     </Link>
 
@@ -78,7 +79,7 @@ const Navbar = () => {
 
                         {user ? (
                             <div className="flex items-center gap-4">
-                                <span className="font-semibold text-primary-blue flex items-center gap-2">
+                                <span className="font-semibold text-text-main flex items-center gap-2">
                                     Ciao, {user.name}
                                     {user.is_subscribed && <span className="text-xl">💎</span>}
                                 </span>
@@ -155,7 +156,7 @@ const Navbar = () => {
                             {user ? (
                                 <>
                                     <div className="px-4 py-2">
-                                        <span className="font-semibold text-primary-blue flex items-center gap-2">
+                                        <span className="font-semibold text-text-main flex items-center gap-2">
                                             Ciao, {user.name}
                                             {user.is_subscribed && <span className="text-xl">💎</span>}
                                         </span>

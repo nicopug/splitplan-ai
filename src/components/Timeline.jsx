@@ -55,7 +55,7 @@ const Timeline = ({ items }) => {
                             <div style={{
                                 width: '54px',
                                 height: '54px',
-                                background: 'white',
+                                background: 'var(--bg-white)',
                                 borderRadius: '18px',
                                 border: '2px solid var(--primary-blue)',
                                 zIndex: 2,
@@ -73,7 +73,7 @@ const Timeline = ({ items }) => {
                             <h3 style={{
                                 marginLeft: '1.5rem',
                                 margin: 0,
-                                background: 'rgba(255,255,255,0.7)',
+                                background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '0.6rem 1.2rem',
                                 borderRadius: '16px',
@@ -89,7 +89,7 @@ const Timeline = ({ items }) => {
                         <div style={{ marginLeft: '65px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {grouped[date].map((item, i) => (
                                 <div key={item.id || i} className="hover-lift hover-scale" style={{
-                                    background: 'white',
+                                    background: 'var(--bg-white)',
                                     padding: '1.2rem',
                                     borderRadius: '20px',
                                     boxShadow: '0 4px 15px rgba(0,0,0,0.03)',

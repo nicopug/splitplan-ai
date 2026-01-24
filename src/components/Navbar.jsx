@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import logo from '../assets/logo_splitplan.jpg';
 
 const Navbar = () => {
     const [user, setUser] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -44,6 +46,13 @@ const Navbar = () => {
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-8">
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-full hover:bg-gray-100 transition-colors text-xl"
+                            title="Cambia Tema"
+                        >
+                            {theme === 'dark' ? '☀️' : '🌙'}
+                        </button>
                         {location.pathname === '/' && (
                             <>
                                 <a
@@ -112,6 +121,12 @@ const Navbar = () => {
                 {mobileMenuOpen && (
                     <div className="md:hidden border-t border-gray-200 py-4 animate-slideDown">
                         <div className="flex flex-col gap-4">
+                            <button
+                                onClick={toggleTheme}
+                                className="px-4 py-2 text-left font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                {theme === 'dark' ? '☀️ Modalità Chiara' : '🌙 Modalità Scura'}
+                            </button>
 
                             {location.pathname === '/' && (
                                 <>

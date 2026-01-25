@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import logo from '../assets/logo_splitplan.jpg';
 
 const Navbar = () => {
     const [user, setUser] = useState(null);
@@ -35,14 +34,20 @@ const Navbar = () => {
             <div className="container">
                 <div className="flex items-center justify-between h-20 md:h-24">
 
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center">
-                        <img
-                            src={logo}
-                            alt="SplitPlan Logo"
-                            className="h-12 md:h-16 w-auto mix-blend-multiply hover:scale-105 transition-transform"
-                            style={{ filter: theme === 'dark' ? 'invert(1) brightness(2)' : 'none' }}
-                        />
+                    {/* Logo Stilizzato */}
+                    <Link to="/" className="flex items-center gap-2.5 group">
+                        {/* Icona Aeroplanino Minimal */}
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-blue rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                            <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 2 9 18zm0 0v-8" />
+                            </svg>
+                        </div>
+                        {/* Testo Logo */}
+                        <span className="text-2xl md:text-3xl font-black tracking-tight flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                            <span className="bg-gradient-to-r from-primary-blue to-blue-400 bg-clip-text text-transparent">Split</span>
+                            <span className="text-text-main dark:text-white">Plan</span>
+                            <span className="text-primary-blue ml-0.5">.</span>
+                        </span>
                     </Link>
 
                     {/* Desktop Navigation */}

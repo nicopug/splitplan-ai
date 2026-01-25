@@ -93,6 +93,13 @@ export const getTrip = async (id) => {
     }
 };
 
+export const getProposals = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/proposals`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 export const generateProposals = async (tripId, preferences) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/generate-proposals`, {
         method: "POST",

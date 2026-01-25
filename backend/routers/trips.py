@@ -283,6 +283,16 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
         
     return trip
 
+@router.get("/{trip_id}/proposals", response_model=List[Proposal])
+def get_proposals(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Recupera le proposte generate per un viaggio"""
+    # Verifica che l'utente partecipi al viaggio
+    check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
+    if not check:
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+        
+    return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
+
 @router.post("/{trip_id}/share")
 def generate_share_token(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Genera o restituisce il token di condivisione del viaggio"""

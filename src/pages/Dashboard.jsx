@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -39,6 +39,12 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
+
+            if (data.status === 'VOTING') {
+                const props = await getProposals(id);
+                setProposals(props);
+            }
+
             if (data.status === 'BOOKED') {
                 const items = await getItinerary(id);
                 setItinerary(items);

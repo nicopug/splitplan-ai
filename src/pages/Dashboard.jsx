@@ -188,7 +188,7 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {user && (
+                    {user && isOrganizer && (
                         <div style={{ marginTop: '1.5rem', marginBottom: '2rem' }}>
                             <button
                                 onClick={handleShare}
@@ -207,7 +207,7 @@ const Dashboard = () => {
                                     transition: 'all 0.3s ease',
                                 }}
                             >
-                                Condividi Viaggio
+                                Condividi Viaggio (Sola Lettura)
                             </button>
                         </div>
                     )}
@@ -262,7 +262,7 @@ const Dashboard = () => {
                     )}
 
                     {trip.status === 'VOTING' && (
-                        <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} />
+                        <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
                     )}
 
                     {trip.status === 'BOOKED' && (

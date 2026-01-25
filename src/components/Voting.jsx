@@ -3,7 +3,7 @@ import { voteProposal, getParticipants, generateShareLink } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
-const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
+const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer }) => {
     const { showToast } = useToast();
     const { showConfirm } = useModal();
     const [proposals, setProposals] = useState(initialProposals || []);
@@ -24,7 +24,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
                 // 1. Carichiamo i partecipanti
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
-                
+
                 // 2. Se non abbiamo proposte, carichiamole dal DB
                 if (!initialProposals || initialProposals.length === 0) {
                     setLoadingProposals(true);
@@ -135,7 +135,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
 
                             <div className="flex flex-col items-center gap-4">
                                 {/* Messaggio per l'organizzatore */}
-                                {!currentUserParticipant && (
+                                {isOrganizer && !currentUserParticipant && (
                                     <div style={{ maxWidth: '500px', marginBottom: '1rem' }} className="animate-fade-in">
                                         <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '16px', border: '1px solid #dbeafe' }}>
                                             <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0 }}>
@@ -145,7 +145,6 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
                                         </div>
                                     </div>
                                 )}
-
                                 {/* Se l'utente è riconosciuto, gli mostriamo il suo nome, altrimenti il selettore (per l'organizzatore o demo) */}                                {currentUserParticipant ? (
                                     <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
                                         <p className="text-green-800 font-bold m-0 flex items-center gap-2">
@@ -174,17 +173,19 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
                                     </div>
                                 )}
 
-                                {/* Pulsante Condividi - Solo per chi ha creato il viaggio (se riconosciuto come organizzatore) o per tutti in questa fase */}
-                                <button
-                                    onClick={handleShareVotingLink}
-                                    disabled={isSharing}
-                                    className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-primary-blue hover:text-white transition-all shadow-md group"
-                                >
-                                    <span>{isSharing ? 'Generando...' : '🔗 Condividi per il voto'}</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9.158a3 3 0 100-2.684 3 3 0 000 2.684z" />
-                                    </svg>
-                                </button>
+                                {/* Pulsante Condividi - Solo per l'organizzatore */}
+                                {isOrganizer && (
+                                    <button
+                                        onClick={handleShareVotingLink}
+                                        disabled={isSharing}
+                                        className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-primary-blue hover:text-white transition-all shadow-md group"
+                                    >
+                                        <span>{isSharing ? 'Generando...' : '🔗 Condividi per il voto'}</span>
+                                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9.158a3 3 0 100-2.684 3 3 0 000 2.684z" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}

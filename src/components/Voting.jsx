@@ -3,9 +3,10 @@ import { voteProposal, getParticipants, generateShareLink } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
-const Voting = ({ proposals, trip, onVoteComplete }) => {
+const Voting = ({ proposals: initialProposals, trip, onVoteComplete }) => {
     const { showToast } = useToast();
     const { showConfirm } = useModal();
+    const [proposals, setProposals] = useState(initialProposals || []);
     const [votedId, setVotedId] = useState(null);
     const [stats, setStats] = useState({ count: 0, total: trip.num_people });
     const isSolo = trip.trip_type === 'SOLO';
@@ -15,18 +16,27 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
     const [currentUserParticipant, setCurrentUserParticipant] = useState(null);
     const [loadingProposalId, setLoadingProposalId] = useState(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [loadingProposals, setLoadingProposals] = useState(!initialProposals || initialProposals.length === 0);
 
     useEffect(() => {
-        const loadParticipants = async () => {
+        const loadData = async () => {
             try {
+                // 1. Carichiamo i partecipanti
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
+                
+                // 2. Se non abbiamo proposte, carichiamole dal DB
+                if (!initialProposals || initialProposals.length === 0) {
+                    setLoadingProposals(true);
+                    const { getProposals } = await import('../api');
+                    const props = await getProposals(trip.id);
+                    setProposals(props);
+                }
 
-                // Riconoscimento utente loggato
+                // 3. Riconoscimento utente loggato
                 const storedUser = localStorage.getItem('user');
                 if (storedUser && storedUser !== 'undefined') {
                     const userObj = JSON.parse(storedUser);
-                    // Cerchiamo se l'utente loggato è tra i partecipanti (match per nome)
                     const match = parts.find(p => p.name.toLowerCase() === userObj.name.toLowerCase());
                     if (match) {
                         setCurrentUserParticipant(match);
@@ -38,12 +48,13 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                     setSelectedUser(parts[0].id);
                 }
             } catch (e) {
-                console.error("Error loading participants", e);
+                console.error("Error loading voting data", e);
+            } finally {
+                setLoadingProposals(false);
             }
         };
-        loadParticipants();
-    }, [trip.id]);
-
+        loadData();
+    }, [trip.id, initialProposals]);
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
             showToast("Seleziona chi sta votando!", "info");
@@ -181,68 +192,75 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
 
                 {/* Proposals Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {proposals.map(prop => (
-                        <div
-                            key={prop.id}
-                            className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl 
-                                     transition-all duration-300 transform hover:-translate-y-1
-                                     flex flex-col"
-                        >
-                            {/* Image */}
-                            <div className="relative overflow-hidden h-48 md:h-56">
-                                <img
-                                    src={prop.image_url}
-                                    alt={prop.destination}
-                                    className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
-                                    }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                                <h3 className="absolute bottom-4 left-4 text-white text-xl md:text-2xl font-bold drop-shadow-lg">
-                                    {prop.destination}
-                                </h3>
-                            </div>
+                {loadingProposals ? (
+                    <div className="text-center py-12">
+                        <div className="spinner-large" style={{ margin: '0 auto' }}></div>
+                        <p className="mt-4 text-text-muted">Caricamento mete in corso...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {proposals.map(prop => (
+                            <div
+                                key={prop.id}
+                                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl 
+                                         transition-all duration-300 transform hover:-translate-y-1
+                                         flex flex-col"
+                            >
+                                {/* Image */}
+                                <div className="relative overflow-hidden h-48 md:h-56">
+                                    <img
+                                        src={prop.image_url}
+                                        alt={prop.destination}
+                                        className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                    <h3 className="absolute bottom-4 left-4 text-white text-xl md:text-2xl font-bold drop-shadow-lg">
+                                        {prop.destination}
+                                    </h3>
+                                </div>
 
-                            {/* Content */}
-                            <div className="p-5 md:p-6 flex-1 flex flex-col">
-                                <p className="text-text-muted text-sm md:text-base mb-4 flex-1" style={{ minHeight: '4.5rem' }}>
-                                    {prop.description}
-                                </p>
+                                {/* Content */}
+                                <div className="p-5 md:p-6 flex-1 flex flex-col">
+                                    <p className="text-text-muted text-sm md:text-base mb-4 flex-1" style={{ minHeight: '4.5rem' }}>
+                                        {prop.description}
+                                    </p>
 
-                                {/* Vote Button */}
-                                <button
-                                    onClick={() => handleVote(prop.id)}
-                                    disabled={loadingProposalId !== null}
-                                    className={`w-full py-3 md:py-4 rounded-xl font-bold text-sm md:text-base
-                                              transition-all duration-200 transform active:scale-95
-                                              flex items-center justify-center gap-2
-                                              ${votedId === prop.id
-                                            ? 'bg-green-100 text-green-700 border-2 border-green-500'
-                                            : 'bg-primary-blue text-white hover:bg-opacity-90 hover:shadow-lg'
-                                        }
-                                              disabled:opacity-50 disabled:cursor-not-allowed`}
-                                >
-                                    {loadingProposalId === prop.id ? (
-                                        <>
-                                            <span className="spinner border-current"></span>
-                                            {isSolo ? 'Conferma...' : 'Invio...'}
-                                        </>
-                                    ) : (
-                                        isSolo
-                                            ? "Scegli e Procedi"
-                                            : (votedId === prop.id ? 'Votato' : 'Vota Questa')
-                                    )}
-                                </button>
+                                    {/* Vote Button */}
+                                    <button
+                                        onClick={() => handleVote(prop.id)}
+                                        disabled={loadingProposalId !== null}
+                                        className={`w-full py-3 md:py-4 rounded-xl font-bold text-sm md:text-base
+                                                  transition-all duration-200 transform active:scale-95
+                                                  flex items-center justify-center gap-2
+                                                  ${votedId === prop.id
+                                                ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                                                : 'bg-primary-blue text-white hover:bg-opacity-90 hover:shadow-lg'
+                                            }
+                                                  disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    >
+                                        {loadingProposalId === prop.id ? (
+                                            <>
+                                                <span className="spinner border-current"></span>
+                                                {isSolo ? 'Conferma...' : 'Invio...'}
+                                            </>
+                                        ) : (
+                                            isSolo
+                                                ? "Scegli e Procedi"
+                                                : (votedId === prop.id ? 'Votato' : 'Vota Questa')
+                                        )}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Empty State */}
-                {proposals.length === 0 && (
+                {!loadingProposals && proposals.length === 0 && (
                     <div className="text-center py-12">
                         <div className="text-6xl mb-4"></div>
                         <p className="text-text-muted text-lg">Nessuna proposta disponibile.</p>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -39,12 +39,6 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
-
-            if (data.status === 'VOTING') {
-                const props = await getProposals(id);
-                setProposals(props);
-            }
-
             if (data.status === 'BOOKED') {
                 const items = await getItinerary(id);
                 setItinerary(items);
@@ -77,7 +71,7 @@ const Dashboard = () => {
         setLoading(true);
         await fetchTrip();
         setLoading(false);
-        showToast("🎉 Viaggio Confermato!", "success");
+        showToast("Viaggio Confermato!", "success");
     };
 
     const handleOptimize = async () => {
@@ -85,7 +79,7 @@ const Dashboard = () => {
             await optimizeItinerary(id);
             const items = await getItinerary(id);
             setItinerary(items);
-            showToast("✨ Itinerario ottimizzato!", "success");
+            showToast("Itinerario ottimizzato!", "success");
         } catch (e) {
             showToast("Errore ottimizzazione: " + e.message, "error");
         }
@@ -97,7 +91,7 @@ const Dashboard = () => {
             const res = await generateShareLink(id);
             const shareUrl = `${window.location.origin}/share/${res.share_token}`;
             await navigator.clipboard.writeText(shareUrl);
-            showToast("🔗 Link di condivisione copiato negli appunti!", "success");
+            showToast("Link di condivisione copiato negli appunti!", "success");
         } catch (e) {
             showToast("Errore condivisione: " + e.message, "error");
         }
@@ -203,7 +197,7 @@ const Dashboard = () => {
                         flexWrap: 'wrap',
                         gap: '0.75rem'
                     }}>
-                        {[ 
+                        {[
                             { id: 'TRIP', label: 'Viaggio' },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
@@ -272,7 +266,7 @@ const Dashboard = () => {
                                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
+                                            Accedi o Registrati per sbloccare l'itinerario completo, la gestione budget e la chat AI.
                                         </p>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                             <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -327,7 +321,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l\'AI per personalizzare il tuo viaggio istantaneamente.
+                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
                                 </p>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                     <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -357,7 +351,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    I nostri utenti <b>Premium</b> possono usare l\'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
+                                    I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
                                 </p>
                                 <button
                                     onClick={() => navigate('/auth')}

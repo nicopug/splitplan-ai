@@ -152,15 +152,6 @@ export const optimizeItinerary = async (tripId) => {
     return handleResponse(response);
 };
 
-export const updateItineraryItem = async (itemId, updates) => {
-    const response = await fetch(`${API_URL}/itinerary/items/${itemId}`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updates)
-    });
-    return handleResponse(response);
-};
-
 export const getParticipants = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/participants`, {
         headers: getAuthHeaders()

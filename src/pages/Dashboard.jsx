@@ -197,7 +197,7 @@ const Dashboard = () => {
                         flexWrap: 'wrap',
                         gap: '0.75rem'
                     }}>
-                        {[
+                        {[ 
                             { id: 'TRIP', label: 'Viaggio' },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
@@ -266,7 +266,7 @@ const Dashboard = () => {
                                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Accedi o Registrati per sbloccare l'itinerario completo, la gestione budget e la chat AI.
+                                            Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
                                         </p>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                             <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -296,11 +296,7 @@ const Dashboard = () => {
                                         isPremium={user?.is_subscribed}
                                     />
 
-                                    <Timeline 
-                                        items={itinerary} 
-                                        tripId={id} 
-                                        onUpdate={fetchTrip} 
-                                    />
+                                    <Timeline items={itinerary} />
                                 </div>
                             )}
                         </>
@@ -325,7 +321,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
+                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l\'AI per personalizzare il tuo viaggio istantaneamente.
                                 </p>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                     <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -355,7 +351,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
+                                    I nostri utenti <b>Premium</b> possono usare l\'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
                                 </p>
                                 <button
                                     onClick={() => navigate('/auth')}

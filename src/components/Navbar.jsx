@@ -45,7 +45,7 @@ const Navbar = () => {
                         {/* Testo Logo */}
                         <span className="text-2xl md:text-3xl font-black tracking-tight flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
                             <span className="bg-gradient-to-r from-primary-blue to-blue-400 bg-clip-text text-transparent">Split</span>
-                            <span className="text-text-main dark:text-white">Plan</span>
+                            <span className="text-[#1e293b] dark:text-white">Plan</span>
                             <span className="text-primary-blue ml-0.5">.</span>
                         </span>
                     </Link>

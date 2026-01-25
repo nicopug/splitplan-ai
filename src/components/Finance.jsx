@@ -358,26 +358,26 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                     {tab === 'summary' && (
                         <div className="animate-in">
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
+                            <h3 className="dark:text-white" style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
                             {balances.length === 0 ? (
-                                <div className="text-center py-12 glass-card">
+                                <div className="text-center py-12 glass-card dark:bg-white/10">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-                                    <p style={{ fontWeight: '600', color: '#0f172a' }}>Tutti in pari!</p>
-                                    <p className="text-muted" style={{ fontSize: '0.9rem' }}>Nessuno deve soldi a nessuno.</p>
+                                    <p className="dark:text-white" style={{ fontWeight: '600', color: '#0f172a' }}>Tutti in pari!</p>
+                                    <p className="text-muted dark:text-gray-400" style={{ fontSize: '0.9rem' }}>Nessuno deve soldi a nessuno.</p>
                                 </div>
                             ) : (
                                 balances.map((b, idx) => (
-                                    <div key={idx} className="balance-card-premium">
+                                    <div key={idx} className="balance-card-premium bg-white dark:bg-gray-100 border-gray-200">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <div className="user-avatar-mini" style={{ background: '#3b82f6' }}>
                                                 {getUserName(b.debtor_id).substring(0, 1).toUpperCase()}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: '0.95rem' }}>
-                                                    <strong>{getUserName(b.debtor_id)}</strong>
+                                                    <strong className="text-black font-bold">{getUserName(b.debtor_id)}</strong>
                                                 </div>
-                                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                                                    deve dare a <strong>{getUserName(b.creditor_id)}</strong>
+                                                <div className="text-gray-600" style={{ fontSize: '0.8rem' }}>
+                                                    deve dare a <strong className="text-black font-bold">{getUserName(b.creditor_id)}</strong>
                                                 </div>
                                             </div>
                                             <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#ef4444' }}>

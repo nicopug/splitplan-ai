@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { voteProposal, getParticipants, generateShareLink } from '../api';
+import { voteProposal, getParticipants, generateShareLink, getProposals } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
@@ -24,11 +24,10 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 // 1. Carichiamo i partecipanti
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
-
+                
                 // 2. Se non abbiamo proposte, carichiamole dal DB
                 if (!initialProposals || initialProposals.length === 0) {
                     setLoadingProposals(true);
-                    const { getProposals } = await import('../api');
                     const props = await getProposals(trip.id);
                     setProposals(props);
                 }
@@ -37,7 +36,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 const storedUser = localStorage.getItem('user');
                 if (storedUser && storedUser !== 'undefined') {
                     const userObj = JSON.parse(storedUser);
-                    const match = parts.find(p => p.name.toLowerCase() === userObj.name.toLowerCase());
+                    const match = parts.find(p => p.name && p.name.toLowerCase() === userObj.name.toLowerCase());
                     if (match) {
                         setCurrentUserParticipant(match);
                         setSelectedUser(match.id);
@@ -55,6 +54,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
         };
         loadData();
     }, [trip.id, initialProposals]);
+
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
             showToast("Seleziona chi sta votando!", "info");
@@ -95,9 +95,8 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
         setIsSharing(true);
         try {
             const res = await generateShareLink(trip.id);
-            // LINK DI JOIN PER VOTARE
             const shareUrl = `${window.location.origin}/trip/join/${res.share_token}`;
-
+            
             if (navigator.share) {
                 await navigator.share({
                     title: 'Vota la nostra meta su SplitPlan!',
@@ -134,18 +133,18 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                             </p>
 
                             <div className="flex flex-col items-center gap-4">
-                                {/* Messaggio per l'organizzatore */}
                                 {isOrganizer && !currentUserParticipant && (
                                     <div style={{ maxWidth: '500px', marginBottom: '1rem' }} className="animate-fade-in">
                                         <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '16px', border: '1px solid #dbeafe' }}>
                                             <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0 }}>
-                                                <strong>Organizzatore:</strong> Manda il link qui sotto ai tuoi amici.
+                                                <strong>Organizzatore:</strong> Manda il link qui sotto ai tuoi amici. 
                                                 Quando entreranno, il sistema li riconoscerà per nome e permetterà loro di votare!
                                             </p>
                                         </div>
                                     </div>
                                 )}
-                                {/* Se l'utente è riconosciuto, gli mostriamo il suo nome, altrimenti il selettore (per l'organizzatore o demo) */}                                {currentUserParticipant ? (
+
+                                {currentUserParticipant ? (
                                     <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
                                         <p className="text-green-800 font-bold m-0 flex items-center gap-2">
                                             <span>👋</span> Ciao {currentUserParticipant.name}, stai votando per te stesso
@@ -173,7 +172,6 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                     </div>
                                 )}
 
-                                {/* Pulsante Condividi - Solo per l'organizzatore */}
                                 {isOrganizer && (
                                     <button
                                         onClick={handleShareVotingLink}
@@ -207,7 +205,6 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                          transition-all duration-300 transform hover:-translate-y-1
                                          flex flex-col"
                             >
-                                {/* Image */}
                                 <div className="relative overflow-hidden h-48 md:h-56">
                                     <img
                                         src={prop.image_url}
@@ -224,13 +221,11 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                     </h3>
                                 </div>
 
-                                {/* Content */}
                                 <div className="p-5 md:p-6 flex-1 flex flex-col">
                                     <p className="text-text-muted text-sm md:text-base mb-4 flex-1" style={{ minHeight: '4.5rem' }}>
                                         {prop.description}
                                     </p>
 
-                                    {/* Vote Button */}
                                     <button
                                         onClick={() => handleVote(prop.id)}
                                         disabled={loadingProposalId !== null}
@@ -260,10 +255,9 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                     </div>
                 )}
 
-                {/* Empty State */}
                 {!loadingProposals && proposals.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
+                        <div className="text-6xl mb-4">🤔</div>
                         <p className="text-text-muted text-lg">Nessuna proposta disponibile.</p>
                     </div>
                 )}

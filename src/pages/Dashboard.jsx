@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -24,6 +24,7 @@ const Dashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [view, setView] = useState('TRIP'); // 'TRIP', 'CHAT', 'BUDGET', 'FINANCE', or 'PHOTOS'
     const [user, setUser] = useState(null);
+    const [isOrganizer, setIsOrganizer] = useState(false);
     const [chatMessages, setChatMessages] = useState([
         { role: 'ai', text: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }
     ]);
@@ -40,25 +41,21 @@ const Dashboard = () => {
             const data = await getTrip(id);
             setTrip(data);
 
-            // Verifichiamo se l'utente corrente è l'organizzatore
+            // Verifichiamo se l\'utente corrente è l\'organizzatore
             const storedUser = localStorage.getItem('user');
             if (storedUser && storedUser !== 'undefined') {
                 const userObj = JSON.parse(storedUser);
                 const parts = await getParticipants(id);
-                const me = parts.find(p => p.account_id === userObj.id || p.name.toLowerCase() === userObj.name.toLowerCase());
+                const me = parts.find(p => p.account_id === userObj.id || (p.name && p.name.toLowerCase() === userObj.name.toLowerCase()));
                 if (me && me.is_organizer) {
                     setIsOrganizer(true);
                 }
             }
 
-            // CARICAMENTO PROPOSTE PER TUTTI (Organizzatore e Amici)
+            // Caricamento proposte per tutti
             if (data.status === 'VOTING') {
-                try {
-                    const props = await getProposals(id);
-                    setProposals(props);
-                } catch (propErr) {
-                    console.error("Errore caricamento proposte:", propErr);
-                }
+                const props = await getProposals(id);
+                setProposals(props);
             }
 
             if (data.status === 'BOOKED') {
@@ -66,15 +63,33 @@ const Dashboard = () => {
                 setItinerary(items);
             }
         } catch (error) {
-            console.error(error);
+            console.error("Fetch Trip Error:", error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchTrip();
+        if (id) fetchTrip();
     }, [id]);
+
+    // Polling per aggiornamento automatico voti
+    useEffect(() => {
+        let interval;
+        if (trip?.status === 'VOTING') {
+            interval = setInterval(async () => {
+                try {
+                    const data = await getTrip(id);
+                    if (data.status !== 'VOTING') {
+                        fetchTrip();
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 5000);
+        }
+        return () => clearInterval(interval);
+    }, [trip?.status, id]);
 
     const handleSurveyComplete = async (surveyData) => {
         setIsGenerating(true);
@@ -82,6 +97,7 @@ const Dashboard = () => {
             const props = await generateProposals(id, surveyData);
             setProposals(props);
             setTrip(prev => ({ ...prev, status: 'VOTING', num_people: surveyData.num_people }));
+            fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
         } catch (e) {
             showToast("Errore generazione: " + e.message, "error");
         } finally {
@@ -93,7 +109,7 @@ const Dashboard = () => {
         setLoading(true);
         await fetchTrip();
         setLoading(false);
-        showToast("Viaggio Confermato!", "success");
+        showToast("🎉 Viaggio Confermato!", "success");
     };
 
     const handleOptimize = async () => {
@@ -101,7 +117,7 @@ const Dashboard = () => {
             await optimizeItinerary(id);
             const items = await getItinerary(id);
             setItinerary(items);
-            showToast("Itinerario ottimizzato!", "success");
+            showToast("✨ Itinerario ottimizzato!", "success");
         } catch (e) {
             showToast("Errore ottimizzazione: " + e.message, "error");
         }
@@ -113,7 +129,7 @@ const Dashboard = () => {
             const res = await generateShareLink(id);
             const shareUrl = `${window.location.origin}/share/${res.share_token}`;
             await navigator.clipboard.writeText(shareUrl);
-            showToast("Link di condivisione copiato negli appunti!", "success");
+            showToast("🔗 Link di condivisione copiato negli appunti!", "success");
         } catch (e) {
             showToast("Errore condivisione: " + e.message, "error");
         }
@@ -219,7 +235,7 @@ const Dashboard = () => {
                         flexWrap: 'wrap',
                         gap: '0.75rem'
                     }}>
-                        {[
+                        {[ 
                             { id: 'TRIP', label: 'Viaggio' },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
@@ -288,7 +304,7 @@ const Dashboard = () => {
                                         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
                                         <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
                                         <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Accedi o Registrati per sbloccare l'itinerario completo, la gestione budget e la chat AI.
+                                            Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
                                         </p>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                             <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -298,9 +314,35 @@ const Dashboard = () => {
                                 </div>
                             )}
 
-                            {/* 3. Hotel Form: Visible to everyone to complete the itinerary */}
+                            {/* 3. Hotel Form or Wait Message */}
                             {!trip.accommodation && (
-                                <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
+                                isOrganizer ? (
+                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
+                                ) : (
+                                    <div className="container" style={{ marginTop: '2rem' }}>
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                                            padding: '3rem',
+                                            borderRadius: '32px',
+                                            textAlign: 'center',
+                                            border: '1px solid #dbeafe',
+                                            boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
+                                        }} className="animate-fade-in">
+                                            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🎉</div>
+                                            <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
+                                                Consenso Raggiunto!
+                                            </h2>
+                                            <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
+                                                Ottime notizie! Il gruppo ha scelto <b>{trip.destination}</b> come meta ufficiale.
+                                                <br /><br />
+                                                L\'organizzatore sta ora ultimando i dettagli della logistica e dell\'hotel per generare l\'itinerario finale.
+                                            </p>
+                                            <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                ⏳ In attesa della conferma finale...
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
                             )}
 
                             {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
@@ -331,7 +373,6 @@ const Dashboard = () => {
                     {!user ? (
                         <div className="container" style={{ marginTop: '2rem' }}>
                             <div style={{
-                                function: 'var(--glass-bg)', // This was background, just placeholder to match
                                 background: 'var(--glass-bg)',
                                 backdropFilter: 'blur(10px)',
                                 padding: '3rem',
@@ -343,7 +384,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
+                                    Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l\'AI per personalizzare il tuo viaggio istantaneamente.
                                 </p>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                                     <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
@@ -373,7 +414,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                                 <h2 style={{ color: 'var(--primary-blue)' }}>Chatbot AI Personale</h2>
                                 <p style={{ maxWidth: '600px', margin: '0 auto 2rem' }}>
-                                    I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
+                                    I nostri utenti <b>Premium</b> possono usare l\'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
                                 </p>
                                 <button
                                     onClick={() => navigate('/auth')}

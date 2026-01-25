@@ -25,6 +25,7 @@ const Dashboard = () => {
     const [view, setView] = useState('TRIP'); // 'TRIP', 'CHAT', 'BUDGET', 'FINANCE', or 'PHOTOS'
     const [user, setUser] = useState(null);
     const [isOrganizer, setIsOrganizer] = useState(false);
+    const [hasVoted, setHasVoted] = useState(false);
     const [chatMessages, setChatMessages] = useState([
         { role: 'ai', text: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }
     ]);
@@ -40,6 +41,11 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
+
+            // Check local voting state
+            if (localStorage.getItem(`splitplan_voted_${id}`)) {
+                setHasVoted(true);
+            }
 
             // Verifichiamo se l\'utente corrente è l\'organizzatore
             const storedUser = localStorage.getItem('user');
@@ -107,6 +113,10 @@ const Dashboard = () => {
 
     const handleVotingComplete = async () => {
         setLoading(true);
+        // Force re-check of everything including local voted state
+        if (localStorage.getItem(`splitplan_voted_${id}`)) {
+            setHasVoted(true);
+        }
         await fetchTrip();
         setLoading(false);
         showToast("🎉 Viaggio Confermato!", "success");
@@ -235,8 +245,8 @@ const Dashboard = () => {
                         flexWrap: 'wrap',
                         gap: '0.75rem'
                     }}>
-                        {[ 
-                            { id: 'TRIP', label: 'Viaggio' },
+                        {[
+                            { id: 'TRIP', label: 'Viaggio', condition: !(!isOrganizer && hasVoted && trip.status === 'VOTING') },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
                             { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
@@ -272,101 +282,143 @@ const Dashboard = () => {
             </div>
 
             {view === 'TRIP' && (
-                <>
-                    {trip.status === 'PLANNING' && (
-                        <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
-                    )}
-
-                    {trip.status === 'VOTING' && (
-                        <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
-                    )}
-
-                    {trip.status === 'BOOKED' && (
-                        <>
-                            {/* 1. Logistics (Premium only) */}
-                            {user?.is_subscribed && (
-                                <Logistics trip={trip} />
-                            )}
-
-                            {/* Registration/Login CTA for Guests */}
-                            {!user && (
-                                <div className="container" style={{ marginTop: '2rem' }}>
-                                    <div style={{
-                                        background: 'var(--glass-bg)',
-                                        backdropFilter: 'blur(10px)',
-                                        padding: '2.5rem',
-                                        borderRadius: '24px',
-                                        textAlign: 'center',
-                                        border: '1px solid var(--primary-blue)',
-                                        marginBottom: '2rem',
-                                        boxShadow: 'var(--shadow-md)'
-                                    }}>
-                                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
-                                        <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
-                                        <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                            Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
-                                        </p>
-                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                                            <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
-                                            <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
-                                        </div>
-                                    </div>
+                // GUEST WAITING SCREEN (Plan B override)
+                !isOrganizer && hasVoted && trip.status === 'VOTING' ? (
+                    <div className="container" style={{ marginTop: '2rem' }}>
+                        <div className="animate-fade-in" style={{
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{
+                                background: 'var(--bg-white)',
+                                padding: '3rem',
+                                borderRadius: '32px',
+                                textAlign: 'center',
+                                border: '1px solid var(--primary-blue)',
+                                maxWidth: '600px',
+                                boxShadow: 'var(--shadow-lg)'
+                            }}>
+                                <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🗳️</div>
+                                <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
+                                    Voto Registrato!
+                                </h2>
+                                <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem' }}>
+                                    Grazie per aver espresso la tua preferenza.
+                                    <br /><br />
+                                    <strong>L'organizzatore deve ora finire di pianificare il viaggio.</strong>
+                                    <br />
+                                    Una volta completato, chiedi di farti mandare il <b>link di sola lettura</b> per vedere l'itinerario finale.
+                                </p>
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '0.8rem 1.5rem',
+                                    background: 'var(--bg-soft-gray)',
+                                    borderRadius: '16px',
+                                    color: 'var(--text-main)',
+                                    fontWeight: '700',
+                                    fontSize: '0.9rem'
+                                }}>
+                                    Puoi chiudere questa pagina.
                                 </div>
-                            )}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {trip.status === 'PLANNING' && (
+                            <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
+                        )}
 
-                            {/* 3. Hotel Form or Wait Message */}
-                            {!trip.accommodation && (
-                                isOrganizer ? (
-                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
-                                ) : (
+                        {trip.status === 'VOTING' && (
+                            <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
+                        )}
+
+                        {trip.status === 'BOOKED' && (
+                            <>
+                                {/* 1. Logistics (Premium only) */}
+                                {user?.is_subscribed && (
+                                    <Logistics trip={trip} />
+                                )}
+
+                                {/* Registration/Login CTA for Guests */}
+                                {!user && (
                                     <div className="container" style={{ marginTop: '2rem' }}>
                                         <div style={{
-                                            background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
-                                            padding: '3rem',
-                                            borderRadius: '32px',
+                                            background: 'var(--glass-bg)',
+                                            backdropFilter: 'blur(10px)',
+                                            padding: '2.5rem',
+                                            borderRadius: '24px',
                                             textAlign: 'center',
-                                            border: '1px solid #dbeafe',
-                                            boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
-                                        }} className="animate-fade-in">
-                                            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🎉</div>
-                                            <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
-                                                Consenso Raggiunto!
-                                            </h2>
-                                            <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
-                                                Ottime notizie! Il gruppo ha scelto <b>{trip.destination}</b> come meta ufficiale.
-                                                <br /><br />
-                                                L\'organizzatore sta ora ultimando i dettagli della logistica e dell\'hotel per generare l\'itinerario finale.
+                                            border: '1px solid var(--primary-blue)',
+                                            marginBottom: '2rem',
+                                            boxShadow: 'var(--shadow-md)'
+                                        }}>
+                                            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
+                                            <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
+                                            <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
+                                                Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
                                             </p>
-                                            <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                                                ⏳ In attesa della conferma finale...
+                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                                <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
+                                                <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
                                             </div>
                                         </div>
                                     </div>
-                                )
-                            )}
+                                )}
 
-                            {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
-                            {trip.accommodation && itinerary && itinerary.length > 0 && (
-                                <div className="container" style={{ marginTop: '2rem' }}>
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                {/* 3. Hotel Form or Wait Message */}
+                                {!trip.accommodation && (
+                                    isOrganizer ? (
+                                        <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
+                                    ) : (
+                                        <div className="container" style={{ marginTop: '2rem' }}>
+                                            <div style={{
+                                                background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                                                padding: '3rem',
+                                                borderRadius: '32px',
+                                                textAlign: 'center',
+                                                border: '1px solid #dbeafe',
+                                                boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
+                                            }} className="animate-fade-in">
+                                                <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🎉</div>
+                                                <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
+                                                    Consenso Raggiunto!
+                                                </h2>
+                                                <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
+                                                    Ottime notizie! Il gruppo ha scelto <b>{trip.destination}</b> come meta ufficiale.
+                                                    <br /><br />
+                                                    L\'organizzatore sta ora ultimando i dettagli della logistica e dell\'hotel per generare l\'itinerario finale.
+                                                </p>
+                                                <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                    ⏳ In attesa della conferma finale...
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
+                                {trip.accommodation && itinerary && itinerary.length > 0 && (
+                                    <div className="container" style={{ marginTop: '2rem' }}>
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                        </div>
+
+                                        <Map
+                                            items={itinerary}
+                                            hotelLat={trip.hotel_latitude}
+                                            hotelLon={trip.hotel_longitude}
+                                            startDate={trip.start_date}
+                                            isPremium={user?.is_subscribed}
+                                        />
+
+                                        <Timeline items={itinerary} />
                                     </div>
-
-                                    <Map
-                                        items={itinerary}
-                                        hotelLat={trip.hotel_latitude}
-                                        hotelLon={trip.hotel_longitude}
-                                        startDate={trip.start_date}
-                                        isPremium={user?.is_subscribed}
-                                    />
-
-                                    <Timeline items={itinerary} />
-                                </div>
-                            )}
-                        </>
-                    )}
-                </>
-            )}
+                                )}
+                            </>
+                        )}
+                    </>
+                ))}
 
             {view === 'CHAT' && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>

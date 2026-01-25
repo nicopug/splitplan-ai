@@ -47,15 +47,28 @@ const Dashboard = () => {
                 setHasVoted(true);
             }
 
-            // Verifichiamo se l\'utente corrente è l\'organizzatore
+            // Verifichiamo se l'utente corrente è l'organizzatore
             const storedUser = localStorage.getItem('user');
             if (storedUser && storedUser !== 'undefined') {
                 const userObj = JSON.parse(storedUser);
+                console.log('🔍 DEBUG isOrganizer - User from localStorage:', userObj);
+
                 const parts = await getParticipants(id);
+                console.log('🔍 DEBUG isOrganizer - Participants list:', parts);
+
                 const me = parts.find(p => p.account_id === userObj.id || (p.name && p.name.toLowerCase() === userObj.name.toLowerCase()));
+                console.log('🔍 DEBUG isOrganizer - Found participant match:', me);
+
                 if (me && me.is_organizer) {
+                    console.log('✅ User IS organizer');
                     setIsOrganizer(true);
+                } else {
+                    console.log('❌ User is NOT organizer');
+                    setIsOrganizer(false);
                 }
+            } else {
+                console.log('⚠️ No user in localStorage');
+                setIsOrganizer(false);
             }
 
             // Caricamento proposte per tutti

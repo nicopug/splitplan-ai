@@ -39,6 +39,28 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
+
+            // Verifichiamo se l'utente corrente è l'organizzatore
+            const storedUser = localStorage.getItem('user');
+            if (storedUser && storedUser !== 'undefined') {
+                const userObj = JSON.parse(storedUser);
+                const parts = await getParticipants(id);
+                const me = parts.find(p => p.account_id === userObj.id || p.name.toLowerCase() === userObj.name.toLowerCase());
+                if (me && me.is_organizer) {
+                    setIsOrganizer(true);
+                }
+            }
+
+            // CARICAMENTO PROPOSTE PER TUTTI (Organizzatore e Amici)
+            if (data.status === 'VOTING') {
+                try {
+                    const props = await getProposals(id);
+                    setProposals(props);
+                } catch (propErr) {
+                    console.error("Errore caricamento proposte:", propErr);
+                }
+            }
+
             if (data.status === 'BOOKED') {
                 const items = await getItinerary(id);
                 setItinerary(items);

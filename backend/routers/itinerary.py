@@ -36,3 +36,18 @@ def add_itinerary_item(trip_id: int, item: ItineraryItemCreate, session: Session
     session.commit()
     session.refresh(db_item)
     return db_item
+
+@router.patch("/{item_id}", response_model=ItineraryItem)
+def update_itinerary_item(item_id: int, updates: dict, session: Session = Depends(get_session)):
+    db_item = session.get(ItineraryItem, item_id)
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Attività non trovata")
+    
+    for key, value in updates.items():
+        if hasattr(db_item, key):
+            setattr(db_item, key, value)
+    
+    session.add(db_item)
+    session.commit()
+    session.refresh(db_item)
+    return db_item

@@ -296,7 +296,11 @@ const Dashboard = () => {
                                         isPremium={user?.is_subscribed}
                                     />
 
-                                    <Timeline items={itinerary} />
+                                    <Timeline 
+                                        items={itinerary} 
+                                        tripId={id} 
+                                        onUpdate={fetchTrip} 
+                                    />
                                 </div>
                             )}
                         </>

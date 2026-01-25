@@ -144,6 +144,15 @@ export const getItinerary = async (tripId) => {
     }
 };
 
+export const updateItineraryItem = async (itemId, updates) => {
+    const response = await fetch(`${API_URL}/itinerary/${itemId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates)
+    });
+    return handleResponse(response);
+};
+
 export const optimizeItinerary = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/optimize`, {
         method: "POST",

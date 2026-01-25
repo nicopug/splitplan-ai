@@ -84,12 +84,13 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         setIsSharing(true);
         try {
             const res = await generateShareLink(trip.id);
-            const shareUrl = `${window.location.origin}/share/${res.share_token}`;
+            // LINK DI JOIN PER VOTARE
+            const shareUrl = `${window.location.origin}/trip/join/${res.share_token}`;
 
             if (navigator.share) {
                 await navigator.share({
                     title: 'Vota la nostra meta su SplitPlan!',
-                    text: `Ehi! Il nostro viaggio a ${trip.destination} è pronto. Entra e vota la tua meta preferita!`,
+                    text: `Ehi! Il nostro viaggio a ${trip.destination} è pronto. Entra, registrati con il tuo nome e vota la tua meta preferita!`,
                     url: shareUrl,
                 });
             } else {
@@ -122,8 +123,19 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                             </p>
 
                             <div className="flex flex-col items-center gap-4">
-                                {/* Se l'utente è riconosciuto, gli mostriamo il suo nome, altrimenti il selettore (per l'organizzatore o demo) */}
-                                {currentUserParticipant ? (
+                                {/* Messaggio per l'organizzatore */}
+                                {!currentUserParticipant && (
+                                    <div style={{ maxWidth: '500px', marginBottom: '1rem' }} className="animate-fade-in">
+                                        <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '16px', border: '1px solid #dbeafe' }}>
+                                            <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0 }}>
+                                                <strong>Organizzatore:</strong> Manda il link qui sotto ai tuoi amici.
+                                                Quando entreranno, il sistema li riconoscerà per nome e permetterà loro di votare!
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Se l'utente è riconosciuto, gli mostriamo il suo nome, altrimenti il selettore (per l'organizzatore o demo) */}                                {currentUserParticipant ? (
                                     <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
                                         <p className="text-green-800 font-bold m-0 flex items-center gap-2">
                                             <span>👋</span> Ciao {currentUserParticipant.name}, stai votando per te stesso

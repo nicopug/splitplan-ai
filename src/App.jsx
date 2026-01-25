@@ -99,6 +99,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
           <Route path="/trip/:id" element={<Dashboard />} />
+          <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
           <Route path="/share/:token" element={<ShareTrip />} />
 
           <Route path="*" element={<Navigate to="/" />} />

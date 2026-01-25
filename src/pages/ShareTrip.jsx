@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSharedTrip } from '../api';
 import Timeline from '../components/Timeline';
 import Map from '../components/Map';
 import Finance from '../components/Finance';
 import Photos from '../components/Photos';
 
-const ShareTrip = () => {
+const ShareTrip = ({ isJoinMode = false }) => {
     const { token } = useParams();
+    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -30,6 +31,14 @@ const ShareTrip = () => {
             try {
                 const res = await getSharedTrip(token);
                 console.log("[DEBUG] Shared Trip Data:", res);
+
+                // SE SIAMO IN MODALITÀ JOIN E IL VIAGGIO ESISTE
+                if (isJoinMode && res.trip && res.trip.id) {
+                    // Reindirizziamo alla dashboard ufficiale
+                    navigate(`/trip/${res.trip.id}`);
+                    return;
+                }
+
                 setData(res);
             } catch (err) {
                 setError(err.message);
@@ -38,7 +47,7 @@ const ShareTrip = () => {
             }
         };
         fetchData();
-    }, [token]);
+    }, [token, isJoinMode, navigate]);
 
     const banner = (
         <div style={{

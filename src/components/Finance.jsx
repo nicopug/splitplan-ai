@@ -358,7 +358,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                     {tab === 'summary' && (
                         <div className="animate-in">
-                            <h3 className="dark:text-white" style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
+                            <h3 className="text-black dark:text-white" style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
                             {balances.length === 0 ? (
                                 <div className="text-center py-12 glass-card dark:bg-white/10">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>

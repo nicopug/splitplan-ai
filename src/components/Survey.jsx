@@ -143,24 +143,45 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                                 {/* Dynamic Names Inputs */}
                                 {formData.participant_names.length > 0 && (
-                                    <div>
-                                        <label className="block text-sm font-bold mb-3 text-primary-blue">
+                                    <div className="animate-fade-in">
+                                        <label className="block text-sm font-bold mb-3 text-primary-blue flex items-center gap-2">
                                             Chi viene con te?
+                                            <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                         </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                             {formData.participant_names.map((name, idx) => (
                                                 <input
                                                     key={idx}
                                                     type="text"
                                                     value={name}
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
-                                                    placeholder={`Nome Partecipante ${idx + 2}`}
+                                                    placeholder={`Nome Amico ${idx + 2}`}
                                                     required
                                                     className="w-full px-4 py-2.5 rounded-lg border border-gray-300 
                                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
                                                              transition-all outline-none bg-white text-sm"
                                                 />
                                             ))}
+                                        </div>
+
+                                        {/* AVVISO NOMI */}
+                                        <div style={{
+                                            padding: '1rem',
+                                            background: '#fff7ed',
+                                            borderRadius: '12px',
+                                            border: '1px solid #ffedd5',
+                                            display: 'flex',
+                                            gap: '12px',
+                                            alignItems: 'flex-start'
+                                        }}>
+                                            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+                                            <div>
+                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>ATTENZIONE AI NOMI</strong>
+                                                <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>
+                                                    Inserisci i <b>NOMI</b> con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan.
+                                                    Questo permetterà loro di votare la destinazione dal loro account!
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

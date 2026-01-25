@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { voteProposal, getParticipants } from '../api';
+import { voteProposal, getParticipants, generateShareLink } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
@@ -12,14 +12,31 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
     const [participants, setParticipants] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [currentUserParticipant, setCurrentUserParticipant] = useState(null);
     const [loadingProposalId, setLoadingProposalId] = useState(null);
+    const [isSharing, setIsSharing] = useState(false);
 
     useEffect(() => {
         const loadParticipants = async () => {
             try {
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
-                if (parts.length > 0) setSelectedUser(parts[0].id);
+
+                // Riconoscimento utente loggato
+                const storedUser = localStorage.getItem('user');
+                if (storedUser && storedUser !== 'undefined') {
+                    const userObj = JSON.parse(storedUser);
+                    // Cerchiamo se l'utente loggato è tra i partecipanti (match per nome)
+                    const match = parts.find(p => p.name.toLowerCase() === userObj.name.toLowerCase());
+                    if (match) {
+                        setCurrentUserParticipant(match);
+                        setSelectedUser(match.id);
+                    } else if (parts.length > 0) {
+                        setSelectedUser(parts[0].id);
+                    }
+                } else if (parts.length > 0) {
+                    setSelectedUser(parts[0].id);
+                }
             } catch (e) {
                 console.error("Error loading participants", e);
             }
@@ -29,7 +46,7 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
 
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
-            showToast("Seleziona chi sta votando dal menu a tendina!", "info");
+            showToast("Seleziona chi sta votando!", "info");
             return;
         }
 
@@ -63,6 +80,30 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
         }
     };
 
+    const handleShareVotingLink = async () => {
+        setIsSharing(true);
+        try {
+            const res = await generateShareLink(trip.id);
+            const shareUrl = `${window.location.origin}/share/${res.share_token}`;
+
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Vota la nostra meta su SplitPlan!',
+                    text: `Ehi! Il nostro viaggio a ${trip.destination} è pronto. Entra e vota la tua meta preferita!`,
+                    url: shareUrl,
+                });
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                showToast("🔗 Link di voto copiato! Invialo ai tuoi amici.", "success");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Errore condivisione", "error");
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
 
     return (
         <div className="section py-8 md:py-12">
@@ -75,30 +116,52 @@ const Voting = ({ proposals, trip, onVoteComplete }) => {
                     </h2>
 
                     {!isSolo && (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             <p className="text-text-muted text-base md:text-lg">
                                 Il gruppo deve raggiungere il consenso. ({stats.count}/{stats.total} voti)
                             </p>
 
-                            {/* User Selector */}
-                            <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
-                                <label className="font-bold text-sm md:text-base text-text-main">
-                                    Chi sta votando?
-                                </label>
-                                <select
-                                    value={selectedUser || ''}
-                                    onChange={(e) => {
-                                        setSelectedUser(parseInt(e.target.value));
-                                        setVotedId(null);
-                                    }}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none min-w-[150px] text-sm md:text-base"
+                            <div className="flex flex-col items-center gap-4">
+                                {/* Se l'utente è riconosciuto, gli mostriamo il suo nome, altrimenti il selettore (per l'organizzatore o demo) */}
+                                {currentUserParticipant ? (
+                                    <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
+                                        <p className="text-green-800 font-bold m-0 flex items-center gap-2">
+                                            <span>👋</span> Ciao {currentUserParticipant.name}, stai votando per te stesso
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
+                                        <label className="font-bold text-sm md:text-base text-text-main">
+                                            Vota per:
+                                        </label>
+                                        <select
+                                            value={selectedUser || ''}
+                                            onChange={(e) => {
+                                                setSelectedUser(parseInt(e.target.value));
+                                                setVotedId(null);
+                                            }}
+                                            className="px-4 py-2 rounded-lg border border-gray-300 bg-white
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none min-w-[150px] text-sm md:text-base"
+                                        >
+                                            {participants.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {/* Pulsante Condividi - Solo per chi ha creato il viaggio (se riconosciuto come organizzatore) o per tutti in questa fase */}
+                                <button
+                                    onClick={handleShareVotingLink}
+                                    disabled={isSharing}
+                                    className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-primary-blue hover:text-white transition-all shadow-md group"
                                 >
-                                    {participants.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
+                                    <span>{isSharing ? 'Generando...' : '🔗 Condividi per il voto'}</span>
+                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9.158a3 3 0 100-2.684 3 3 0 000 2.684z" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     )}

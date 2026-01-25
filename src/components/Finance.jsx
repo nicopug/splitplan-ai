@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
     const { showToast } = useToast();
+    const { theme } = useTheme();
     const [tab, setTab] = useState('summary');
     const [expenses, setExpenses] = useState((readOnly && sharedExpenses) ? sharedExpenses : []);
     const [balances, setBalances] = useState([]);
@@ -358,11 +360,22 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                     {tab === 'summary' && (
                         <div className="animate-in">
-                            <h3 className="text-black dark:text-white" style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>Bilancio Debiti/Crediti</h3>
+                            <h3
+                                className="dark:text-white"
+                                style={{
+                                    fontSize: '1.1rem',
+                                    fontWeight: '800',
+                                    marginBottom: '1.5rem',
+                                    paddingLeft: '0.5rem',
+                                    color: theme === 'dark' ? '#ffffff' : '#000000'
+                                }}
+                            >
+                                Bilancio Debiti/Crediti
+                            </h3>
                             {balances.length === 0 ? (
                                 <div className="text-center py-12 glass-card dark:bg-white/10">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-                                    <p className="dark:text-white" style={{ fontWeight: '600', color: '#0f172a' }}>Tutti in pari!</p>
+                                    <p style={{ fontWeight: '600', color: theme === 'dark' ? '#ffffff' : '#000000' }}>Tutti in pari!</p>
                                     <p className="text-muted dark:text-gray-400" style={{ fontSize: '0.9rem' }}>Nessuno deve soldi a nessuno.</p>
                                 </div>
                             ) : (
@@ -374,10 +387,10 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: '0.95rem' }}>
-                                                    <strong className="text-black font-bold">{getUserName(b.debtor_id)}</strong>
+                                                    <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUserName(b.debtor_id)}</strong>
                                                 </div>
-                                                <div className="text-gray-600" style={{ fontSize: '0.8rem' }}>
-                                                    deve dare a <strong className="text-black font-bold">{getUserName(b.creditor_id)}</strong>
+                                                <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
+                                                    deve dare a <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUserName(b.creditor_id)}</strong>
                                                 </div>
                                             </div>
                                             <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#ef4444' }}>

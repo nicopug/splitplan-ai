@@ -246,7 +246,7 @@ const Dashboard = () => {
                         gap: '0.75rem'
                     }}>
                         {[
-                            { id: 'TRIP', label: 'Viaggio', condition: !(!isOrganizer && hasVoted && trip.status === 'VOTING') },
+                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
                             { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
@@ -283,7 +283,7 @@ const Dashboard = () => {
 
             {view === 'TRIP' && (
                 // GUEST WAITING SCREEN (Plan B override)
-                !isOrganizer && hasVoted && trip.status === 'VOTING' ? (
+                !isOrganizer && hasVoted ? (
                     <div className="container" style={{ marginTop: '2rem' }}>
                         <div className="animate-fade-in" style={{
                             display: 'flex',
@@ -305,7 +305,7 @@ const Dashboard = () => {
                                 <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem' }}>
                                     Grazie per aver espresso la tua preferenza.
                                     <br /><br />
-                                    <strong>L'organizzatore deve ora finire di pianificare il viaggio.</strong>
+                                    <strong>L'organizzatore sta pianificando il viaggio.</strong>
                                     <br />
                                     Una volta completato, chiedi di farti mandare il <b>link di sola lettura</b> per vedere l'itinerario finale.
                                 </p>

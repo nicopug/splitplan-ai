@@ -210,6 +210,14 @@ export const getSharedTrip = async (token) => {
     return handleResponse(response);
 };
 
+export const joinTrip = async (token) => {
+    const response = await fetch(`${API_URL}/trips/join/${token}`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {

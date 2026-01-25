@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getSharedTrip } from '../api';
+import { getSharedTrip, joinTrip } from '../api';
 import Timeline from '../components/Timeline';
 import Map from '../components/Map';
 import Finance from '../components/Finance';
@@ -29,14 +29,34 @@ const ShareTrip = ({ isJoinMode = false }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // 1. Recuperiamo i dati base del viaggio condiviso
                 const res = await getSharedTrip(token);
                 console.log("[DEBUG] Shared Trip Data:", res);
 
-                // SE SIAMO IN MODALITÀ JOIN E IL VIAGGIO ESISTE
-                if (isJoinMode && res.trip && res.trip.id) {
-                    // Reindirizziamo alla dashboard ufficiale
-                    navigate(`/trip/${res.trip.id}`);
-                    return;
+                // 2. SE SIAMO IN MODALITÀ JOIN
+                if (isJoinMode) {
+                    const storedUser = localStorage.getItem('token');
+
+                    if (storedUser) {
+                        // L'utente è loggato, proviamo a farlo unire formalmente
+                        try {
+                            const joinRes = await joinTrip(token);
+                            if (joinRes.trip_id) {
+                                navigate(`/trip/${joinRes.trip_id}`);
+                                return;
+                            }
+                        } catch (joinErr) {
+                            console.warn("Join failed, maybe names don't match:", joinErr);
+                            // Se il join fallisce (es. nomi diversi), mostriamo comunque il viaggio 
+                            // ma resterà in sola lettura nella dashboard.
+                            navigate(`/trip/${res.trip.id}`);
+                            return;
+                        }
+                    } else {
+                        // L'utente NON è loggato, lo portiamo alla pagina Auth con un messaggio
+                        navigate('/auth', { state: { message: "Accedi o Registrati per unirti al viaggio e votare!", redirectTo: `/trip/join/${token}` } });
+                        return;
+                    }
                 }
 
                 setData(res);

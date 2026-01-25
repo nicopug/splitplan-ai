@@ -327,6 +327,42 @@ def get_shared_trip(token: str, session: Session = Depends(get_session)):
         "participants": [{"id": p.id, "name": p.name} for p in participants]
     }
 
+@router.post("/join/{token}")
+def join_trip(token: str, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Collega l'account corrente a un partecipante esistente nel viaggio tramite match di nome"""
+    trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Link non valido")
+    
+    # Cerchiamo se esiste un partecipante con lo stesso nome dell'account corrente
+    # che non sia ancora collegato a nessun account_id
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip.id,
+            func.lower(Participant.name) == func.lower(current_account.name),
+            Participant.account_id == None
+        )
+    ).first()
+    
+    if participant:
+        participant.account_id = current_account.id
+        session.add(participant)
+        session.commit()
+        return {"status": "joined", "trip_id": trip.id}
+    
+    # Se l'utente è già collegato, restituiamo comunque il successo per procedere al redirect
+    already_joined = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip.id,
+            Participant.account_id == current_account.id
+        )
+    ).first()
+    
+    if already_joined:
+        return {"status": "already_member", "trip_id": trip.id}
+        
+    raise HTTPException(status_code=403, detail="Il tuo nome non è nella lista dei partecipanti di questo viaggio. Chiedi all'organizzatore di aggiungerti con il tuo nome esatto!")
+
 @router.patch("/{trip_id}")
 def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Aggiorna parzialmente i dati di un viaggio"""

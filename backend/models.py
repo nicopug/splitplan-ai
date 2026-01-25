@@ -105,7 +105,10 @@ class Expense(SQLModel, table=True):
     trip_id: int = Field(foreign_key="trip.id")
     payer_id: int = Field(foreign_key="participant.id")
     description: str
-    amount: float
+    amount: float # Importo in EUR (valuta base per il bilancio)
+    original_amount: Optional[float] = None # Importo inserito (es. Yen)
+    currency: str = "EUR" # Valuta originale
+    exchange_rate: Optional[float] = 1.0 # Tasso applicato
     date: str
     category: str = "General"
     

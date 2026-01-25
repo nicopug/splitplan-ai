@@ -14,8 +14,18 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     // Form State
     const [title, setTitle] = useState('');
     const [amount, setAmount] = useState('');
+    const [currency, setCurrency] = useState('EUR');
     const [payerId, setPayerId] = useState('');
     const [category, setCategory] = useState('Food');
+
+    const currencies = [
+        { code: 'EUR', symbol: '€', label: 'Euro' },
+        { code: 'USD', symbol: '$', label: 'Dollaro USA' },
+        { code: 'JPY', symbol: '¥', label: 'Yen Giapponese' },
+        { code: 'GBP', symbol: '£', label: 'Sterlina' },
+        { code: 'CHF', symbol: 'CHF', label: 'Franco Svizzero' },
+        { code: 'AED', symbol: 'د.إ', label: 'Dirham' }
+    ];
 
     const categories = [
         { id: 'Food', label: 'Cibo & Drink', icon: '🍕' },
@@ -120,12 +130,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                 trip_id: trip.id,
                 title,
                 amount: parseFloat(amount),
+                currency: currency,
                 payer_id: parseInt(payerId),
                 category
             });
             setShowForm(false);
             setTitle('');
             setAmount('');
+            setCurrency('EUR');
             showToast("Spesa aggiunta! 💸", "success");
             fetchData();
         } catch (error) {
@@ -236,9 +248,19 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     <label className="form-label-modern">Cosa?</label>
                                     <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" className="form-input-modern" />
                                 </div>
-                                <div style={{ marginBottom: '1.2rem' }}>
-                                    <label className="form-label-modern">Quanto (€)?</label>
-                                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="form-input-modern" />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+                                    <div>
+                                        <label className="form-label-modern">Importo</label>
+                                        <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="form-input-modern" />
+                                    </div>
+                                    <div>
+                                        <label className="form-label-modern">Valuta</label>
+                                        <select value={currency} onChange={e => setCurrency(e.target.value)} className="form-input-modern">
+                                            {currencies.map(c => (
+                                                <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div style={{ marginBottom: '1.2rem' }}>
                                     <label className="form-label-modern">Categoria</label>
@@ -309,7 +331,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                                 </div>
                                             </div>
                                             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                <div style={{ fontWeight: '800', fontSize: '1.1rem', color: '#2563eb' }}>€{exp.amount.toFixed(2)}</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                    <div style={{ fontWeight: '800', fontSize: '1.1rem', color: '#2563eb' }}>€{exp.amount.toFixed(2)}</div>
+                                                    {exp.currency && exp.currency !== 'EUR' && (
+                                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '600' }}>
+                                                            {exp.original_amount.toLocaleString()} {exp.currency}
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 {!readOnly && (
                                                     <button
                                                         onClick={() => handleDelete(exp.id)}

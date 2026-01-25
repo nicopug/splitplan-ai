@@ -6,6 +6,7 @@ import math
 
 from ..database import get_session
 from ..models import Trip, Participant, Expense, SQLModel
+from ..utils.currency import convert_to_euro, get_exchange_rates
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -13,7 +14,8 @@ class CreateExpenseRequest(SQLModel):
     trip_id: int
     payer_id: int
     title: str
-    amount: float
+    amount: float # Importo inserito dall'utente
+    currency: str = "EUR" # Valuta scelta
     category: str = "General"
     involved_user_ids: List[int] = [] 
 
@@ -36,12 +38,27 @@ def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends
     if not payer:
         raise HTTPException(status_code=404, detail="Payer not found")
 
-    # 3. Create Expense
+    # 3. Handle Currency Conversion
+    amount_eur = expense_req.amount
+    exchange_rate = 1.0
+    
+    if expense_req.currency.upper() != "EUR":
+        rates = get_exchange_rates("EUR")
+        if rates and expense_req.currency.upper() in rates:
+            exchange_rate = rates[expense_req.currency.upper()]
+            amount_eur = round(expense_req.amount / exchange_rate, 2)
+        else:
+            print(f"[Warning] Rates for {expense_req.currency} not found. Using original amount.")
+
+    # 4. Create Expense
     db_expense = Expense(
         trip_id=expense_req.trip_id,
         payer_id=expense_req.payer_id,
         description=expense_req.title,
-        amount=expense_req.amount,
+        amount=amount_eur, # Salviamo sempre in EUR per i bilanci
+        original_amount=expense_req.amount,
+        currency=expense_req.currency.upper(),
+        exchange_rate=exchange_rate,
         category=expense_req.category,
         date=str(datetime.now())
     )
@@ -122,12 +139,15 @@ def delete_expense(expense_id: int, session: Session = Depends(get_session)):
 
 @router.post("/migrate-schema")
 def migrate_schema(session: Session = Depends(get_session)):
-    """Temporary endpoint to add category column if missing"""
+    """Endpoint temporaneo per aggiungere colonne mancanti"""
     try:
         from sqlalchemy import text
-        session.execute(text("ALTER TABLE expense ADD COLUMN category VARCHAR DEFAULT 'General'"))
+        session.execute(text("ALTER TABLE expense ADD COLUMN IF NOT EXISTS category VARCHAR DEFAULT 'General'"))
+        session.execute(text("ALTER TABLE expense ADD COLUMN IF NOT EXISTS original_amount FLOAT"))
+        session.execute(text("ALTER TABLE expense ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'EUR'"))
+        session.execute(text("ALTER TABLE expense ADD COLUMN IF NOT EXISTS exchange_rate FLOAT DEFAULT 1.0"))
         session.commit()
         return {"status": "migration success"}
     except Exception as e:
         session.rollback()
-        return {"status": "ignored", "detail": str(e)}
+        return {"status": "error", "detail": str(e)}

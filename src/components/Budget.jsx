@@ -79,6 +79,11 @@ const Budget = ({ trip, onUpdate }) => {
 
         const realTotal = realExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
+        // Find local currency info
+        const foreignExpense = realExpenses.find(e => e.currency && e.currency !== 'EUR');
+        const localCurrency = foreignExpense ? foreignExpense.currency : null;
+        const localRate = foreignExpense ? foreignExpense.exchange_rate : null;
+
         // Group by category for chart
         const categoryMap = realExpenses.reduce((acc, exp) => {
             const cat = exp.category || 'Other';
@@ -150,7 +155,9 @@ const Budget = ({ trip, onUpdate }) => {
             percentUsed,
             categories,
             isOverBudget: remaining < 0,
-            simulatedCosts
+            simulatedCosts,
+            localCurrency,
+            localRate
         };
     }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation, handleRemoveAI]);
 
@@ -339,6 +346,33 @@ const Budget = ({ trip, onUpdate }) => {
                                     'Ottimo lavoro, il budget è ancora ampiamente sotto controllo.'}
                         </p>
                     </div>
+
+                    {/* Currency Info Section */}
+                    {stats.localCurrency && stats.localCurrency !== 'EUR' && (
+                        <div className="glass-card" style={{ 
+                            padding: '2rem', 
+                            background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                            border: '1px solid #dbeafe'
+                        }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Focus Valuta: {stats.localCurrency} 💱
+                            </h3>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Tasso medio applicato</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e40af' }}>
+                                    1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}
+                                </div>
+                            </div>
+                            <div style={{ padding: '1rem', background: 'white', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.2rem' }}>
+                                    {stats.isOverBudget ? 'Sforamento' : 'Disponibilità'} in valuta locale
+                                </div>
+                                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: stats.isOverBudget ? '#ef4444' : '#10b981' }}>
+                                    {(Math.abs(stats.remaining) * stats.localRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} {stats.localCurrency}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* AI Estimation Section */}
                     <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-white)' }}>

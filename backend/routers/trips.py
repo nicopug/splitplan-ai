@@ -543,6 +543,14 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         iata_map = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
         trip.departure_airport = iata_map.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
         
+        # Semplice euristica per il fallback se l'AI fallisce (quota finita)
+        short_distance_cities = ['roma', 'milano', 'firenze', 'napoli', 'venezia', 'torino', 'bologna']
+        is_short = prefs.destination.lower() in short_distance_cities or prefs.departure_airport.lower() in short_distance_cities
+        if is_short:
+            trip.transport_mode = "TRAIN"
+        else:
+            trip.transport_mode = "FLIGHT"
+
         mock_options = [
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description="Opzione equilibrata.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Budget", destination_iata="LHR", price_estimate=prefs.budget * 0.7, description="Viaggio economico.", image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"),

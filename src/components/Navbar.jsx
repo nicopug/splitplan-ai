@@ -34,76 +34,91 @@ const Navbar = () => {
             <div className="container">
                 <div className="flex items-center justify-between h-20 md:h-24">
 
-                    {/* Logo Stilizzato */}
-                    <Link to="/" className="flex items-center gap-2.5 group">
-                        {/* Icona Aeroplanino Minimal */}
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-blue rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                            <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 2 9 18zm0 0v-8" />
-                            </svg>
-                        </div>
-                        {/* Testo Logo */}
-                        <span className="text-2xl md:text-3xl font-black tracking-tight flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                            <span className="bg-gradient-to-r from-primary-blue to-blue-400 bg-clip-text text-transparent">Split</span>
-                            <span
-                                className="dark:text-white"
-                                style={{ color: theme === 'dark' ? '#ffffff' : '#0f172a' }}
-                            >
-                                Plan
+                    {/* Logo & Navigation Links */}
+                    <div className="flex items-center gap-8">
+                        <Link to="/" className="flex items-center gap-2.5 group">
+                            <div className="w-10 h-10 md:w-11 md:h-11 bg-primary-blue rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <svg className="w-6 h-6 md:w-6.5 md:h-6.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 2 9 18zm0 0v-8" />
+                                </svg>
+                            </div>
+                            <span className="text-xl md:text-2xl font-black tracking-tight flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                                <span className="bg-gradient-to-r from-primary-blue to-blue-400 bg-clip-text text-transparent">Split</span>
+                                <span
+                                    className="dark:text-white"
+                                    style={{ color: theme === 'dark' ? '#ffffff' : '#0f172a' }}
+                                >
+                                    Plan
+                                </span>
+                                <span className="text-primary-blue ml-0.5">.</span>
                             </span>
-                            <span className="text-primary-blue ml-0.5">.</span>
-                        </span>
-                    </Link>
+                        </Link>
 
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2 rounded-full hover:bg-gray-100 transition-colors text-xl"
-                            title="Cambia Tema"
-                        >
-                            {theme === 'dark' ? '☀️' : '🌙'}
-                        </button>
-                        {location.pathname === '/' && (
-                            <>
-                                <a
-                                    href="#how-it-works"
-                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
-                                >
-                                    Come Funziona
-                                </a>
-                                <a
-                                    href="#features"
-                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
-                                >
-                                    Funzionalità
-                                </a>
-                                <a
-                                    href="#pricing"
-                                    className="font-medium text-text-main hover:text-primary-blue transition-colors"
-                                >
-                                    Prezzi
-                                </a>
-                            </>
-                        )}
+                        {/* Desktop Links - Reduced size and moved here */}
+                        <div className="hidden lg:flex items-center gap-6">
+                            {location.pathname === '/' && (
+                                <>
+                                    <a
+                                        href="#how-it-works"
+                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
+                                    >
+                                        Come Funziona
+                                    </a>
+                                    <a
+                                        href="#features"
+                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
+                                    >
+                                        Funzionalità
+                                    </a>
+                                    <a
+                                        href="#pricing"
+                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
+                                    >
+                                        Prezzi
+                                    </a>
+                                </>
+                            )}
+                        </div>
+                    </div>
 
+                    {/* Right Side: Theme & User */}
+                    <div className="hidden md:flex items-center gap-6">
                         {user ? (
                             <div className="flex items-center gap-4">
-                                <span className="font-semibold text-text-main flex items-center gap-2">
-                                    Ciao, {user.name}
-                                    {user.is_subscribed && <span className="text-xl">💎</span>}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="font-semibold text-text-main text-sm flex items-center gap-2">
+                                        Ciao, {user.name}
+                                        {user.is_subscribed && <span className="text-lg">💎</span>}
+                                    </span>
+                                    {/* Moved Theme Switcher here */}
+                                    <button
+                                        onClick={toggleTheme}
+                                        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-lg"
+                                        title="Cambia Tema"
+                                    >
+                                        {theme === 'dark' ? '☀️' : '🌙'}
+                                    </button>
+                                </div>
                                 <button
                                     onClick={handleLogout}
-                                    className="btn-secondary px-4 py-2 text-sm rounded-lg"
+                                    className="btn-secondary px-4 py-2 text-xs rounded-lg font-bold"
                                 >
                                     Esci
                                 </button>
                             </div>
                         ) : (
-                            <Link to="/auth" className="btn btn-primary px-6 py-2.5 text-base">
-                                Accedi
-                            </Link>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-lg"
+                                    title="Cambia Tema"
+                                >
+                                    {theme === 'dark' ? '☀️' : '🌙'}
+                                </button>
+                                <Link to="/auth" className="btn btn-primary px-6 py-2.5 text-sm font-bold">
+                                    Accedi
+                                </Link>
+                            </div>
                         )}
                     </div>
 

@@ -98,7 +98,7 @@ const Hero = () => {
                     <div className="relative order-1 lg:order-2">
                         <div className="bg-bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg transform -rotate-2 hover:rotate-0 transition-transform duration-300 border border-gray-100 dark:border-white/10 overflow-hidden">
                             <img
-                                src="/app-preview.png"
+                                src="/dashboard-preview.png"
                                 alt="SplitPlan Dashboard Preview"
                                 className="w-full h-auto rounded-xl md:rounded-2xl"
                                 loading="lazy"

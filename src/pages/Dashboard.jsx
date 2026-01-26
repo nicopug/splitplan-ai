@@ -259,7 +259,7 @@ const Dashboard = () => {
                         gap: '0.75rem'
                     }}>
                         {[
-                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' },
+                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
                             { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
                             { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
@@ -296,7 +296,7 @@ const Dashboard = () => {
 
             {view === 'TRIP' && (
                 // GUEST WAITING SCREEN (Plan B override)
-                !isOrganizer && hasVoted ? (
+                !isOrganizer && hasVoted && trip.status === 'VOTING' ? (
                     <div className="container" style={{ marginTop: '2rem' }}>
                         <div className="animate-fade-in" style={{
                             display: 'flex',
@@ -393,17 +393,17 @@ const Dashboard = () => {
                                                 border: '1px solid #dbeafe',
                                                 boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
                                             }} className="animate-fade-in">
-                                                <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🎉</div>
+                                                <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}></div>
                                                 <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
                                                     Consenso Raggiunto!
                                                 </h2>
                                                 <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
                                                     Ottime notizie! Il gruppo ha scelto <b>{trip.destination}</b> come meta ufficiale.
                                                     <br /><br />
-                                                    L\'organizzatore sta ora ultimando i dettagli della logistica e dell\'hotel per generare l\'itinerario finale.
+                                                    L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.
                                                 </p>
                                                 <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                                                    ⏳ In attesa della conferma finale...
+                                                    In attesa della conferma finale...
                                                 </div>
                                             </div>
                                         </div>

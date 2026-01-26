@@ -234,8 +234,8 @@ const Dashboard = () => {
                                     fontWeight: '800',
                                     border: '1px solid rgba(255,255,255,0.3)',
                                 }}>
-                                    {trip.transport_mode === 'TRAIN' ? '🚆 TRENO' :
-                                        trip.transport_mode === 'CAR' ? '🚗 AUTO' : '✈️ AEREO'}
+                                    {trip.transport_mode === 'TRAIN' ? 'TRENO' :
+                                        trip.transport_mode === 'CAR' ? 'AUTO' : 'AEREO'}
                                 </span>
                             )}
                         </div>

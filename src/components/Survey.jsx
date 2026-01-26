@@ -74,7 +74,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             onClick={() => handleTransportSelect('CAR')}
                             className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
                         >
-                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🚗</div>
+                            <div className="text-xl md:text-2xl font-bold mb-4 opacity-70 group-hover:scale-110 transition-transform">Auto</div>
                             <h3 className="text-xl font-bold mb-2">Macchina</h3>
                             <p className="text-sm text-gray-500">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
                         </div>
@@ -84,7 +84,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             onClick={() => handleTransportSelect('TRAIN')}
                             className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-secondary-teal group text-center"
                         >
-                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🚆</div>
+                            <div className="text-xl md:text-2xl font-bold mb-4 opacity-70 group-hover:scale-110 transition-transform">Treno</div>
                             <h3 className="text-xl font-bold mb-2">Treno</h3>
                             <p className="text-sm text-gray-500">Viaggia sui binari con i link pronti di Trainline.</p>
                         </div>
@@ -94,7 +94,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             onClick={() => handleTransportSelect('FLIGHT')}
                             className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-orange group text-center"
                         >
-                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">✈️</div>
+                            <div className="text-xl md:text-2xl font-bold mb-4 opacity-70 group-hover:scale-110 transition-transform">Volo</div>
                             <h3 className="text-xl font-bold mb-2">Volo</h3>
                             <p className="text-sm text-gray-500">Decolla verso la meta con le migliori offerte Skyscanner.</p>
                         </div>
@@ -236,7 +236,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             gap: '12px',
                                             alignItems: 'flex-start'
                                         }}>
-                                            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#9a3412' }}>!</span>
                                             <div>
                                                 <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>ATTENZIONE AI NOMI</strong>
                                                 <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>

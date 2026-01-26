@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 const Navbar = () => {
     const [user, setUser] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,7 +20,19 @@ const Navbar = () => {
     // Chiudi menu quando cambia pagina
     useEffect(() => {
         setMobileMenuOpen(false);
+        setShowUserMenu(false);
     }, [location.pathname]);
+
+    // Click away to close user menu
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showUserMenu && !event.target.closest('.user-menu-container')) {
+                setShowUserMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showUserMenu]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -84,12 +97,8 @@ const Navbar = () => {
                     {/* Right Side: Theme & User */}
                     <div className="hidden md:flex items-center gap-6">
                         {user ? (
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 user-menu-container relative">
                                 <div className="flex items-center gap-3">
-                                    <span className="font-semibold text-text-main text-sm flex items-center gap-2">
-                                        Ciao, {user.name}
-                                        {user.is_subscribed && <span className="text-lg">💎</span>}
-                                    </span>
                                     {/* Moved Theme Switcher here */}
                                     <button
                                         onClick={toggleTheme}
@@ -98,13 +107,53 @@ const Navbar = () => {
                                     >
                                         {theme === 'dark' ? '☀️' : '🌙'}
                                     </button>
+
+                                    {/* Interactive User Button */}
+                                    <button
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-primary-blue text-white flex items-center justify-center font-bold text-sm">
+                                            {user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="font-semibold text-text-main text-sm flex items-center gap-2">
+                                            {user.name}
+                                            {user.is_subscribed && <span className="text-lg">💎</span>}
+                                        </span>
+                                        <svg className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="btn-secondary px-4 py-2 text-xs rounded-lg font-bold"
-                                >
-                                    Esci
-                                </button>
+
+                                {/* Dropdown Menu (Epic Games Style) */}
+                                {showUserMenu && (
+                                    <div className="absolute top-full right-0 mt-2 w-56 bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-[100] animate-slideDownFast">
+                                        <div className="p-3 border-b border-white/5">
+                                            <div className="text-[0.65rem] uppercase tracking-wider font-bold text-gray-500 mb-2 px-3">Account</div>
+                                            <Link
+                                                to="/"
+                                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                </svg>
+                                                I miei Viaggi
+                                            </Link>
+                                        </div>
+                                        <div className="p-2">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                </svg>
+                                                Esci
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
@@ -219,8 +268,23 @@ const Navbar = () => {
                     }
                 }
                 
+                @keyframes slideDownFast {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-5px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
                 .animate-slideDown {
                     animation: slideDown 0.2s ease-out;
+                }
+                
+                .animate-slideDownFast {
+                    animation: slideDownFast 0.15s ease-out;
                 }
             `}</style>
         </nav>

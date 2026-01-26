@@ -77,7 +77,7 @@ const Logistics = ({ trip }) => {
                                 Assumiamo che userai la tua auto per questo viaggio verso <strong>{destName}</strong>.
                             </p>
                             <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '12px', fontSize: '0.9rem', color: '#475569' }}>
-                                💡 Abbiamo incluso una stima di carburante e pedaggi nel tuo <b>Budget</b>.
+                                Abbiamo incluso una stima di carburante e pedaggi nel tuo <b>Budget</b>.
                             </div>
                         </>
                     ) : (

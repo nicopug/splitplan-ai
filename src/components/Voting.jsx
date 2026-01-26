@@ -144,7 +144,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                             maxWidth: '600px',
                             boxShadow: 'var(--shadow-lg)'
                         }}>
-                            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🗳️</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-blue)', marginBottom: '1.5rem', letterSpacing: '2px' }}>VOTED</div>
                             <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
                                 Voto Registrato!
                             </h2>
@@ -196,9 +196,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                                         {currentUserParticipant ? (
                                             <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
-                                                <p className="text-green-800 font-bold m-0 flex items-center gap-2">
-                                                    <span>👋</span> Ciao {currentUserParticipant.name}, stai votando per te stesso
-                                                </p>
+                                                Ciao {currentUserParticipant.name}, stai votando per te stesso
                                             </div>
                                         ) : (
                                             <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
@@ -307,7 +305,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                         {!loadingProposals && proposals.length === 0 && (
                             <div className="text-center py-12">
-                                <div className="text-6xl mb-4">🤔</div>
+                                <div className="text-2xl font-bold text-gray-300 mb-4">No Data</div>
                                 <p className="text-text-muted text-lg">Nessuna proposta disponibile.</p>
                             </div>
                         )}

@@ -59,7 +59,7 @@ function App() {
   if (globalError) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', paddingTop: '10rem' }}>
-        <h2>Ops! Il sito ha riscontrato un problema critico 🛑</h2>
+        <h2>Ops! Il sito ha riscontrato un problema critico</h2>
         <pre style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '8px', display: 'inline-block', color: 'red', marginTop: '1rem' }}>
           {globalError}
         </pre>
@@ -87,7 +87,7 @@ function App() {
             right: 0,
             zIndex: 9999
           }}>
-            📴 Modalità Offline - Stai visualizzando i dati salvati
+            Modalità Offline - Stai visualizzando i dati salvati
           </div>
         )}
         <Toast />

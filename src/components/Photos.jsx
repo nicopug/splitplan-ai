@@ -94,7 +94,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
 
             {photos.length === 0 ? (
                 <div className="text-center" style={{ padding: '4rem', background: 'white', borderRadius: '24px', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🖼️</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '1rem' }}>No Photos</div>
                     <p className="text-muted">Non ci sono ancora foto. Sii il primo a caricarne una!</p>
                 </div>
             ) : (

@@ -128,7 +128,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                     ) : (
                         <div style={{ gridColumn: '1 / -1' }}>
                             <p style={{ fontSize: '0.85rem', color: '#666', background: '#f8f9fa', padding: '1rem', borderRadius: '12px' }}>
-                                🚗 <strong>Viaggio in Auto:</strong> Non sono richiesti orari di volo. Verrà usato l'orario standard (14:00 - 10:00) per l'itinerario.
+                                <strong>Viaggio in Auto:</strong> Non sono richiesti orari di volo. Verrà usato l'orario standard (14:00 - 10:00) per l'itinerario.
                             </p>
                         </div>
                     )}

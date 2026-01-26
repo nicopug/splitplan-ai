@@ -61,7 +61,7 @@ const Logistics = ({ trip }) => {
                                 Prenota il tuo biglietto del treno da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong>.
                             </p>
                             <a
-                                href={`https://www.thetrainline.com/it/cerca/${trip.departure_city || origin}/${destName}`}
+                                href={`https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn"

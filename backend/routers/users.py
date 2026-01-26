@@ -200,6 +200,7 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
+            "id": account.id,
             "name": account.name,
             "surname": account.surname,
             "email": account.email,

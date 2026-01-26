@@ -48,21 +48,55 @@ const Logistics = ({ trip }) => {
             </div>
 
             <div className="grid-2" style={{ gap: '2rem' }}>
-                {/* FLIGHTS */}
-                <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #00a698' }}>
-                    <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
-                    <p style={{ margin: '1rem 0', color: '#666' }}>
-                        Cerca voli diretti da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
-                    </p>
-                    <a
-                        href={flightLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn"
-                        style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
-                    >
-                        Cerca Voli
-                    </a>
+                {/* TRANSPORT (Flight, Train, or Car) */}
+                <div className="card" style={{
+                    padding: '2rem',
+                    textAlign: 'center',
+                    borderTop: `4px solid ${trip.transport_mode === 'TRAIN' ? '#ff6400' : trip.transport_mode === 'CAR' ? '#003580' : '#00a698'}`
+                }}>
+                    {trip.transport_mode === 'TRAIN' ? (
+                        <>
+                            <h3 style={{ color: '#ff6400' }}>Treni (Trainline)</h3>
+                            <p style={{ margin: '1rem 0', color: '#666' }}>
+                                Prenota il tuo biglietto del treno da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong>.
+                            </p>
+                            <a
+                                href={`https://www.thetrainline.com/it/cerca/${trip.departure_city || origin}/${destName}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn"
+                                style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
+                            >
+                                Cerca Treni
+                            </a>
+                        </>
+                    ) : trip.transport_mode === 'CAR' ? (
+                        <>
+                            <h3 style={{ color: '#003580' }}>Viaggio in Auto</h3>
+                            <p style={{ margin: '1rem 0', color: '#666' }}>
+                                Assumiamo che userai la tua auto per questo viaggio verso <strong>{destName}</strong>.
+                            </p>
+                            <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '12px', fontSize: '0.9rem', color: '#475569' }}>
+                                💡 Abbiamo incluso una stima di carburante e pedaggi nel tuo <b>Budget</b>.
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
+                            <p style={{ margin: '1rem 0', color: '#666' }}>
+                                Cerca voli diretti da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
+                            </p>
+                            <a
+                                href={flightLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn"
+                                style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
+                            >
+                                Cerca Voli
+                            </a>
+                        </>
+                    )}
                 </div>
 
                 {/* HOTELS */}

@@ -127,6 +127,18 @@ def migrate_share_token(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
+@router.get("/migrate-transport-mode")
+def migrate_transport_mode(session: Session = Depends(get_session)):
+    """Aggiunge transport_mode alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_mode VARCHAR DEFAULT 'FLIGHT';"))
+        session.commit()
+        return {"status": "success", "message": "Colonna transport_mode aggiunta."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
 @router.post("/{trip_id}/optimize")
 def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
@@ -209,24 +221,34 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
         except:
             days = 7 # Fallback
             
+        car_prompt = ""
+        if trip.transport_mode == "CAR":
+            car_prompt = f"""
+            4. COSTI STRADALI: Il viaggio è in AUTO PROPRIA da {trip.departure_city or "Sconosciuto"} a {trip.destination}. 
+               Stima il costo totale di CARBURANTE e PEDAGGI (Andata e Ritorno) per {trip.num_people} persone.
+               Dividi questo costo per {trip.num_people} per includerlo nella stima a persona.
+            """
+
         prompt = f"""
-        Analizza i costi di vita locale (esclusi voli e hotel) per un viaggio a: {trip.destination}.
-        Dati: {trip.num_people} persona/e, durata {days} giorni.
+        Analizza i costi di vita locale (esclusi alloggio) per un viaggio a: {trip.destination}.
+        Dati: {trip.num_people} persona/e, durata {days} giorni. Mezzo: {trip.transport_mode}.
         
+        {car_prompt}
+
         Fornisci una stima REALISTICA e ONESTA per una persona (viaggiatore medio, non lussuoso):
         1. Pasti (colazione, pranzo veloce, cena in trattoria): ca. 35-50€/giorno.
-        2. Trasporti locali: ca. 5-10€/giorno.
+        2. Trasporti locali (se non in auto): ca. 5-10€/giorno.
         3. Piccole spese: ca. 10-15€/giorno.
         
         Importante: Se la città è economica (es. Est Europa), i costi devono rifletterlo. 
-        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni.
+        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni, COMPRESI gli eventuali costi stradali stimati sopra.
         
         RESTITUISCI SOLO JSON:
         {{
             "daily_meal_mid": 35.0,
             "daily_meal_cheap": 20.0,
             "daily_transport": 10.0,
-            "coffee_drinks": 10.0,
+            "road_costs_total_per_person": 0.0,
             "total_estimated_per_person": 0.0, 
             "advice": "Un consiglio utile..."
         }}
@@ -441,9 +463,15 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne', 'Parigi Segreta') per differenziarle.
                 Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
+
+                TASK 3: Analizza la distanza tra la partenza ({prefs.departure_airport}) e la destinazione ({prefs.destination}).
+                Scegli il "suggested_transport_mode" tra: FLIGHT, TRAIN, CAR.
+                REGOLA: Se la destinazione è raggiungibile via terra in meno di 6 ore (es. Milano-Roma, Parigi-Lione, Madrid-Barcellona), preferisci sempre TRAIN o CAR. Altrimenti usa FLIGHT.
+
                 RESTITUISCI SOLO JSON:
                 {{
                     "departure_iata_normalized": "XXX",
+                    "suggested_transport_mode": "FLIGHT",
                     "proposals": [
                         {{
                             "destination": "Titolo Creativo (es. Parigi dei Musei)", 
@@ -467,7 +495,11 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 
                 if data.get("departure_iata_normalized"):
                     trip.departure_airport = data["departure_iata_normalized"].upper()
-                    session.add(trip)
+                
+                if data.get("suggested_transport_mode"):
+                    trip.transport_mode = data["suggested_transport_mode"].upper()
+                
+                session.add(trip)
 
                 # Elimina proposte esistenti
                 existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()

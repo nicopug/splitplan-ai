@@ -224,6 +224,18 @@ const Dashboard = () => {
                             }}>
                                 {user.is_subscribed ? 'PREMIUM ABBONATO' : 'UTENTE FREE'}
                             </span>
+                            <span className="glass-panel" style={{
+                                background: 'rgba(255,255,255,0.2)',
+                                color: 'white',
+                                padding: '4px 14px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '800',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                            }}>
+                                {trip.transport_mode === 'TRAIN' ? '🚆 TRENO' :
+                                    trip.transport_mode === 'CAR' ? '🚗 AUTO' : '✈️ AEREO'}
+                            </span>
                         </div>
                     )}
 
@@ -296,7 +308,7 @@ const Dashboard = () => {
 
             {view === 'TRIP' && (
                 // GUEST WAITING SCREEN (Plan B override)
-                !isOrganizer && hasVoted && trip.status === 'VOTING' ? (
+                !isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
                     <div className="container" style={{ marginTop: '2rem' }}>
                         <div className="animate-fade-in" style={{
                             display: 'flex',

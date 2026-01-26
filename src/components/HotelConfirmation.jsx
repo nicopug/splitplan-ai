@@ -40,7 +40,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
             <div className="card" style={{ padding: '2rem', borderTop: '4px solid #ff006e' }}>
                 <h3 style={{ color: '#ff006e', textAlign: 'center' }}>Step 2: Conferma Logistica</h3>
                 <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#666' }}>
-                    Prenota voli e hotel dai link sopra, poi inserisci i dettagli qui.<br />
+                    Prenota {trip.transport_mode === 'CAR' ? 'l’hotel' : 'voli e hotel'} dai link sopra, poi inserisci i dettagli qui.<br />
                     L'AI creerà l'itinerario basandosi sul tuo orario di arrivo e posizione.
                 </p>
 
@@ -69,17 +69,19 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                         />
                     </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Costo Volo Totale (€)</label>
-                        <input
-                            type="number"
-                            value={flightCost}
-                            onChange={(e) => setFlightCost(e.target.value)}
-                            placeholder="Es. 250"
-                            required
-                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                    </div>
+                    {trip.transport_mode !== 'CAR' && (
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Costo Volo Totale (€)</label>
+                            <input
+                                type="number"
+                                value={flightCost}
+                                onChange={(e) => setFlightCost(e.target.value)}
+                                placeholder="Es. 250"
+                                required
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
+                        </div>
+                    )}
 
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Costo Hotel Totale (€)</label>
@@ -93,27 +95,37 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                         />
                     </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Arrivo (Andata)</label>
-                        <input
-                            type="time"
-                            value={arrivalTime}
-                            onChange={(e) => setArrivalTime(e.target.value)}
-                            required
-                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                    </div>
+                    {trip.transport_mode !== 'CAR' ? (
+                        <>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Arrivo (Andata)</label>
+                                <input
+                                    type="time"
+                                    value={arrivalTime}
+                                    onChange={(e) => setArrivalTime(e.target.value)}
+                                    required
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                />
+                            </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Partenza (Ritorno)</label>
-                        <input
-                            type="time"
-                            value={returnTime}
-                            onChange={(e) => setReturnTime(e.target.value)}
-                            required
-                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                    </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Partenza (Ritorno)</label>
+                                <input
+                                    type="time"
+                                    value={returnTime}
+                                    onChange={(e) => setReturnTime(e.target.value)}
+                                    required
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <p style={{ fontSize: '0.85rem', color: '#666', background: '#f8f9fa', padding: '1rem', borderRadius: '12px' }}>
+                                🚗 <strong>Viaggio in Auto:</strong> Non sono richiesti orari di volo. Verrà usato l'orario standard (14:00 - 10:00) per l'itinerario.
+                            </p>
+                        </div>
+                    )}
 
                     <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
                         <button

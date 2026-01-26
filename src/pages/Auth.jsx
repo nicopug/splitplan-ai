@@ -114,9 +114,8 @@ const Auth = () => {
                 localStorage.setItem('token', res.access_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
-                // Redirect directly to home, plan selection is optional/upgradable later
-                navigate('/');
-                window.location.reload();
+                // Show plan selection before going to home
+                setShowPlanSelection(true);
             } else {
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');

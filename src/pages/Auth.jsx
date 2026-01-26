@@ -114,8 +114,14 @@ const Auth = () => {
                 localStorage.setItem('token', res.access_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
-                // Show plan selection before going to home
-                setShowPlanSelection(true);
+                // Show plan selection ONLY if we just registered
+                if (localStorage.getItem('pending_plan_selection')) {
+                    localStorage.removeItem('pending_plan_selection');
+                    setShowPlanSelection(true);
+                } else {
+                    navigate('/');
+                    window.location.reload();
+                }
             } else {
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');
@@ -126,6 +132,10 @@ const Auth = () => {
                     email: formData.email,
                     password: formData.password
                 });
+
+                // Mark that we need to show plan selection on first login
+                localStorage.setItem('pending_plan_selection', 'true');
+
                 setMessage("Registrazione completata! Controlla la tua email per verificare l'account prima di accedere.");
                 setIsLogin(true);
             }

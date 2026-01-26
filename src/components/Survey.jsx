@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
 
+    const [step, setStep] = useState(0);
     const [formData, setFormData] = useState({
         destination: '',
         departure_airport: '',
@@ -12,11 +13,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         end_date: '',
         must_have: '',
         must_avoid: '',
-        participant_names: []
+        participant_names: [],
+        transport_mode: 'FLIGHT' // Default
     });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleTransportSelect = (mode) => {
+        setFormData({ ...formData, transport_mode: mode });
+        setStep(1);
     };
 
     // Update participant names array when num_people changes
@@ -48,12 +55,67 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         onComplete(formData);
     };
 
+    if (step === 0) {
+        return (
+            <div className="section py-8 md:py-12 animate-fade-in">
+                <div className="container max-w-4xl">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                            Qual è il tuo mezzo di trasporto?
+                        </h2>
+                        <p className="text-lg text-text-muted">
+                            Scegli come vuoi raggiungere la tua destinazione.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* CAR */}
+                        <div
+                            onClick={() => handleTransportSelect('CAR')}
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
+                        >
+                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🚗</div>
+                            <h3 className="text-xl font-bold mb-2">Macchina</h3>
+                            <p className="text-sm text-gray-500">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
+                        </div>
+
+                        {/* TRAIN */}
+                        <div
+                            onClick={() => handleTransportSelect('TRAIN')}
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-secondary-teal group text-center"
+                        >
+                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🚆</div>
+                            <h3 className="text-xl font-bold mb-2">Treno</h3>
+                            <p className="text-sm text-gray-500">Viaggia sui binari con i link pronti di Trainline.</p>
+                        </div>
+
+                        {/* FLIGHT */}
+                        <div
+                            onClick={() => handleTransportSelect('FLIGHT')}
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-orange group text-center"
+                        >
+                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">✈️</div>
+                            <h3 className="text-xl font-bold mb-2">Volo</h3>
+                            <p className="text-sm text-gray-500">Decolla verso la meta con le migliori offerte Skyscanner.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="section py-8 md:py-12">
+        <div className="section py-8 md:py-12 animate-fade-in">
             <div className="container max-w-4xl">
 
                 {/* Header */}
                 <div className="text-center mb-8 md:mb-12">
+                    <button
+                        onClick={() => setStep(0)}
+                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer' }}
+                    >
+                        ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
+                    </button>
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                         Definiamo i dettagli
                     </h2>
@@ -86,14 +148,14 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Aeroporto Partenza
+                                    {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
                                 </label>
                                 <input
                                     name="departure_airport"
                                     value={formData.departure_airport}
                                     onChange={handleChange}
                                     type="text"
-                                    placeholder="es. MXP, FCO"
+                                    placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
                                     required
                                     className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20

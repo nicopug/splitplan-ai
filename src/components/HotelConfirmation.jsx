@@ -40,7 +40,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
             <div className="card" style={{ padding: '2rem', borderTop: '4px solid #ff006e' }}>
                 <h3 style={{ color: '#ff006e', textAlign: 'center' }}>Step 2: Conferma Logistica</h3>
                 <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#666' }}>
-                    Prenota {trip.transport_mode === 'CAR' ? 'l’hotel' : 'voli e hotel'} dai link sopra, poi inserisci i dettagli qui.<br />
+                    Prenota {trip.transport_mode === 'TRAIN' ? 'treni e hotel' : trip.transport_mode === 'CAR' ? 'l’hotel' : 'voli e hotel'} dai link sopra, poi inserisci i dettagli qui.<br />
                     L'AI creerà l'itinerario basandosi sul tuo orario di arrivo e posizione.
                 </p>
 
@@ -71,7 +71,9 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
 
                     {trip.transport_mode !== 'CAR' && (
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Costo Volo Totale (€)</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                Costo {trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'} Totale (€)
+                            </label>
                             <input
                                 type="number"
                                 value={flightCost}
@@ -98,7 +100,9 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                     {trip.transport_mode !== 'CAR' ? (
                         <>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Arrivo (Andata)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    Orario Arrivo ({trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
+                                </label>
                                 <input
                                     type="time"
                                     value={arrivalTime}
@@ -109,7 +113,9 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                             </div>
 
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Orario Partenza (Ritorno)</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    Orario Partenza ({trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
+                                </label>
                                 <input
                                     type="time"
                                     value={returnTime}

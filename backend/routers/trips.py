@@ -617,7 +617,7 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                - Pranzo: 13:00 - 14:30
                - Attività Pomeriggio: 15:00 - 18:30
                - Cena: 20:00 - 22:00
-            3. TRASPORTI: Il primo giorno inizia DOPO l'ora di arrivo ({trip.arrival_time or '14:00'}). L'ultimo giorno finisce PRIMA dell'ora di ritorno ({trip.return_time or '18:00'}).
+            3. TRASPORTI: L'itinerario del PRIMO giorno deve iniziare TASSATIVAMENTE DOPO l'ora di arrivo ({trip.arrival_time or '14:00'}). L'itinerario dell'ULTIMO giorno deve concludersi TASSATIVAMENTE PRIMA dell'ora di ritorno ({trip.return_time or '18:00'}). Se il viaggio è in CAR o TRAIN, usa comunque questi orari forniti per calcolare le attività possibili.
             4. DURATA: Ogni attività deve durare almeno 1.5 - 2 ore.
             5. JSON ARRAY: Restituisci un array di oggetti.
             6. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.

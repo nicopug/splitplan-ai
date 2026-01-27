@@ -74,7 +74,7 @@ const Logistics = ({ trip }) => {
                         <>
                             <h3 style={{ color: '#003580' }}>Viaggio in Auto</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Assumiamo che userai la tua auto per questo viaggio verso <strong>{destName}</strong>.
+                                Pensiamo che userai la tua auto per questo viaggio verso <strong>{destName}</strong>.
                             </p>
                             <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '12px', fontSize: '0.9rem', color: '#475569' }}>
                                 Abbiamo incluso una stima di carburante e pedaggi nel tuo <b>Budget</b>.

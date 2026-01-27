@@ -97,41 +97,33 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                         />
                     </div>
 
-                    {trip.transport_mode !== 'CAR' ? (
-                        <>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                                    Orario Arrivo ({trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
-                                </label>
-                                <input
-                                    type="time"
-                                    value={arrivalTime}
-                                    onChange={(e) => setArrivalTime(e.target.value)}
-                                    required
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                                />
-                            </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                            {trip.transport_mode === 'FLIGHT' ? 'Arrivo Volo (Andata)' :
+                                trip.transport_mode === 'TRAIN' ? 'Arrivo Treno (Andata)' : 'Arrivo a Destinazione'}
+                        </label>
+                        <input
+                            type="time"
+                            value={arrivalTime}
+                            onChange={(e) => setArrivalTime(e.target.value)}
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                        />
+                    </div>
 
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                                    Orario Partenza ({trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
-                                </label>
-                                <input
-                                    type="time"
-                                    value={returnTime}
-                                    onChange={(e) => setReturnTime(e.target.value)}
-                                    required
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                                />
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <p style={{ fontSize: '0.85rem', color: '#666', background: '#f8f9fa', padding: '1rem', borderRadius: '12px' }}>
-                                <strong>Viaggio in Auto:</strong> Non sono richiesti orari di volo. Verrà usato l'orario standard (14:00 - 10:00) per l'itinerario.
-                            </p>
-                        </div>
-                    )}
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                            {trip.transport_mode === 'FLIGHT' ? 'Partenza Volo (Ritorno)' :
+                                trip.transport_mode === 'TRAIN' ? 'Partenza Treno (Ritorno)' : 'Partenza per il Ritorno'}
+                        </label>
+                        <input
+                            type="time"
+                            value={returnTime}
+                            onChange={(e) => setReturnTime(e.target.value)}
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                        />
+                    </div>
 
                     <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
                         <button

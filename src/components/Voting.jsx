@@ -16,11 +16,12 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
     const [currentUserParticipant, setCurrentUserParticipant] = useState(null);
     const [loadingProposalId, setLoadingProposalId] = useState(null);
     const [isSharing, setIsSharing] = useState(false);
-    const [loadingProposals, setLoadingProposals] = useState(!initialProposals || initialProposals.length === 0);
+    const [loadingProposals, setLoadingProposals] = useState(true);
     const [hasVoted, setHasVoted] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
+            setLoadingProposals(true);
             try {
                 // Check if already voted (Local Persistence for guests)
                 if (localStorage.getItem(`splitplan_voted_${trip.id}`)) {
@@ -33,7 +34,6 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                 // 2. Se non abbiamo proposte, carichiamole dal DB
                 if (!initialProposals || initialProposals.length === 0) {
-                    setLoadingProposals(true);
                     const props = await getProposals(trip.id);
                     setProposals(props);
                 }

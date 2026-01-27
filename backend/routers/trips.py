@@ -603,6 +603,15 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             real_places = get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
             places_prompt = f"USA OBBLIGATORIAMENTE QUESTI NOMI REALI PER I PASTI (NON SCRIVERE 'PRANZO IN ZONA' O SIMILI): {', '.join(real_places[:12])}" if real_places else "Cerca di inventare nomi di fantasia realistici o usa locali famosi della zona, NON usare frasi generiche come 'Pasto in ristorante locale'."
 
+            CAR_EXPENSES_PROMPT = ""
+            if trip.transport_mode == "CAR":
+                CAR_EXPENSES_PROMPT = f"""
+                7. STIME AUTO: Poiché il viaggio è in MACCHINA (CAR), stima il costo totale di:
+                   - "CAR_FUEL": Stima realistica del carburante da {trip.departure_city or 'origine'} a {proposal.destination}.
+                   - "CAR_TOLLS": Stima dei pedaggi autostradali.
+                   Restituisci queste stime in un campo "estimated_expenses" separato dall'itinerario.
+                """
+
             prompt = f"""
             Crea un itinerario di {num_days} giorni a {proposal.destination}. 
             Alloggio: {trip.accommodation} (Coordinate Hotel: {hotel_lat}, {hotel_lon}).
@@ -619,15 +628,49 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                - Cena: 20:00 - 22:00
             3. TRASPORTI: L'itinerario del PRIMO giorno deve iniziare TASSATIVAMENTE DOPO l'ora di arrivo ({trip.arrival_time or '14:00'}). L'itinerario dell'ULTIMO giorno deve concludersi TASSATIVAMENTE PRIMA dell'ora di ritorno ({trip.return_time or '18:00'}). Se il viaggio è in CAR o TRAIN, usa comunque questi orari forniti per calcolare le attività possibili.
             4. DURATA: Ogni attività deve durare almeno 1.5 - 2 ore.
-            5. JSON ARRAY: Restituisci un array di oggetti.
+            5. JSON OBJECT: Restituisci un oggetto JSON con due campi: "itinerary" (array di oggetti) e "estimated_expenses" (oggetto, solo se richiesto).
             6. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.
-            7. LINGUA: Italiano.
+            {CAR_EXPENSES_PROMPT}
+            LINGUA: Italiano.
 
-            FORMATO: [{{"title": "Nome Locale", "description": "Dettagli", "start_time": "YYYY-MM-DDTHH:mm:ss", "end_time": "YYYY-MM-DDTHH:mm:ss", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8584, "lon": 2.2945}}]
+            FORMATO: {{
+                "itinerary": [{{ "title": "..", "description": "..", "start_time": "..", "end_time": "..", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8, "lon": 2.2 }}],
+                "estimated_expenses": {{ "fuel": 50, "tolls": 25 }}
+            }}
             """
             
             response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
-            items_data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
+            raw_data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
+            
+            items_data = raw_data.get("itinerary", [])
+            car_expenses = raw_data.get("estimated_expenses", {})
+            
+            # --- SALVATAGGIO SPESE AUTO ---
+            if trip.transport_mode == "CAR" and car_expenses:
+                organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
+                if organizer:
+                    # Elimina eventuali stime vecchie per evitare duplicati
+                    session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Transport", Expense.description.like("Stima%")))
+                    
+                    if car_expenses.get("fuel"):
+                        session.add(Expense(
+                            trip_id=trip.id,
+                            payer_id=organizer.id,
+                            description="Stima Carburante (Viaggio)",
+                            amount=float(car_expenses["fuel"]),
+                            category="Transport",
+                            date=str(datetime.now())
+                        ))
+                    if car_expenses.get("tolls"):
+                        session.add(Expense(
+                            trip_id=trip.id,
+                            payer_id=organizer.id,
+                            description="Stima Pedaggi (Viaggio)",
+                            amount=float(car_expenses["tolls"]),
+                            category="Transport",
+                            date=str(datetime.now())
+                        ))
+                    session.commit()
             
             # Ordiniamo gli item per start_time prima di salvarli per garantire coerenza
             try:

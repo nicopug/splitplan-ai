@@ -132,7 +132,7 @@ const Dashboard = () => {
         }
         await fetchTrip();
         setLoading(false);
-        showToast("🎉 Viaggio Confermato!", "success");
+        showToast("Viaggio Confermato!", "success");
     };
 
     const handleOptimize = async () => {

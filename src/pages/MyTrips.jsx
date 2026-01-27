@@ -28,21 +28,22 @@ const MyTrips = () => {
         fetchTrips();
     }, []);
 
-    const handleHideTrip = (e, tripId) => {
+    const handleHideTrip = async (e, tripId) => {
         e.stopPropagation(); // Evita di navigare al trip
-        showConfirm(
+        const confirmed = await showConfirm(
             "Nascondi Viaggio",
-            "Sei sicuro di voler nascondere questo viaggio dalla tua cronologia? Potrai comunque accedervi se hai il link.",
-            async () => {
-                try {
-                    await hideTrip(tripId);
-                    showToast("Viaggio nascosto", "success");
-                    fetchTrips();
-                } catch (error) {
-                    showToast("Errore: " + error.message, "error");
-                }
-            }
+            "Sei sicuro di voler nascondere questo viaggio dalla tua cronologia? Potrai comunque accedervi se hai il link."
         );
+
+        if (confirmed) {
+            try {
+                await hideTrip(tripId);
+                showToast("Viaggio nascosto", "success");
+                fetchTrips();
+            } catch (error) {
+                showToast("Errore: " + error.message, "error");
+            }
+        }
     };
 
     return (
@@ -98,7 +99,7 @@ const MyTrips = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {trips.reverse().map(trip => (
+                            {trips.slice().reverse().map(trip => (
                                 <div
                                     key={trip.id}
                                     onClick={() => navigate(`/trip/${trip.id}`)}

@@ -56,6 +56,7 @@ class Trip(TripBase, table=True):
 class ParticipantBase(SQLModel):
     name: str
     is_organizer: bool = False
+    is_active: bool = True
 
 class Participant(ParticipantBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -132,7 +132,7 @@ const Navbar = () => {
                                         <div className="p-3 border-b border-white/5">
                                             <div className="text-[0.65rem] uppercase tracking-wider font-bold text-gray-500 mb-2 px-3">Account</div>
                                             <Link
-                                                to="/"
+                                                to="/my-trips"
                                                 className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

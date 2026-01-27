@@ -225,6 +225,21 @@ export const joinTrip = async (token) => {
     return handleResponse(response);
 };
 
+export const getUserTrips = async () => {
+    const response = await fetch(`${API_URL}/trips/my-trips`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const hideTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/hide`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {

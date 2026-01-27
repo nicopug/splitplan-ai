@@ -996,3 +996,68 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         session.rollback()
         print(f"[Chat Error] {e}")
         raise HTTPException(status_code=500, detail=f"Errore elaborazione chat: {str(e)}")
+@router.get("/my-trips")
+def get_my_trips(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Ritorna tutti i viaggi a cui partecipa l'utente corrente e che non sono stati nascosti"""
+    try:
+        # Trova tutti i record Participant collegati all'account e attivi
+        participants = session.exec(
+            select(Participant).where(
+                Participant.account_id == current_account.id,
+                Participant.is_active == True
+            )
+        ).all()
+        
+        trip_ids = [p.trip_id for p in participants]
+        if not trip_ids:
+            return []
+            
+        # Trova i viaggi corrispondenti
+        trips = session.exec(
+            select(Trip).where(Trip.id.in_(trip_ids))
+        ).all()
+        
+        return trips
+    except Exception as e:
+        print(f"[ERROR] get_my_trips: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{trip_id}/hide")
+def hide_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Nasconde un viaggio dalla cronologia dell'utente (imposta is_active=False per il partecipante)"""
+    try:
+        participant = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip_id,
+                Participant.account_id == current_account.id
+            )
+        ).first()
+        
+        if not participant:
+            raise HTTPException(status_code=404, detail="Partecipante non trovato in questo viaggio")
+            
+        participant.is_active = False
+        session.add(participant)
+        session.commit()
+        return {"status": "success", "message": "Viaggio nascosto correttamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] hide_trip: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/migrate-participants-active")
+def migrate_participants_active(session: Session = Depends(get_session)):
+    """Migrazione per aggiungere la colonna is_active alla tabella participant se non esiste"""
+    from sqlalchemy import text
+    try:
+        session.execute(text("ALTER TABLE participant ADD COLUMN is_active BOOLEAN DEFAULT TRUE"))
+        session.commit()
+        return {"status": "success", "message": "Colonna is_active aggiunta correttamente."}
+    except Exception as e:
+        session.rollback()
+        if "already exists" in str(e) or "duplicate column" in str(e).lower():
+            return {"status": "info", "message": "La colonna is_active esiste già."}
+        print(f"[Migration Error] {e}")
+        return {"status": "error", "message": str(e)}

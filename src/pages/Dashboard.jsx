@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -12,11 +12,13 @@ import Chatbot from '../components/Chatbot';
 import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
+import { useModal } from '../context/ModalContext';
 
 const Dashboard = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { showToast } = useToast();
+    const { showConfirm } = useModal();
     const [trip, setTrip] = useState(null);
     const [proposals, setProposals] = useState([]);
     const [itinerary, setItinerary] = useState([]);
@@ -155,6 +157,25 @@ const Dashboard = () => {
             showToast("🔗 Link di condivisione copiato negli appunti!", "success");
         } catch (e) {
             showToast("Errore condivisione: " + e.message, "error");
+        }
+    };
+
+    const handleResetHotel = async () => {
+        const confirmed = await showConfirm(
+            "Modifica Logistica",
+            "Vuoi davvero resettare la logistica? L'itinerario attuale verrà eliminato e dovrà essere rigenerato dopo aver inserito i nuovi dati dell'hotel."
+        );
+        if (confirmed) {
+            try {
+                setLoading(true);
+                await resetHotel(id);
+                showToast("Logistica resettata con successo", "success");
+                await fetchTrip();
+            } catch (e) {
+                showToast("Errore: " + e.message, "error");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -427,8 +448,25 @@ const Dashboard = () => {
                                 {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
                                 {trip.accommodation && itinerary && itinerary.length > 0 && (
                                     <div className="container" style={{ marginTop: '2rem' }}>
-                                        <div style={{ marginBottom: '1.5rem' }}>
+                                        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                            {isOrganizer && (
+                                                <button
+                                                    onClick={handleResetHotel}
+                                                    style={{
+                                                        background: 'rgba(59, 130, 246, 0.1)',
+                                                        color: '#2563eb',
+                                                        border: '1px solid rgba(37, 99, 235, 0.2)',
+                                                        padding: '0.5rem 1rem',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '700',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    ⚙️ Modifica Logistica
+                                                </button>
+                                            )}
                                         </div>
 
                                         <Map

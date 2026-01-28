@@ -808,6 +808,46 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
         print(f"[ERROR] confirm_hotel: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/{trip_id}/reset-hotel")
+def reset_hotel(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Resetta i dati dell'hotel per permettere la modifica e la rigenerazione dell'itinerario"""
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip: 
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+        
+        # Autorizzazione: verifica che l'utente sia l'organizzatore
+        participant = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip_id, 
+                Participant.account_id == current_account.id
+            )
+        ).first()
+        
+        if not participant or not participant.is_organizer:
+            raise HTTPException(status_code=403, detail="Solo l'organizzatore può resettare la logistica")
+
+        trip.accommodation = None
+        trip.accommodation_location = None
+        trip.hotel_latitude = None
+        trip.hotel_longitude = None
+        trip.hotel_cost = 0.0
+        trip.flight_cost = 0.0
+        
+        # Elimina anche l'itinerario e le stime spese collegate
+        session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip_id))
+        session.exec(delete(Expense).where(Expense.trip_id == trip_id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
+        
+        session.add(trip)
+        session.commit()
+        return {"status": "success", "message": "Logistica resettata. Ora puoi inserire nuovi dati."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] reset_hotel: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/vote/{proposal_id}")
 def vote_proposal(
     proposal_id: int, 

@@ -175,6 +175,14 @@ export const confirmHotel = async (tripId, hotelData) => {
     return handleResponse(response);
 };
 
+export const resetHotel = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/reset-hotel`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
 export const chatWithAI = async (tripId, message, history = []) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/chat`, {
         method: "POST",

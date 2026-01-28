@@ -386,7 +386,7 @@ const Dashboard = () => {
                         {trip.status === 'BOOKED' && (
                             <>
                                 {/* 1. Logistics (Premium only) */}
-                                {user?.is_subscribed && (
+                                {user?.is_subscribed && !trip.accommodation && (
                                     <Logistics trip={trip} />
                                 )}
 

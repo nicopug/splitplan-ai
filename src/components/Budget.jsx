@@ -103,71 +103,41 @@ const Budget = ({ trip, onUpdate }) => {
         const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
         const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
 
-        const categories = Object.entries(categoryMap).map(([id, amount]) => ({
-            id,
-            amount: Number(amount),
-            label: id === 'Food' ? 'Cibo' :
-                id === 'Transport' ? 'Trasporti' :
-                    id === 'Lodging' ? 'Alloggio' :
-                        id === 'Activity' ? 'Attività' :
-                            id === 'Shopping' ? 'Shopping' :
-                                id === 'Flight' ? 'Volo' : 'Altro',
-            color: id === 'Food' ? '#3b82f6' :
-                id === 'Transport' ? '#f59e0b' :
-                    id === 'Lodging' ? '#10b981' :
-                        id === 'Activity' ? '#8b5cf6' :
-                            id === 'Shopping' ? '#ec4899' :
-                                id === 'Flight' ? '#0ea5e9' : '#94a3b8'
-        })).sort((a, b) => b.amount - a.amount);
-
-        // Add AI projection if active - FORCE CHECK NUMBER
-        const estPerPerson_Raw = (estimation && estimation.total_estimated_per_person) ? Number(estimation.total_estimated_per_person) : 0;
+        // Add Road Cost simulation to categoryMap if needed
         const roadCosts_Raw = (estimation && estimation.road_costs_total_per_person) ? Number(estimation.road_costs_total_per_person) : 0;
-
-        // Se il viaggio è in auto, la stima AI include i costi stradali. 
-        // Separiamo i costi stradali per il grafico se presenti.
         if (showSimulation && roadCosts_Raw > 0) {
             categoryMap['Travel_Road'] = (categoryMap['Travel_Road'] || 0) + (roadCosts_Raw * numPeople);
         }
 
-        const aiCost = appliedAIExpense + simulatedCosts;
-        if (Number(aiCost) > 0.01) {
-            // Se abbiamo già applicato la spesa, la mostriamo come simulazione fissa
-            // Altrimenti la logica sopra (Travel_Road) la gestisce durante l'anteprima
-            if (!showSimulation) {
-                categories.push({
-                    id: 'AI_Simulation',
-                    amount: Number(aiCost),
-                    label: 'Simulazione AI',
-                    color: '#f59e0b',
-                    isSimulation: true,
-                    onRemove: handleRemoveAI
-                });
-            }
-        }
+        // --- Category Mapping Helper ---
+        const getCategoryInfo = (id) => {
+            const map = {
+                'Food': { label: 'Cibo', color: '#3b82f6' },
+                'Transport': { label: 'Trasporti', color: '#f59e0b' },
+                'Travel_Road': { label: 'Viaggio (Auto/Pedaggi)', color: '#ff6400' },
+                'Lodging': { label: 'Alloggio', color: '#10b981' },
+                'Activity': { label: 'Attività', color: '#8b5cf6' },
+                'Shopping': { label: 'Shopping', color: '#ec4899' },
+                'Flight': { label: 'Volo', color: '#0ea5e9' },
+                'Other': { label: 'Altro', color: '#94a3b8' }
+            };
+            return map[id] || map['Other'];
+        };
 
-        const stats_categories = Object.entries(categoryMap).map(([id, amount]) => ({
-            id,
-            amount: Number(amount),
-            label: id === 'Food' ? 'Cibo' :
-                id === 'Transport' ? 'Trasporti' :
-                    id === 'Travel_Road' ? 'Viaggio (Auto/Pedaggi)' :
-                        id === 'Lodging' ? 'Alloggio' :
-                            id === 'Activity' ? 'Attività' :
-                                id === 'Shopping' ? 'Shopping' :
-                                    id === 'Flight' ? 'Volo' : 'Altro',
-            color: id === 'Food' ? '#3b82f6' :
-                id === 'Transport' ? '#f59e0b' :
-                    id === 'Travel_Road' ? '#ff6400' :
-                        id === 'Lodging' ? '#10b981' :
-                            id === 'Activity' ? '#8b5cf6' :
-                                id === 'Shopping' ? '#ec4899' :
-                                    id === 'Flight' ? '#0ea5e9' : '#94a3b8'
-        })).sort((a, b) => b.amount - a.amount);
+        // Separate and calculate final categories
+        const finalCategories = Object.entries(categoryMap).map(([id, amount]) => {
+            const info = getCategoryInfo(id);
+            return {
+                id,
+                amount: Number(amount),
+                label: info.label,
+                color: info.color
+            };
+        });
 
-        // Add 'Remaining' as a category if it's positive and there is a total budget
+        // Add Remaining as a category if it's positive
         if (remaining > 0 && totalBudget > 0) {
-            stats_categories.push({
+            finalCategories.push({
                 id: 'Remaining',
                 amount: remaining,
                 label: 'Disponibile',
@@ -175,6 +145,12 @@ const Budget = ({ trip, onUpdate }) => {
                 isRemaining: true
             });
         }
+
+        // Add AI simulation as a separate visual item if specifically requested and not in categoryMap already
+        const aiCost = appliedAIExpense + simulatedCosts;
+        // In reality, appliedAIExpense is already in total if it was saved, 
+        // but here it's treated as a local simulation toggle.
+        // For simplicity, we trust categoryMap.
 
         return {
             totalBudget,
@@ -185,7 +161,7 @@ const Budget = ({ trip, onUpdate }) => {
             currentSpent,
             remaining,
             percentUsed,
-            categories: stats_categories, // Use the new list
+            categories: finalCategories.sort((a, b) => b.amount - a.amount),
             isOverBudget: remaining < 0,
             simulatedCosts,
             localCurrency,

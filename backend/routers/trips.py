@@ -550,6 +550,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                             "destination": "Titolo Creativo (es. Parigi dei Musei)", 
                             "destination_iata": "XXX", 
                             "destination_english": "Paris",
+                            "destination_italian": "Parigi",
                             "description": "...", 
                             "price_estimate": 1000, 
                             "image_search_term": "louvre,museum"
@@ -559,6 +560,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 NOTE: 
                 - 'destination' deve essere il TITOLO CREATIVO (unico per ogni proposta).
                 - 'destination_english' deve essere il nome della città principale in INGLESE.
+                - 'destination_italian' deve essere il nome della città principale in ITALIANO.
                 - 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE specifiche per quel tema.
                 LINGUA: ITALIANO.
                 """
@@ -597,7 +599,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
-                        real_destination=dest_en, # Salviamo il nome reale (es. Paris)
+                        real_destination=p.get("destination_italian") or p.get("destination_english") or "", # Salviamo il nome reale in ITALIANO (es. Parigi)
                         destination_iata=p.get("destination_iata"),
                         description=p["description"],
                         price_estimate=p["price_estimate"],
@@ -716,8 +718,12 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                     organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id)).first()
                 
                 if organizer:
-                    # Elimina eventuali stime vecchie per evitare duplicati
-                    session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
+                    # Elimina eventuali stime vecchie (sia categoria vecchia che nuova) per evitare duplicati
+                    session.exec(delete(Expense).where(
+                        Expense.trip_id == trip.id, 
+                        Expense.category.in_(["Transport", "Travel_Road"]), 
+                        Expense.description.like("Stima%")
+                    ))
                     
                     if car_expenses.get("fuel"):
                         session.add(Expense(

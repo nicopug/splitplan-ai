@@ -685,17 +685,15 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
             
             REGOLE CRITICHE DI TIMING E LOGICA:
-            1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).
-            2. ORARI REALI: 
-               - Colazione: 08:00 - 09:00
-               - Attività Mattina: 09:30 - 12:30
-               - Pranzo: 13:00 - 14:30
-               - Attività Pomeriggio: 15:00 - 18:30
-               - Cena: 20:00 - 22:00
-            3. TRASPORTI: L'itinerario del PRIMO giorno deve iniziare TASSATIVAMENTE DOPO l'ora di arrivo ({trip.arrival_time or '14:00'}). L'itinerario dell'ULTIMO giorno deve concludersi TASSATIVAMENTE PRIMA dell'ora di ritorno ({trip.return_time or '18:00'}). Se il viaggio è in CAR o TRAIN, usa comunque questi orari forniti per calcolare le attività possibili.
-            4. DURATA: Ogni attività deve durare almeno 1.5 - 2 ore.
-            5. JSON OBJECT: Restituisci un oggetto JSON con due campi: "itinerary" (array di oggetti) e "estimated_expenses" (oggetto, solo se richiesto).
-            6. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.
+            1. SEQUENZA LOGICA: Rispetta l'ordine cronologico naturale (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).
+            2. TIMING DINAMICO: NON usare orari fissi per tutti. Ogni attività deve avere un'ora di inizio e fine basata sulla sua durata realistica.
+               - Colazione: Inizia tra le 07:30 e le 09:00 (durata ~45 min).
+               - Pranzo: Inizia tra le 12:30 e le 14:00 (durata ~1-1.5 ore).
+               - Cena: Inizia tra le 19:30 e le 21:30 (durata ~1.5-2 ore).
+               - Attività: Devono incastrarsi logicamente tra i pasti, con durate variabili (da 1 a 4 ore a seconda dell'importanza del luogo).
+            3. TRASPORTI E COERENZA: Il PRIMO giorno inizia DOPO l'arrivo ({trip.arrival_time or '14:00'}). L'ULTIMO giorno termina PRIMA del ritorno ({trip.return_time or '18:00'}). Lascia dei piccoli "cuscinetti" di 15-30 minuti tra un'attività e l'altra per gli spostamenti.
+            4. JSON OBJECT: Restituisci un oggetto JSON con: "itinerary" (array di oggetti) e "estimated_expenses" (oggetto, solo se richiesto).
+            5. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.
             {CAR_EXPENSES_PROMPT}
             LINGUA: Italiano.
 

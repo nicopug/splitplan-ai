@@ -31,6 +31,8 @@ const Dashboard = () => {
     const [chatMessages, setChatMessages] = useState([
         { role: 'ai', text: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }
     ]);
+    const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false);
+    const [itineraryProgress, setItineraryProgress] = useState(0);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -417,7 +419,12 @@ const Dashboard = () => {
                                 {/* 3. Hotel Form or Wait Message */}
                                 {!trip.accommodation && (
                                     isOrganizer ? (
-                                        <HotelConfirmation trip={trip} onConfirm={fetchTrip} />
+                                        <HotelConfirmation
+                                            trip={trip}
+                                            onConfirm={fetchTrip}
+                                            setIsGenerating={setIsGeneratingItinerary}
+                                            setProgress={setItineraryProgress}
+                                        />
                                     ) : (
                                         <div className="container" style={{ marginTop: '2rem' }}>
                                             <div style={{
@@ -483,7 +490,8 @@ const Dashboard = () => {
                             </>
                         )}
                     </>
-                ))}
+                )
+            )}
 
             {view === 'CHAT' && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
@@ -606,6 +614,68 @@ const Dashboard = () => {
             {view === 'PHOTOS' && (
                 <Photos trip={trip} />
             )}
+
+            {isGeneratingItinerary && <GeneratingOverlay progress={itineraryProgress} />}
+        </div>
+    );
+};
+
+// Componente Overlay per la generazione AI
+const GeneratingOverlay = ({ progress }) => {
+    const messages = [
+        "Analizzando la destinazione...",
+        "Ottimizzando i percorsi...",
+        "Cercando i migliori punti d'interesse...",
+        "Calcolando i tempi di percorrenza...",
+        "Quasi pronto! Ultimi ritocchi..."
+    ];
+    const msgIndex = Math.min(Math.floor(progress / 20), messages.length - 1);
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem'
+        }}>
+            <div style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
+                <div style={{ fontSize: '5rem', marginBottom: '2rem' }}>🚀</div>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-blue)', marginBottom: '1.5rem' }}>
+                    Sto creando il tuo viaggio...
+                </h2>
+                <p style={{ color: '#475569', fontSize: '1.3rem', marginBottom: '3rem', fontWeight: '500' }}>
+                    {messages[msgIndex]}
+                </p>
+                <div style={{
+                    width: '100%',
+                    height: '16px',
+                    background: '#f1f5f9',
+                    borderRadius: '30px',
+                    overflow: 'hidden',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
+                    marginBottom: '1rem'
+                }}>
+                    <div style={{
+                        width: `${progress}%`,
+                        height: '100%',
+                        background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
+                        transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+                    }} />
+                </div>
+                <div style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '1.5rem' }}>
+                    {progress}%
+                </div>
+            </div>
         </div>
     );
 };

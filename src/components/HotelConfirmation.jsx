@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { confirmHotel } from '../api';
 import { useToast } from '../context/ToastContext';
 
-const HotelConfirmation = ({ trip, onConfirm }) => {
+const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) => {
     const { showToast } = useToast();
     const [hotelName, setHotelName] = useState('');
     const [hotelAddress, setHotelAddress] = useState('');
@@ -15,7 +15,23 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        if (setIsGenerating) setIsGenerating(true);
+        if (setProgress) setProgress(0);
+
         try {
+            // Avviamo un timer per simulare il progresso fino a quasi la fine
+            const progressInterval = setInterval(() => {
+                if (setProgress) {
+                    setProgress(prev => {
+                        if (prev >= 92) {
+                            clearInterval(progressInterval);
+                            return 92;
+                        }
+                        return prev + 2;
+                    });
+                }
+            }, 300);
+
             await confirmHotel(trip.id, {
                 hotel_name: hotelName,
                 hotel_address: hotelAddress,
@@ -24,6 +40,13 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
                 arrival_time: arrivalTime,
                 return_time: returnTime
             });
+
+            clearInterval(progressInterval);
+            if (setProgress) setProgress(100);
+
+            // Piccola pausa per far vedere il 100% prima di svanire
+            await new Promise(r => setTimeout(r, 800));
+
             showToast("Logistica confermata! Itinerario generato.", "success");
             onConfirm(); // Refresh trip
         } catch (error) {
@@ -31,6 +54,7 @@ const HotelConfirmation = ({ trip, onConfirm }) => {
             showToast("Errore nella conferma dell'hotel.", "error");
         } finally {
             setLoading(false);
+            if (setIsGenerating) setIsGenerating(false);
         }
     };
 

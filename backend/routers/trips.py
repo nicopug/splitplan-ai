@@ -543,6 +543,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 RESTITUISCI SOLO JSON:
                 {{
                     "departure_iata_normalized": "XXX",
+                    "departure_city_normalized": "Nome Città (es. Milano)",
                     "suggested_transport_mode": "FLIGHT",
                     "proposals": [
                         {{
@@ -568,11 +569,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 if data.get("departure_iata_normalized"):
                     trip.departure_airport = data["departure_iata_normalized"].upper()
                 
-                # Sostituiamo il mezzo SOLO se non è stato già scelto dall'utente manualmente 
-                # (o se l'utente ha lasciato il default e l'AI ha un suggerimento migliore)
-                # Ma dato che ora lo chiediamo esplicitamente, ci fidiamo dell'utente.
-                # if data.get("suggested_transport_mode") and not prefs.transport_mode:
-                #     trip.transport_mode = data["suggested_transport_mode"].upper()
+                if data.get("departure_city_normalized"):
+                    trip.departure_city = data["departure_city_normalized"]
                 
                 session.add(trip)
 
@@ -673,9 +671,9 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             if trip.transport_mode == "CAR":
                 CAR_EXPENSES_PROMPT = f"""
                 7. STIME AUTO: Poiché il viaggio è in MACCHINA (CAR), stima il costo totale di:
-                   - "CAR_FUEL": Stima realistica del carburante da {trip.departure_city or 'origine'} a {proposal.destination}.
-                   - "CAR_TOLLS": Stima dei pedaggi autostradali.
-                   Restituisci queste stime in un campo "estimated_expenses" separato dall'itinerario.
+                   - "fuel": Stima realistica del carburante per ANDATA E RITORNO da {trip.departure_city or 'origine'} a {proposal.destination}.
+                   - "tolls": Stima dei pedaggi autostradali per ANDATA E RITORNO.
+                   Restituisci queste stime nell'oggetto "estimated_expenses" usando ESATTAMENTE le chiavi "fuel" e "tolls".
                 """
 
             prompt = f"""
@@ -711,10 +709,15 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
             
             # --- SALVATAGGIO SPESE AUTO ---
             if trip.transport_mode == "CAR" and car_expenses:
+                print(f"[DEBUG] Car expenses received: {car_expenses}")
+                # Cerchiamo l'organizzatore o il primo partecipante disponibile
                 organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
+                if not organizer:
+                    organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id)).first()
+                
                 if organizer:
                     # Elimina eventuali stime vecchie per evitare duplicati
-                    session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Transport", Expense.description.like("Stima%")))
+                    session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
                     
                     if car_expenses.get("fuel"):
                         session.add(Expense(
@@ -722,7 +725,7 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                             payer_id=organizer.id,
                             description="Stima Carburante (Viaggio)",
                             amount=float(car_expenses["fuel"]),
-                            category="Transport",
+                            category="Travel_Road",
                             date=str(datetime.now())
                         ))
                     if car_expenses.get("tolls"):
@@ -731,7 +734,7 @@ def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session)
                             payer_id=organizer.id,
                             description="Stima Pedaggi (Viaggio)",
                             amount=float(car_expenses["tolls"]),
-                            category="Transport",
+                            category="Travel_Road",
                             date=str(datetime.now())
                         ))
                     session.commit()

@@ -17,7 +17,7 @@ def get_exchange_rates(base_currency: str = "EUR") -> Optional[Dict[str, float]]
             return cache_data["rates"]
 
     try:
-        # Usiamo l'API gratuita di exchange-rate-api.com
+        # Usiamo l'API gratuita di exchangerate-api.com
         # Per un uso professionale servirebbe una API Key in .env
         url = f"https://open.er-api.com/v6/latest/{base_currency}"
         response = requests.get(url, timeout=10)

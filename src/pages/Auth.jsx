@@ -4,7 +4,7 @@ import { register, login, verifyEmail, toggleSubscription, forgotPassword } from
 
 import './Auth.css';
 
-const Auth = () => {
+const Auth = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [showPlanSelection, setShowPlanSelection] = useState(false);
     const [formData, setFormData] = useState({
@@ -114,13 +114,17 @@ const Auth = () => {
                 localStorage.setItem('token', res.access_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
+                // Notify parent immediately
+                if (onLogin) onLogin(res.user);
+
                 // Show plan selection ONLY if we just registered
-                if (localStorage.getItem('pending_plan_selection')) {
+                if (localStorage.getItem('pending_plan_selection') === 'true') {
                     localStorage.removeItem('pending_plan_selection');
                     setShowPlanSelection(true);
                 } else {
                     navigate('/');
-                    window.location.reload();
+                    // Small delay to ensure state propagates before reload if necessary
+                    setTimeout(() => window.location.reload(), 100);
                 }
             } else {
                 if (formData.password !== formData.confirmPassword) {

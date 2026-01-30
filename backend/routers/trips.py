@@ -428,42 +428,41 @@ async def get_shared_trip(token: str, session: Session = Depends(get_session)):
         "participants": [{"id": p.id, "name": p.name} for p in participants]
     }
 
-@router.post("/join")
-async def join_trip(req: JoinRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Unisce un utente a un viaggio tramite token di condivisione e nome partecipante"""
+@router.post("/join/{token}")
+async def join_trip(token: str, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Unisce un utente a un viaggio tramite token di condivisione.
+       Tenta di far corrispondere l'account corrente con un partecipante 'ospite' creato dall'organizzatore.
+    """
     try:
-        # Cerca il viaggio tramite share_token
-        statement = select(Trip).where(Trip.share_token == req.share_token)
-        trip = session.exec(statement).first()
+        # 1. Cerca il viaggio tramite token
+        trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
         if not trip:
             raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
 
-        # Pulizia nome per il matching
-        clean_name = req.participant_name.strip().lower()
-
-        # Verifica se l'utente è già un partecipante (tramite account_id)
-        existing_member = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip.id,
-                Participant.account_id == current_account.id
-            )
-        ).first()
-
-        if existing_member:
+        # 2. Verifica se è già dentro
+        existing = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.account_id == current_account.id)).first()
+        if existing:
             return {"status": "success", "message": "Fai già parte di questo viaggio", "trip_id": trip.id}
 
-        # Cerca un partecipante "ospite" (account_id is Null) con nome corrispondente (case-insensitive)
-        # Questo permette di collegare un partecipante creato manualmente all'account reale
-        guest_participant = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip.id,
-                Participant.account_id == None,
-                func.lower(Participant.name) == clean_name
-            )
-        ).first()
-
+        # 3. Matching Intelligente del nome
+        # L'organizzatore potrebbe aver inserito solo il nome, o nome e cognome.
+        # Proviamo diverse combinazioni.
+        search_names = [
+            current_account.name.strip().lower(),
+            f"{current_account.name} {current_account.surname}".strip().lower()
+        ]
+        
+        # Cerchiamo un partecipante senza account_id il cui nome (lower) combacia o è contenuto nei nomi dell'account
+        guest_participant = None
+        all_guests = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.account_id == None)).all()
+        
+        for g in all_guests:
+            g_name = g.name.strip().lower()
+            if g_name in search_names or any(s in g_name for s in search_names):
+                guest_participant = g
+                break
+        
         if guest_participant:
-            # Collega l'account reale al partecipante ospite
             guest_participant.account_id = current_account.id
             # Sincronizziamo il nome con quello dell'account per coerenza
             guest_participant.name = f"{current_account.name} {current_account.surname}"
@@ -471,19 +470,18 @@ async def join_trip(req: JoinRequest, session: Session = Depends(get_session), c
             session.commit()
             return {"status": "success", "message": f"Benvenuto a bordo, {current_account.name}!", "trip_id": trip.id}
         
-        # Se non troviamo un match, restituiamo un errore chiaro
+        # 4. Fallback: Se non troviamo un match, restituiamo un errore chiaro
         raise HTTPException(
             status_code=403, 
-            detail=f"Non è stato trovato un partecipante chiamato '{req.participant_name}' in questo viaggio. Assicurati di usare il nome esatto inserito dall'organizzatore."
+            detail=f"Non è stato trovato un partecipante che corrisponda al tuo nome ({current_account.name}) in questo viaggio. Assicurati che l'organizzatore ti abbia aggiunto con il nome corretto."
         )
 
     except HTTPException:
         raise
     except Exception as e:
         session.rollback()
-        # Logging per debug interno
         print(f"[ERROR] join_trip: {e}")
-        raise HTTPException(status_code=500, detail="Si è verificato un errore durante l'unione al viaggio.")
+        raise HTTPException(status_code=500, detail="Errore durante l'adesione al viaggio.")
 
 @router.patch("/{trip_id}")
 async def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):

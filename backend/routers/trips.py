@@ -57,6 +57,10 @@ class ChatRequest(SQLModel):
     message: str
     history: Optional[List[Dict]] = []
 
+class JoinRequest(SQLModel):
+    share_token: str
+    participant_name: str
+
 # --- HELPER FUNZIONI: OPENSTREETMAP (OSM) & GEODATA ---
 
 async def get_coordinates(address: str):

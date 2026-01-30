@@ -3,6 +3,7 @@ from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
 import os
 import json
+from datetime import datetime
 import httpx
 # SDK Ufficiale Google
 from google import genai
@@ -48,8 +49,9 @@ class PreferencesRequest(SQLModel):
 class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
-    flight_cost: Optional[float] = 0.0
-    hotel_cost: Optional[float] = 0.0
+    transport_mode: Optional[str] = "FLIGHT"
+    transport_price: Optional[float] = 0.0
+    hotel_price: Optional[float] = 0.0
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
 

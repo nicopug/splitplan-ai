@@ -24,12 +24,12 @@ async def get_exchange_rates(base_currency: str = "EUR") -> Optional[Dict[str, f
             if response.status_code == 200:
                 data = response.json()
                 if data.get("result") == "success":
-                rates = data.get("rates")
-                _exchange_cache[base_currency] = {
-                    "rates": rates,
-                    "timestamp": now
-                }
-                return rates
+                    rates = data.get("rates")
+                    _exchange_cache[base_currency] = {
+                        "rates": rates,
+                        "timestamp": now
+                    }
+                    return rates
     except Exception as e:
         print(f"[Currency Error] Impossibile recuperare i tassi: {e}")
     

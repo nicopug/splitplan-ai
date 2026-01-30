@@ -45,7 +45,7 @@ class PreferencesRequest(SQLModel):
     participant_names: List[str] = []
     transport_mode: Optional[str] = "FLIGHT"
 
-class HotelConfirmationRequest(SQLModel):
+class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
     flight_cost: Optional[float] = 0.0
@@ -1006,7 +1006,7 @@ async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
     return session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
 
 @router.get("/{trip_id}/participants")
-async def get_participants(trip_id: int, session: Session = Depends(get_session)):
+async def get_participants(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Restituisce i partecipanti al viaggio in formato pulito per evitare loop JSON"""
     # Verifica accesso
     check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()

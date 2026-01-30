@@ -979,13 +979,6 @@ async def vote_proposal(
         raise HTTPException(status_code=500, detail=f"Errore nel voto: {str(e)}")
 
 @router.post("/{trip_id}/simulate-votes")
-def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Simula i voti per raggiungere il consenso (Demo mode)"""
-    try:
-        trip = session.get(Trip, trip_id)
-        if not trip:
-            raise HTTPException(status_code=404, detail="Viaggio non trovato")
-            
 async def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Simula i voti mancanti per chiudere il viaggio in DEMO"""
     try:

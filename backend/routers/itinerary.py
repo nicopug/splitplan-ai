@@ -16,13 +16,13 @@ class ItineraryItemCreate(SQLModel):
     type: str 
 
 @router.get("/{trip_id}", response_model=List[ItineraryItem])
-def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
+async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
     statement = select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)
     results = session.exec(statement)
     return results.all()
 
 @router.post("/{trip_id}", response_model=ItineraryItem)
-def add_itinerary_item(trip_id: int, item: ItineraryItemCreate, session: Session = Depends(get_session)):
+async def add_itinerary_item(trip_id: int, item: ItineraryItemCreate, session: Session = Depends(get_session)):
     # Creiamo l'oggetto DB partendo dai dati ricevuti
     db_item = ItineraryItem(
         trip_id=trip_id,

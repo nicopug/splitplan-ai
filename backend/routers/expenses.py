@@ -27,7 +27,7 @@ class BalanceResult(SQLModel):
     creditor_name: str
 
 @router.post("/", response_model=Expense)
-def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends(get_session)):
+async def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends(get_session)):
     # 1. Validate Trip
     trip = session.get(Trip, expense_req.trip_id)
     if not trip:
@@ -43,7 +43,7 @@ def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends
     exchange_rate = 1.0
     
     if expense_req.currency.upper() != "EUR":
-        rates = get_exchange_rates("EUR")
+        rates = await get_exchange_rates("EUR")
         if rates and expense_req.currency.upper() in rates:
             exchange_rate = rates[expense_req.currency.upper()]
             amount_eur = round(expense_req.amount / exchange_rate, 2)
@@ -69,11 +69,11 @@ def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends
     return db_expense
 
 @router.get("/{trip_id}", response_model=List[Expense])
-def get_expenses(trip_id: int, session: Session = Depends(get_session)):
+async def get_expenses(trip_id: int, session: Session = Depends(get_session)):
     return session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
 
 @router.get("/{trip_id}/balances", response_model=List[BalanceResult])
-def get_balances(trip_id: int, session: Session = Depends(get_session)):
+async def get_balances(trip_id: int, session: Session = Depends(get_session)):
     # Fetch all expenses and participants
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
     participants = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
@@ -129,7 +129,7 @@ def get_balances(trip_id: int, session: Session = Depends(get_session)):
     return settlements
 
 @router.delete("/{expense_id}")
-def delete_expense(expense_id: int, session: Session = Depends(get_session)):
+async def delete_expense(expense_id: int, session: Session = Depends(get_session)):
     expense = session.get(Expense, expense_id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -138,7 +138,7 @@ def delete_expense(expense_id: int, session: Session = Depends(get_session)):
     return {"status": "ok"}
 
 @router.post("/migrate-schema")
-def migrate_schema(session: Session = Depends(get_session)):
+async def migrate_schema(session: Session = Depends(get_session)):
     """Endpoint temporaneo per aggiungere colonne mancanti"""
     try:
         from sqlalchemy import text

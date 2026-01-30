@@ -11,8 +11,8 @@ app = FastAPI(root_path="/api")
 # Permette al frontend di parlare con il backend
 origins = [
     "http://localhost:3000",
+    "http://localhost:5173", # Vite default
     "https://splitplan-ai.vercel.app",
-    "*" # Lasciamo * per sicurezza in fase di sviluppo
 ]
 
 app.add_middleware(
@@ -42,6 +42,27 @@ def on_startup():
 def init_db():
     create_db_and_tables()
     return {"message": "Database tables created successfully! Check Supabase now."}
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import logging
+import traceback
+
+# Configurazione Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Logghiamo l'errore completo internamente
+    logger.error(f"Unhandled error: {exc}")
+    logger.error(traceback.format_exc())
+    
+    # Restituiamo un messaggio pulito all'utente
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Si è verificato un errore interno al server. Riprova più tardi."},
+    )
 
 @app.get("/")
 def root():

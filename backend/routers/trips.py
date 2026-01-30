@@ -3,11 +3,7 @@ from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
 import os
 import json
-import requests
-import random
-import urllib.parse
-from datetime import datetime, date
-import secrets
+import httpx
 # SDK Ufficiale Google
 from google import genai
 from dotenv import load_dotenv
@@ -63,7 +59,7 @@ class ChatRequest(SQLModel):
 
 # --- HELPER FUNZIONI: OPENSTREETMAP (OSM) & GEODATA ---
 
-def get_coordinates(address: str):
+async def get_coordinates(address: str):
     """Trasforma un indirizzo in coordinate Lat/Lon usando Nominatim (OSM)"""
     try:
         url = "https://nominatim.openstreetmap.org/search"
@@ -73,16 +69,17 @@ def get_coordinates(address: str):
             "limit": 1
         }
         headers = {'User-Agent': 'SplitPlanApp/1.0 (contact: alessiopuglise9@gmail.com)'} 
-        response = requests.get(url, params=params, headers=headers, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            if data:
-                return float(data[0]['lat']), float(data[0]['lon'])
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, headers=headers, timeout=5.0)
+            if response.status_code == 200:
+                data = response.json()
+                if data:
+                    return float(data[0]['lat']), float(data[0]['lon'])
     except Exception as e:
         print(f"[OSM Error] Geocoding fallito per {address}: {e}")
     return None, None
 
-def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
+async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
     """Query Overpass API per trovare nomi reali di ristoranti e bar vicini"""
     overpass_url = "https://overpass-api.de/api/interpreter"
     query = f"""
@@ -94,22 +91,23 @@ def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
     out tags 20;
     """
     try:
-        response = requests.post(overpass_url, data={'data': query}, timeout=15)
-        if response.status_code == 200:
-            elements = response.json().get('elements', [])
-            places = [e.get('tags', {}).get('name') for e in elements if e.get('tags', {}).get('name')]
-            return list(set(places)) 
+        async with httpx.AsyncClient() as client:
+            response = await client.post(overpass_url, data={'data': query}, timeout=15.0)
+            if response.status_code == 200:
+                elements = response.json().get('elements', [])
+                places = [e.get('tags', {}).get('name') for e in elements if e.get('tags', {}).get('name')]
+                return list(set(places)) 
     except Exception as e:
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
 
 @router.get("/migrate-db-coords")
-def migrate_db_coords(session: Session = Depends(get_session)):
+async def migrate_db_coords(session: Session = Depends(get_session)):
     """Aggiunge lat/lon alla tabella itineraryitem"""
     from sqlalchemy import text
     try:
-        session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS latitude FLOAT;"))
-        session.exec(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;"))
+        session.execute(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS latitude FLOAT;"))
+        session.execute(text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;"))
         session.commit()
         return {"status": "success", "message": "Colonne coordinate aggiunte."}
     except Exception as e:
@@ -117,23 +115,23 @@ def migrate_db_coords(session: Session = Depends(get_session)):
         return {"status": "error", "message": str(e)}
 
 @router.get("/migrate-share-token")
-def migrate_share_token(session: Session = Depends(get_session)):
+async def migrate_share_token(session: Session = Depends(get_session)):
     """Aggiunge share_token alla tabella trip"""
     from sqlalchemy import text
     try:
-        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS share_token VARCHAR;"))
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS share_token VARCHAR;"))
         session.commit()
-        return {"status": "success", "message": "Colonna share_token aggiunta."}
+        return {"status": "success", "message": "Colonna share_token aggiunte."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
 
 @router.get("/migrate-transport-mode")
-def migrate_transport_mode(session: Session = Depends(get_session)):
+async def migrate_transport_mode(session: Session = Depends(get_session)):
     """Aggiunge transport_mode alla tabella trip"""
     from sqlalchemy import text
     try:
-        session.exec(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_mode VARCHAR DEFAULT 'FLIGHT';"))
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_mode VARCHAR DEFAULT 'FLIGHT';"))
         session.commit()
         return {"status": "success", "message": "Colonna transport_mode aggiunta."}
     except Exception as e:
@@ -141,7 +139,7 @@ def migrate_transport_mode(session: Session = Depends(get_session)):
         return {"status": "error", "message": str(e)}
 
 @router.post("/{trip_id}/optimize")
-def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
     try:
         trip = session.get(Trip, trip_id)
@@ -168,7 +166,7 @@ def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), cu
             # Algoritmo Nearest Neighbor partendo dall'hotel (se disponibile) o dal primo elemento
             start_lat, start_lon = None, None
             if trip.accommodation_location:
-                 start_lat, start_lon = get_coordinates(trip.accommodation_location)
+                 start_lat, start_lon = await get_coordinates(trip.accommodation_location)
             
             if not start_lat and fixed:
                 start_lat, start_lon = fixed[0].latitude, fixed[0].longitude
@@ -204,7 +202,7 @@ def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), cu
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/estimate-budget")
-def estimate_budget(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def estimate_budget(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Stima i costi della vita locale tramite AI"""
     try:
         trip = session.get(Trip, trip_id)
@@ -256,7 +254,7 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
         LINGUA: ITALIANO.
         """
         
-        response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+        response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
         data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
         return data
     except Exception as e:
@@ -266,7 +264,7 @@ def estimate_budget(trip_id: int, session: Session = Depends(get_session), curre
 # --- ENDPOINTS CORE ---
 
 @router.post("/", response_model=Dict)
-def create_trip(trip_data: TripBase, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def create_trip(trip_data: TripBase, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Crea un nuovo viaggio e assegna l'organizzatore"""
     try:
         db_trip = Trip.model_validate(trip_data)
@@ -294,7 +292,7 @@ def create_trip(trip_data: TripBase, session: Session = Depends(get_session), cu
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/my-trips")
-def get_my_trips(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def get_my_trips(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ritorna tutti i viaggi a cui partecipa l'utente corrente e che non sono stati nascosti"""
     try:
         # Trova tutti i record Participant collegati all'account e attivi
@@ -320,7 +318,7 @@ def get_my_trips(session: Session = Depends(get_session), current_account: Accou
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/hide")
-def hide_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def hide_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Nasconde un viaggio dalla cronologia dell'utente (imposta is_active=False per il partecipante)"""
     try:
         participant = session.exec(
@@ -345,7 +343,7 @@ def hide_trip(trip_id: int, session: Session = Depends(get_session), current_acc
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/migrate-participants-active")
-def migrate_participants_active(session: Session = Depends(get_session)):
+async def migrate_participants_active(session: Session = Depends(get_session)):
     """Migrazione per aggiungere la colonna is_active alla tabella participant se non esiste"""
     from sqlalchemy import text
     try:
@@ -360,7 +358,7 @@ def migrate_participants_active(session: Session = Depends(get_session)):
         return {"status": "error", "message": str(e)}
 
 @router.get("/{trip_id}", response_model=Trip)
-def read_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def read_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Recupera i dettagli del viaggio verificando l'appartenenza dell'account"""
     trip = session.get(Trip, trip_id)
     if not trip:
@@ -373,7 +371,7 @@ def read_trip(trip_id: int, session: Session = Depends(get_session), current_acc
     return trip
 
 @router.get("/{trip_id}/proposals", response_model=List[Proposal])
-def get_proposals(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def get_proposals(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Recupera le proposte generate per un viaggio"""
     # Verifica che l'utente partecipi al viaggio
     check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
@@ -383,8 +381,9 @@ def get_proposals(trip_id: int, session: Session = Depends(get_session), current
     return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
 @router.post("/{trip_id}/share")
-def generate_share_token(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def generate_share_token(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Genera o restituisce il token di condivisione del viaggio"""
+    import secrets
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
@@ -403,14 +402,11 @@ def generate_share_token(trip_id: int, session: Session = Depends(get_session), 
     return {"share_token": trip.share_token}
 
 @router.get("/share/{token}")
-def get_shared_trip(token: str, session: Session = Depends(get_session)):
-    print(f"[DEBUG] get_shared_trip: Token ricevuto = {token}")
+async def get_shared_trip(token: str, session: Session = Depends(get_session)):
     trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
     if not trip:
-        print(f"[DEBUG] get_shared_trip: Viaggio non trovato nel DB per token {token}")
         raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
         
-    print(f"[DEBUG] get_shared_trip: Viaggio trovato! ID = {trip.id}")
     # Recuperiamo anche i dati correlati necessari per la visualizzazione
     itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip.id).order_by(ItineraryItem.start_time)).all()
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip.id)).all()
@@ -426,44 +422,65 @@ def get_shared_trip(token: str, session: Session = Depends(get_session)):
         "participants": [{"id": p.id, "name": p.name} for p in participants]
     }
 
-@router.post("/join/{token}")
-def join_trip(token: str, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Collega l'account corrente a un partecipante esistente nel viaggio tramite match di nome"""
-    trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
-    if not trip:
-        raise HTTPException(status_code=404, detail="Link non valido")
-    
-    # Cerchiamo se esiste un partecipante con lo stesso nome dell'account corrente
-    # che non sia ancora collegato a nessun account_id
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip.id,
-            func.lower(Participant.name) == func.lower(current_account.name),
-            Participant.account_id == None
-        )
-    ).first()
-    
-    if participant:
-        participant.account_id = current_account.id
-        session.add(participant)
-        session.commit()
-        return {"status": "joined", "trip_id": trip.id}
-    
-    # Se l'utente è già collegato, restituiamo comunque il successo per procedere al redirect
-    already_joined = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip.id,
-            Participant.account_id == current_account.id
-        )
-    ).first()
-    
-    if already_joined:
-        return {"status": "already_member", "trip_id": trip.id}
+@router.post("/join")
+async def join_trip(req: JoinRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Unisce un utente a un viaggio tramite token di condivisione e nome partecipante"""
+    try:
+        # Cerca il viaggio tramite share_token
+        statement = select(Trip).where(Trip.share_token == req.share_token)
+        trip = session.exec(statement).first()
+        if not trip:
+            raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
+
+        # Pulizia nome per il matching
+        clean_name = req.participant_name.strip().lower()
+
+        # Verifica se l'utente è già un partecipante (tramite account_id)
+        existing_member = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip.id,
+                Participant.account_id == current_account.id
+            )
+        ).first()
+
+        if existing_member:
+            return {"status": "success", "message": "Fai già parte di questo viaggio", "trip_id": trip.id}
+
+        # Cerca un partecipante "ospite" (account_id is Null) con nome corrispondente (case-insensitive)
+        # Questo permette di collegare un partecipante creato manualmente all'account reale
+        guest_participant = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip.id,
+                Participant.account_id == None,
+                func.lower(Participant.name) == clean_name
+            )
+        ).first()
+
+        if guest_participant:
+            # Collega l'account reale al partecipante ospite
+            guest_participant.account_id = current_account.id
+            # Sincronizziamo il nome con quello dell'account per coerenza
+            guest_participant.name = f"{current_account.name} {current_account.surname}"
+            session.add(guest_participant)
+            session.commit()
+            return {"status": "success", "message": f"Benvenuto a bordo, {current_account.name}!", "trip_id": trip.id}
         
-    raise HTTPException(status_code=403, detail="Il tuo nome non è nella lista dei partecipanti di questo viaggio. Chiedi all'organizzatore di aggiungerti con il tuo nome esatto!")
+        # Se non troviamo un match, restituiamo un errore chiaro
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Non è stato trovato un partecipante chiamato '{req.participant_name}' in questo viaggio. Assicurati di usare il nome esatto inserito dall'organizzatore."
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        # Logging per debug interno
+        print(f"[ERROR] join_trip: {e}")
+        raise HTTPException(status_code=500, detail="Si è verificato un errore durante l'unione al viaggio.")
 
 @router.patch("/{trip_id}")
-def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Aggiorna parzialmente i dati di un viaggio"""
     try:
         trip = session.get(Trip, trip_id)
@@ -488,7 +505,7 @@ def update_trip(trip_id: int, updates: Dict, session: Session = Depends(get_sess
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/generate-proposals", response_model=List[Proposal])
-def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Genera 3 proposte e salva tutti i partecipanti nel Database"""
     try:
         # Verifica autorizzazione
@@ -565,7 +582,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                 LINGUA: ITALIANO.
                 """
                 
-                response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+                response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
                 data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
                 
                 if data.get("departure_iata_normalized"):
@@ -582,6 +599,8 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
                     session.delete(e)
                 
                 # Crea nuove proposte
+                import random
+                import urllib.parse
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or ""
                     dest_en = p.get("destination_english") or ""
@@ -628,6 +647,7 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
             else:
                 trip.transport_mode = "FLIGHT"
 
+        import random
         mock_options = [
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Smart", destination_iata="JFK", price_estimate=prefs.budget, description="Opzione equilibrata.", image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"),
             Proposal(trip_id=trip_id, destination=f"{prefs.destination} Budget", destination_iata="LHR", price_estimate=prefs.budget * 0.7, description="Viaggio economico.", image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"),
@@ -647,142 +667,144 @@ def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session
         print(f"[ERROR] generate_proposals: {e}")
         raise HTTPException(status_code=500, detail=f"Errore nella generazione: {str(e)}")
 
-def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session):
-    """Genera l'itinerario finale integrando nomi reali da OSM"""
+async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session):
+    """Genera l'itinerario finale integrando nomi reali da OSM e AI avanzata"""
     print(f"[System] Generating itinerary for Trip {trip.id}...")
     
-    if ai_client:
+    if not ai_client:
+        print("[Warning] AI Client not available, skipping itinerary generation.")
+        return
+
+    try:
+        # 1. Calcolo Durata e Logistica
         try:
-            # Tenta conversione robusta delle date
-            try:
-                d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
-                d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
-                num_days = abs((d2 - d1).days) + 1
-            except Exception as e:
-                print(f"[Warning] Date parsing failed in itinerary: {e}")
-                num_days = 5 # Fallback
-            
-            # Recupero locali reali (usa le coordinate hotel salvate)
-            hotel_lat = trip.hotel_latitude
-            hotel_lon = trip.hotel_longitude
-            
-            real_places = get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
-            places_prompt = f"USA OBBLIGATORIAMENTE QUESTI NOMI REALI PER I PASTI (NON SCRIVERE 'PRANZO IN ZONA' O SIMILI): {', '.join(real_places[:12])}" if real_places else "Cerca di inventare nomi di fantasia realistici o usa locali famosi della zona, NON usare frasi generiche come 'Pasto in ristorante locale'."
-
-            CAR_EXPENSES_PROMPT = ""
-            if trip.transport_mode == "CAR":
-                CAR_EXPENSES_PROMPT = f"""
-                7. STIME AUTO: Poiché il viaggio è in MACCHINA (CAR), stima il costo totale di:
-                   - "fuel": Stima realistica del carburante per ANDATA E RITORNO da {trip.departure_city or 'origine'} a {proposal.destination}.
-                   - "tolls": Stima dei pedaggi autostradali per ANDATA E RITORNO.
-                   Restituisci queste stime nell'oggetto "estimated_expenses" usando ESATTAMENTE le chiavi "fuel" e "tolls".
-                """
-
-            prompt = f"""
-            Crea un itinerario di {num_days} giorni a {proposal.destination}. 
-            Alloggio: {trip.accommodation} (Coordinate Hotel: {hotel_lat}, {hotel_lon}).
-            {places_prompt}
-            Logistica: Arrivo {trip.start_date} ore {trip.arrival_time or '14:00'}, Ritorno {trip.end_date} ore {trip.return_time or '18:00'}.
-            
-            REGOLE CRITICHE DI TIMING E LOGICA:
-            1. SEQUENZA LOGICA: Rispetta l'ordine cronologico naturale (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).
-            2. TIMING DINAMICO: NON usare orari fissi per tutti. Ogni attività deve avere un'ora di inizio e fine basata sulla sua durata realistica.
-               - Colazione: Inizia tra le 07:30 e le 09:00 (durata ~45 min).
-               - Pranzo: Inizia tra le 12:30 e le 14:00 (durata ~1-1.5 ore).
-               - Cena: Inizia tra le 19:30 e le 21:30 (durata ~1.5-2 ore).
-               - Attività: Devono incastrarsi logicamente tra i pasti, con durate variabili (da 1 a 4 ore a seconda dell'importanza del luogo).
-            3. TRASPORTI E COERENZA: Il PRIMO giorno inizia DOPO l'arrivo ({trip.arrival_time or '14:00'}). L'ULTIMO giorno termina PRIMA del ritorno ({trip.return_time or '18:00'}). Lascia dei piccoli "cuscinetti" di 15-30 minuti tra un'attività e l'altra per gli spostamenti.
-            4. JSON OBJECT: Restituisci un oggetto JSON con: "itinerary" (array di oggetti) e "estimated_expenses" (oggetto, solo se richiesto).
-            5. MAPPA: Fornisci COORDINATE GPS (lat, lon) PRECISE e REALI per ogni luogo.
-            {CAR_EXPENSES_PROMPT}
-            LINGUA: Italiano.
-
-            FORMATO: {{
-                "itinerary": [{{ "title": "..", "description": "..", "start_time": "..", "end_time": "..", "type": "ACTIVITY/MEAL/CHECKIN", "lat": 48.8, "lon": 2.2 }}],
-                "estimated_expenses": {{ "fuel": 50, "tolls": 25 }}
-            }}
-            """
-            
-            response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
-            raw_data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
-            
-            items_data = raw_data.get("itinerary", [])
-            car_expenses = raw_data.get("estimated_expenses", {})
-            
-            # --- SALVATAGGIO SPESE AUTO ---
-            if trip.transport_mode == "CAR" and car_expenses:
-                print(f"[DEBUG] Car expenses received: {car_expenses}")
-                # Cerchiamo l'organizzatore o il primo partecipante disponibile
-                organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
-                if not organizer:
-                    organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id)).first()
-                
-                if organizer:
-                    # Elimina eventuali stime vecchie (sia categoria vecchia che nuova) per evitare duplicati
-                    session.exec(delete(Expense).where(
-                        Expense.trip_id == trip.id, 
-                        Expense.category.in_(["Transport", "Travel_Road"]), 
-                        Expense.description.like("Stima%")
-                    ))
-                    
-                    if car_expenses.get("fuel"):
-                        session.add(Expense(
-                            trip_id=trip.id,
-                            payer_id=organizer.id,
-                            description="Stima Carburante (Viaggio)",
-                            amount=float(car_expenses["fuel"]),
-                            category="Travel_Road",
-                            date=str(datetime.now())
-                        ))
-                    if car_expenses.get("tolls"):
-                        session.add(Expense(
-                            trip_id=trip.id,
-                            payer_id=organizer.id,
-                            description="Stima Pedaggi (Viaggio)",
-                            amount=float(car_expenses["tolls"]),
-                            category="Travel_Road",
-                            date=str(datetime.now())
-                        ))
-                    session.commit()
-            
-            # Ordiniamo gli item per start_time prima di salvarli per garantire coerenza
-            try:
-                items_data.sort(key=lambda x: x.get("start_time", ""))
-            except:
-                pass
-
-            # Elimina itinerario esistente
-            session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
-            session.commit()
-            
-            for item in items_data:
-                lat = item.get("lat")
-                lon = item.get("lon")
-                if not lat or lat == 0:
-                    lat, lon = get_coordinates(f"{item['title']}, {proposal.destination}")
-                
-                clean_item = {k: v for k, v in item.items() if k not in ["lat", "lon"]}
-                session.add(ItineraryItem(trip_id=trip.id, latitude=lat, longitude=lon, **clean_item))
-            session.commit()
-            print(f"[System] Itinerary for Trip {trip.id} generated correctly and sorted.")
-            return
+            d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
+            d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
+            num_days = abs((d2 - d1).days) + 1
         except Exception as e:
-            print(f"[AI Error] Itinerario fallito: {e}")
+            print(f"[Warning] Date parsing failed: {e}")
+            num_days = 5 # Fallback
+        
+        # 2. Recupero nomi reali (OSM)
+        hotel_lat = trip.hotel_latitude
+        hotel_lon = trip.hotel_longitude
+        locali_reali = await get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
+        
+        places_prompt = ""
+        if locali_reali:
+            places_prompt = f"Ecco alcuni nomi reali di ristoranti/bar vicino all'alloggio: {', '.join(locali_reali[:10])}. USA QUESTI NOMI per i pasti (FOOD) o pause caffè."
+        
+        # 3. Prompt Avanzato (Merge dei due stili)
+        prompt = f"""
+        Sei un esperto Travel Agent. Genera un itinerario di {num_days} giorni per il viaggio "{trip.name}" a {trip.destination}.
+        TEMA: {proposal.destination}. DESCRIZIONE: {proposal.description}.
+        ALLOGGIO: {trip.accommodation or "Hotel centrale"} (Coordinate: {hotel_lat}, {hotel_lon}).
+        MEZZO PRINCIPALE: {trip.transport_mode}.
+        ARRIVO: {trip.start_date} ore {trip.arrival_time or '14:00'}.
+        RITORNO: {trip.end_date} ore {trip.return_time or '18:00'}.
 
-    # Mock Fallback Itinerary
-    session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
-    session.commit()
-    
-    mock_it = [
-        ItineraryItem(trip_id=trip.id, title="Arrivo e Check-in", description=f"Check-in presso {trip.accommodation}", start_time=f"{trip.start_date}T14:30:00", type="CHECKIN"),
-        ItineraryItem(trip_id=trip.id, title="Esplorazione Centro", description="Primo contatto con la città", start_time=f"{trip.start_date}T16:30:00", type="ACTIVITY"),
-    ]
-    for i in mock_it: session.add(i)
-    session.commit()
+        {places_prompt}
+
+        REGOLE CRITICHE:
+        1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).
+        2. TIMING DINAMICO: Non usare orari fissi. Ogni attività deve avere ora inizio e fine realistica.
+           - Colazione: ~45 min (07:30-09:00).
+           - Pranzo: ~1-1.5 ore (12:30-14:00).
+           - Cena: ~1.5-2 ore (19:30-21:30).
+           - Attività: Durata variabile 1-4 ore.
+        3. LOGISTICA: Il Giorno 1 inizia DOPO l'arrivo. L'ultimo giorno termina PRIMA del ritorno.
+        4. TRASPORTI: Se CAR, includi arrivo/ritorno in auto e stima i costi stradali totali.
+        5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
+        
+        RISPONDI SOLO IN JSON:
+        {{
+            "estimated_road_costs": {{"fuel": 0.0, "tolls": 0.0}},
+            "itinerary": [
+                {{
+                    "title": "...", 
+                    "description": "...", 
+                    "start_time": "YYYY-MM-DDTHH:MM:SS",
+                    "end_time": "YYYY-MM-DDTHH:MM:SS",
+                    "type": "ACTIVITY|FOOD|TRANSPORT|CHECKIN",
+                    "lat": 0.0,
+                    "lon": 0.0
+                }}
+            ]
+        }}
+        LINGUA: ITALIANO.
+        """
+        
+        response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
+        text = response.text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(text)
+        
+        # 4. Salvataggio Itinerario
+        # Elimina vecchio itinerario
+        session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
+        session.commit()
+        
+        import asyncio
+        async def process_item(item):
+            try:
+                # Se l'AI non ha dato coordinate o sono 0, fallback su geocoding parallelizzato
+                i_lat = item.get("lat")
+                i_lon = item.get("lon")
+                if not i_lat or i_lat == 0:
+                    i_lat, i_lon = await get_coordinates(f"{item['title']}, {trip.destination}")
+                
+                return ItineraryItem(
+                    trip_id=trip.id,
+                    title=item["title"],
+                    description=item["description"],
+                    start_time=item["start_time"],
+                    end_time=item.get("end_time"),
+                    type=item["type"],
+                    latitude=i_lat,
+                    longitude=i_lon
+                )
+            except Exception as ei:
+                print(f"[ERROR] Skip item {item.get('title')}: {ei}")
+                return None
+
+        # Task paralleli per coordinate se necessario
+        tasks = [process_item(item) for item in data.get("itinerary", [])]
+        results = await asyncio.gather(*tasks)
+        
+        for db_item in results:
+            if db_item:
+                session.add(db_item)
+        
+        # 5. Salvataggio Stime Spese (CAR)
+        costs = data.get("estimated_road_costs", {})
+        if trip.transport_mode == "CAR":
+            total_road = float(costs.get("fuel", 0.0)) + float(costs.get("tolls", 0.0))
+            if total_road > 0:
+                # Elimina vecchie stime
+                session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
+                
+                organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
+                if organizer:
+                    session.add(Expense(
+                        trip_id=trip.id,
+                        payer_id=organizer.id,
+                        amount=total_road,
+                        description="Stima Carburante e Pedaggi (AI)",
+                        category="Travel_Road",
+                        date=str(datetime.now())
+                    ))
+
+        session.commit()
+        print(f"[SUCCESS] Itinerary for Trip {trip.id} generated correctly.")
+
+    except Exception as e:
+        session.rollback()
+        print(f"[AI Error] Generazione itinerario fallita: {e}")
+        import traceback
+        traceback.print_exc()
 
 @router.post("/{trip_id}/confirm-hotel")
-def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Salva la logica hotel e genera l'itinerario"""
+async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Conferma i dati logistici finali e genera l'itinerario"""
     try:
         trip = session.get(Trip, trip_id)
         if not trip: 
@@ -790,13 +812,15 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
         
         trip.accommodation = hotel_data.hotel_name
         trip.accommodation_location = hotel_data.hotel_address
-        trip.flight_cost = hotel_data.flight_cost
-        trip.hotel_cost = hotel_data.hotel_cost
-        trip.arrival_time = hotel_data.arrival_time
-        trip.return_time = hotel_data.return_time
+        trip.hotel_cost = hotel_data.hotel_price or 0.0
+        trip.flight_cost = hotel_data.transport_price or 0.0
         
-        # Recupero automatico coordinate hotel
-        lat, lon = get_coordinates(f"{hotel_data.hotel_name}, {hotel_data.hotel_address}")
+        # Salviamo anche il mezzo se cambiato nell'ultimo step
+        if hotel_data.transport_mode:
+            trip.transport_mode = hotel_data.transport_mode
+
+        # Otteniamo coordinate dell'hotel
+        lat, lon = await get_coordinates(f"{hotel_data.hotel_name}, {hotel_data.hotel_address}")
         trip.hotel_latitude = lat
         trip.hotel_longitude = lon
         
@@ -807,7 +831,7 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
         if not proposal:
             proposal = Proposal(destination=trip.destination, trip_id=trip.id, price_estimate=0, description="")
         
-        generate_itinerary_content(trip, proposal, session)
+        await generate_itinerary_content(trip, proposal, session)
         return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
     except Exception as e:
         session.rollback()
@@ -815,7 +839,7 @@ def confirm_hotel(trip_id: int, hotel_data: HotelConfirmationRequest, session: S
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/reset-hotel")
-def reset_hotel(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def reset_hotel(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Resetta i dati dell'hotel per permettere la modifica e la rigenerazione dell'itinerario"""
     try:
         trip = session.get(Trip, trip_id)
@@ -855,7 +879,7 @@ def reset_hotel(trip_id: int, session: Session = Depends(get_session), current_a
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/vote/{proposal_id}")
-def vote_proposal(
+async def vote_proposal(
     proposal_id: int, 
     score: int, 
     user_id: Optional[int] = None, 
@@ -952,8 +976,6 @@ def vote_proposal(
     except Exception as e:
         session.rollback()
         print(f"[ERROR] vote_proposal: {e}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Errore nel voto: {str(e)}")
 
 @router.post("/{trip_id}/simulate-votes")
@@ -964,41 +986,34 @@ def simulate_votes(trip_id: int, session: Session = Depends(get_session), curren
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
             
+async def simulate_votes(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Simula i voti mancanti per chiudere il viaggio in DEMO"""
+    try:
+        trip = session.get(Trip, trip_id)
         proposals = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
-        if not proposals: 
-            return {"error": "Genera proposte prima"}
+        participants = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
         
-        # Trova chi ha già votato
-        voted_ids_query = select(Vote.user_id).join(Proposal).where(Proposal.trip_id == trip.id)
-        voted_ids = [row for row in session.exec(voted_ids_query)]
+        if not proposals: return {"error": "Nessuna proposta"}
         
-        # Trova chi manca
-        missing = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip.id, 
-                Participant.id.not_in(voted_ids) if voted_ids else True
-            )
-        ).all()
-        
-        # Aggiungi voti simulati
-        for u in missing:
-            session.add(Vote(proposal_id=proposals[0].id, user_id=u.id, score=1))
-        session.commit()
-        
-        # Ricalcola il consenso
-        return vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=missing[0].id if missing else None)
-        
+        for p in participants:
+            # Se è il creatore, vota la prima proposta se non ha già votato
+            voted = session.exec(select(Vote).where(Vote.user_id == p.id)).first()
+            if not voted:
+                await vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=p.id)
+                
+        return {"status": "votes_simulated", "voters": len(participants)}
     except Exception as e:
-        session.rollback()
+        # Loggare l'errore reale internamente
         print(f"[ERROR] simulate_votes: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Restituire errore generico al client
+        return {"status": "error", "message": "Errore durante la simulazione dei voti."}
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
-def get_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
     return session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
 
 @router.get("/{trip_id}/participants")
-def get_participants(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def get_participants(trip_id: int, session: Session = Depends(get_session)):
     """Restituisce i partecipanti al viaggio in formato pulito per evitare loop JSON"""
     # Verifica accesso
     check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
@@ -1009,7 +1024,7 @@ def get_participants(trip_id: int, session: Session = Depends(get_session), curr
     return [{"id": p.id, "name": p.name, "is_organizer": p.is_organizer} for p in results]
 
 @router.post("/{trip_id}/chat")
-def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Chat AI evoluta: gestisce contesto temporale, history e comandi multipli"""
     import re
     try:
@@ -1056,7 +1071,7 @@ def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_
         if not ai_client: 
             return {"reply": "AI non disponibile.", "itinerary": [i.model_dump() for i in itinerary]}
         
-        response = ai_client.models.generate_content(model=AI_MODEL, contents=prompt)
+        response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
         raw_text = response.text.strip()
         
         print(f"[DEBUG] Raw AI Response: {raw_text}")

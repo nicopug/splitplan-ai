@@ -42,7 +42,17 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 const storedUser = localStorage.getItem('user');
                 if (storedUser && storedUser !== 'undefined') {
                     const userObj = JSON.parse(storedUser);
-                    const match = parts.find(p => p.name && p.name.toLowerCase() === userObj.name.toLowerCase());
+
+                    // Match per account_id (più sicuro) o per nome (più flessibile)
+                    const match = parts.find(p =>
+                        (p.account_id && p.account_id === userObj.id) ||
+                        (p.name && p.name.toLowerCase() === userObj.name.toLowerCase()) ||
+                        (p.name && userObj.name && (
+                            p.name.toLowerCase().includes(userObj.name.toLowerCase()) ||
+                            userObj.name.toLowerCase().includes(p.name.toLowerCase())
+                        ))
+                    );
+
                     if (match) {
                         setCurrentUserParticipant(match);
                         setSelectedUser(match.id);

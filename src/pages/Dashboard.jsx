@@ -61,14 +61,11 @@ const Dashboard = () => {
                 console.log('🔍 DEBUG - Found participant match:', me);
 
                 if (me) {
-                    if (me.is_organizer) {
-                        console.log('✅ User IS organizer');
-                        setIsOrganizer(true);
-                    }
-                    if (me.has_voted) {
-                        console.log('🗳️ User HAS voted (from DB)');
-                        setHasVoted(true);
-                    }
+                    setIsOrganizer(!!me.is_organizer);
+                    setHasVoted(!!me.has_voted);
+                } else {
+                    setIsOrganizer(false);
+                    setHasVoted(false);
                 }
             } else {
                 console.log('⚠️ No user in localStorage');

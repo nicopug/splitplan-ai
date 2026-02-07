@@ -600,6 +600,12 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 if data.get("departure_city_normalized"):
                     trip.departure_city = data["departure_city_normalized"]
                 
+                # Applica il suggerimento AI solo se non contrasta con una scelta manuale forte del tipo 'CAR' o 'TRAIN'
+                # Se l'utente ha lasciato 'FLIGHT' (default) ma l'AI vede che è vicino, seguiamo l'AI.
+                ai_suggested = data.get("suggested_transport_mode")
+                if ai_suggested and (trip.transport_mode == "FLIGHT" or not trip.transport_mode):
+                    trip.transport_mode = ai_suggested
+                
                 session.add(trip)
 
                 # Elimina proposte esistenti

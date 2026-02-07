@@ -116,7 +116,14 @@ const Dashboard = () => {
         try {
             const props = await generateProposals(id, surveyData);
             setProposals(props);
-            setTrip(prev => ({ ...prev, status: 'VOTING', num_people: surveyData.num_people }));
+            setTrip(prev => ({
+                ...prev,
+                status: 'VOTING',
+                num_people: surveyData.num_people,
+                transport_mode: surveyData.transport_mode,
+                destination: surveyData.destination,
+                departure_airport: surveyData.departure_airport
+            }));
             fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
         } catch (e) {
             showToast("Errore generazione: " + e.message, "error");

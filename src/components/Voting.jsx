@@ -27,9 +27,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
 
-                // Initial hasVoted check from localStorage (legacy support)
-                let votedLocally = localStorage.getItem(`splitplan_voted_${trip.id}`);
-                if (votedLocally) setHasVoted(true);
+                // Initial check moved to participant list loading and selectedUser effect
 
                 // 2. Se non abbiamo proposte, carichiamole dal DB
                 if (!initialProposals || initialProposals.length === 0) {
@@ -118,7 +116,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 if (!isSolo) showToast("Consenso raggiunto! Si procede.", "success");
                 onVoteComplete();
             } else {
-                localStorage.setItem(`splitplan_voted_${trip.id}`, 'true');
+                // Global marker removed to allow other participants on same device to vote
                 localStorage.setItem(`splitplan_voted_session_${trip.id}_${voterId}`, 'true');
                 setHasVoted(true);
                 const voterName = participants.find(p => p.id == voterId)?.name || 'Utente';

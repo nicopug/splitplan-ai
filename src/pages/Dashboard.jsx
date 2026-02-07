@@ -46,10 +46,7 @@ const Dashboard = () => {
             const data = await getTrip(id);
             setTrip(data);
 
-            // Check local voting state
-            if (localStorage.getItem(`splitplan_voted_${id}`)) {
-                setHasVoted(true);
-            }
+            // Remote voting state check moved to participant data match below
 
             // Verifichiamo se l'utente corrente è l'organizzatore
             const storedUser = localStorage.getItem('user');
@@ -133,10 +130,6 @@ const Dashboard = () => {
 
     const handleVotingComplete = async () => {
         setLoading(true);
-        // Force re-check of everything including local voted state
-        if (localStorage.getItem(`splitplan_voted_${id}`)) {
-            setHasVoted(true);
-        }
         await fetchTrip();
         setLoading(false);
         showToast("Viaggio Confermato!", "success");

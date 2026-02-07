@@ -377,12 +377,11 @@ async def read_trip(trip_id: int, session: Session = Depends(get_session), curre
     return trip
 
 @router.get("/{trip_id}/proposals", response_model=List[Proposal])
-async def get_proposals(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Recupera le proposte generate per un viaggio"""
-    # Verifica che l'utente partecipi al viaggio
-    check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
-    if not check:
-        raise HTTPException(status_code=403, detail="Non autorizzato")
+async def get_proposals(trip_id: int, session: Session = Depends(get_session)):
+    """Recupera le proposte generate per un viaggio (Accessibile pubblicamente per votazioni)"""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
         
     return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
@@ -894,7 +893,7 @@ async def vote_proposal(
     score: int, 
     user_id: Optional[int] = None, 
     session: Session = Depends(get_session), 
-    current_account: Account = Depends(get_current_user)
+    current_account: Optional[Account] = Depends(get_current_user, use_cache=True)
 ):
     """Registra il voto (Demo mode con user_id o Secure con token)"""
     try:
@@ -1016,12 +1015,11 @@ async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
     return session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
 
 @router.get("/{trip_id}/participants")
-async def get_participants(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
-    """Restituisce i partecipanti al viaggio in formato pulito per evitare loop JSON"""
-    # Verifica accesso
-    check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
-    if not check: 
-        raise HTTPException(status_code=403, detail="Non autorizzato")
+async def get_participants(trip_id: int, session: Session = Depends(get_session)):
+    """Restituisce i partecipanti al viaggio (Accessibile pubblicamente per votazioni)"""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
     
     results = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
     return [

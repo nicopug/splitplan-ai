@@ -1,3 +1,4 @@
+// Initial state restore - Force redeploy
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';

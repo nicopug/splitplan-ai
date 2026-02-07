@@ -61,14 +61,17 @@ const Dashboard = () => {
                 console.log('🔍 DEBUG isOrganizer - Participants list:', parts);
 
                 const me = parts.find(p => p.account_id === userObj.id || (p.name && p.name.toLowerCase() === userObj.name.toLowerCase()));
-                console.log('🔍 DEBUG isOrganizer - Found participant match:', me);
+                console.log('🔍 DEBUG - Found participant match:', me);
 
-                if (me && me.is_organizer) {
-                    console.log('✅ User IS organizer');
-                    setIsOrganizer(true);
-                } else {
-                    console.log('❌ User is NOT organizer');
-                    setIsOrganizer(false);
+                if (me) {
+                    if (me.is_organizer) {
+                        console.log('✅ User IS organizer');
+                        setIsOrganizer(true);
+                    }
+                    if (me.has_voted) {
+                        console.log('🗳️ User HAS voted (from DB)');
+                        setHasVoted(true);
+                    }
                 }
             } else {
                 console.log('⚠️ No user in localStorage');

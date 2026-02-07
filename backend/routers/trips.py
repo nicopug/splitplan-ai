@@ -425,7 +425,13 @@ async def get_shared_trip(token: str, session: Session = Depends(get_session)):
         "itinerary": [i.model_dump() for i in itinerary],
         "expenses": [e.model_dump() for e in expenses],
         "photos": [p.model_dump() for p in photos],
-        "participants": [{"id": p.id, "name": p.name} for p in participants]
+        "participants": [
+            {
+                "id": p.id, 
+                "name": p.name, 
+                "has_voted": session.exec(select(func.count(Vote.id)).where(Vote.user_id == p.id)).one() > 0
+            } for p in participants
+        ]
     }
 
 @router.post("/join/{token}")
@@ -1018,7 +1024,14 @@ async def get_participants(trip_id: int, session: Session = Depends(get_session)
         raise HTTPException(status_code=403, detail="Non autorizzato")
     
     results = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
-    return [{"id": p.id, "name": p.name, "is_organizer": p.is_organizer} for p in results]
+    return [
+        {
+            "id": p.id, 
+            "name": p.name, 
+            "is_organizer": p.is_organizer,
+            "has_voted": session.exec(select(func.count(Vote.id)).where(Vote.user_id == p.id)).one() > 0
+        } for p in results
+    ]
 
 @router.post("/{trip_id}/chat")
 async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):

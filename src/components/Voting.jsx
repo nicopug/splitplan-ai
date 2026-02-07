@@ -23,14 +23,13 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
         const loadData = async () => {
             setLoadingProposals(true);
             try {
-                // Check if already voted (Local Persistence for guests)
-                if (localStorage.getItem(`splitplan_voted_${trip.id}`)) {
-                    setHasVoted(true);
-                }
-
                 // 1. Carichiamo i partecipanti
                 const parts = await getParticipants(trip.id);
                 setParticipants(parts);
+
+                // Initial hasVoted check from localStorage (legacy support)
+                let votedLocally = localStorage.getItem(`splitplan_voted_${trip.id}`);
+                if (votedLocally) setHasVoted(true);
 
                 // 2. Se non abbiamo proposte, carichiamole dal DB
                 if (!initialProposals || initialProposals.length === 0) {
@@ -69,7 +68,29 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
             }
         };
         loadData();
-    }, [trip.id, initialProposals]);
+    }, [trip.id]);
+    // Removed initialProposals from deps to avoid double trigger
+
+    // Check if the currently selected user has already voted
+    useEffect(() => {
+        if (!selectedUser) return;
+        const participant = participants.find(p => p.id === selectedUser);
+        if (participant?.has_voted) {
+            setHasVoted(true);
+            // If they voted, we might want to highlight which one, but the backend 
+            // doesn't send *which* proposal they voted for in the participants list.
+            // For now, seeing the "Voted" screen is enough.
+        } else {
+            // Se cambiamo utente e quello nuovo non ha votato, resettiamo lo stato locale
+            // MA solo se non abbiamo votato proprio ora in questa sessione
+            if (!localStorage.getItem(`splitplan_voted_session_${trip.id}_${selectedUser}`)) {
+                setHasVoted(false);
+                setVotedId(null);
+            } else {
+                setHasVoted(true);
+            }
+        }
+    }, [selectedUser, participants, trip.id]);
 
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
@@ -98,6 +119,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                 onVoteComplete();
             } else {
                 localStorage.setItem(`splitplan_voted_${trip.id}`, 'true');
+                localStorage.setItem(`splitplan_voted_session_${trip.id}_${voterId}`, 'true');
                 setHasVoted(true);
                 const voterName = participants.find(p => p.id == voterId)?.name || 'Utente';
                 showToast(`Voto di ${voterName} registrato! (${res.votes_count}/${res.required})`, "success");

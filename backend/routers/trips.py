@@ -50,8 +50,8 @@ class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
     transport_mode: Optional[str] = None
-    transport_price: Optional[float] = 0.0
-    hotel_price: Optional[float] = 0.0
+    flight_cost: Optional[float] = 0.0
+    hotel_cost: Optional[float] = 0.0
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
 
@@ -831,8 +831,8 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         
         trip.accommodation = hotel_data.hotel_name
         trip.accommodation_location = hotel_data.hotel_address
-        trip.hotel_cost = hotel_data.hotel_price or 0.0
-        trip.flight_cost = hotel_data.transport_price or 0.0
+        trip.hotel_cost = hotel_data.hotel_cost or 0.0
+        trip.flight_cost = hotel_data.flight_cost or 0.0
         
         # Salviamo anche il mezzo se cambiato nell'ultimo step
         if hotel_data.transport_mode and hotel_data.transport_mode != "None":

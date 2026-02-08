@@ -94,16 +94,18 @@ const Hero = () => {
                     </div>
 
 
-                    {/* Visual - Ordine mobile: 1, Desktop: 2 */}
+                    {/* Visual - Showcase */}
                     <div className="relative order-1 lg:order-2">
-                        <div className="bg-bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg transform -rotate-2 hover:rotate-0 transition-transform duration-300 border border-gray-100 dark:border-white/10 overflow-hidden">
+                        <div className="bg-bg-white rounded-2xl md:rounded-3xl p-2 md:p-3 shadow-2xl transition-all duration-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:scale-[1.02]">
                             <img
                                 src="/dashboard-preview.png"
                                 alt="SplitPlan Dashboard Preview"
-                                className="w-full h-auto rounded-xl md:rounded-2xl"
+                                className="w-full h-auto rounded-xl md:rounded-2xl shadow-inner"
                                 loading="lazy"
                             />
                         </div>
+                        {/* Decorative background glow */}
+                        <div className="absolute -z-10 inset-0 bg-primary-blue/20 blur-[100px] rounded-full transform translate-x-12 translate-y-12"></div>
                     </div>
                 </div>
             </div>

@@ -229,9 +229,10 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         car_prompt = ""
         if trip.transport_mode == "CAR":
             car_prompt = f"""
-            4. COSTI STRADALI: Il viaggio è in AUTO PROPRIA da {trip.departure_city or "Sconosciuto"} a {trip.destination}. 
-               Stima il costo totale di CARBURANTE e PEDAGGI (Andata e Ritorno) per {trip.num_people} persone.
-               Dividi questo costo per {trip.num_people} per includerlo nella stima a persona.
+            4. COSTI STRADALI: Il viaggio è in AUTO PROPRIA da {trip.departure_city or trip.departure_airport} a {trip.destination}. 
+               CALCOLA L'ESATTO PEDAGGIO E CARBURANTE basandoti sulla rotta specifica e reale delle autostrade italiane/europee. 
+               NON usare stime generiche regionali. Sii preciso sui pedaggi reali (es. Bologna-Bressanone).
+               Stima il costo totale A/R per {trip.num_people} persone e dividilo per loro.
             """
 
         prompt = f"""
@@ -714,6 +715,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         prompt = f"""
         Sei un esperto Travel Agent. Genera un itinerario di {num_days} giorni per il viaggio "{trip.name}" a {trip.destination}.
         TEMA: {proposal.destination}. DESCRIZIONE: {proposal.description}.
+        PARTENZA: {trip.departure_city or trip.departure_airport}.
         ALLOGGIO: {trip.accommodation or "Hotel centrale"} (Coordinate: {hotel_lat}, {hotel_lon}).
         MEZZO PRINCIPALE: {trip.transport_mode}.
         ARRIVO: {trip.start_date} ore {trip.arrival_time or '14:00'}.
@@ -729,7 +731,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
            - Cena: ~1.5-2 ore (19:30-21:30).
            - Attività: Durata variabile 1-4 ore.
         3. LOGISTICA: Il Giorno 1 inizia DOPO l'arrivo. L'ultimo giorno termina PRIMA del ritorno.
-        4. TRASPORTI (CAR): Se il mezzo è CAR, calcola OBBLIGATORIAMENTE nel campo JSON "estimated_road_costs" una stima di Carburante e Pedaggi per il viaggio A/R.
+        4. TRASPORTI (CAR): Se il mezzo è CAR, calcola l'ESATTA stima di CARBURANTE e PEDAGGI per il viaggio A/R tra {trip.departure_city or trip.departure_airport} e {trip.destination}. Usa i dati reali delle autostrade (es. Autostrade per l'Italia). NON essere generico.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
         6. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.
         

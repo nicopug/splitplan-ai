@@ -49,7 +49,7 @@ class PreferencesRequest(SQLModel):
 class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
-    transport_mode: Optional[str] = "FLIGHT"
+    transport_mode: Optional[str] = None
     transport_price: Optional[float] = 0.0
     hotel_price: Optional[float] = 0.0
     arrival_time: Optional[str] = None
@@ -246,7 +246,8 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         3. Piccole spese: ca. 10-15€/giorno.
         
         Importante: Se la città è economica (es. Est Europa), i costi devono rifletterlo. 
-        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni, COMPRESI gli eventuali costi stradali stimati sopra.
+        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni.
+        SE IL MEZZO È "CAR", includi OBBLIGATORIAMENTE una stima di carburante e pedaggi nel totale.
         
         RESTITUISCI SOLO JSON:
         {{
@@ -728,7 +729,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
            - Cena: ~1.5-2 ore (19:30-21:30).
            - Attività: Durata variabile 1-4 ore.
         3. LOGISTICA: Il Giorno 1 inizia DOPO l'arrivo. L'ultimo giorno termina PRIMA del ritorno.
-        4. TRASPORTI: Se CAR, includi arrivo/ritorno in auto e stima i costi stradali totali.
+        4. TRASPORTI (CAR): Se il mezzo è CAR, calcola OBBLIGATORIAMENTE nel campo JSON "estimated_road_costs" una stima di Carburante e Pedaggi per il viaggio A/R.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
         
         RISPONDI SOLO IN JSON:
@@ -831,7 +832,7 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         trip.flight_cost = hotel_data.transport_price or 0.0
         
         # Salviamo anche il mezzo se cambiato nell'ultimo step
-        if hotel_data.transport_mode:
+        if hotel_data.transport_mode and hotel_data.transport_mode != "None":
             trip.transport_mode = hotel_data.transport_mode
 
         # Otteniamo coordinate dell'hotel

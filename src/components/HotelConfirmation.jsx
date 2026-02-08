@@ -38,7 +38,8 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                 flight_cost: parseFloat(flightCost) || 0,
                 hotel_cost: parseFloat(hotelCost) || 0,
                 arrival_time: arrivalTime,
-                return_time: returnTime
+                return_time: returnTime,
+                transport_mode: trip.transport_mode
             });
 
             clearInterval(progressInterval);

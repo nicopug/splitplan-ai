@@ -31,7 +31,8 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
     const categories = [
         { id: 'Food', label: 'Cibo & Drink', icon: '🍕' },
-        { id: 'Transport', label: 'Trasporti', icon: '🚗' },
+        { id: 'Transport', label: 'Movimenti Locali', icon: '🚌' },
+        { id: 'Travel_Road', label: 'Auto/Pedaggi', icon: '🚗' },
         { id: 'Lodging', label: 'Alloggio', icon: '🏨' },
         { id: 'Activity', label: 'Attività', icon: '🎡' },
         { id: 'Shopping', label: 'Shopping', icon: '🛍️' },

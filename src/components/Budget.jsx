@@ -103,7 +103,7 @@ const Budget = ({ trip, onUpdate }) => {
         const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
         const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
 
-        // Add Road Cost simulation to categoryMap if needed
+        // Add Road Cost (real or simulated) to categoryMap
         const roadCosts_Raw = (estimation && estimation.road_costs_total_per_person) ? Number(estimation.road_costs_total_per_person) : 0;
         if (showSimulation && roadCosts_Raw > 0) {
             categoryMap['Travel_Road'] = (categoryMap['Travel_Road'] || 0) + (roadCosts_Raw * numPeople);
@@ -113,12 +113,12 @@ const Budget = ({ trip, onUpdate }) => {
         const getCategoryInfo = (id) => {
             const map = {
                 'Food': { label: 'Cibo', color: '#3b82f6' },
-                'Transport': { label: 'Trasporti', color: '#f59e0b' },
-                'Travel_Road': { label: 'Viaggio (Auto/Pedaggi)', color: '#ff6400' },
-                'Lodging': { label: 'Alloggio', color: '#10b981' },
+                'Transport': { label: 'Trasporti locali', color: '#f59e0b' },
+                'Travel_Road': { label: 'Carburante/Pedaggi', color: '#ff6400' },
+                'Lodging': { label: 'Alloggio (Hotel)', color: '#10b981' },
                 'Activity': { label: 'Attività', color: '#8b5cf6' },
                 'Shopping': { label: 'Shopping', color: '#ec4899' },
-                'Flight': { label: 'Volo', color: '#0ea5e9' },
+                'Flight': { label: trip.transport_mode === 'TRAIN' ? 'Treno' : (trip.transport_mode === 'CAR' ? 'Viaggio' : 'Volo'), color: '#0ea5e9' },
                 'Other': { label: 'Altro', color: '#94a3b8' }
             };
             return map[id] || map['Other'];

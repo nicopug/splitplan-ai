@@ -44,7 +44,7 @@ class PreferencesRequest(SQLModel):
     must_avoid: Optional[str] = ""
     vibe: Optional[str] = "" 
     participant_names: List[str] = []
-    transport_mode: Optional[str] = "FLIGHT"
+    transport_mode: Optional[str] = None
 
 class HotelSelectionRequest(SQLModel):
     hotel_name: str

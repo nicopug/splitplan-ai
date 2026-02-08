@@ -731,6 +731,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         3. LOGISTICA: Il Giorno 1 inizia DOPO l'arrivo. L'ultimo giorno termina PRIMA del ritorno.
         4. TRASPORTI (CAR): Se il mezzo è CAR, calcola OBBLIGATORIAMENTE nel campo JSON "estimated_road_costs" una stima di Carburante e Pedaggi per il viaggio A/R.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
+        6. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.
         
         RISPONDI SOLO IN JSON:
         {{

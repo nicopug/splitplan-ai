@@ -730,7 +730,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
            - Pranzo: ~1-1.5 ore (12:30-14:00).
            - Cena: ~1.5-2 ore (19:30-21:30).
            - Attività: Durata variabile 1-4 ore.
-        3. LOGISTICA: Il Giorno 1 inizia DOPO l'arrivo. L'ultimo giorno termina PRIMA del ritorno.
+        3. LOGISTICA: Il Giorno 1 deve iniziare TASSATIVAMENTE DOPO l'ora di ARRIVO ({trip.arrival_time or '14:00'}). L'ultimo giorno deve terminare TASSATIVAMENTE PRIMA dell'ora di RITORNO ({trip.return_time or '18:00'}). NON pianificare nulla al di fuori di questo intervallo.
         4. TRASPORTI (CAR): Se il mezzo è CAR, calcola l'ESATTA stima di CARBURANTE e PEDAGGI per il viaggio A/R tra {trip.departure_city or trip.departure_airport} e {trip.destination}. Usa i dati reali delle autostrade (es. Autostrade per l'Italia). NON essere generico.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
         6. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.
@@ -833,6 +833,8 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         trip.accommodation_location = hotel_data.hotel_address
         trip.hotel_cost = hotel_data.hotel_cost or 0.0
         trip.flight_cost = hotel_data.flight_cost or 0.0
+        trip.arrival_time = hotel_data.arrival_time
+        trip.return_time = hotel_data.return_time
         
         # Salviamo anche il mezzo se cambiato nell'ultimo step
         if hotel_data.transport_mode and hotel_data.transport_mode != "None":

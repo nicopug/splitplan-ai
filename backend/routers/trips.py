@@ -711,7 +711,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         
         places_prompt = ""
         if locali_reali:
-            places_prompt = f"Ecco alcuni nomi reali di luoghi vicino all'alloggio (ristoranti, bar o lidi/spiagge): {', '.join(locali_reali[:15])}. USA QUESTI NOMI REALI per le attività correlate (FOOD, ACTIVITY). Se il viaggio è al mare, cerca di usare i nomi dei 'Bagni' o 'Lidi' per le attività in spiaggia."
+            places_prompt = f"Ecco alcuni nomi reali di luoghi vicino all'alloggio (ristoranti, bar o lidi/spiagge): {', '.join(locali_reali[:15])}. REQUISITO: Quando includi uno di questi luoghi, USA IL SUO NOME REALE COME 'title' DEL JSON. Se il viaggio è al mare, usa tassativamente i nomi dei 'Bagni' o 'Lidi' forniti per ogni attività in spiaggia."
         
         # 3. Prompt Avanzato (Merge dei due stili)
         prompt = f"""
@@ -739,7 +739,8 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
            - NON pianificare nulla DOPO l'ora di ritorno.
         4. TRASPORTI (CAR): Se il mezzo è CAR, calcola l'ESATTA stima di CARBURANTE e PEDAGGI per il viaggio A/R tra {trip.departure_city or trip.departure_airport} e {trip.destination}. Usa i dati reali delle autostrade (es. Autostrade per l'Italia). NON essere generico.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
-        6. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.
+        6. NO TRANSIT: Per le attività di svago (ACTIVITY) o pasti (FOOD), evita tassativamente di usare nomi di stazioni ferroviarie o aeroporti (es. Stazione di Rimini), a meno che non sia specificamente richiesto.
+        7. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.
         
         RISPONDI SOLO IN JSON:
         {{
@@ -775,7 +776,16 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                 i_lat = item.get("lat")
                 i_lon = item.get("lon")
                 if not i_lat or i_lat == 0:
-                    i_lat, i_lon = await get_coordinates(f"{item['title']}, {trip.destination}")
+                    query = f"{item['title']}, {trip.destination}"
+                    # Ottimizzazione per spiagge/mare: evita il centro città (es. stazione)
+                    if any(word in item['title'].lower() for word in ['spiaggia', 'mare', 'bagno', 'lido', 'balneare']):
+                        query = f"{item['title']}, Lungomare, {trip.destination}"
+                    
+                    i_lat, i_lon = await get_coordinates(query)
+                    
+                    # Se ancora fallisce e siamo al mare, usa coordinate hotel come fallback vicino
+                    if (not i_lat or i_lat == 0) and trip.hotel_latitude:
+                       i_lat, i_lon = trip.hotel_latitude, trip.hotel_longitude
                 
                 return ItineraryItem(
                     trip_id=trip.id,

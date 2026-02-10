@@ -96,7 +96,7 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
       node["leisure"~"beach_resort|bath"](around:{radius},{lat},{lon});
       way["leisure"~"beach_resort|bath"](around:{radius},{lat},{lon});
     );
-    out tags 20;
+    out center 50;
     """
     try:
         async with httpx.AsyncClient() as client:
@@ -752,9 +752,9 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             REQUISITO CRITICO PER LA MAPPA:
             Se usi uno di questi luoghi:
             1. Usa il suo NOME REALE come 'title'.
-            2. Usa LE SUE COORDINATE (Lat/Lon) fornite sopra nel JSON.
-            3. Se l'attività riguarda la spiaggia o il relax al mare, DEVI usare uno dei 'Bagni' o 'Lidi' sopra indicati.
-            4. Se un luogo NON è nella lista sopra, imposta "lat": 0 e "lon": 0. Il sistema le calcolerà automaticamente. NON INVENTARE COORDINATE.
+            2. Usa LE SUE COORDINATE (Lat/Lon) esatte fornite sopra nel JSON. NON cambiarle di un solo decimale (Precisione chirurgica).
+            3. Se l'attività riguarda la spiaggia o il relax al mare, l'attività DEVE essere posizionata sulla costa (usando i 'Bagni' o 'Lidi' sopra indicati).
+            4. Se un luogo NON è nella lista sopra, imposta "lat": 0 e "lon": 0. Il sistema le cercherà. NON INVENTARE COORDINATE.
             """
         
         # 3. Prompt Avanzato (Merge dei due stili)
@@ -829,9 +829,13 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                     query = f"{item['title']}, {trip.destination}"
                     
                     # Ottimizzazione aggressiva per spiagge/mare: evita il centro città (es. stazione)
-                    # Aggiungiamo 'Marina' o 'Spiaggia' alla query per forzare il geocoding sulla costa
-                    if any(word in title_clean for word in ['spiaggia', 'mare', 'bagno', 'lido', 'balneare', 'lungomare']):
-                        query = f"{item['title']}, Spiaggia, {trip.destination}"
+                    # Se il titolo contiene già "Bagno" o "Lido", cerchiamo quello direttamente per precisione.
+                    # Se è generico, aggiungiamo "Lungomare" che è una strada, quindi a terra.
+                    if any(word in title_clean for word in ['bagno', 'lido', 'mare']):
+                        if 'bagno' in title_clean or 'lido' in title_clean:
+                           query = f"{item['title']}, {trip.destination}"
+                        else:
+                           query = f"{item['title']}, Lungomare, {trip.destination}"
                     
                     i_lat, i_lon = await get_coordinates(query)
                     

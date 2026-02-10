@@ -93,6 +93,8 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
     (
       node["amenity"~"restaurant|bar|cafe|pub|fast_food"](around:{radius},{lat},{lon});
       way["amenity"~"restaurant|bar|cafe|pub|fast_food"](around:{radius},{lat},{lon});
+      node["leisure"~"beach_resort|bath"](around:{radius},{lat},{lon});
+      way["leisure"~"beach_resort|bath"](around:{radius},{lat},{lon});
     );
     out tags 20;
     """
@@ -709,7 +711,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         
         places_prompt = ""
         if locali_reali:
-            places_prompt = f"Ecco alcuni nomi reali di ristoranti/bar vicino all'alloggio: {', '.join(locali_reali[:10])}. USA QUESTI NOMI per i pasti (FOOD) o pause caffè."
+            places_prompt = f"Ecco alcuni nomi reali di luoghi vicino all'alloggio (ristoranti, bar o lidi/spiagge): {', '.join(locali_reali[:15])}. USA QUESTI NOMI REALI per le attività correlate (FOOD, ACTIVITY). Se il viaggio è al mare, cerca di usare i nomi dei 'Bagni' o 'Lidi' per le attività in spiaggia."
         
         # 3. Prompt Avanzato (Merge dei due stili)
         prompt = f"""
@@ -730,7 +732,11 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
            - Pranzo: ~1-1.5 ore (12:30-14:00).
            - Cena: ~1.5-2 ore (19:30-21:30).
            - Attività: Durata variabile 1-4 ore.
-        3. LOGISTICA: Il Giorno 1 deve iniziare TASSATIVAMENTE DOPO l'ora di ARRIVO ({trip.arrival_time or '14:00'}). L'ultimo giorno deve terminare TASSATIVAMENTE PRIMA dell'ora di RITORNO ({trip.return_time or '18:00'}). NON pianificare nulla al di fuori di questo intervallo.
+        3. LOGISTICA E ORARI: 
+           - Il Giorno 1 deve iniziare TASSATIVAMENTE DOPO l'ora di ARRIVO ({trip.arrival_time or '14:00'}).
+           - L'ultimo giorno deve terminare il più vicino possibile all'ora di RITORNO ({trip.return_time or '19:00'}). 
+           - NON terminare l'itinerario troppo presto se il ritorno è tardi (es. se si parte alle 19:00, pianifica attività/pranzo/relax fino almeno alle 17:30-18:00).
+           - NON pianificare nulla DOPO l'ora di ritorno.
         4. TRASPORTI (CAR): Se il mezzo è CAR, calcola l'ESATTA stima di CARBURANTE e PEDAGGI per il viaggio A/R tra {trip.departure_city or trip.departure_airport} e {trip.destination}. Usa i dati reali delle autostrade (es. Autostrade per l'Italia). NON essere generico.
         5. MAPPA: Fornisci COORDINATE GPS (lat, lon) REALI per ogni luogo.
         6. NO NOTES: Non includere MAI note, commenti, disclaimer o spiegazioni (es. "I costi sono calcolati su...") né nel testo delle attività né esternamente. Solo i dati richiesti nel JSON.

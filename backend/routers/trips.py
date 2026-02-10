@@ -103,17 +103,21 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
             response = await client.post(overpass_url, data={'data': query}, timeout=15.0)
             if response.status_code == 200:
                 elements = response.json().get('elements', [])
-                places = []
+                places_map = {} # Usa una mappa per gestire duplicati e preferire nodi
+                
                 for e in elements:
                     tags = e.get('tags', {})
                     name = tags.get('name')
                     if name:
-                        # Prendi centroide o coordinate nodo
                         lat_val = e.get('lat') or e.get('center', {}).get('lat')
                         lon_val = e.get('lon') or e.get('center', {}).get('lon')
                         if lat_val and lon_val:
-                            places.append({"name": name, "lat": lat_val, "lon": lon_val})
-                return places # Lista di dict
+                            # Se abbiamo già questo nome e l'elemento corrente è un nodo (più preciso), sovrascrivi
+                            # Gli elementi Overpass hanno 'type': 'node', 'way', 'relation'
+                            if name not in places_map or e.get('type') == 'node':
+                                places_map[name] = {"name": name, "lat": lat_val, "lon": lon_val}
+                
+                return list(places_map.values()) # Lista di dict unici
     except Exception as e:
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
@@ -748,8 +752,9 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             REQUISITO CRITICO PER LA MAPPA:
             Se usi uno di questi luoghi:
             1. Usa il suo NOME REALE come 'title'.
-            2. Usa LE SUE COORDINATE (Lat/Lon) fornite sopra nel JSON dell'itinerario.
+            2. Usa LE SUE COORDINATE (Lat/Lon) fornite sopra nel JSON.
             3. Se l'attività riguarda la spiaggia o il relax al mare, DEVI usare uno dei 'Bagni' o 'Lidi' sopra indicati.
+            4. Se un luogo NON è nella lista sopra, imposta "lat": 0 e "lon": 0. Il sistema le calcolerà automaticamente. NON INVENTARE COORDINATE.
             """
         
         # 3. Prompt Avanzato (Merge dei due stili)
@@ -812,12 +817,20 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         async def process_item(item):
             try:
                 # Se l'AI non ha dato coordinate o sono 0, fallback su geocoding parallelizzato
-                i_lat = item.get("lat")
-                i_lon = item.get("lon")
+                # Forza conversione in float e pulizia
+                try:
+                    i_lat = float(item.get("lat", 0))
+                    i_lon = float(item.get("lon", 0))
+                except:
+                    i_lat, i_lon = 0.0, 0.0
+
                 if not i_lat or i_lat == 0:
+                    title_clean = item['title'].lower()
                     query = f"{item['title']}, {trip.destination}"
+                    
                     # Ottimizzazione aggressiva per spiagge/mare: evita il centro città (es. stazione)
-                    if any(word in item['title'].lower() for word in ['spiaggia', 'mare', 'bagno', 'lido', 'balneare', 'lungomare']):
+                    # Aggiungiamo 'Marina' o 'Spiaggia' alla query per forzare il geocoding sulla costa
+                    if any(word in title_clean for word in ['spiaggia', 'mare', 'bagno', 'lido', 'balneare', 'lungomare']):
                         query = f"{item['title']}, Spiaggia, {trip.destination}"
                     
                     i_lat, i_lon = await get_coordinates(query)

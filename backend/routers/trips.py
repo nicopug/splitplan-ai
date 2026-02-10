@@ -103,8 +103,17 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
             response = await client.post(overpass_url, data={'data': query}, timeout=15.0)
             if response.status_code == 200:
                 elements = response.json().get('elements', [])
-                places = [e.get('tags', {}).get('name') for e in elements if e.get('tags', {}).get('name')]
-                return list(set(places)) 
+                places = []
+                for e in elements:
+                    tags = e.get('tags', {})
+                    name = tags.get('name')
+                    if name:
+                        # Prendi centroide o coordinate nodo
+                        lat_val = e.get('lat') or e.get('center', {}).get('lat')
+                        lon_val = e.get('lon') or e.get('center', {}).get('lon')
+                        if lat_val and lon_val:
+                            places.append({"name": name, "lat": lat_val, "lon": lon_val})
+                return places # Lista di dict
     except Exception as e:
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
@@ -711,7 +720,18 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         
         places_prompt = ""
         if locali_reali:
-            places_prompt = f"Ecco alcuni nomi reali di luoghi vicino all'alloggio (ristoranti, bar o lidi/spiagge): {', '.join(locali_reali[:15])}. REQUISITO ASSOLUTO: Se un'attività riguarda la spiaggia, il relax al mare, il lungomare o una cena in spiaggia, DEVI USARE TASSATIVAMENTE il nome di uno dei lidi/bagni forniti (es. 'Bagno 62') come 'title'. NON usare mai nomi generici come 'Spiaggia di Rimini' o nomi di stazioni/centri città per queste attività."
+            # Formatta la lista per l'AI
+            places_list_str = "\n".join([f"- {p['name']} (Lat: {p['lat']}, Lon: {p['lon']})" for p in locali_reali[:15]])
+            places_prompt = f"""
+            Ecco alcuni luoghi reali verificati vicino all'alloggio (ristoranti, bar, lidi/bagni):
+            {places_list_str}
+            
+            REQUISITO CRITICO PER LA MAPPA:
+            Se usi uno di questi luoghi:
+            1. Usa il suo NOME REALE come 'title'.
+            2. Usa LE SUE COORDINATE (Lat/Lon) fornite sopra nel JSON dell'itinerario.
+            3. Se l'attività riguarda la spiaggia o il relax al mare, DEVI usare uno dei 'Bagni' o 'Lidi' sopra indicati.
+            """
         
         # 3. Prompt Avanzato (Merge dei due stili)
         prompt = f"""

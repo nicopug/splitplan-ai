@@ -50,7 +50,7 @@ class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
     transport_mode: Optional[str] = None
-    flight_cost: Optional[float] = 0.0
+    transport_cost: Optional[float] = 0.0
     hotel_cost: Optional[float] = 0.0
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
@@ -154,6 +154,25 @@ async def migrate_transport_mode(session: Session = Depends(get_session)):
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
+
+@router.get("/migrate-transport-cost")
+async def migrate_transport_cost(session: Session = Depends(get_session)):
+    """Rinomina flight_cost in transport_cost nella tabella trip"""
+    from sqlalchemy import text
+    try:
+        # Tenta di rinominare la colonna (PostgreSQL syntax)
+        session.execute(text("ALTER TABLE trip RENAME COLUMN flight_cost TO transport_cost;"))
+        session.commit()
+        return {"status": "success", "message": "Colonna flight_cost rinominata in transport_cost."}
+    except Exception as e:
+        session.rollback()
+        # Se fallisce perché già rinomata o altro, proviamo a crearla se non esiste (safety measure)
+        try:
+             session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_cost FLOAT DEFAULT 0.0;"))
+             session.commit()
+             return {"status": "partial_success", "message": "Colonna transport_cost assicurata."}
+        except Exception as e2:
+             return {"status": "error", "message": str(e2)}
 
 @router.post("/{trip_id}/optimize")
 async def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -868,7 +887,7 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         trip.accommodation = hotel_data.hotel_name
         trip.accommodation_location = hotel_data.hotel_address
         trip.hotel_cost = hotel_data.hotel_cost or 0.0
-        trip.flight_cost = hotel_data.flight_cost or 0.0
+        trip.transport_cost = hotel_data.transport_cost or 0.0
         trip.arrival_time = hotel_data.arrival_time
         trip.return_time = hotel_data.return_time
         
@@ -919,7 +938,7 @@ async def reset_hotel(trip_id: int, session: Session = Depends(get_session), cur
         trip.hotel_latitude = None
         trip.hotel_longitude = None
         trip.hotel_cost = 0.0
-        trip.flight_cost = 0.0
+        trip.transport_cost = 0.0
         
         # Elimina anche l'itinerario e le stime spese collegate
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip_id))

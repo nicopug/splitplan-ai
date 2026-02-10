@@ -35,7 +35,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
             await confirmHotel(trip.id, {
                 hotel_name: hotelName,
                 hotel_address: hotelAddress,
-                flight_cost: parseFloat(flightCost) || 0,
+                transport_cost: parseFloat(flightCost) || 0,
                 hotel_cost: parseFloat(hotelCost) || 0,
                 arrival_time: arrivalTime,
                 return_time: returnTime,

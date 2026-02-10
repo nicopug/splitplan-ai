@@ -74,7 +74,7 @@ const Budget = ({ trip, onUpdate }) => {
     const stats = useMemo(() => {
         const numPeople = trip.num_people || 1;
         const totalBudget = (trip.budget_per_person || 0) * numPeople;
-        const flightCost = Number(trip.flight_cost) || 0;
+        const flightCost = Number(trip.transport_cost) || 0;
         const hotelCost = Number(trip.hotel_cost) || 0;
 
         const realTotal = realExpenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -155,7 +155,7 @@ const Budget = ({ trip, onUpdate }) => {
         return {
             totalBudget,
             numPeople,
-            flightCost,
+            transportCost: flightCost,
             hotelCost,
             realTotal,
             currentSpent,

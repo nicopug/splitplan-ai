@@ -35,6 +35,14 @@ const Dashboard = () => {
     const [itineraryProgress, setItineraryProgress] = useState(0);
     const [isCalendarConnected, setIsCalendarConnected] = useState(false);
 
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser) setUser(parsedUser);
+        }
+    }, []);
+
     // Check calendar connection status on load
     useEffect(() => {
         const checkCalendar = async () => {

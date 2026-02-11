@@ -73,8 +73,8 @@ async def get_auth_url(trip_id: int, current_user: Account = Depends(get_current
     """Restituisce l'URL di autorizzazione Google a cui reindirizzare l'utente."""
     try:
         flow = get_flow(redirect_uri)
-        # Usiamo lo 'state' per passare informazioni attraverso il redirect di Google
-        state_data = json.dumps({"trip_id": trip_id, "account_id": current_user.id})
+        # Usiamo un formato semplice per lo state per evitare problemi di encoding JSON
+        state_data = f"{trip_id}:{current_user.id}"
         
         auth_url, state = flow.authorization_url(
             access_type='offline',
@@ -125,10 +125,13 @@ async def exchange_token(payload: dict, session: Session = Depends(get_session),
 async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
     """Callback di Google che riceve il codice di autorizzazione."""
     try:
-        # Decodifica lo stato
-        state_data = json.loads(state)
-        trip_id = state_data.get("trip_id")
-        account_id = state_data.get("account_id")
+        # Decodifica lo stato (formato "trip_id:account_id")
+        parts = state.split(":")
+        if len(parts) != 2:
+            raise Exception("Invalid state format")
+            
+        trip_id = parts[0]
+        account_id = int(parts[1])
         
         # Scambia il codice per i token
         flow = get_flow()
@@ -142,10 +145,9 @@ async def google_callback(code: str, state: str, session: Session = Depends(get_
             user.is_calendar_connected = True
             session.add(user)
             session.commit()
-            logger.info(f"Calendar connected for user {account_id}")
+            logger.info(f"Calendar connected success for user {account_id}")
         
         # Reindirizza al frontend
-        # Se siamo in produzione su Vercel, usiamo l'URL di Vercel, altrimenti localhost
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
         if "localhost" in flow.redirect_uri:
             frontend_url = "http://localhost:5173"
@@ -154,8 +156,9 @@ async def google_callback(code: str, state: str, session: Session = Depends(get_
         
     except Exception as e:
         logger.error(f"Callback failed: {str(e)}")
-        # In caso di errore, torna alla home del frontend
-        return RedirectResponse(os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app"))
+        # In caso di errore, torna alla home ma con un parametro di errore per debug
+        frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
+        return RedirectResponse(f"{frontend_url}?calendar_error={str(e)}")
 
 
 @router.get("/status")

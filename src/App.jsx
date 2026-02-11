@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import ShareTrip from './pages/ShareTrip';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
+import { useToast } from './context/ToastContext';
 
 
 function Landing({ user }) {
@@ -34,6 +35,16 @@ function App() {
   const [user, setUser] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [globalError, setGlobalError] = useState(null);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('calendar_error');
+    if (error) {
+      showToast("Errore Calendario: " + decodeURIComponent(error), "error");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [showToast]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

@@ -152,13 +152,19 @@ async def google_callback(code: str, state: str, session: Session = Depends(get_
         if "localhost" in flow.redirect_uri:
             frontend_url = "http://localhost:5173"
             
-        return RedirectResponse(f"{frontend_url}/trip/{trip_id}?calendar_success=true")
+        final_redirect = f"{frontend_url}/trip/{trip_id}?calendar_success=true"
+        logger.info(f"Connection complete. Redirecting to: {final_redirect}")
+        return RedirectResponse(final_redirect)
         
     except Exception as e:
-        logger.error(f"Callback failed: {str(e)}")
+        logger.error(f"Callback failed fatally: {str(e)}")
         # In caso di errore, torna alla home ma con un parametro di errore per debug
+        import urllib.parse
+        err_msg = urllib.parse.quote(str(e))
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
-        return RedirectResponse(f"{frontend_url}?calendar_error={str(e)}")
+        target = f"{frontend_url}?calendar_error={err_msg}"
+        logger.error(f"Redirecting user to error page: {target}")
+        return RedirectResponse(target)
 
 
 @router.get("/status")

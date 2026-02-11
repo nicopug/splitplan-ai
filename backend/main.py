@@ -45,6 +45,22 @@ def init_db():
     create_db_and_tables()
     return {"message": "Database tables created successfully! Check Supabase now."}
 
+from sqlmodel import text
+from .database import get_session
+
+@app.get("/migrate-db-calendar")
+def migrate_db_calendar():
+    # Helper temporaneo per aggiungere le colonne mancanti su Supabase
+    try:
+        from .database import engine
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"))
+            conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"))
+            conn.commit()
+        return {"status": "success", "message": "Columns added to 'account' table."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import logging

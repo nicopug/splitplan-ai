@@ -62,14 +62,17 @@ def get_flow(redirect_uri=None):
     env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
     
     if redirect_uri:
-        # Se passato esplicitamente (es. dal frontend), usalo
         flow.redirect_uri = redirect_uri
     elif env_redirect:
-        # Se definito in ENV (es. Vercel), usalo
         flow.redirect_uri = env_redirect
     else:
-        # Default locale hardcodato
-        flow.redirect_uri = "http://localhost:5678/api/calendar/callback"
+        # Fallback locale o produzione se env non settata
+        if os.getenv("VERCEL_URL"):
+            flow.redirect_uri = f"https://{os.getenv('VERCEL_URL')}/api/calendar/callback"
+        else:
+            flow.redirect_uri = "https://splitplan-ai.vercel.app/api/calendar/callback"
+
+    logger.info(f"Using REDIRECT_URI: {flow.redirect_uri}")
 
     return flow
 
@@ -131,52 +134,39 @@ async def exchange_token(payload: dict, session: Session = Depends(get_session),
 @router.get("/callback")
 async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
     """Callback di Google che riceve il codice di autorizzazione."""
-    print(f"[DEBUG] Google Callback reached! code={code[:10]}..., state={state}")
+    logger.info(f"CALLBACK RECEIVED - code: {code[:5]}... state: {state}")
     try:
-        # Decodifica lo stato (formato "trip_id:account_id")
         if not state or ":" not in state:
-            print(f"[ERROR] Invalid state received: {state}")
-            raise Exception("Invalid state format")
+            raise Exception(f"Invalid state format: {state}")
             
         parts = state.split(":")
         trip_id = parts[0]
         account_id = int(parts[1])
-        print(f"[DEBUG] Decoded state: trip_id={trip_id}, account_id={account_id}")
+        logger.info(f"Processing callback for trip {trip_id}, account {account_id}")
         
-        # Scambia il codice per i token
         flow = get_flow()
-        print(f"[DEBUG] Exchanging code for tokens using redirect_uri: {flow.redirect_uri}")
         flow.fetch_token(code=code)
         credentials = flow.credentials
-        print(f"[DEBUG] Tokens obtained successfully.")
         
-        # Salva nel DB
         user = session.get(Account, account_id)
         if user:
             user.google_calendar_token = credentials.to_json()
             user.is_calendar_connected = True
             session.add(user)
             session.commit()
-            print(f"[SUCCESS] Calendar connected for user {account_id}")
-        else:
-            print(f"[ERROR] User {account_id} not found in database during callback.")
+            logger.info("Calendar connection saved to DB")
         
-        # Reindirizza al frontend
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
         final_redirect = f"{frontend_url}/trip/{trip_id}?calendar_success=true"
-        print(f"[DEBUG] Redirecting to success page: {final_redirect}")
-            
+        logger.info(f"Success! Redirecting to {final_redirect}")
         return RedirectResponse(final_redirect)
         
     except Exception as e:
-        print(f"[FATAL ERROR] google_callback failed: {str(e)}")
-        print(traceback.format_exc())
-        
-        # In caso di errore, torna alla home ma con un parametro di errore per debug
+        logger.error(f"CALLBACK FATAL ERROR: {str(e)}")
+        import urllib.parse
         err_msg = urllib.parse.quote(str(e))
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
-        target = f"{frontend_url}?calendar_error={err_msg}"
-        return RedirectResponse(target)
+        return RedirectResponse(f"{frontend_url}?calendar_error={err_msg}")
 
 
 @router.get("/status")

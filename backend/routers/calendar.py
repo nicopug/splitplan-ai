@@ -79,6 +79,7 @@ async def get_auth_url(trip_id: int, current_user: Account = Depends(get_current
     """Restituisce l'URL di autorizzazione Google a cui reindirizzare l'utente."""
     try:
         flow = get_flow(redirect_uri)
+        print(f"[DEBUG] Generating Auth URL. Target redirect_uri: {flow.redirect_uri}")
         # Usiamo un formato semplice per lo state per evitare problemi di encoding JSON
         state_data = f"{trip_id}:{current_user.id}"
         

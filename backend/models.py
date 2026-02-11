@@ -10,6 +10,8 @@ class Account(SQLModel, table=True):
     is_verified: bool = False
     is_subscribed: bool = False
     reset_in_progress: bool = False
+    google_calendar_token: Optional[str] = Field(default=None) # JSON dump of tokens
+    is_calendar_connected: bool = False
 
 
 class TripBase(SQLModel):

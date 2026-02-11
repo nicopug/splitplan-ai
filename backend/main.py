@@ -29,6 +29,8 @@ app.include_router(photos.router)
 app.include_router(users.router)
 app.include_router(expenses.router)
 app.include_router(itinerary.router)
+from .routers import calendar
+app.include_router(calendar.router)
 
 # --- AVVIO AUTOMATICO DB ---
 @app.on_event("startup")

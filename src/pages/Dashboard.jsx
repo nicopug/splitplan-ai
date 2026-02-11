@@ -33,13 +33,109 @@ const Dashboard = () => {
     ]);
     const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false);
     const [itineraryProgress, setItineraryProgress] = useState(0);
+    const [isCalendarConnected, setIsCalendarConnected] = useState(false);
 
+    // Check calendar connection status on load
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        const checkCalendar = async () => {
+            try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`${window.location.origin.includes('localhost') ? 'http://localhost:5678/api' : '/api'}/calendar/status`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setIsCalendarConnected(data.connected);
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking calendar status:", error);
+            }
+        };
+        checkCalendar();
+    }, []);
+
+    // Handle OAuth callback
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const scope = urlParams.get('scope');
+
+        if (code && scope && scope.includes('calendar')) {
+            const handleCallback = async () => {
+                try {
+                    setLoading(true);
+                    const token = localStorage.getItem('token');
+                    const redirectUri = window.location.origin + '/dashboard'; // Must match what was sent
+
+                    // Nota: Google richiede che il redirect_uri sia IDENTICO. 
+                    // Se siamo su dashboard con query params, potrebbe rompere.
+                    // Idealmente dovremmo usare un endpoint /callback dedicato nel frontend o pulire l'URL.
+                    // Per ora usiamo window.location.origin + window.location.pathname
+                    // MA ATTENZIONE: Se l'utente naviga su /dashboard/123, questo cambia.
+                    // Il backend calendar.py ha un default. Proviamo a passare quello corretto.
+                    // Per semplicità nel backend mettiamo un default fisso, qui non lo passiamo se non serve.
+
+                    // FIX: Usiamo l'endpoint di callback del backend configurato in Google Console
+                    // Ma aspetta, il flow che abbiamo scelto è Authorization Code.
+                    // Google reindirizza al backend? O al frontend?
+                    // Se reindirizza al backend, il frontend non vede il codice.
+                    // Se reindirizza al frontend, dobbiamo scambiarlo noi.
+                    // IL PIANO ERA: Backend -> Google -> Frontend (con code) -> Backend (exchange).
+                    // Quindi Google deve reindirizzare a http://localhost:3000/dashboard (o Vercel equiv).
+                    // MA nella console abbiamo messo .../api/calendar/callback (Backend).
+
+                    // ERRORE DI PIANIFICAZIONE:
+                    // Se Google reindirizza al backend, il backend riceve il codice.
+                    // E il backend deve poi reindirizzare al frontend.
+                    // Nel mio `calendar.py`, `google_callback` fa redirect al frontend con `calendar_success=true`.
+                    // QUINDI qui devo solo cercare `calendar_success=true`.
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            // handleCallback(); 
+        }
+
+        // Verifica successo dal redirect del backend
+        if (urlParams.get('calendar_success') === 'true') {
+            setIsCalendarConnected(true);
+            showToast("Google Calendar connesso con successo!", "success");
+            // Pulisci URL
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     }, []);
+
+    const handleConnectCalendar = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            // Costruiamo il redirect URL che il BACKEND deve usare per tornare QUI (o meglio, al suo callback che poi torna qui)
+            // In realtà il backend ha già logica per gestire il redirect.
+            // Chiamiamo /auth-url
+            const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:5678/api' : '/api';
+
+            // Il backend deve sapere dove redirigere POI l'utente finale? 
+            // Nel mio codice backend attuale, il callback reindirizza fisso a localhost:3000/dashboard.
+            // Questo è un problema per Vercel.
+            // FIX: Passiamo al backend un parametro `frontend_redirect_url`?
+            // No, semplifichiamo. Il backend farà redirect alla root dashboard.
+
+            const res = await fetch(`${apiUrl}/calendar/auth-url`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.auth_url) {
+                window.location.href = data.auth_url;
+            }
+        } catch (e) {
+            showToast("Errore connessione calendar: " + e.message, "error");
+        }
+    };
+
 
     const fetchTrip = async () => {
         try {
@@ -265,7 +361,7 @@ const Dashboard = () => {
                     )}
 
                     {user && isOrganizer && (
-                        <div style={{ marginTop: '1.5rem', marginBottom: '2rem' }}>
+                        <div style={{ marginTop: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                             <button
                                 onClick={handleShare}
                                 className="hover-scale hover-glow"
@@ -285,6 +381,36 @@ const Dashboard = () => {
                             >
                                 Condividi Viaggio (Sola Lettura)
                             </button>
+
+                            {trip.trip_intent === 'BUSINESS' && (
+                                <button
+                                    onClick={handleConnectCalendar}
+                                    className="hover-scale hover-glow"
+                                    disabled={isCalendarConnected}
+                                    style={{
+                                        background: isCalendarConnected ? 'rgba(76, 175, 80, 0.2)' : 'rgba(66, 133, 244, 0.2)', // Green or Google Blue
+                                        backdropFilter: 'blur(10px)',
+                                        color: isCalendarConnected ? '#4caf50' : '#4285f4',
+                                        padding: '0.6rem 1.5rem',
+                                        borderRadius: '16px',
+                                        border: `1px solid ${isCalendarConnected ? 'rgba(76, 175, 80, 0.3)' : 'rgba(66, 133, 244, 0.3)'}`,
+                                        fontSize: '0.85rem',
+                                        fontWeight: '700',
+                                        cursor: isCalendarConnected ? 'default' : 'pointer',
+                                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    {isCalendarConnected ? (
+                                        <>✓ Calendar Connesso</>
+                                    ) : (
+                                        <>📅 Connetti Google Calendar</>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
 

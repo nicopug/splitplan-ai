@@ -7,6 +7,8 @@ from datetime import datetime
 import httpx
 # SDK Ufficiale Google
 from google import genai
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
 from ..database import get_session
@@ -770,6 +772,52 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             4. Se un luogo NON è nella lista sopra, imposta "lat": 0 e "lon": 0. Il sistema le cercherà. NON INVENTARE COORDINATE.
             """
         
+
+        
+        # 2.5 BUSINES CALENDAR INTEGRATION
+        calendar_prompt = ""
+        organization_name = ""
+        # Cerchiamo l'organizzatore per accedere al suo calendario
+        organizer_part = next((p for p in trip.participants if p.is_organizer), None)
+        
+        if trip.trip_intent == "BUSINESS" and organizer_part and organizer_part.account_id:
+             organizer_account = session.get(Account, organizer_part.account_id)
+             if organizer_account and organizer_account.is_calendar_connected and organizer_account.google_calendar_token:
+                 try:
+                     print(f"[System] Fetching calendar events for Organizer {organizer_account.email}...")
+                     creds = Credentials.from_authorized_user_info(json.loads(organizer_account.google_calendar_token), ['https://www.googleapis.com/auth/calendar.events.readonly'])
+                     service = build('calendar', 'v3', credentials=creds)
+                     
+                     # Time range del viaggio
+                     t_min = datetime.fromisoformat(trip.start_date.replace('Z', '')).isoformat() + 'Z'
+                     t_max = datetime.fromisoformat(trip.end_date.replace('Z', '')).isoformat() + 'Z'
+                     
+                     events_result = service.events().list(
+                         calendarId='primary', timeMin=t_min, timeMax=t_max,
+                         singleEvents=True, orderBy='startTime'
+                     ).execute()
+                     
+                     events = events_result.get('items', [])
+                     if events:
+                         event_lines = []
+                         for event in events:
+                             start = event['start'].get('dateTime', event['start'].get('date'))
+                             end = event['end'].get('dateTime', event['end'].get('date'))
+                             summary = event.get('summary', 'Impegno')
+                             event_lines.append(f"- {summary}: {start} - {end}")
+                         
+                         calendar_prompt = f"""
+                         IMPEGNI DI LAVORO ESISTENTI (DA RISPETTARE TASSATIVAMENTE):
+                         L'utente ha già i seguenti impegni fissati nel calendario. 
+                         NON sovrapporre nessuna attività turistica a questi orari.
+                         Pianifica spostamenti, pranzi e relax INTORNO a questi blocchi.
+                         
+                         {chr(10).join(event_lines)}
+                         """
+                         print(f"[System] Found {len(events)} calendar events.")
+                 except Exception as exc:
+                     print(f"[Warning] Failed to fetch calendar events: {exc}")
+
         # 3. Prompt Avanzato (Merge dei due stili)
         prompt = f"""
         Sei un esperto Travel Agent. Genera un itinerario di {num_days} giorni per il viaggio "{trip.name}" a {trip.destination}.
@@ -781,6 +829,8 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         RITORNO: {trip.end_date} ore {trip.return_time or '18:00'}.
 
         {places_prompt}
+
+        {calendar_prompt}
 
         SCOPO DEL VIAGGIO: {trip.trip_intent}
         {"Se il viaggio è BUSINESS, PRIORITÀ ASSOLUTA a: efficienza, hotel con coworking/Wi-Fi eccellente, pasti veloci ma di qualità, posizioni centrali vicino a hub di trasporto. Evita attività troppo rilassate o dispersive. Ottimizza per produttività." if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}

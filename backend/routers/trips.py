@@ -178,6 +178,19 @@ async def migrate_transport_cost(session: Session = Depends(get_session)):
         except Exception as e2:
              return {"status": "error", "message": str(e2)}
 
+
+@router.get("/migrate-trip-intent")
+async def migrate_trip_intent(session: Session = Depends(get_session)):
+    """Aggiunge trip_intent alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS trip_intent VARCHAR DEFAULT 'LEISURE';"))
+        session.commit()
+        return {"status": "success", "message": "Colonna trip_intent aggiunta."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
 @router.post("/{trip_id}/optimize")
 async def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
@@ -768,6 +781,9 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         RITORNO: {trip.end_date} ore {trip.return_time or '18:00'}.
 
         {places_prompt}
+
+        SCOPO DEL VIAGGIO: {trip.trip_intent}
+        {"Se il viaggio è BUSINESS, PRIORITÀ ASSOLUTA a: efficienza, hotel con coworking/Wi-Fi eccellente, pasti veloci ma di qualità, posizioni centrali vicino a hub di trasporto. Evita attività troppo rilassate o dispersive. Ottimizza per produttività." if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
 
         REGOLE CRITICHE:
         1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).

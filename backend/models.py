@@ -16,6 +16,7 @@ class TripBase(SQLModel):
     name: str
     destination: str = "" 
     trip_type: str 
+    trip_intent: str = "LEISURE"  # "LEISURE" or "BUSINESS"
     budget: float = 0.0
     start_date: str = ""
     end_date: str = ""

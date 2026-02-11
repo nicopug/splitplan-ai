@@ -14,16 +14,22 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         must_have: '',
         must_avoid: '',
         participant_names: [],
-        transport_mode: 'FLIGHT' // Default
+        transport_mode: 'FLIGHT', // Default
+        trip_intent: 'LEISURE' // Default: LEISURE or BUSINESS
     });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleIntentSelect = (intent) => {
+        setFormData({ ...formData, trip_intent: intent });
+        setStep(1);
+    };
+
     const handleTransportSelect = (mode) => {
         setFormData({ ...formData, transport_mode: mode });
-        setStep(1);
+        setStep(2);
     };
 
     // Update participant names array when num_people changes
@@ -56,6 +62,45 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     };
 
     if (step === 0) {
+        return (
+            <div className="section py-8 md:py-12 animate-fade-in">
+                <div className="container max-w-4xl">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                            Qual è lo scopo del viaggio?
+                        </h2>
+                        <p className="text-lg text-text-muted">
+                            Questo ci aiuterà a personalizzare l'itinerario perfetto per te.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Leisure */}
+                        <div
+                            onClick={() => handleIntentSelect('LEISURE')}
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-green group text-center"
+                        >
+                            <div className="text-6xl mb-4">🏖️</div>
+                            <h3 className="text-xl font-bold mb-2">Vacanza</h3>
+                            <p className="text-sm text-gray-500">Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.</p>
+                        </div>
+
+                        {/* Business */}
+                        <div
+                            onClick={() => handleIntentSelect('BUSINESS')}
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
+                        >
+                            <div className="text-6xl mb-4">💼</div>
+                            <h3 className="text-xl font-bold mb-2">Lavoro</h3>
+                            <p className="text-sm text-gray-500">Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === 1) {
         return (
             <div className="section py-8 md:py-12 animate-fade-in">
                 <div className="container max-w-4xl">
@@ -109,7 +154,13 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 <div className="text-center mb-8 md:mb-12">
                     <button
                         onClick={() => setStep(0)}
-                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer' }}
+                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.5rem', cursor: 'pointer' }}
+                    >
+                        ← Cambia Scopo ({formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'})
+                    </button>
+                    <button
+                        onClick={() => setStep(1)}
+                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer', marginLeft: '8px' }}
                     >
                         ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
                     </button>

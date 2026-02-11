@@ -115,7 +115,3 @@ SplitPlan non si ferma qui. Ecco cosa abbiamo in cantiere:
 -   ✅ **Fix Mappe**: Risolto il bug dei punti in mare. Ora il sistema priorizza i nodi terrestri e usa il geocoding del lungomare come fallback.
 -   ✅ **Standardizzazione Costi**: Rinominato `flight_cost` in `transport_cost` per supportare ufficialmente i treni.
 -   ✅ **AI Prompt Refinement**: L'AI ora ha regole ferree: non può inventare coordinate e deve rispettare tassativamente gli orari di arrivo/ritorno.
-
----
-
-*Creato con ❤️ e 🤖 da Alessio & Team SplitPlan.*

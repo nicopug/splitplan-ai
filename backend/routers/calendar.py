@@ -69,14 +69,18 @@ def get_flow(redirect_uri=None):
 
 
 @router.get("/auth-url")
-async def get_auth_url(redirect_uri: str = None):
+async def get_auth_url(trip_id: int, current_user: Account = Depends(get_current_user), redirect_uri: str = None):
     """Restituisce l'URL di autorizzazione Google a cui reindirizzare l'utente."""
     try:
         flow = get_flow(redirect_uri)
+        # Usiamo lo 'state' per passare informazioni attraverso il redirect di Google
+        state_data = json.dumps({"trip_id": trip_id, "account_id": current_user.id})
+        
         auth_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
-            prompt='consent' # Forza il refresh token
+            prompt='consent',
+            state=state_data
         )
         return {"auth_url": auth_url}
     except Exception as e:
@@ -115,6 +119,43 @@ async def exchange_token(payload: dict, session: Session = Depends(get_session),
     except Exception as e:
         logger.error(f"Token exchange failed: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to exchange token: {str(e)}")
+
+
+@router.get("/callback")
+async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
+    """Callback di Google che riceve il codice di autorizzazione."""
+    try:
+        # Decodifica lo stato
+        state_data = json.loads(state)
+        trip_id = state_data.get("trip_id")
+        account_id = state_data.get("account_id")
+        
+        # Scambia il codice per i token
+        flow = get_flow()
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        
+        # Salva nel DB
+        user = session.get(Account, account_id)
+        if user:
+            user.google_calendar_token = credentials.to_json()
+            user.is_calendar_connected = True
+            session.add(user)
+            session.commit()
+            logger.info(f"Calendar connected for user {account_id}")
+        
+        # Reindirizza al frontend
+        # Se siamo in produzione su Vercel, usiamo l'URL di Vercel, altrimenti localhost
+        frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
+        if "localhost" in flow.redirect_uri:
+            frontend_url = "http://localhost:5173"
+            
+        return RedirectResponse(f"{frontend_url}/trip/{trip_id}?calendar_success=true")
+        
+    except Exception as e:
+        logger.error(f"Callback failed: {str(e)}")
+        # In caso di errore, torna alla home del frontend
+        return RedirectResponse(os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app"))
 
 
 @router.get("/status")

@@ -132,7 +132,7 @@ const Dashboard = () => {
             // FIX: Passiamo al backend un parametro `frontend_redirect_url`?
             // No, semplifichiamo. Il backend farà redirect alla root dashboard.
 
-            const res = await fetch(`${apiUrl}/calendar/auth-url`, {
+            const res = await fetch(`${apiUrl}/calendar/auth-url?trip_id=${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();

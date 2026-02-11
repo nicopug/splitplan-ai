@@ -1,7 +1,5 @@
 # 🌍 SplitPlan AI: La Piattaforma Definitiva per Viaggi di Gruppo
 
-![SplitPlan Banner](https://via.placeholder.com/1200x400?text=SplitPlan+AI+-+Il+Futuro+dei+Viaggi+di+Gruppo)
-
 > **"Organizzare un viaggio con gli amici non dovrebbe essere la parte più stressante della vacanza."**
 
 **SplitPlan AI** è l'ecosistema digitale che rivoluziona il modo in cui i gruppi pianificano, vivono e pagano i loro viaggi. Unendo la potenza dell'**Intelligenza Artificiale Generativa (Google Gemini)** alla precisione dei dati geografici in tempo reale (**OpenStreetMap**), SplitPlan elimina il caos delle chat di gruppo, i fogli Excel infiniti e le discussioni sui soldi.

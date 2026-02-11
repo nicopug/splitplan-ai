@@ -397,12 +397,12 @@ const Dashboard = () => {
                                     className="hover-scale hover-glow"
                                     disabled={isCalendarConnected}
                                     style={{
-                                        background: isCalendarConnected ? 'rgba(76, 175, 80, 0.2)' : 'rgba(66, 133, 244, 0.2)', // Green or Google Blue
+                                        background: isCalendarConnected ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)',
                                         backdropFilter: 'blur(10px)',
-                                        color: isCalendarConnected ? '#4caf50' : '#4285f4',
+                                        color: isCalendarConnected ? '#4caf50' : 'white',
                                         padding: '0.6rem 1.5rem',
                                         borderRadius: '16px',
-                                        border: `1px solid ${isCalendarConnected ? 'rgba(76, 175, 80, 0.3)' : 'rgba(66, 133, 244, 0.3)'}`,
+                                        border: `1px solid ${isCalendarConnected ? 'rgba(76, 175, 80, 0.4)' : 'rgba(255, 255, 255, 0.4)'}`,
                                         fontSize: '0.85rem',
                                         fontWeight: '700',
                                         cursor: isCalendarConnected ? 'default' : 'pointer',

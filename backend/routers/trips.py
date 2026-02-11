@@ -752,6 +752,32 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                     ))
                 
                 trip.status = "VOTING"
+                
+                # AUTO-BOOKING PER BUSINESS TRIPS
+                # Se è un viaggio di lavoro, saltiamo la fase di voto e prenotiamo subito la prima proposta (ottimizzata dall'AI)
+                if trip.trip_intent == "BUSINESS":
+                    print(f"[Auto-Booking] Business Trip detected. Booking first proposal automatically.")
+                    first_proposal = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).first()
+                    
+                    if first_proposal:
+                        trip.status = "BOOKED"
+                        trip.winning_proposal_id = first_proposal.id
+                        trip.destination = first_proposal.destination
+                        trip.destination_iata = first_proposal.destination_iata
+                        trip.real_destination = first_proposal.real_destination
+                        trip.description = first_proposal.description
+                        trip.budget = first_proposal.price_estimate # Aggiorniamo budget con stima reale
+                        
+                        # Salvataggio link specifici nel trip
+                        if first_proposal.booking_url:
+                            trip.booking_url = first_proposal.booking_url
+                        if first_proposal.transport_url:
+                            trip.transport_url = first_proposal.transport_url
+                            
+                        # Generazione immediata itinerario
+                        await generate_itinerary_content(trip, first_proposal, session)
+                
+                session.add(trip)
                 session.commit()
                 return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 

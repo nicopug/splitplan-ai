@@ -629,14 +629,23 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 Scegli il "suggested_transport_mode" tra: FLIGHT, TRAIN, CAR.
                 REGOLA: Se la destinazione è raggiungibile via terra in meno di 6 ore (es. Milano-Roma, Parigi-Lione, Madrid-Barcellona), preferisci sempre TRAIN o CAR. Altrimenti usa FLIGHT.
                 
-                TASK 4 (CRITICO): Usa Google Search per trovare opzioni REALI di hotel e trasporti:
-                - Per ogni proposta, cerca un hotel SPECIFICO nella destinazione che rientri nel budget per persona ({prefs.budget / prefs.num_people}€ per {(datetime.fromisoformat(prefs.end_date) - datetime.fromisoformat(prefs.start_date)).days + 1} notti).
-                - Cerca anche trasporti REALI:
-                  * Se FLIGHT: cerca voli su Google Flights, Skyscanner, etc.
-                  * Se TRAIN: cerca biglietti su Trainline.com o Trenitalia.
-                  * Se CAR: lascia transport_url come null (non serve link).
-                - Fornisci i link diretti di prenotazione (Booking.com, Expedia, Google Flights, Trainline, etc.).
-                - Se non trovi link specifici, lascia "booking_url" e "transport_url" come null.
+                TASK 4 (CRITICO - USA GOOGLE SEARCH): Per ogni proposta, devi trovare opzioni REALI e PRENOTABILI:
+                
+                A) HOTEL:
+                   1. Usa Google Search per cercare: "hotel {prefs.destination} budget {int(prefs.budget / prefs.num_people)}€ per {(datetime.fromisoformat(prefs.end_date) - datetime.fromisoformat(prefs.start_date)).days + 1} notti"
+                   2. Trova un hotel SPECIFICO su Booking.com, Expedia, o Hotels.com
+                   3. Il link DEVE essere diretto alla pagina dell'hotel, NON una pagina di ricerca
+                   4. ESEMPI VALIDI:
+                      ✅ "https://www.booking.com/hotel/it/grand-hotel-majestic.it.html?checkin=..."
+                      ✅ "https://www.expedia.it/Bologna-Hotels-NH-Bologna-De-La-Gare.h12345.Hotel-Information"
+                      ❌ "https://www.booking.com/searchresults.html?ss=Bologna" (QUESTO È SBAGLIATO - è una ricerca generica)
+                   5. Se NON trovi un hotel specifico, lascia "booking_url": null
+                
+                B) TRASPORTI:
+                   - Se FLIGHT: cerca voli reali su Google Flights/Skyscanner e fornisci il link diretto
+                   - Se TRAIN: cerca biglietti su Trainline.com o Trenitalia e fornisci il link diretto
+                   - Se CAR: lascia "transport_url": null
+                   - Se NON trovi un trasporto specifico, lascia "transport_url": null
 
                 RESTITUISCI SOLO JSON:
                 {{
@@ -652,8 +661,8 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                             "description": "...", 
                             "price_estimate": 1000, 
                             "image_search_term": "louvre,museum",
-                            "booking_url": "https://www.booking.com/hotel/...",
-                            "transport_url": "https://www.thetrainline.com/..."
+                            "booking_url": "https://www.booking.com/hotel/it/nome-hotel-specifico.it.html?checkin=...",
+                            "transport_url": "https://www.thetrainline.com/book/results?origin=..."
                         }}
                     ]
                 }}
@@ -662,7 +671,9 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 - 'destination_english' deve essere il nome della città principale in INGLESE.
                 - 'destination_italian' deve essere il nome della città principale in ITALIANO.
                 - 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE specifiche per quel tema.
-                - 'booking_url' e 'transport_url' devono essere link REALI trovati tramite Google Search, non inventati.
+                - 'booking_url' DEVE essere un link DIRETTO a un hotel specifico (con /hotel/ nell'URL), NON una pagina di ricerca.
+                - 'transport_url' DEVE essere un link DIRETTO a un volo/treno specifico.
+                - Se non trovi link SPECIFICI, usa null invece di inventare o usare link generici.
                 LINGUA: ITALIANO.
                 """
                 
@@ -713,6 +724,21 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                     # Usiamo /all per forzare la precisione dei tag
                     img_url = f"https://loremflickr.com/1080/720/{encoded_tags}/all?lock={seed}"
                     
+                    
+                    # Validazione URL: Accetta solo link SPECIFICI, non pagine di ricerca generiche
+                    booking_url = p.get("booking_url")
+                    transport_url = p.get("transport_url")
+                    
+                    # Filtra link generici di Booking.com (searchresults, index, etc.)
+                    if booking_url and ("/searchresults" in booking_url or "/index" in booking_url or "?ss=" in booking_url):
+                        print(f"[Warning] Scartato booking_url generico: {booking_url}")
+                        booking_url = None
+                    
+                    # Verifica che il link Booking contenga /hotel/ (indica un hotel specifico)
+                    if booking_url and "/hotel/" not in booking_url:
+                        print(f"[Warning] Scartato booking_url senza /hotel/: {booking_url}")
+                        booking_url = None
+                    
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
@@ -721,8 +747,8 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                         description=p["description"],
                         price_estimate=p["price_estimate"],
                         image_url=img_url,
-                        booking_url=p.get("booking_url"),  # URL specifico per hotel
-                        transport_url=p.get("transport_url")     # URL specifico per volo/treno
+                        booking_url=booking_url,  # URL validato
+                        transport_url=transport_url     # URL specifico per volo/treno
                     ))
                 
                 trip.status = "VOTING"

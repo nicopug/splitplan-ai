@@ -11,11 +11,17 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import datetime
+import urllib.parse
+import traceback
 
 # Setup logger
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
+
+@router.get("/ping")
+async def ping():
+    return {"message": "Calendar router is alive and reachable"}
 
 # Configurazione OAuth
 SCOPES = ['https://www.googleapis.com/auth/calendar.events.readonly']
@@ -124,19 +130,24 @@ async def exchange_token(payload: dict, session: Session = Depends(get_session),
 @router.get("/callback")
 async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
     """Callback di Google che riceve il codice di autorizzazione."""
+    print(f"[DEBUG] Google Callback reached! code={code[:10]}..., state={state}")
     try:
         # Decodifica lo stato (formato "trip_id:account_id")
-        parts = state.split(":")
-        if len(parts) != 2:
+        if not state or ":" not in state:
+            print(f"[ERROR] Invalid state received: {state}")
             raise Exception("Invalid state format")
             
+        parts = state.split(":")
         trip_id = parts[0]
         account_id = int(parts[1])
+        print(f"[DEBUG] Decoded state: trip_id={trip_id}, account_id={account_id}")
         
         # Scambia il codice per i token
         flow = get_flow()
+        print(f"[DEBUG] Exchanging code for tokens using redirect_uri: {flow.redirect_uri}")
         flow.fetch_token(code=code)
         credentials = flow.credentials
+        print(f"[DEBUG] Tokens obtained successfully.")
         
         # Salva nel DB
         user = session.get(Account, account_id)
@@ -145,25 +156,25 @@ async def google_callback(code: str, state: str, session: Session = Depends(get_
             user.is_calendar_connected = True
             session.add(user)
             session.commit()
-            logger.info(f"Calendar connected success for user {account_id}")
+            print(f"[SUCCESS] Calendar connected for user {account_id}")
+        else:
+            print(f"[ERROR] User {account_id} not found in database during callback.")
         
         # Reindirizza al frontend
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
-        if "localhost" in flow.redirect_uri:
-            frontend_url = "http://localhost:5173"
-            
         final_redirect = f"{frontend_url}/trip/{trip_id}?calendar_success=true"
-        logger.info(f"Connection complete. Redirecting to: {final_redirect}")
+        print(f"[DEBUG] Redirecting to success page: {final_redirect}")
+            
         return RedirectResponse(final_redirect)
         
     except Exception as e:
-        logger.error(f"Callback failed fatally: {str(e)}")
+        print(f"[FATAL ERROR] google_callback failed: {str(e)}")
+        print(traceback.format_exc())
+        
         # In caso di errore, torna alla home ma con un parametro di errore per debug
-        import urllib.parse
         err_msg = urllib.parse.quote(str(e))
         frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
         target = f"{frontend_url}?calendar_error={err_msg}"
-        logger.error(f"Redirecting user to error page: {target}")
         return RedirectResponse(target)
 
 

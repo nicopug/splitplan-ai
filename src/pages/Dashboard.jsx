@@ -108,14 +108,6 @@ const Dashboard = () => {
             };
             // handleCallback(); 
         }
-
-        // Verifica successo dal redirect del backend
-        if (urlParams.get('calendar_success') === 'true') {
-            setIsCalendarConnected(true);
-            showToast("Google Calendar connesso con successo!", "success");
-            // Pulisci URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
     }, []);
 
     const handleConnectCalendar = async () => {

@@ -44,6 +44,11 @@ function App() {
       showToast("Errore Calendario: " + decodeURIComponent(error), "error");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+    const success = urlParams.get('calendar_success');
+    if (success === 'true') {
+      showToast("Account connesso correttamente! 📅", "success");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, [showToast]);
 
   useEffect(() => {

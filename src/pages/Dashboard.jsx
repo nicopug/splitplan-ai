@@ -226,7 +226,8 @@ const Dashboard = () => {
                 num_people: surveyData.num_people,
                 transport_mode: surveyData.transport_mode,
                 destination: surveyData.destination,
-                departure_airport: surveyData.departure_airport
+                departure_airport: surveyData.departure_airport,
+                trip_intent: surveyData.trip_intent
             }));
             fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
         } catch (e) {

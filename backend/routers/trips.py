@@ -47,6 +47,7 @@ class PreferencesRequest(SQLModel):
     vibe: Optional[str] = "" 
     participant_names: List[str] = []
     transport_mode: Optional[str] = None
+    trip_intent: str = "LEISURE"
 
 class HotelSelectionRequest(SQLModel):
     hotel_name: str
@@ -586,6 +587,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         trip.departure_city = prefs.departure_airport
         trip.must_have = prefs.must_have
         trip.must_avoid = prefs.must_avoid
+        trip.trip_intent = prefs.trip_intent
         
         # SALVA IL MEZZO DI TRASPORTO SCELTO MANUALMENTE SE PRESENTE
         if prefs.transport_mode:

@@ -31,11 +31,28 @@ const Logistics = ({ trip }) => {
     // Deep Links
     let flightLink = "#";
     let hotelLink = "#";
+    let hasSpecificHotel = false;
+    let hasSpecificFlight = false;
 
+    // Check if we have specific URLs from Google Search Grounding
+    if (trip.booking_url) {
+        hotelLink = trip.booking_url;
+        hasSpecificHotel = true;
+    }
+    if (trip.flight_url) {
+        flightLink = trip.flight_url;
+        hasSpecificFlight = true;
+    }
+
+    // Fallback to generic search links if no specific URLs
     try {
-        flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
-        const safeDestName = encodeURIComponent(destName);
-        hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
+        if (!hasSpecificFlight && trip.transport_mode === 'FLIGHT') {
+            flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
+        }
+        if (!hasSpecificHotel) {
+            const safeDestName = encodeURIComponent(destName);
+            hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
+        }
     } catch (e) {
         console.warn("Link generation error", e);
     }
@@ -103,7 +120,10 @@ const Logistics = ({ trip }) => {
                 <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #003580' }}>
                     <h3 style={{ color: '#003580' }}>Hotel (Booking.com)</h3>
                     <p style={{ margin: '1rem 0', color: '#666' }}>
-                        Le migliori offerte a <strong>{destName}</strong>.
+                        {hasSpecificHotel
+                            ? `Abbiamo trovato un'opzione perfetta per te a ${destName}.`
+                            : `Le migliori offerte a ${destName}.`
+                        }
                     </p>
                     <a
                         href={hotelLink}
@@ -112,7 +132,7 @@ const Logistics = ({ trip }) => {
                         className="btn"
                         style={{ background: '#003580', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                     >
-                        Cerca Hotel
+                        {hasSpecificHotel ? 'Prenota Ora' : 'Cerca Hotel'}
                     </a>
                 </div>
             </div>

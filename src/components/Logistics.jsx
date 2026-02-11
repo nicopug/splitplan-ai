@@ -30,38 +30,12 @@ const Logistics = ({ trip }) => {
 
     // Deep Links
     let flightLink = "#";
-    let trainLink = "#";
     let hotelLink = "#";
-    let hasSpecificHotel = false;
-    let hasSpecificTransport = false;
 
-    // Check if we have specific URLs from Google Search Grounding
-    if (trip.booking_url) {
-        hotelLink = trip.booking_url;
-        hasSpecificHotel = true;
-    }
-    if (trip.transport_url) {
-        if (trip.transport_mode === 'TRAIN') {
-            trainLink = trip.transport_url;
-        } else if (trip.transport_mode === 'FLIGHT') {
-            flightLink = trip.transport_url;
-        }
-        hasSpecificTransport = true;
-    }
-
-    // Fallback to generic search links if no specific URLs
     try {
-        if (!hasSpecificTransport) {
-            if (trip.transport_mode === 'FLIGHT') {
-                flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
-            } else if (trip.transport_mode === 'TRAIN') {
-                trainLink = `https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`;
-            }
-        }
-        if (!hasSpecificHotel) {
-            const safeDestName = encodeURIComponent(destName);
-            hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
-        }
+        flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
+        const safeDestName = encodeURIComponent(destName);
+        hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
     } catch (e) {
         console.warn("Link generation error", e);
     }
@@ -84,19 +58,16 @@ const Logistics = ({ trip }) => {
                         <>
                             <h3 style={{ color: '#ff6400' }}>Treni (Trainline)</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                {hasSpecificTransport
-                                    ? `Abbiamo trovato il biglietto perfetto da ${trip.departure_city || origin} a ${destName}.`
-                                    : `Prenota il tuo biglietto del treno da ${trip.departure_city || origin} a ${destName}.`
-                                }
+                                Prenota il tuo biglietto del treno da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong>.
                             </p>
                             <a
-                                href={trainLink}
+                                href={`https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn"
                                 style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                {hasSpecificTransport ? 'Prenota Ora' : 'Cerca Treni'}
+                                Cerca Treni
                             </a>
                         </>
                     ) : trip.transport_mode === 'CAR' ? (
@@ -113,10 +84,7 @@ const Logistics = ({ trip }) => {
                         <>
                             <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                {hasSpecificTransport
-                                    ? `Abbiamo trovato il volo perfetto da ${trip.departure_city || origin} a ${destName}.`
-                                    : `Cerca voli diretti da ${trip.departure_city || origin} a ${destName} per ${numPeople} persone.`
-                                }
+                                Cerca voli diretti da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
                             </p>
                             <a
                                 href={flightLink}
@@ -125,7 +93,7 @@ const Logistics = ({ trip }) => {
                                 className="btn"
                                 style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                {hasSpecificTransport ? 'Prenota Ora' : 'Cerca Voli'}
+                                Cerca Voli
                             </a>
                         </>
                     )}
@@ -135,10 +103,7 @@ const Logistics = ({ trip }) => {
                 <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #003580' }}>
                     <h3 style={{ color: '#003580' }}>Hotel (Booking.com)</h3>
                     <p style={{ margin: '1rem 0', color: '#666' }}>
-                        {hasSpecificHotel
-                            ? `Abbiamo trovato un'opzione perfetta per te a ${destName}.`
-                            : `Le migliori offerte a ${destName}.`
-                        }
+                        Le migliori offerte a <strong>{destName}</strong>.
                     </p>
                     <a
                         href={hotelLink}
@@ -147,7 +112,7 @@ const Logistics = ({ trip }) => {
                         className="btn"
                         style={{ background: '#003580', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                     >
-                        {hasSpecificHotel ? 'Prenota Ora' : 'Cerca Hotel'}
+                        Cerca Hotel
                     </a>
                 </div>
             </div>

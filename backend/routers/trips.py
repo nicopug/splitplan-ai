@@ -191,19 +191,6 @@ async def migrate_trip_intent(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
-@router.get("/migrate-booking-urls")
-async def migrate_booking_urls(session: Session = Depends(get_session)):
-    """Aggiunge booking_url e transport_url alla tabella proposal"""
-    from sqlalchemy import text
-    try:
-        session.execute(text("ALTER TABLE proposal ADD COLUMN IF NOT EXISTS booking_url VARCHAR;"))
-        session.execute(text("ALTER TABLE proposal ADD COLUMN IF NOT EXISTS transport_url VARCHAR;"))
-        session.commit()
-        return {"status": "success", "message": "Colonne booking_url e transport_url aggiunte."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
 @router.post("/{trip_id}/optimize")
 async def optimize_itinerary(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
@@ -621,31 +608,12 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 TASK 2: Genera 3 proposte UNICHE per: {prefs.destination}. 
                 Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico). 
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne', 'Parigi Segreta') per differenziarle.
-                Dati: Budget TOTALE {prefs.budget}€ per {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
-                Budget per persona: {prefs.budget / prefs.num_people}€.
+                Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
 
                 TASK 3: Analizza la distanza tra la partenza ({prefs.departure_airport}) e la destinazione ({prefs.destination}).
                 Scegli il "suggested_transport_mode" tra: FLIGHT, TRAIN, CAR.
                 REGOLA: Se la destinazione è raggiungibile via terra in meno di 6 ore (es. Milano-Roma, Parigi-Lione, Madrid-Barcellona), preferisci sempre TRAIN o CAR. Altrimenti usa FLIGHT.
-                
-                TASK 4 (CRITICO - USA GOOGLE SEARCH): Per ogni proposta, devi trovare opzioni REALI e PRENOTABILI:
-                
-                A) HOTEL:
-                   1. Usa Google Search per cercare: "hotel {prefs.destination} budget {int(prefs.budget / prefs.num_people)}€ per {(datetime.fromisoformat(prefs.end_date) - datetime.fromisoformat(prefs.start_date)).days + 1} notti"
-                   2. Trova un hotel SPECIFICO su Booking.com, Expedia, o Hotels.com
-                   3. Il link DEVE essere diretto alla pagina dell'hotel, NON una pagina di ricerca
-                   4. ESEMPI VALIDI:
-                      ✅ "https://www.booking.com/hotel/it/grand-hotel-majestic.it.html?checkin=..."
-                      ✅ "https://www.expedia.it/Bologna-Hotels-NH-Bologna-De-La-Gare.h12345.Hotel-Information"
-                      ❌ "https://www.booking.com/searchresults.html?ss=Bologna" (QUESTO È SBAGLIATO - è una ricerca generica)
-                   5. Se NON trovi un hotel specifico, lascia "booking_url": null
-                
-                B) TRASPORTI:
-                   - Se FLIGHT: cerca voli reali su Google Flights/Skyscanner e fornisci il link diretto
-                   - Se TRAIN: cerca biglietti su Trainline.com o Trenitalia e fornisci il link diretto
-                   - Se CAR: lascia "transport_url": null
-                   - Se NON trovi un trasporto specifico, lascia "transport_url": null
 
                 RESTITUISCI SOLO JSON:
                 {{
@@ -660,9 +628,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                             "destination_italian": "Parigi",
                             "description": "...", 
                             "price_estimate": 1000, 
-                            "image_search_term": "louvre,museum",
-                            "booking_url": "https://www.booking.com/hotel/it/nome-hotel-specifico.it.html?checkin=...",
-                            "transport_url": "https://www.thetrainline.com/book/results?origin=..."
+                            "image_search_term": "louvre,museum"
                         }}
                     ]
                 }}
@@ -671,21 +637,10 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 - 'destination_english' deve essere il nome della città principale in INGLESE.
                 - 'destination_italian' deve essere il nome della città principale in ITALIANO.
                 - 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE specifiche per quel tema.
-                - 'booking_url' DEVE essere un link DIRETTO a un hotel specifico (con /hotel/ nell'URL), NON una pagina di ricerca.
-                - 'transport_url' DEVE essere un link DIRETTO a un volo/treno specifico.
-                - Se non trovi link SPECIFICI, usa null invece di inventare o usare link generici.
                 LINGUA: ITALIANO.
                 """
                 
-                # Abilita Google Search Grounding
-                from google.genai import types
-                response = await ai_client.aio.models.generate_content(
-                    model=AI_MODEL, 
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        tools=[types.Tool(google_search=types.GoogleSearch())]
-                    )
-                )
+                response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
                 data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
                 
                 if data.get("departure_iata_normalized"):
@@ -724,21 +679,6 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                     # Usiamo /all per forzare la precisione dei tag
                     img_url = f"https://loremflickr.com/1080/720/{encoded_tags}/all?lock={seed}"
                     
-                    
-                    # Validazione URL: Accetta solo link SPECIFICI, non pagine di ricerca generiche
-                    booking_url = p.get("booking_url")
-                    transport_url = p.get("transport_url")
-                    
-                    # Filtra link generici di Booking.com (searchresults, index, etc.)
-                    if booking_url and ("/searchresults" in booking_url or "/index" in booking_url or "?ss=" in booking_url):
-                        print(f"[Warning] Scartato booking_url generico: {booking_url}")
-                        booking_url = None
-                    
-                    # Verifica che il link Booking contenga /hotel/ (indica un hotel specifico)
-                    if booking_url and "/hotel/" not in booking_url:
-                        print(f"[Warning] Scartato booking_url senza /hotel/: {booking_url}")
-                        booking_url = None
-                    
                     session.add(Proposal(
                         trip_id=trip_id, 
                         destination=p["destination"], 
@@ -746,38 +686,10 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                         destination_iata=p.get("destination_iata"),
                         description=p["description"],
                         price_estimate=p["price_estimate"],
-                        image_url=img_url,
-                        booking_url=booking_url,  # URL validato
-                        transport_url=transport_url     # URL specifico per volo/treno
+                        image_url=img_url
                     ))
                 
                 trip.status = "VOTING"
-                
-                # AUTO-BOOKING PER BUSINESS TRIPS
-                # Se è un viaggio di lavoro, saltiamo la fase di voto e prenotiamo subito la prima proposta (ottimizzata dall'AI)
-                if trip.trip_intent == "BUSINESS":
-                    print(f"[Auto-Booking] Business Trip detected. Booking first proposal automatically.")
-                    first_proposal = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).first()
-                    
-                    if first_proposal:
-                        trip.status = "BOOKED"
-                        trip.winning_proposal_id = first_proposal.id
-                        trip.destination = first_proposal.destination
-                        trip.destination_iata = first_proposal.destination_iata
-                        trip.real_destination = first_proposal.real_destination
-                        trip.description = first_proposal.description
-                        trip.budget = first_proposal.price_estimate # Aggiorniamo budget con stima reale
-                        
-                        # Salvataggio link specifici nel trip
-                        if first_proposal.booking_url:
-                            trip.booking_url = first_proposal.booking_url
-                        if first_proposal.transport_url:
-                            trip.transport_url = first_proposal.transport_url
-                            
-                        # Generazione immediata itinerario
-                        await generate_itinerary_content(trip, first_proposal, session)
-                
-                session.add(trip)
                 session.commit()
                 return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 

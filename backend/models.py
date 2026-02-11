@@ -77,8 +77,6 @@ class Proposal(SQLModel, table=True):
     price_estimate: float
     image_url: str
     real_destination: Optional[str] = ""
-    booking_url: Optional[str] = None  # URL specifico per prenotare l'hotel
-    transport_url: Optional[str] = None   # URL specifico per prenotare volo/treno
     
     trip: Optional[Trip] = Relationship(back_populates="proposals")
     votes: List["Vote"] = Relationship(back_populates="proposal")

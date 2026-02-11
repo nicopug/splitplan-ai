@@ -118,20 +118,13 @@ const Dashboard = () => {
             setProposals(props);
             setTrip(prev => ({
                 ...prev,
-                status: surveyData.trip_intent === 'BUSINESS' ? 'BOOKED' : 'VOTING', // Auto-switch status locally
+                status: 'VOTING',
                 num_people: surveyData.num_people,
                 transport_mode: surveyData.transport_mode,
                 destination: surveyData.destination,
                 departure_airport: surveyData.departure_airport
             }));
-
-            // Se è Business, forziamo il refresh immediato per caricare l'itinerario
-            if (surveyData.trip_intent === 'BUSINESS') {
-                setTimeout(() => fetchTrip(), 500); // Piccolo delay per assicurare che il backend abbia finito
-            } else {
-                fetchTrip();
-            }
-
+            fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
         } catch (e) {
             showToast("Errore generazione: " + e.message, "error");
         } finally {

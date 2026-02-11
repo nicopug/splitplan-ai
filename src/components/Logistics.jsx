@@ -30,24 +30,33 @@ const Logistics = ({ trip }) => {
 
     // Deep Links
     let flightLink = "#";
+    let trainLink = "#";
     let hotelLink = "#";
     let hasSpecificHotel = false;
-    let hasSpecificFlight = false;
+    let hasSpecificTransport = false;
 
     // Check if we have specific URLs from Google Search Grounding
     if (trip.booking_url) {
         hotelLink = trip.booking_url;
         hasSpecificHotel = true;
     }
-    if (trip.flight_url) {
-        flightLink = trip.flight_url;
-        hasSpecificFlight = true;
+    if (trip.transport_url) {
+        if (trip.transport_mode === 'TRAIN') {
+            trainLink = trip.transport_url;
+        } else if (trip.transport_mode === 'FLIGHT') {
+            flightLink = trip.transport_url;
+        }
+        hasSpecificTransport = true;
     }
 
     // Fallback to generic search links if no specific URLs
     try {
-        if (!hasSpecificFlight && trip.transport_mode === 'FLIGHT') {
-            flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
+        if (!hasSpecificTransport) {
+            if (trip.transport_mode === 'FLIGHT') {
+                flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
+            } else if (trip.transport_mode === 'TRAIN') {
+                trainLink = `https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`;
+            }
         }
         if (!hasSpecificHotel) {
             const safeDestName = encodeURIComponent(destName);
@@ -75,16 +84,19 @@ const Logistics = ({ trip }) => {
                         <>
                             <h3 style={{ color: '#ff6400' }}>Treni (Trainline)</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Prenota il tuo biglietto del treno da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong>.
+                                {hasSpecificTransport
+                                    ? `Abbiamo trovato il biglietto perfetto da ${trip.departure_city || origin} a ${destName}.`
+                                    : `Prenota il tuo biglietto del treno da ${trip.departure_city || origin} a ${destName}.`
+                                }
                             </p>
                             <a
-                                href={`https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`}
+                                href={trainLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn"
                                 style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                Cerca Treni
+                                {hasSpecificTransport ? 'Prenota Ora' : 'Cerca Treni'}
                             </a>
                         </>
                     ) : trip.transport_mode === 'CAR' ? (
@@ -101,7 +113,10 @@ const Logistics = ({ trip }) => {
                         <>
                             <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Cerca voli diretti da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
+                                {hasSpecificTransport
+                                    ? `Abbiamo trovato il volo perfetto da ${trip.departure_city || origin} a ${destName}.`
+                                    : `Cerca voli diretti da ${trip.departure_city || origin} a ${destName} per ${numPeople} persone.`
+                                }
                             </p>
                             <a
                                 href={flightLink}
@@ -110,7 +125,7 @@ const Logistics = ({ trip }) => {
                                 className="btn"
                                 style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                Cerca Voli
+                                {hasSpecificTransport ? 'Prenota Ora' : 'Cerca Voli'}
                             </a>
                         </>
                     )}

@@ -17,7 +17,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         transport_mode: 'FLIGHT', // Default
         trip_intent: 'LEISURE', // Default: LEISURE or BUSINESS
         work_start_time: '09:00',
-        work_end_time: '18:00'
+        work_end_time: '18:00',
+        work_days: 'Monday,Tuesday,Wednesday,Thursday,Friday'
     });
 
     const handleChange = (e) => {
@@ -33,6 +34,27 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         setFormData({ ...formData, transport_mode: mode });
         setStep(2);
     };
+
+    // Initialize from trip if editing
+    useEffect(() => {
+        if (trip) {
+            setFormData(prev => ({
+                ...prev,
+                destination: trip.destination || prev.destination,
+                departure_airport: trip.departure_airport || prev.departure_airport,
+                budget: trip.budget_per_person * (trip.num_people || 1) || prev.budget,
+                num_people: trip.num_people || prev.num_people,
+                start_date: trip.start_date || prev.start_date,
+                end_date: trip.end_date || prev.end_date,
+                must_have: trip.must_have || prev.must_have,
+                must_avoid: trip.must_avoid || prev.must_avoid,
+                trip_intent: trip.trip_intent || prev.trip_intent,
+                work_start_time: trip.work_start_time || prev.work_start_time,
+                work_end_time: trip.work_end_time || prev.work_end_time,
+                work_days: trip.work_days || prev.work_days
+            }));
+        }
+    }, [trip]);
 
     // Update participant names array when num_people changes
     useEffect(() => {
@@ -378,7 +400,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                 key={day.id}
                                                 type="button"
                                                 onClick={() => {
-                                                    const currentDays = formData.work_days.split(',').filter(d => d);
+                                                    const currentDays = (formData.work_days || '').split(',').filter(d => d);
                                                     let newDays;
                                                     if (currentDays.includes(day.id)) {
                                                         newDays = currentDays.filter(d => d !== day.id);
@@ -387,9 +409,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     }
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
-                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${formData.work_days.includes(day.id)
-                                                        ? 'bg-primary-blue text-white shadow-md scale-105'
-                                                        : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
+                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${(formData.work_days || '').includes(day.id)
+                                                    ? 'bg-primary-blue text-white shadow-md scale-105'
+                                                    : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
                                                     }`}
                                             >
                                                 {day.label}

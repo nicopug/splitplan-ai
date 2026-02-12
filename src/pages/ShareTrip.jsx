@@ -174,13 +174,15 @@ const ShareTrip = ({ isJoinMode = false }) => {
                                     </div>
                                 </div>
 
-                                <Map
-                                    items={itinerary}
-                                    hotelLat={trip?.hotel_latitude}
-                                    hotelLon={trip?.hotel_longitude}
-                                    startDate={trip?.start_date}
-                                    isPremium={user?.is_subscribed}
-                                />
+                                {trip?.trip_intent !== 'BUSINESS' && (
+                                    <Map
+                                        items={itinerary}
+                                        hotelLat={trip?.hotel_latitude}
+                                        hotelLon={trip?.hotel_longitude}
+                                        startDate={trip?.start_date}
+                                        isPremium={user?.is_subscribed}
+                                    />
+                                )}
                             </div>
                             <Timeline items={itinerary} />
                         </>

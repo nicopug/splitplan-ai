@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
@@ -380,7 +381,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {formData.trip_intent === 'BUSINESS' && (
                             <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
                                 <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
-                                    💼 Orario e Giorni di Lavoro
+                                    Orario e Giorni di Lavoro
                                     <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                 </label>
 
@@ -489,22 +490,22 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         </div>
 
                         {/* Submit Button */}
-                        <button
+                        <Button
                             type="submit"
-                            className="btn btn-primary w-full py-4 text-lg font-bold
-                                     disabled:opacity-50 disabled:cursor-not-allowed
-                                     transform active:scale-95 transition-all"
+                            variant="premium"
+                            size="xl"
+                            className="w-full"
                             disabled={isGenerating}
                         >
                             {isGenerating ? (
                                 <span className="flex items-center justify-center">
-                                    <span className="spinner"></span>
+                                    <span className="spinner mr-2"></span>
                                     Generazione in corso...
                                 </span>
                             ) : (
                                 isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'
                             )}
-                        </button>
+                        </Button>
                     </form>
                 </div>
             </div>

@@ -598,7 +598,7 @@ const Dashboard = () => {
                                                         cursor: 'pointer'
                                                     }}
                                                 >
-                                                    ⚙️ Modifica Logistica
+                                                    Modifica Logistica
                                                 </button>
                                             )}
                                         </div>

@@ -314,6 +314,10 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         
         response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
         data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
+        
+        # Aggiungiamo il numero di giorni calcolato per aiutare il frontend nel breakdown
+        data["days_count"] = days
+        
         return data
     except Exception as e:
         print(f"[AI Error] Stima budget fallita: {e}")

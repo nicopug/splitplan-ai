@@ -109,6 +109,21 @@ const Budget = ({ trip, onUpdate }) => {
             categoryMap['Travel_Road'] = (categoryMap['Travel_Road'] || 0) + (roadCosts_Raw * numPeople);
         }
 
+        // Add other AI estimated costs to categories
+        if (showSimulation && estimation) {
+            const days = (estimation.days_count) ? estimation.days_count : 7; // Backend should ideally return this
+
+            // Map meals
+            if (estimation.daily_meal_mid > 0) {
+                categoryMap['Food'] = (categoryMap['Food'] || 0) + (estimation.daily_meal_mid * days * numPeople);
+            }
+
+            // Map local transport (if not road costs)
+            if (estimation.daily_transport > 0) {
+                categoryMap['Transport'] = (categoryMap['Transport'] || 0) + (estimation.daily_transport * days * numPeople);
+            }
+        }
+
         // --- Category Mapping Helper ---
         const getCategoryInfo = (id) => {
             const map = {

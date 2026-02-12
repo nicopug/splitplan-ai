@@ -42,6 +42,7 @@ class TripBase(SQLModel):
     # Orario di lavoro per viaggi BUSINESS
     work_start_time: Optional[str] = "09:00"
     work_end_time: Optional[str] = "18:00"
+    work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday" # Comma separated days
     
     status: str = "PLANNING"
     winning_proposal_id: Optional[int] = None

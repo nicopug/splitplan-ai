@@ -354,14 +354,50 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             </div>
                         </div>
 
-                        {/* Work Hours (Business Only) */}
+                        {/* Work Hours & Days (Business Only) */}
                         {formData.trip_intent === 'BUSINESS' && (
-                            <div className="bg-blue-50 p-6 rounded-xl space-y-4 animate-fade-in border border-blue-100">
+                            <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
                                 <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
-                                    💼 Orario di Lavoro (Opzionale)
+                                    💼 Orario e Giorni di Lavoro
                                     <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                 </label>
-                                <p className="text-xs text-blue-600 mb-2">L'AI organizzerà le attività extra intorno a questi orari.</p>
+
+                                <div className="space-y-3">
+                                    <p className="text-xs text-blue-600 font-medium">In quali giorni lavorerai?</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { id: 'Monday', label: 'Lun' },
+                                            { id: 'Tuesday', label: 'Mar' },
+                                            { id: 'Wednesday', label: 'Mer' },
+                                            { id: 'Thursday', label: 'Gio' },
+                                            { id: 'Friday', label: 'Ven' },
+                                            { id: 'Saturday', label: 'Sab' },
+                                            { id: 'Sunday', label: 'Dom' }
+                                        ].map(day => (
+                                            <button
+                                                key={day.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    const currentDays = formData.work_days.split(',').filter(d => d);
+                                                    let newDays;
+                                                    if (currentDays.includes(day.id)) {
+                                                        newDays = currentDays.filter(d => d !== day.id);
+                                                    } else {
+                                                        newDays = [...currentDays, day.id];
+                                                    }
+                                                    setFormData({ ...formData, work_days: newDays.join(',') });
+                                                }}
+                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${formData.work_days.includes(day.id)
+                                                        ? 'bg-primary-blue text-white shadow-md scale-105'
+                                                        : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
+                                                    }`}
+                                            >
+                                                {day.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
@@ -374,7 +410,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="time"
                                             className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                                      focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                                     transition-all outline-none bg-white text-sm"
                                         />
                                     </div>
                                     <div>
@@ -388,10 +424,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="time"
                                             className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                                      focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                                     transition-all outline-none bg-white text-sm"
                                         />
                                     </div>
                                 </div>
+                                <p className="text-xs text-blue-500 italic">L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.</p>
                             </div>
                         )}
 

@@ -15,7 +15,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         must_avoid: '',
         participant_names: [],
         transport_mode: 'FLIGHT', // Default
-        trip_intent: 'LEISURE' // Default: LEISURE or BUSINESS
+        trip_intent: 'LEISURE', // Default: LEISURE or BUSINESS
+        work_start_time: '09:00',
+        work_end_time: '18:00'
     });
 
     const handleChange = (e) => {
@@ -351,6 +353,47 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                 />
                             </div>
                         </div>
+
+                        {/* Work Hours (Business Only) */}
+                        {formData.trip_intent === 'BUSINESS' && (
+                            <div className="bg-blue-50 p-6 rounded-xl space-y-4 animate-fade-in border border-blue-100">
+                                <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
+                                    💼 Orario di Lavoro (Opzionale)
+                                    <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                </label>
+                                <p className="text-xs text-blue-600 mb-2">L'AI organizzerà le attività extra intorno a questi orari.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                            Inizio Lavoro
+                                        </label>
+                                        <input
+                                            name="work_start_time"
+                                            value={formData.work_start_time}
+                                            onChange={handleChange}
+                                            type="time"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                            Fine Lavoro
+                                        </label>
+                                        <input
+                                            name="work_end_time"
+                                            value={formData.work_end_time}
+                                            onChange={handleChange}
+                                            type="time"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Preferences */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

@@ -48,6 +48,8 @@ class PreferencesRequest(SQLModel):
     participant_names: List[str] = []
     transport_mode: Optional[str] = None
     trip_intent: str = "LEISURE"
+    work_start_time: Optional[str] = "09:00"
+    work_end_time: Optional[str] = "18:00"
 
 class HotelSelectionRequest(SQLModel):
     hotel_name: str
@@ -190,6 +192,19 @@ async def migrate_trip_intent(session: Session = Depends(get_session)):
         session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS trip_intent VARCHAR DEFAULT 'LEISURE';"))
         session.commit()
         return {"status": "success", "message": "Colonna trip_intent aggiunta."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.get("/migrate-trip-work-hours")
+async def migrate_trip_work_hours(session: Session = Depends(get_session)):
+    """Aggiunge work_start_time e work_end_time alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_start_time VARCHAR DEFAULT '09:00';"))
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_end_time VARCHAR DEFAULT '18:00';"))
+        session.commit()
+        return {"status": "success", "message": "Colonne work_start/end_time aggiunte."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
@@ -592,6 +607,8 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         trip.must_have = prefs.must_have
         trip.must_avoid = prefs.must_avoid
         trip.trip_intent = prefs.trip_intent
+        trip.work_start_time = prefs.work_start_time
+        trip.work_end_time = prefs.work_end_time
         
         # SALVA IL MEZZO DI TRASPORTO SCELTO MANUALMENTE SE PRESENTE
         if prefs.transport_mode:
@@ -618,6 +635,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne', 'Parigi Segreta') per differenziarle.
                 Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
+                {"ORARIO LAVORO: dalle " + prefs.work_start_time + " alle " + prefs.work_end_time if prefs.trip_intent == "BUSINESS" else ""}
 
                 TASK 3: Analizza la distanza tra la partenza ({prefs.departure_airport}) e la destinazione ({prefs.destination}).
                 Scegli il "suggested_transport_mode" tra: FLIGHT, TRAIN, CAR.
@@ -839,7 +857,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         {calendar_prompt}
 
         SCOPO DEL VIAGGIO: {trip.trip_intent}
-        {"Se il viaggio è BUSINESS, PRIORITÀ ASSOLUTA a: efficienza, hotel con coworking/Wi-Fi eccellente, pasti veloci ma di qualità, posizioni centrali vicino a hub di trasporto. Evita attività troppo rilassate o dispersive. Ottimizza per produttività." if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
+        {"Se il viaggio è BUSINESS (LAVORO), PRIORITÀ ASSOLUTA a: efficienza, hotel con coworking/Wi-Fi eccellente, pasti veloci ma di qualità, posizioni centrali vicino a hub di trasporto. Evita attività troppo rilassate o dispersive. Ottimizza per produttività. RISPETTA L'ORARIO DI LAVORO: dalle " + (trip.work_start_time or '09:00') + " alle " + (trip.work_end_time or '18:00') + ". Pianifica attività turistiche/extra SOLO PRIMA o DOPO questi orari (es. Colazione presto o Cena/Passeggiata serale)." if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
 
         REGOLE CRITICHE:
         1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).

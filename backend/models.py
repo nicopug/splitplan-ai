@@ -39,6 +39,10 @@ class TripBase(SQLModel):
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
     
+    # Orario di lavoro per viaggi BUSINESS
+    work_start_time: Optional[str] = "09:00"
+    work_end_time: Optional[str] = "18:00"
+    
     status: str = "PLANNING"
     winning_proposal_id: Optional[int] = None
     destination_iata: Optional[str] = None

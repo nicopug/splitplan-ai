@@ -127,18 +127,41 @@ async def exchange_token(payload: dict, session: Session = Depends(get_session),
 
 
 @router.get("/callback")
-async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
+async def google_callback(
+    request: Request,
+    code: Optional[str] = None, 
+    state: Optional[str] = None, 
+    error: Optional[str] = None,
+    session: Session = Depends(get_session)
+):
     """Callback di Google che riceve il codice di autorizzazione."""
-    print(f"[CALENDAR] CALLBACK START - state: {state}", flush=True)
+    logger.info(f"CALLBACK RECEIVED - code present: {bool(code)}, state: {state}, error: {error}")
+    print(f"[CALENDAR] CALLBACK - code: {bool(code)}, state: {state}, error: {error}", flush=True)
+    
     try:
-        if not state or ":" not in state:
-            raise Exception(f"Stato non valido: {state}")
+        # Se Google restituisce un errore (es. utente ha annullato)
+        if error:
+            logger.error(f"Google returned error: {error}")
+            return RedirectResponse(f"https://splitplan-ai.vercel.app?calendar_error={error}")
+
+        if not code or not state:
+            logger.error("Missing code or state in callback")
+            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=missing_data")
+
+        # Decodifica lo stato (formato "trip_id:account_id" o "trip_id_account_id")
+        # Usiamo un separatore più sicuro se necessario, ma gestiamo entrambi
+        separator = ":" if ":" in state else "_"
+        parts = state.split(separator)
+        
+        if len(parts) < 2:
+            logger.error(f"Invalid state format: {state}")
+            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=invalid_state")
             
-        parts = state.split(":")
         trip_id = parts[0]
         account_id = int(parts[1])
-        print(f"[CALENDAR] Processing for trip {trip_id}, user {account_id}", flush=True)
+        logger.info(f"Processing for trip {trip_id}, account {account_id}")
         
+        # Scambia il codice per i token
         flow = get_flow()
         flow.fetch_token(code=code)
         credentials = flow.credentials
@@ -149,22 +172,20 @@ async def google_callback(code: str, state: str, session: Session = Depends(get_
             user.is_calendar_connected = True
             session.add(user)
             session.commit()
-            print(f"[CALENDAR] Token saved successfully for user {account_id}", flush=True)
+            logger.info("Calendar connection saved to DB")
+        else:
+            logger.error(f"User {account_id} not found")
+            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=user_not_found")
         
-        frontend_url = "https://splitplan-ai.vercel.app"
-        final_redirect = f"{frontend_url}/trip/{trip_id}?calendar_success=true"
-        print(f"[CALENDAR] Success! Redirecting to {final_redirect}", flush=True)
+        final_redirect = f"https://splitplan-ai.vercel.app/trip/{trip_id}?calendar_success=true"
+        logger.info(f"Success! Redirecting to {final_redirect}")
         return RedirectResponse(final_redirect)
         
     except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
-        print(f"[CALENDAR] CALLBACK ERROR: {str(e)}\n{error_trace}", flush=True)
-        
-        import urllib.parse
+        logger.error(f"CALLBACK FATAL ERROR: {str(e)}")
+        logger.error(traceback.format_exc())
         err_msg = urllib.parse.quote(str(e))
-        frontend_url = "https://splitplan-ai.vercel.app"
-        return RedirectResponse(f"{frontend_url}?calendar_error={err_msg}")
+        return RedirectResponse(f"https://splitplan-ai.vercel.app?calendar_error={err_msg}")
 
 
 @router.get("/status")

@@ -13,6 +13,7 @@ import MyTrips from './pages/MyTrips';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import ShareTrip from './pages/ShareTrip';
+import CalendarCallback from './pages/CalendarCallback';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
 import { useToast } from './context/ToastContext';
@@ -36,20 +37,6 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [globalError, setGlobalError] = useState(null);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const error = urlParams.get('calendar_error');
-    if (error) {
-      showToast("Errore Calendario: " + decodeURIComponent(error), "error");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    const success = urlParams.get('calendar_success');
-    if (success === 'true') {
-      showToast("Account connesso correttamente! 📅", "success");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [showToast]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -117,6 +104,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
           <Route path="/trip/:id" element={<Dashboard />} />
+          <Route path="/calendar-callback" element={<CalendarCallback />} />
           <Route path="/my-trips" element={<MyTrips />} />
           <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
           <Route path="/share/:token" element={<ShareTrip />} />

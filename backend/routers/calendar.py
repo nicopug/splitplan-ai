@@ -60,15 +60,15 @@ def get_flow(redirect_uri=None):
             raise HTTPException(status_code=500, detail="OAuth Credentials not found (neither Env Vars nor File)")
 
     # Configura il Redirect URI
-    if os.getenv("VERCEL"):
-        # Forza il link di produzione ufficiale - DEVE ESSERE UGUALE A QUELLO NELLA CONSOLE GOOGLE
-        flow.redirect_uri = "https://splitplan-ai.vercel.app/api/calendar/callback"
+    if os.getenv("VERCEL") or os.getenv("FRONTEND_URL"):
+        # Forza il link di produzione ufficiale del FRONTEND
+        # Questo deve corrispondere a quanto inserito nella Google Cloud Console
+        flow.redirect_uri = "https://splitplan-ai.vercel.app/calendar-callback"
     else:
-        # Fallback locale
-        flow.redirect_uri = "http://localhost:5678/api/calendar/callback"
+        # Fallback locale - ora punta al frontend locale
+        flow.redirect_uri = "http://localhost:5173/calendar-callback"
 
-    print(f"[CALENDAR] Using REDIRECT_URI: {flow.redirect_uri}", flush=True)
-    logger.info(f"Using REDIRECT_URI: {flow.redirect_uri}")
+    logger.info(f"Using FRONTEND REDIRECT_URI: {flow.redirect_uri}")
 
     return flow
 

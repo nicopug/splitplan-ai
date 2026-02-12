@@ -377,3 +377,16 @@ export const validateResetToken = async (token) => {
     });
     return handleResponse(response);
 };
+
+export const exchangeCalendarToken = async (code, state) => {
+    const response = await fetch(`${API_URL}/calendar/exchange-token`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            code,
+            state,
+            redirect_uri: window.location.origin + "/calendar-callback"
+        }),
+    });
+    return handleResponse(response);
+};

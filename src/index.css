@@ -225,6 +225,20 @@
     @apply rounded-3xl;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   }
+
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-md border border-white/20;
+  }
+
+  .mesh-gradient {
+    background-color: #2563eb;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(210, 100%, 70%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(225, 100%, 60%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(250, 100%, 70%, 1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: mesh-flow 15s ease infinite;
+  }
 }
 
 @keyframes spin {
@@ -247,6 +261,12 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes mesh-flow {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
 }
 
 .animate-fade-in {

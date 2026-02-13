@@ -9,3 +9,4 @@ dist/
 build/
 .DS_Store
 backend/client_secret.json
+APPUNTI.MD

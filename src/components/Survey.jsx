@@ -2,6 +2,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { AlertCircle } from 'lucide-react';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
@@ -178,35 +179,42 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="container max-w-4xl">
 
                 {/* Header */}
-                <div className="text-center mb-8 md:mb-12">
-                    <button
-                        onClick={() => setStep(0)}
-                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.5rem', cursor: 'pointer' }}
-                    >
-                        ← Cambia Scopo ({formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'})
-                    </button>
-                    <button
-                        onClick={() => setStep(1)}
-                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer', marginLeft: '8px' }}
-                    >
-                        ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
-                    </button>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                <div className="text-center mb-10">
+                    <div className="flex justify-center gap-3 mb-6">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setStep(0)}
+                            className="bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-full border border-white/10 text-[10px] h-8"
+                        >
+                            ← Cambia Scopo ({formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'})
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setStep(1)}
+                            className="bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-full border border-white/10 text-[10px] h-8"
+                        >
+                            ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
+                        </Button>
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-3 text-white tracking-tight">
                         Definiamo i dettagli
                     </h2>
-                    <p className="text-base md:text-lg text-text-muted">
+                    <p className="text-lg text-white/60">
                         Aiutaci a costruire il viaggio perfetto per {isGroup ? 'il gruppo' : 'te'}.
                     </p>
                 </div>
 
                 {/* Form Container */}
-                <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-slate-900/60 backdrop-blur-xl rounded-[32px] p-8 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 opacity-50" />
+                    <form onSubmit={handleSubmit} className="space-y-8">
 
                         {/* Destination & Airport */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <Label htmlFor="destination" className="font-bold mb-2 block">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label htmlFor="destination" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                     Destinazione
                                 </Label>
                                 <Input
@@ -217,11 +225,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="text"
                                     placeholder="es. Europa, Giappone..."
                                     required
-                                    className="bg-white"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50"
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="departure_airport" className="font-bold mb-2 block">
+                            <div className="space-y-2">
+                                <Label htmlFor="departure_airport" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                     {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
                                 </Label>
                                 <Input
@@ -232,17 +240,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="text"
                                     placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
                                     required
-                                    className="bg-white"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50"
                                 />
                             </div>
                         </div>
 
                         {/* Group Details */}
                         {isGroup && (
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="budget" className="font-bold mb-2 block">
+                            <div className="bg-white/5 p-6 rounded-[24px] border border-white/5 space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="budget" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                             Budget Totale (€)
                                         </Label>
                                         <Input
@@ -253,11 +261,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="number"
                                             placeholder="es. 3000"
                                             required
-                                            className="bg-white"
+                                            className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50"
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="num_people" className="font-bold mb-2 block">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="num_people" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                             Numero Persone
                                         </Label>
                                         <Input
@@ -269,19 +277,19 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="bg-white"
+                                            className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Dynamic Names Inputs */}
                                 {formData.participant_names.length > 0 && (
-                                    <div className="animate-fade-in">
-                                        <label className="block text-sm font-bold mb-3 text-primary-blue flex items-center gap-2">
+                                    <div className="animate-fade-in space-y-4">
+                                        <label className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 flex items-center gap-2">
                                             Chi viene con te?
-                                            <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                            <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-tighter border border-blue-500/20">INFO</span>
                                         </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {formData.participant_names.map((name, idx) => (
                                                 <Input
                                                     key={idx}
@@ -290,25 +298,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={`Nome Amico ${idx + 2}`}
                                                     required
-                                                    className="bg-white text-sm"
+                                                    className="bg-white/5 border-white/10 text-white h-11 rounded-xl text-sm"
                                                 />
                                             ))}
                                         </div>
 
                                         {/* AVVISO NOMI */}
-                                        <div style={{
-                                            padding: '1rem',
-                                            background: '#fff7ed',
-                                            borderRadius: '12px',
-                                            border: '1px solid #ffedd5',
-                                            display: 'flex',
-                                            gap: '12px',
-                                            alignItems: 'flex-start'
-                                        }}>
-                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#9a3412' }}>!</span>
+                                        <div className="p-4 bg-orange-500/10 rounded-2xl border border-orange-500/20 flex gap-4 items-start">
+                                            <AlertCircle className="w-5 h-5 text-orange-400 shrink-0" />
                                             <div>
-                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>ATTENZIONE AI NOMI</strong>
-                                                <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>
+                                                <strong className="text-xs font-bold text-orange-300 uppercase tracking-wider block mb-1">Attenzione ai nomi</strong>
+                                                <p className="text-xs text-orange-200/70 leading-relaxed">
                                                     Inserisci i <b>NOMI</b> con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan.
                                                     Questo permetterà loro di votare la destinazione dal loro account!
                                                 </p>
@@ -321,8 +321,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Solo Details */}
                         {!isGroup && (
-                            <div>
-                                <Label htmlFor="budget-solo" className="font-bold mb-2 block">
+                            <div className="space-y-2">
+                                <Label htmlFor="budget-solo" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                     Budget Totale (€)
                                 </Label>
                                 <Input
@@ -333,15 +333,15 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="number"
                                     placeholder="es. 1500"
                                     required
-                                    className="bg-white"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50"
                                 />
                             </div>
                         )}
 
                         {/* Dates */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <Label htmlFor="start_date" className="font-bold mb-2 block">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label htmlFor="start_date" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                     Dal
                                 </Label>
                                 <Input
@@ -351,11 +351,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     type="date"
                                     required
-                                    className="bg-white"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50 [color-scheme:dark]"
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="end_date" className="font-bold mb-2 block">
+                            <div className="space-y-2">
+                                <Label htmlFor="end_date" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">
                                     Al
                                 </Label>
                                 <Input
@@ -365,22 +365,22 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     type="date"
                                     required
-                                    className="bg-white"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50 [color-scheme:dark]"
                                 />
                             </div>
                         </div>
 
                         {/* Work Hours & Days (Business Only) */}
                         {formData.trip_intent === 'BUSINESS' && (
-                            <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
-                                <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
+                            <div className="bg-white/5 p-8 rounded-[24px] border border-white/5 space-y-8 animate-fade-in">
+                                <label className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 flex items-center gap-2">
                                     Orario e Giorni di Lavoro
-                                    <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                    <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-tighter border border-blue-500/20">INFO</span>
                                 </label>
 
-                                <div className="space-y-3">
-                                    <p className="text-xs text-blue-600 font-medium">In quali giorni lavorerai?</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <div className="space-y-4">
+                                    <p className="text-xs text-white/60 font-medium px-1">In quali giorni lavorerai?</p>
+                                    <div className="flex flex-wrap gap-2 px-1">
                                         {[
                                             { id: 'Monday', label: 'Lun' },
                                             { id: 'Tuesday', label: 'Mar' },
@@ -403,9 +403,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     }
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
-                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${(formData.work_days || '').includes(day.id)
-                                                    ? 'bg-primary-blue text-white shadow-md scale-105'
-                                                    : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
+                                                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${(formData.work_days || '').includes(day.id)
+                                                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/30'
+                                                        : 'bg-white/5 text-white/40 border-white/10 hover:border-white/30 hover:text-white'
                                                     }`}
                                             >
                                                 {day.label}
@@ -414,9 +414,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="work_start_time" className="text-xs font-bold mb-1 text-gray-500 uppercase block">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="work_start_time" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 block">
                                             Inizio Lavoro
                                         </Label>
                                         <Input
@@ -425,11 +425,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="bg-white text-sm"
+                                            className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50 [color-scheme:dark]"
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="work_end_time" className="text-xs font-bold mb-1 text-gray-500 uppercase block">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="work_end_time" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 block">
                                             Fine Lavoro
                                         </Label>
                                         <Input
@@ -438,18 +438,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="bg-white text-sm"
+                                            className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-blue-500/50 [color-scheme:dark]"
                                         />
                                     </div>
                                 </div>
-                                <p className="text-xs text-blue-500 italic">L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.</p>
+                                <p className="text-xs text-blue-400 font-medium italic bg-blue-500/10 p-4 rounded-xl border border-blue-500/10">L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.</p>
                             </div>
                         )}
 
                         {/* Preferences */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <Label htmlFor="must_have" className="font-bold mb-2 block">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label htmlFor="must_have" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 block">
                                     Cosa non può mancare?
                                 </Label>
                                 <Textarea
@@ -459,11 +459,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder="es. Musei, Spiagge, Shopping..."
                                     rows="4"
-                                    className="bg-white resize-none"
+                                    className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-blue-500/50 resize-none"
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="must_avoid" className="font-bold mb-2 block">
+                            <div className="space-y-2">
+                                <Label htmlFor="must_avoid" className="text-xs font-bold text-white/40 uppercase tracking-widest px-1 block">
                                     Cosa vorresti evitare?
                                 </Label>
                                 <Textarea
@@ -473,7 +473,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder="es. Club, Trekking faticosi..."
                                     rows="4"
-                                    className="bg-white resize-none"
+                                    className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-blue-500/50 resize-none"
                                 />
                             </div>
                         </div>

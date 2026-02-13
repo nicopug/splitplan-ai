@@ -13,8 +13,9 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Share2, Calendar, Map as MapIcon, MessageSquare, PieChart, Camera, Settings } from "lucide-react"
+import { Share2, Calendar, Map as MapIcon, MessageSquare, PieChart, Camera, Settings, AlertCircle } from "lucide-react"
 
 const Dashboard = () => {
     const { id } = useParams();
@@ -334,8 +335,8 @@ const Dashboard = () => {
                     {user && (
                         <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
                             <span className={`px-3 py-1 rounded-full backdrop-blur-md border text-[10px] font-extrabold tracking-widest uppercase shadow-lg ${user.is_subscribed
-                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-amber-300/50 text-amber-950 shadow-amber-500/20'
-                                    : 'bg-white/10 border-white/20 text-white shadow-black/10'
+                                ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-amber-300/50 text-amber-950 shadow-amber-500/20'
+                                : 'bg-white/10 border-white/20 text-white shadow-black/10'
                                 }`}>
                                 {user.is_subscribed ? 'PREMIUM ABBONATO' : 'UTENTE FREE'}
                             </span>
@@ -356,27 +357,29 @@ const Dashboard = () => {
                                 className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-2xl h-11 px-6 shadow-lg shadow-black/20"
                             >
                                 <Share2 className="w-4 h-4 mr-2" />
-                                Condividi Viaggio (Sola Lettura)
+                                <span className="text-xs font-bold">Condividi Viaggio</span>
                             </Button>
 
-                            <Button
-                                variant={isCalendarConnected ? "secondary" : "outline"}
-                                onClick={handleConnectCalendar}
-                                disabled={isCalendarConnected}
-                                className={`h-11 px-6 rounded-2xl shadow-lg shadow-black/20 backdrop-blur-md border transition-all ${isCalendarConnected
-                                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                                    : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                                    }`}
-                            >
-                                {isCalendarConnected ? (
-                                    <>✓ Calendar Connesso</>
-                                ) : (
-                                    <>
-                                        <Calendar className="w-4 h-4 mr-2" />
-                                        Connetti Google Calendar
-                                    </>
-                                )}
-                            </Button>
+                            {trip.trip_intent === 'BUSINESS' && (
+                                <Button
+                                    variant={isCalendarConnected ? "secondary" : "outline"}
+                                    onClick={handleConnectCalendar}
+                                    disabled={isCalendarConnected}
+                                    className={`h-11 px-6 rounded-2xl shadow-lg shadow-black/20 backdrop-blur-md border transition-all ${isCalendarConnected
+                                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                                        : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                                        }`}
+                                >
+                                    {isCalendarConnected ? (
+                                        <>✓ Calendar Connesso</>
+                                    ) : (
+                                        <>
+                                            <Calendar className="w-4 h-4 mr-2" />
+                                            <span className="text-xs font-bold">Connetti Google Calendar</span>
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                         </div>
                     )}
 

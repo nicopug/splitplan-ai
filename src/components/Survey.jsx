@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -94,10 +95,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-8 md:py-12 animate-fade-in">
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
                             Qual è lo scopo del viaggio?
                         </h2>
-                        <p className="text-lg text-text-muted">
+                        <p className="text-lg text-white/60">
                             Questo ci aiuterà a personalizzare l'itinerario perfetto per te.
                         </p>
                     </div>
@@ -106,21 +107,21 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Leisure */}
                         <div
                             onClick={() => handleIntentSelect('LEISURE')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-green group text-center"
+                            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl transition-all cursor-pointer border border-white/10 hover:border-blue-500/50 hover:bg-white/10 group text-center"
                         >
-                            <div className="text-6xl mb-4">🏖️</div>
-                            <h3 className="text-xl font-bold mb-2">Vacanza</h3>
-                            <p className="text-sm text-gray-500">Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.</p>
+                            <div className="text-6xl mb-4 grayscale group-hover:grayscale-0 transition-all">🏖️</div>
+                            <h3 className="text-xl font-bold mb-2 text-white">Vacanza</h3>
+                            <p className="text-sm text-white/50">Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.</p>
                         </div>
 
                         {/* Business */}
                         <div
                             onClick={() => handleIntentSelect('BUSINESS')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
+                            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl transition-all cursor-pointer border border-white/10 hover:border-blue-500/50 hover:bg-white/10 group text-center"
                         >
-                            <div className="text-6xl mb-4">💼</div>
-                            <h3 className="text-xl font-bold mb-2">Lavoro</h3>
-                            <p className="text-sm text-gray-500">Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.</p>
+                            <div className="text-6xl mb-4 grayscale group-hover:grayscale-0 transition-all">💼</div>
+                            <h3 className="text-xl font-bold mb-2 text-white">Lavoro</h3>
+                            <p className="text-sm text-white/50">Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.</p>
                         </div>
                     </div>
                 </div>
@@ -133,10 +134,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-8 md:py-12 animate-fade-in">
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
                             Qual è il tuo mezzo di trasporto?
                         </h2>
-                        <p className="text-lg text-text-muted">
+                        <p className="text-lg text-white/60">
                             Scegli come vuoi raggiungere la tua destinazione.
                         </p>
                     </div>
@@ -145,28 +146,31 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* CAR */}
                         <div
                             onClick={() => handleTransportSelect('CAR')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
+                            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl transition-all cursor-pointer border border-white/10 hover:border-blue-500/50 hover:bg-white/10 group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Macchina</h3>
-                            <p className="text-sm text-gray-500">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
+                            <div className="text-4xl mb-3">🚗</div>
+                            <h3 className="text-xl font-bold mb-2 text-white">Macchina</h3>
+                            <p className="text-sm text-white/50">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
                         </div>
 
                         {/* TRAIN */}
                         <div
                             onClick={() => handleTransportSelect('TRAIN')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-secondary-teal group text-center"
+                            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl transition-all cursor-pointer border border-white/10 hover:border-blue-500/50 hover:bg-white/10 group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Treno</h3>
-                            <p className="text-sm text-gray-500">Viaggia sui binari con i link pronti di Trainline.</p>
+                            <div className="text-4xl mb-3">🚄</div>
+                            <h3 className="text-xl font-bold mb-2 text-white">Treno</h3>
+                            <p className="text-sm text-white/50">Viaggia sui binari con i link pronti di Trainline.</p>
                         </div>
 
                         {/* FLIGHT */}
                         <div
                             onClick={() => handleTransportSelect('FLIGHT')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-orange group text-center"
+                            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl transition-all cursor-pointer border border-white/10 hover:border-blue-500/50 hover:bg-white/10 group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Volo</h3>
-                            <p className="text-sm text-gray-500">Decolla verso la meta con le migliori offerte Skyscanner.</p>
+                            <div className="text-4xl mb-3">✈️</div>
+                            <h3 className="text-xl font-bold mb-2 text-white">Volo</h3>
+                            <p className="text-sm text-white/50">Decolla verso la meta con le migliori offerte Skyscanner.</p>
                         </div>
                     </div>
                 </div>
@@ -404,8 +408,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
                                                 className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${(formData.work_days || '').includes(day.id)
-                                                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/30'
-                                                        : 'bg-white/5 text-white/40 border-white/10 hover:border-white/30 hover:text-white'
+                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/30'
+                                                    : 'bg-white/5 text-white/40 border-white/10 hover:border-white/30 hover:text-white'
                                                     }`}
                                             >
                                                 {day.label}

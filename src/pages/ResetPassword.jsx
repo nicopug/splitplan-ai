@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { resetPassword, validateResetToken } from '../api';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import './Auth.css';
 
 
@@ -72,6 +76,20 @@ const ResetPassword = () => {
         }
     };
 
+    const renderError = (msg) => (
+        <div className="flex items-center gap-2 p-3 mb-4 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{msg}</span>
+        </div>
+    );
+
+    const renderSuccess = (msg) => (
+        <div className="flex items-center gap-2 p-3 mb-4 text-sm text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{msg}</span>
+        </div>
+    );
+
     if (isValidating) {
         return (
             <div className="auth-container">
@@ -87,9 +105,11 @@ const ResetPassword = () => {
         return (
             <div className="auth-container">
                 <div className="auth-glass-card">
-                    <h2>Errore</h2>
-                    <p>{error || "Token di reset mancante o non valido."}</p>
-                    <button className="btn btn-primary mt-4" onClick={() => navigate('/auth')}>Torna al Login</button>
+                    <h2 className="text-2xl font-bold mb-4">Errore</h2>
+                    {renderError(error || "Token di reset mancante o non valido.")}
+                    <Button variant="outline" className="mt-4 border-white/20 hover:bg-white/5 text-white" onClick={() => navigate('/auth')}>
+                        Torna al Login
+                    </Button>
                 </div>
             </div>
         );
@@ -101,15 +121,16 @@ const ResetPassword = () => {
                 <h2>Reimposta Password</h2>
                 <p className="auth-subtitle">Inserisci la tua nuova password</p>
 
-                {error && <div className="auth-error">{error}</div>}
-                {message && <div className="auth-success">{message}</div>}
+                {error && renderError(error)}
+                {message && renderSuccess(message)}
 
                 {!message && (
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        <div className="auth-field">
-                            <label>Nuova Password</label>
-                            <div className="password-input-wrapper">
-                                <input
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Nuova Password</Label>
+                            <div className="relative">
+                                <Input
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={e => {
@@ -118,47 +139,53 @@ const ResetPassword = () => {
                                     }}
                                     required
                                     placeholder="••••••••"
+                                    className="bg-white/5 border-white/10 text-white pr-10"
                                 />
                                 <button
                                     type="button"
-                                    className="toggle-password"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                             {password && (
-                                <div className="strength-meter">
-                                    <div
-                                        className="strength-bar"
-                                        style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
-                                    ></div>
-                                    <span style={{ color: strength.color }}>{strength.label}</span>
+                                <div className="pt-2">
+                                    <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full transition-all duration-300"
+                                            style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-[10px] uppercase tracking-wider font-bold mt-1 block" style={{ color: strength.color }}>{strength.label}</span>
                                 </div>
                             )}
                         </div>
-                        <div className="auth-field">
-                            <label>Conferma Nuova Password</label>
-                            <div className="password-input-wrapper">
-                                <input
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Conferma Nuova Password</Label>
+                            <div className="relative">
+                                <Input
+                                    id="confirmPassword"
                                     type={showPassword ? "text" : "password"}
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
                                     required
                                     placeholder="••••••••"
+                                    className="bg-white/5 border-white/10 text-white pr-10"
                                 />
                                 <button
                                     type="button"
-                                    className="toggle-password"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                        <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-500 mt-6 shadow-lg shadow-blue-500/20" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {loading ? 'Aggiornamento...' : 'Aggiorna Password'}
-                        </button>
+                        </Button>
                     </form>
                 )}
 

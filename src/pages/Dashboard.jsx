@@ -13,6 +13,8 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Share2, Calendar, Map as MapIcon, MessageSquare, PieChart, Camera, Settings } from "lucide-react"
 
 const Dashboard = () => {
     const { id } = useParams();
@@ -415,45 +417,34 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    <div style={{
-                        marginTop: '2rem',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap',
-                        gap: '0.75rem'
-                    }}>
-                        {[
-                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
-                            { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
-                            { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
-                            { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
-                            { id: 'PHOTOS', label: 'Foto' }
-                        ].map(btn => (
-                            (!btn.hasOwnProperty('condition') || btn.condition) && (
-                                <button
-                                    key={btn.id}
-                                    onClick={() => setView(btn.id)}
-                                    className="hover-lift"
-                                    style={{
-                                        background: view === btn.id ? 'white' : 'rgba(255,255,255,0.1)',
-                                        backdropFilter: view === btn.id ? 'none' : 'blur(5px)',
-                                        color: view === btn.id ? 'var(--primary-blue)' : 'white',
-                                        padding: '0.6rem 1.2rem',
-                                        borderRadius: '14px',
-                                        border: view === btn.id ? '1px solid white' : '1px solid rgba(255,255,255,0.2)',
-                                        cursor: 'pointer',
-                                        fontSize: '0.9rem',
-                                        fontWeight: '700',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        boxShadow: view === btn.id ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
-                                    }}
-                                >
-                                    {btn.label}
-                                </button>
-                            )
-                        ))}
+                    <div className="mt-8 flex justify-center">
+                        <Tabs value={view} onValueChange={setView} className="w-full max-w-2xl px-4">
+                            <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto p-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl">
+                                {(isOrganizer || ['PLANNING', 'VOTING', 'BOOKED'].includes(trip.status)) && (
+                                    <TabsTrigger value="TRIP" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue rounded-xl py-2 gap-2">
+                                        <MapIcon className="w-4 h-4" /> <span className="hidden md:inline">Viaggio</span>
+                                    </TabsTrigger>
+                                )}
+                                {trip.status === 'BOOKED' && (
+                                    <TabsTrigger value="CHAT" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue rounded-xl py-2 gap-2">
+                                        <MessageSquare className="w-4 h-4" /> <span className="hidden md:inline">Chat AI</span>
+                                    </TabsTrigger>
+                                )}
+                                {trip.status === 'BOOKED' && (
+                                    <TabsTrigger value="BUDGET" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue rounded-xl py-2 gap-2">
+                                        <PieChart className="w-4 h-4" /> <span className="hidden md:inline">Budget</span>
+                                    </TabsTrigger>
+                                )}
+                                {user && trip.trip_type !== 'SOLO' && (
+                                    <TabsTrigger value="FINANCE" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue rounded-xl py-2 gap-2">
+                                        <PieChart className="w-4 h-4" /> <span className="hidden md:inline">Spese</span>
+                                    </TabsTrigger>
+                                )}
+                                <TabsTrigger value="PHOTOS" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue rounded-xl py-2 gap-2">
+                                    <Camera className="w-4 h-4" /> <span className="hidden md:inline">Foto</span>
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
                 </div>
             </div>

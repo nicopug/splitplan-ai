@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useToast as useShadcnToast } from '../hooks/use-toast';
 
 const ToastContext = createContext();
 
@@ -11,24 +11,18 @@ export const useToast = () => {
 };
 
 export const ToastProvider = ({ children }) => {
-    const [toasts, setToasts] = useState([]);
+    const { toast } = useShadcnToast();
 
     const showToast = useCallback((message, type = 'info') => {
-        const id = Date.now();
-        setToasts((prev) => [...prev, { id, message, type }]);
-
-        // Auto remove after 4 seconds
-        setTimeout(() => {
-            setToasts((prev) => prev.filter((toast) => toast.id !== id));
-        }, 4000);
-    }, []);
-
-    const removeToast = useCallback((id) => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, []);
+        toast({
+            title: type === 'error' ? 'Errore' : (type === 'success' ? 'Successo' : 'Info'),
+            description: message,
+            variant: type === 'error' ? 'destructive' : 'default',
+        });
+    }, [toast]);
 
     return (
-        <ToastContext.Provider value={{ showToast, removeToast, toasts }}>
+        <ToastContext.Provider value={{ showToast, toasts: [] }}>
             {children}
         </ToastContext.Provider>
     );

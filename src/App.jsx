@@ -14,8 +14,8 @@ import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import ShareTrip from './pages/ShareTrip';
 import CalendarCallback from './pages/CalendarCallback';
-import Toast from './components/Toast';
-import Modal from './components/Modal';
+import { Toaster } from './components/ui/toaster';
+import ShadcnModal from './components/ShadcnModal';
 import { useToast } from './context/ToastContext';
 
 
@@ -95,8 +95,8 @@ function App() {
             Modalità Offline - Stai visualizzando i dati salvati
           </div>
         )}
-        <Toast />
-        <Modal />
+        <Toaster />
+        <ShadcnModal />
         <Navbar user={user} />
         <Routes>
           <Route path="/" element={<Landing user={user} />} />

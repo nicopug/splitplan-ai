@@ -231,13 +231,14 @@
   }
 
   .mesh-gradient {
-    background-color: #2563eb;
+    background-color: #020617;
+    /* Deepest Navy */
     background-image:
-      radial-gradient(at 0% 0%, hsla(210, 100%, 70%, 1) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(225, 100%, 60%, 1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(250, 100%, 70%, 1) 0, transparent 50%);
-    background-size: 200% 200%;
-    animation: mesh-flow 15s ease infinite;
+      radial-gradient(at 0% 0%, hsla(222, 47%, 11%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(217, 91%, 60%, 0.4) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(226, 70%, 55%, 0.3) 0, transparent 50%);
+    background-size: 150% 150%;
+    animation: mesh-flow 12s ease-in-out infinite;
   }
 }
 
@@ -264,9 +265,17 @@
 }
 
 @keyframes mesh-flow {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
 .animate-fade-in {

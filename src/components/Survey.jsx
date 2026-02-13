@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
@@ -204,35 +206,33 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Destination & Airport */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="destination" className="font-bold mb-2 block">
                                     Destinazione
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="destination"
                                     name="destination"
                                     value={formData.destination}
                                     onChange={handleChange}
                                     type="text"
                                     placeholder="es. Europa, Giappone..."
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="departure_airport" className="font-bold mb-2 block">
                                     {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="departure_airport"
                                     name="departure_airport"
                                     value={formData.departure_airport}
                                     onChange={handleChange}
                                     type="text"
                                     placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="bg-white"
                                 />
                             </div>
                         </div>
@@ -242,26 +242,26 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold mb-2 text-text-main">
+                                        <Label htmlFor="budget" className="font-bold mb-2 block">
                                             Budget Totale (€)
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
+                                            id="budget"
                                             name="budget"
                                             value={formData.budget}
                                             onChange={handleChange}
                                             type="number"
                                             placeholder="es. 3000"
                                             required
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                            className="bg-white"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold mb-2 text-text-main">
+                                        <Label htmlFor="num_people" className="font-bold mb-2 block">
                                             Numero Persone
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
+                                            id="num_people"
                                             name="num_people"
                                             value={formData.num_people}
                                             onChange={handleChange}
@@ -269,9 +269,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                            className="bg-white"
                                         />
                                     </div>
                                 </div>
@@ -285,16 +283,14 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         </label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                             {formData.participant_names.map((name, idx) => (
-                                                <input
+                                                <Input
                                                     key={idx}
                                                     type="text"
                                                     value={name}
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={`Nome Amico ${idx + 2}`}
                                                     required
-                                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                             transition-all outline-none bg-white text-sm"
+                                                    className="bg-white text-sm"
                                                 />
                                             ))}
                                         </div>
@@ -326,19 +322,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Solo Details */}
                         {!isGroup && (
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="budget-solo" className="font-bold mb-2 block">
                                     Budget Totale (€)
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="budget-solo"
                                     name="budget"
                                     value={formData.budget}
                                     onChange={handleChange}
                                     type="number"
                                     placeholder="es. 1500"
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="bg-white"
                                 />
                             </div>
                         )}
@@ -346,33 +341,31 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Dates */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="start_date" className="font-bold mb-2 block">
                                     Dal
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="start_date"
                                     name="start_date"
                                     value={formData.start_date}
                                     onChange={handleChange}
                                     type="date"
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="end_date" className="font-bold mb-2 block">
                                     Al
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="end_date"
                                     name="end_date"
                                     value={formData.end_date}
                                     onChange={handleChange}
                                     type="date"
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="bg-white"
                                 />
                             </div>
                         </div>
@@ -423,31 +416,29 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                        <Label htmlFor="work_start_time" className="text-xs font-bold mb-1 text-gray-500 uppercase block">
                                             Inizio Lavoro
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
+                                            id="work_start_time"
                                             name="work_start_time"
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white text-sm"
+                                            className="bg-white text-sm"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                        <Label htmlFor="work_end_time" className="text-xs font-bold mb-1 text-gray-500 uppercase block">
                                             Fine Lavoro
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
+                                            id="work_end_time"
                                             name="work_end_time"
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white text-sm"
+                                            className="bg-white text-sm"
                                         />
                                     </div>
                                 </div>
@@ -458,33 +449,31 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Preferences */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="must_have" className="font-bold mb-2 block">
                                     Cosa non può mancare?
-                                </label>
-                                <textarea
+                                </Label>
+                                <Textarea
+                                    id="must_have"
                                     name="must_have"
                                     value={formData.must_have}
                                     onChange={handleChange}
                                     placeholder="es. Musei, Spiagge, Shopping..."
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none"
+                                    className="bg-white resize-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                <Label htmlFor="must_avoid" className="font-bold mb-2 block">
                                     Cosa vorresti evitare?
-                                </label>
-                                <textarea
+                                </Label>
+                                <Textarea
+                                    id="must_avoid"
                                     name="must_avoid"
                                     value={formData.must_avoid}
                                     onChange={handleChange}
                                     placeholder="es. Club, Trekking faticosi..."
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none"
+                                    className="bg-white resize-none"
                                 />
                             </div>
                         </div>

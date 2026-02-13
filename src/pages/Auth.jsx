@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { register, login, verifyEmail, toggleSubscription, forgotPassword } from '../api';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import './Auth.css';
 
@@ -150,6 +154,20 @@ const Auth = ({ onLogin }) => {
         }
     };
 
+    const renderError = (msg) => (
+        <div className="flex items-center gap-2 p-3 mb-4 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{msg}</span>
+        </div>
+    );
+
+    const renderSuccess = (msg) => (
+        <div className="flex items-center gap-2 p-3 mb-4 text-sm text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{msg}</span>
+        </div>
+    );
+
     if (showPlanSelection) {
         return (
             <div className="auth-container">
@@ -186,7 +204,9 @@ const Auth = ({ onLogin }) => {
                                     <li style={{ marginBottom: '0.8rem' }}>Export Video Ricordi</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice(true)} className="btn btn-accent btn-full">Attiva Premium</button>
+                            <Button onClick={() => handlePlanChoice(true)} variant="premium" className="w-full h-12 text-lg shadow-lg shadow-orange-500/20">
+                                Attiva Premium
+                            </Button>
                         </div>
                     </div>
 
@@ -204,24 +224,27 @@ const Auth = ({ onLogin }) => {
                     <h2>Recupero Password</h2>
                     <p className="auth-subtitle">Inserisci la tua email per ricevere il link di reset</p>
 
-                    {error && <div className="auth-error">{error}</div>}
-                    {message && <div className="auth-success">{message}</div>}
+                    {error && renderError(error)}
+                    {message && renderSuccess(message)}
 
                     {!message && (
-                        <form onSubmit={handleForgotSubmit} className="auth-form">
-                            <div className="auth-field">
-                                <label>Email</label>
-                                <input
+                        <form onSubmit={handleForgotSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="forgot-email">Email</Label>
+                                <Input
+                                    id="forgot-email"
                                     type="email"
                                     value={forgotEmail}
                                     onChange={e => setForgotEmail(e.target.value)}
                                     required
                                     placeholder="mario@esempio.it"
+                                    className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
-                            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                            <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-500" disabled={loading}>
+                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {loading ? 'Invio...' : 'Invia Link di Reset'}
-                            </button>
+                            </Button>
                         </form>
                     )}
 
@@ -241,115 +264,128 @@ const Auth = ({ onLogin }) => {
                     {isLogin ? 'Accedi per gestire i tuoi viaggi' : 'Inizia a pianificare con i tuoi amici'}
                 </p>
 
-                {error && <div className="auth-error">{error}</div>}
-                {message && <div className="auth-success">{message}</div>}
+                {error && renderError(error)}
+                {message && renderSuccess(message)}
 
-                <form onSubmit={handleSubmit} className="auth-form">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {!isLogin && (
-                        <div className="auth-row">
-                            <div className="auth-field">
-                                <label>Nome</label>
-                                <input
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Nome</Label>
+                                <Input
+                                    id="name"
                                     type="text"
                                     name="name"
                                     placeholder="Es. Mario"
                                     value={formData.name}
                                     onChange={handleChange}
                                     required
+                                    className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
-                            <div className="auth-field">
-                                <label>Cognome</label>
-                                <input
+                            <div className="space-y-2">
+                                <Label htmlFor="surname">Cognome</Label>
+                                <Input
+                                    id="surname"
                                     type="text"
                                     name="surname"
                                     placeholder="Es. Rossi"
                                     value={formData.surname}
                                     onChange={handleChange}
                                     required
+                                    className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <div className="auth-field">
-                        <label>Email</label>
-                        <input
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
                             type="email"
                             name="email"
                             placeholder="mario@esempio.it"
                             value={formData.email}
                             onChange={handleChange}
                             required
+                            className="bg-white/5 border-white/10 text-white"
                         />
                     </div>
 
-                    <div className="auth-field">
-                        <label>Password</label>
-                        <div className="password-input-wrapper">
-                            <input
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                            <Input
+                                id="password"
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
                                 placeholder="••••••••"
+                                className="bg-white/5 border-white/10 text-white pr-10"
                             />
                             <button
                                 type="button"
-                                className="toggle-password"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
-                                {showPassword ? '👁️' : '👁️‍🗨️'}
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
                         {formData.password && !isLogin && (
-                            <div className="strength-meter">
-                                <div
-                                    className="strength-bar"
-                                    style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
-                                ></div>
-                                <span style={{ color: strength.color }}>{strength.label}</span>
+                            <div className="pt-2">
+                                <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full transition-all duration-300"
+                                        style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
+                                    ></div>
+                                </div>
+                                <span className="text-[10px] uppercase tracking-wider font-bold mt-1 block" style={{ color: strength.color }}>{strength.label}</span>
                             </div>
                         )}
                     </div>
 
                     {!isLogin && (
-                        <div className="auth-field">
-                            <label>Conferma Password</label>
-                            <div className="password-input-wrapper">
-                                <input
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Conferma Password</Label>
+                            <div className="relative">
+                                <Input
+                                    id="confirmPassword"
                                     type={showPassword ? "text" : "password"}
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     required
                                     placeholder="••••••••"
+                                    className="bg-white/5 border-white/10 text-white pr-10"
                                 />
                                 <button
                                     type="button"
-                                    className="toggle-password"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                    <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-500 mt-6 shadow-lg shadow-blue-500/20" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {loading ? 'Caricamento...' : (isLogin ? 'Accedi' : 'Registrati')}
-                    </button>
+                    </Button>
 
                     {isLogin && (
-                        <div className="auth-forgot-link" style={{ textAlign: 'right', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                        <div className="text-right mt-2">
                             <span
                                 onClick={() => {
                                     setShowForgot(true);
                                     setError('');
                                     setMessage('');
                                 }}
-                                style={{ color: 'var(--primary-blue)', cursor: 'pointer', opacity: 0.8 }}
+                                className="text-sm text-blue-400 cursor-pointer hover:text-blue-300 transition-colors"
                             >
                                 Password dimenticata?
                             </span>

@@ -5,6 +5,10 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { AlertCircle, Calendar as CalendarIcon, MapPin, Plane, Train, Car, Briefcase, Palmtree } from 'lucide-react';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
@@ -365,35 +369,65 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     <Label htmlFor="start_date" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
                                         Inizio Viaggio
                                     </Label>
-                                    <div className="relative group">
-                                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
-                                        <Input
-                                            id="start_date"
-                                            name="start_date"
-                                            value={formData.start_date}
-                                            onChange={handleChange}
-                                            type="date"
-                                            required
-                                            className="bg-white/[0.03] border-white/10 text-white h-14 pl-12 rounded-2xl focus:ring-blue-500/20 [color-scheme:dark] cursor-pointer"
-                                        />
-                                    </div>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full h-14 pl-12 justify-start text-left font-normal bg-white/[0.03] border-white/10 text-white rounded-2xl hover:bg-white/5 hover:text-white transition-all relative group",
+                                                    !formData.start_date && "text-white/20"
+                                                )}
+                                            >
+                                                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
+                                                {formData.start_date ? (
+                                                    format(new Date(formData.start_date), "PPP", { locale: it })
+                                                ) : (
+                                                    <span className="text-white/20">Seleziona data</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 backdrop-blur-xl" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                                                onSelect={(date) => setFormData(prev => ({ ...prev, start_date: date ? format(date, "yyyy-MM-dd") : "" }))}
+                                                initialFocus
+                                                locale={it}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                                 <div className="space-y-2.5">
                                     <Label htmlFor="end_date" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
                                         Fine Viaggio
                                     </Label>
-                                    <div className="relative group">
-                                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
-                                        <Input
-                                            id="end_date"
-                                            name="end_date"
-                                            value={formData.end_date}
-                                            onChange={handleChange}
-                                            type="date"
-                                            required
-                                            className="bg-white/[0.03] border-white/10 text-white h-14 pl-12 rounded-2xl focus:ring-blue-500/20 [color-scheme:dark] cursor-pointer"
-                                        />
-                                    </div>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full h-14 pl-12 justify-start text-left font-normal bg-white/[0.03] border-white/10 text-white rounded-2xl hover:bg-white/5 hover:text-white transition-all relative group",
+                                                    !formData.end_date && "text-white/20"
+                                                )}
+                                            >
+                                                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
+                                                {formData.end_date ? (
+                                                    format(new Date(formData.end_date), "PPP", { locale: it })
+                                                ) : (
+                                                    <span className="text-white/20">Seleziona data</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 backdrop-blur-xl" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                                                onSelect={(date) => setFormData(prev => ({ ...prev, end_date: date ? format(date, "yyyy-MM-dd") : "" }))}
+                                                initialFocus
+                                                locale={it}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
 

@@ -76,8 +76,9 @@ function App() {
   }
 
   try {
+
     return (
-      <div className="min-h-screen bg-bg-light">
+      <div className="min-h-screen mesh-gradient overflow-x-hidden">
         {!isOnline && (
           <div style={{
             background: 'var(--accent-orange)',
@@ -98,19 +99,21 @@ function App() {
         <Toaster />
         <ShadcnModal />
         <Navbar user={user} />
-        <Routes>
-          <Route path="/" element={<Landing user={user} />} />
-          <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-          <Route path="/trip/:id" element={<Dashboard />} />
-          <Route path="/calendar-callback" element={<CalendarCallback />} />
-          <Route path="/my-trips" element={<MyTrips />} />
-          <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
-          <Route path="/share/:token" element={<ShareTrip />} />
+        <main className="relative z-10">
+          <Routes>
+            <Route path="/" element={<Landing user={user} />} />
+            <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
+            <Route path="/trip/:id" element={<Dashboard />} />
+            <Route path="/calendar-callback" element={<CalendarCallback />} />
+            <Route path="/my-trips" element={<MyTrips />} />
+            <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
+            <Route path="/share/:token" element={<ShareTrip />} />
 
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
       </div>
     );
   } catch (err) {

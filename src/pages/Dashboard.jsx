@@ -13,9 +13,6 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Share2, Calendar, Map as MapIcon, MessageSquare, PieChart, Camera, Settings, AlertCircle } from "lucide-react"
 
 const Dashboard = () => {
     const { id } = useParams();
@@ -334,14 +331,29 @@ const Dashboard = () => {
 
                     {user && (
                         <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                            <span className={`px-3 py-1 rounded-full backdrop-blur-md border text-[10px] font-extrabold tracking-widest uppercase shadow-lg ${user.is_subscribed
-                                ? 'bg-gradient-to-r from-amber-400 to-orange-500 border-amber-300/50 text-amber-950 shadow-amber-500/20'
-                                : 'bg-white/10 border-white/20 text-white shadow-black/10'
-                                }`}>
+                            <span className="glass-panel" style={{
+                                background: user.is_subscribed ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.2)',
+                                color: user.is_subscribed ? 'black' : 'white',
+                                padding: '4px 14px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '800',
+                                letterSpacing: '0.5px',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }}>
                                 {user.is_subscribed ? 'PREMIUM ABBONATO' : 'UTENTE FREE'}
                             </span>
                             {trip.status !== 'PLANNING' && (
-                                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-extrabold tracking-widest text-white uppercase shadow-lg shadow-black/10">
+                                <span className="glass-panel" style={{
+                                    background: 'rgba(255,255,255,0.2)',
+                                    color: 'white',
+                                    padding: '4px 14px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '800',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                }}>
                                     {trip.transport_mode === 'TRAIN' ? 'TRENO' :
                                         trip.transport_mode === 'CAR' ? 'AUTO' : 'AEREO'}
                                 </span>
@@ -351,66 +363,97 @@ const Dashboard = () => {
 
                     {user && isOrganizer && (
                         <div style={{ marginTop: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                            <Button
-                                variant="outline"
+                            <button
                                 onClick={handleShare}
-                                className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-2xl h-11 px-6 shadow-lg shadow-black/20"
+                                className="hover-scale hover-glow"
+                                style={{
+                                    background: 'rgba(255,255,255,0.15)',
+                                    backdropFilter: 'blur(10px)',
+                                    color: 'white',
+                                    padding: '0.6rem 1.5rem',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                    transition: 'all 0.3s ease',
+                                }}
                             >
-                                <Share2 className="w-4 h-4 mr-2" />
-                                <span className="text-xs font-bold">Condividi Viaggio</span>
-                            </Button>
+                                Condividi Viaggio (Sola Lettura)
+                            </button>
 
                             {trip.trip_intent === 'BUSINESS' && (
-                                <Button
-                                    variant={isCalendarConnected ? "secondary" : "outline"}
+                                <button
                                     onClick={handleConnectCalendar}
+                                    className="hover-scale hover-glow"
                                     disabled={isCalendarConnected}
-                                    className={`h-11 px-6 rounded-2xl shadow-lg shadow-black/20 backdrop-blur-md border transition-all ${isCalendarConnected
-                                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                                        : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                                        }`}
+                                    style={{
+                                        background: isCalendarConnected ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+                                        backdropFilter: 'blur(10px)',
+                                        color: isCalendarConnected ? '#4caf50' : 'white',
+                                        padding: '0.6rem 1.5rem',
+                                        borderRadius: '16px',
+                                        border: `1px solid ${isCalendarConnected ? 'rgba(76, 175, 80, 0.4)' : 'rgba(255, 255, 255, 0.4)'}`,
+                                        fontSize: '0.85rem',
+                                        fontWeight: '700',
+                                        cursor: isCalendarConnected ? 'default' : 'pointer',
+                                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
                                 >
                                     {isCalendarConnected ? (
                                         <>✓ Calendar Connesso</>
                                     ) : (
-                                        <>
-                                            <Calendar className="w-4 h-4 mr-2" />
-                                            <span className="text-xs font-bold">Connetti Google Calendar</span>
-                                        </>
+                                        <>📅 Connetti Google Calendar</>
                                     )}
-                                </Button>
+                                </button>
                             )}
                         </div>
                     )}
 
-                    <div className="mt-8 flex justify-center">
-                        <Tabs value={view} onValueChange={setView} className="w-full max-w-2xl">
-                            <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto p-1.5 bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-[28px] shadow-2xl">
-                                {(isOrganizer || ['PLANNING', 'VOTING', 'BOOKED'].includes(trip.status)) && (
-                                    <TabsTrigger value="TRIP" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue data-[state=active]:shadow-xl rounded-[22px] py-2.5 px-4 transition-all hover:bg-white/5">
-                                        <MapIcon className="w-4 h-4 mr-2" /> <span className="text-xs font-bold">Viaggio</span>
-                                    </TabsTrigger>
-                                )}
-                                {trip.status === 'BOOKED' && (
-                                    <TabsTrigger value="CHAT" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue data-[state=active]:shadow-xl rounded-[22px] py-2.5 px-4 transition-all hover:bg-white/5">
-                                        <MessageSquare className="w-4 h-4 mr-2" /> <span className="text-xs font-bold">Chat AI</span>
-                                    </TabsTrigger>
-                                )}
-                                {trip.status === 'BOOKED' && (
-                                    <TabsTrigger value="BUDGET" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue data-[state=active]:shadow-xl rounded-[22px] py-2.5 px-4 transition-all hover:bg-white/5">
-                                        <PieChart className="w-4 h-4 mr-2" /> <span className="text-xs font-bold">Budget</span>
-                                    </TabsTrigger>
-                                )}
-                                {user && trip.trip_type !== 'SOLO' && (
-                                    <TabsTrigger value="FINANCE" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue data-[state=active]:shadow-xl rounded-[22px] py-2.5 px-4 transition-all hover:bg-white/5">
-                                        <PieChart className="w-4 h-4 mr-2" /> <span className="text-xs font-bold">Spese</span>
-                                    </TabsTrigger>
-                                )}
-                                <TabsTrigger value="PHOTOS" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue data-[state=active]:shadow-xl rounded-[22px] py-2.5 px-4 transition-all hover:bg-white/5">
-                                    <Camera className="w-4 h-4 mr-2" /> <span className="text-xs font-bold">Foto</span>
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
+                    <div style={{
+                        marginTop: '2rem',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem'
+                    }}>
+                        {[
+                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
+                            { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
+                            { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
+                            { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
+                            { id: 'PHOTOS', label: 'Foto' }
+                        ].map(btn => (
+                            (!btn.hasOwnProperty('condition') || btn.condition) && (
+                                <button
+                                    key={btn.id}
+                                    onClick={() => setView(btn.id)}
+                                    className="hover-lift"
+                                    style={{
+                                        background: view === btn.id ? 'white' : 'rgba(255,255,255,0.1)',
+                                        backdropFilter: view === btn.id ? 'none' : 'blur(5px)',
+                                        color: view === btn.id ? 'var(--primary-blue)' : 'white',
+                                        padding: '0.6rem 1.2rem',
+                                        borderRadius: '14px',
+                                        border: view === btn.id ? '1px solid white' : '1px solid rgba(255,255,255,0.2)',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        fontWeight: '700',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        boxShadow: view === btn.id ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    {btn.label}
+                                </button>
+                            )
+                        ))}
                     </div>
                 </div>
             </div>

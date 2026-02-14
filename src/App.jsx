@@ -14,8 +14,8 @@ import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import ShareTrip from './pages/ShareTrip';
 import CalendarCallback from './pages/CalendarCallback';
-import { Toaster } from './components/ui/toaster';
-import ShadcnModal from './components/ShadcnModal';
+import Toast from './components/Toast';
+import Modal from './components/Modal';
 import { useToast } from './context/ToastContext';
 
 
@@ -76,9 +76,8 @@ function App() {
   }
 
   try {
-
     return (
-      <div className="min-h-screen mesh-gradient overflow-x-hidden">
+      <div className="min-h-screen bg-bg-light">
         {!isOnline && (
           <div style={{
             background: 'var(--accent-orange)',
@@ -96,24 +95,22 @@ function App() {
             Modalità Offline - Stai visualizzando i dati salvati
           </div>
         )}
-        <Toaster />
-        <ShadcnModal />
+        <Toast />
+        <Modal />
         <Navbar user={user} />
-        <main className="relative z-10">
-          <Routes>
-            <Route path="/" element={<Landing user={user} />} />
-            <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-            <Route path="/trip/:id" element={<Dashboard />} />
-            <Route path="/calendar-callback" element={<CalendarCallback />} />
-            <Route path="/my-trips" element={<MyTrips />} />
-            <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
-            <Route path="/share/:token" element={<ShareTrip />} />
+        <Routes>
+          <Route path="/" element={<Landing user={user} />} />
+          <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
+          <Route path="/trip/:id" element={<Dashboard />} />
+          <Route path="/calendar-callback" element={<CalendarCallback />} />
+          <Route path="/my-trips" element={<MyTrips />} />
+          <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
+          <Route path="/share/:token" element={<ShareTrip />} />
 
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </div>
     );
   } catch (err) {

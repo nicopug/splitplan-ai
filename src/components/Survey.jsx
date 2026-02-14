@@ -1,15 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Label } from './ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar } from './ui/calendar';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { AlertCircle, Calendar as CalendarIcon, MapPin, Plane, Train, Car, Briefcase, Palmtree } from 'lucide-react';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
@@ -101,42 +90,34 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-8 md:py-12 animate-fade-in">
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                             Qual è lo scopo del viaggio?
                         </h2>
-                        <p className="text-lg text-white/60">
+                        <p className="text-lg text-text-muted">
                             Questo ci aiuterà a personalizzare l'itinerario perfetto per te.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Leisure */}
-                        <Card
+                        <div
                             onClick={() => handleIntentSelect('LEISURE')}
-                            className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group rounded-3xl overflow-hidden"
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-green group text-center"
                         >
-                            <CardHeader className="text-center pb-2">
-                                <div className="text-6xl mb-4 grayscale group-hover:grayscale-0 transition-all duration-500">🏖️</div>
-                                <CardTitle className="text-2xl text-white">Vacanza</CardTitle>
-                                <CardDescription className="text-white/50">
-                                    Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                            <div className="text-6xl mb-4">🏖️</div>
+                            <h3 className="text-xl font-bold mb-2">Vacanza</h3>
+                            <p className="text-sm text-gray-500">Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.</p>
+                        </div>
 
                         {/* Business */}
-                        <Card
+                        <div
                             onClick={() => handleIntentSelect('BUSINESS')}
-                            className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group rounded-3xl overflow-hidden"
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
                         >
-                            <CardHeader className="text-center pb-2">
-                                <div className="text-6xl mb-4 grayscale group-hover:grayscale-0 transition-all duration-500">💼</div>
-                                <CardTitle className="text-2xl text-white">Lavoro</CardTitle>
-                                <CardDescription className="text-white/50">
-                                    Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                            <div className="text-6xl mb-4">💼</div>
+                            <h3 className="text-xl font-bold mb-2">Lavoro</h3>
+                            <p className="text-sm text-gray-500">Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -148,56 +129,41 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-8 md:py-12 animate-fade-in">
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                             Qual è il tuo mezzo di trasporto?
                         </h2>
-                        <p className="text-lg text-white/60">
+                        <p className="text-lg text-text-muted">
                             Scegli come vuoi raggiungere la tua destinazione.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* CAR */}
-                        <Card
+                        <div
                             onClick={() => handleTransportSelect('CAR')}
-                            className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group rounded-3xl overflow-hidden"
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
                         >
-                            <CardHeader className="text-center pb-4">
-                                <div className="text-5xl mb-3 grayscale group-hover:grayscale-0 transition-all duration-500">🚗</div>
-                                <CardTitle className="text-xl text-white font-bold">Macchina</CardTitle>
-                                <CardDescription className="text-white/50">
-                                    Usa la tua auto (stimiamo noi pedaggi e carburante).
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                            <h3 className="text-xl font-bold mb-2">Macchina</h3>
+                            <p className="text-sm text-gray-500">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
+                        </div>
 
                         {/* TRAIN */}
-                        <Card
+                        <div
                             onClick={() => handleTransportSelect('TRAIN')}
-                            className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group rounded-3xl overflow-hidden"
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-secondary-teal group text-center"
                         >
-                            <CardHeader className="text-center pb-4">
-                                <div className="text-5xl mb-3 grayscale group-hover:grayscale-0 transition-all duration-500">🚄</div>
-                                <CardTitle className="text-xl text-white font-bold">Treno</CardTitle>
-                                <CardDescription className="text-white/50">
-                                    Viaggia sui binari con i link pronti di Trainline.
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                            <h3 className="text-xl font-bold mb-2">Treno</h3>
+                            <p className="text-sm text-gray-500">Viaggia sui binari con i link pronti di Trainline.</p>
+                        </div>
 
                         {/* FLIGHT */}
-                        <Card
+                        <div
                             onClick={() => handleTransportSelect('FLIGHT')}
-                            className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group rounded-3xl overflow-hidden"
+                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-orange group text-center"
                         >
-                            <CardHeader className="text-center pb-4">
-                                <div className="text-5xl mb-3 grayscale group-hover:grayscale-0 transition-all duration-500">✈️</div>
-                                <CardTitle className="text-xl text-white font-bold">Volo</CardTitle>
-                                <CardDescription className="text-white/50">
-                                    Decolla verso la meta con le migliori offerte Skyscanner.
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
+                            <h3 className="text-xl font-bold mb-2">Volo</h3>
+                            <p className="text-sm text-gray-500">Decolla verso la meta con le migliori offerte Skyscanner.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -205,386 +171,342 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     }
 
     return (
-        <div className="section py-8 md:py-12 animate-fade-in relative z-10">
+        <div className="section py-8 md:py-12 animate-fade-in">
             <div className="container max-w-4xl">
-                <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 shadow-3xl rounded-[32px] overflow-hidden border-t-blue-500/20">
-                    <CardHeader className="border-b border-white/5 pb-8 p-8 md:p-10">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+
+                {/* Header */}
+                <div className="text-center mb-8 md:mb-12">
+                    <button
+                        onClick={() => setStep(0)}
+                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.5rem', cursor: 'pointer' }}
+                    >
+                        ← Cambia Scopo ({formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'})
+                    </button>
+                    <button
+                        onClick={() => setStep(1)}
+                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer', marginLeft: '8px' }}
+                    >
+                        ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
+                    </button>
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                        Definiamo i dettagli
+                    </h2>
+                    <p className="text-base md:text-lg text-text-muted">
+                        Aiutaci a costruire il viaggio perfetto per {isGroup ? 'il gruppo' : 'te'}.
+                    </p>
+                </div>
+
+                {/* Form Container */}
+                <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+
+                        {/* Destination & Airport */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
-                                <CardTitle className="text-3xl font-bold text-white mb-2">Dettagli del Viaggio</CardTitle>
-                                <CardDescription className="text-white/60">
-                                    Aiutaci a costruire il viaggio perfetto per {isGroup ? 'il gruppo' : 'te'}.
-                                </CardDescription>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Destinazione
+                                </label>
+                                <input
+                                    name="destination"
+                                    value={formData.destination}
+                                    onChange={handleChange}
+                                    type="text"
+                                    placeholder="es. Europa, Giappone..."
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none"
+                                />
                             </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setStep(0)}
-                                    className="text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/5 h-10 px-4"
-                                >
-                                    {formData.trip_intent === 'BUSINESS' ? <Briefcase className="w-3.5 h-3.5 mr-2" /> : <Palmtree className="w-3.5 h-3.5 mr-2" />}
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">{formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'}</span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setStep(1)}
-                                    className="text-white/40 hover:text-white hover:bg-white/5 rounded-full border border-white/5 h-10 px-4"
-                                >
-                                    {formData.transport_mode === 'CAR' ? <Car className="w-3.5 h-3.5 mr-2" /> : formData.transport_mode === 'TRAIN' ? <Train className="w-3.5 h-3.5 mr-2" /> : <Plane className="w-3.5 h-3.5 mr-2" />}
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">{formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'}</span>
-                                </Button>
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
+                                </label>
+                                <input
+                                    name="departure_airport"
+                                    value={formData.departure_airport}
+                                    onChange={handleChange}
+                                    type="text"
+                                    placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none"
+                                />
                             </div>
                         </div>
-                    </CardHeader>
 
-                    <CardContent className="p-8 md:p-12">
-                        <form onSubmit={handleSubmit} className="space-y-10">
-                            {/* Destination & Airport */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2.5">
-                                    <Label htmlFor="destination" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                        Destinazione
-                                    </Label>
-                                    <div className="relative group">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-focus-within:text-blue-500 transition-all duration-300" />
-                                        <Input
-                                            id="destination"
-                                            name="destination"
-                                            value={formData.destination}
+                        {/* Group Details */}
+                        {isGroup && (
+                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold mb-2 text-text-main">
+                                            Budget Totale (€)
+                                        </label>
+                                        <input
+                                            name="budget"
+                                            value={formData.budget}
                                             onChange={handleChange}
-                                            placeholder="es. Tokyo, Giappone"
+                                            type="number"
+                                            placeholder="es. 3000"
                                             required
-                                            className="bg-white/[0.03] border-white/10 text-white h-14 pl-12 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 transition-all placeholder:text-white/20"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold mb-2 text-text-main">
+                                            Numero Persone
+                                        </label>
+                                        <input
+                                            name="num_people"
+                                            value={formData.num_people}
+                                            onChange={handleChange}
+                                            type="number"
+                                            min="2"
+                                            max="10"
+                                            required
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2.5">
-                                    <Label htmlFor="departure_airport" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                        {formData.transport_mode === 'FLIGHT' ? 'Aeroporto di Partenza' : 'Città di Partenza'}
-                                    </Label>
-                                    <div className="relative group">
-                                        <Plane className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-focus-within:text-blue-500 transition-all duration-300" />
-                                        <Input
-                                            id="departure_airport"
-                                            name="departure_airport"
-                                            value={formData.departure_airport}
-                                            onChange={handleChange}
-                                            placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP" : "es. Milano"}
-                                            required
-                                            className="bg-white/[0.03] border-white/10 text-white h-14 pl-12 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 transition-all placeholder:text-white/20 uppercase"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Group Details */}
-                            {isGroup && (
-                                <div className="bg-white/[0.02] p-8 rounded-[32px] border border-white/5 space-y-10">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                                        <div className="space-y-2.5">
-                                            <Label htmlFor="budget" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                                Budget a Persona (€)
-                                            </Label>
-                                            <Input
-                                                id="budget"
-                                                name="budget"
-                                                value={formData.budget}
-                                                onChange={handleChange}
-                                                type="number"
-                                                placeholder="es. 1500"
-                                                required
-                                                className="bg-white/[0.03] border-white/10 text-white h-13 rounded-xl focus:ring-blue-500/20"
-                                            />
-                                        </div>
-                                        <div className="space-y-2.5">
-                                            <Label htmlFor="num_people" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                                Numero Partecipanti
-                                            </Label>
-                                            <Input
-                                                id="num_people"
-                                                name="num_people"
-                                                value={formData.num_people}
-                                                onChange={handleChange}
-                                                type="number"
-                                                min="2"
-                                                max="10"
-                                                required
-                                                className="bg-white/[0.03] border-white/10 text-white h-13 rounded-xl focus:ring-blue-500/20"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {formData.participant_names.length > 0 && (
-                                        <div className="space-y-6">
-                                            <div className="flex items-center gap-3 bg-blue-500/[0.08] border border-blue-500/20 p-4 rounded-2xl">
-                                                <AlertCircle className="w-5 h-5 text-blue-400" />
-                                                <div className="text-xs">
-                                                    <span className="font-bold text-white block mb-0.5 uppercase tracking-wider">Identità Gruppo</span>
-                                                    <span className="text-white/40 font-medium">Usa i nomi reali per la sincronizzazione dell'itinerario.</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {formData.participant_names.map((name, index) => (
-                                                    <div key={index} className="space-y-2">
-                                                        <Label className="text-[9px] font-bold text-white/25 uppercase tracking-widest ml-1">Amico {index + 2}</Label>
-                                                        <Input
-                                                            value={name}
-                                                            onChange={(e) => handleNameChange(index, e.target.value)}
-                                                            placeholder={`Nome ${index + 2}`}
-                                                            required
-                                                            className="bg-white/[0.03] border-white/10 text-white h-11 rounded-xl text-sm"
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {!isGroup && (
-                                <div className="space-y-2.5 max-w-sm">
-                                    <Label htmlFor="budget-solo" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                        Budget Totale (€)
-                                    </Label>
-                                    <Input
-                                        id="budget-solo"
-                                        name="budget"
-                                        value={formData.budget}
-                                        onChange={handleChange}
-                                        type="number"
-                                        placeholder="es. 1500"
-                                        required
-                                        className="bg-white/[0.03] border-white/10 text-white h-13 rounded-xl"
-                                    />
-                                </div>
-                            )}
-
-                            {/* Dates */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                                <div className="space-y-2.5">
-                                    <Label htmlFor="start_date" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                        Inizio Viaggio
-                                    </Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full h-14 pl-12 justify-start text-left font-normal bg-white/[0.03] border-white/10 text-white rounded-2xl hover:bg-white/5 hover:text-white transition-all relative group",
-                                                    !formData.start_date && "text-white/20"
-                                                )}
-                                            >
-                                                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
-                                                {formData.start_date ? (
-                                                    format(new Date(formData.start_date), "PPP", { locale: it })
-                                                ) : (
-                                                    <span className="text-white/20">Seleziona data</span>
-                                                )}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 backdrop-blur-xl" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={formData.start_date ? new Date(formData.start_date) : undefined}
-                                                onSelect={(date) => setFormData(prev => ({ ...prev, start_date: date ? format(date, "yyyy-MM-dd") : "" }))}
-                                                initialFocus
-                                                locale={it}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="space-y-2.5">
-                                    <Label htmlFor="end_date" className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">
-                                        Fine Viaggio
-                                    </Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full h-14 pl-12 justify-start text-left font-normal bg-white/[0.03] border-white/10 text-white rounded-2xl hover:bg-white/5 hover:text-white transition-all relative group",
-                                                    !formData.end_date && "text-white/20"
-                                                )}
-                                            >
-                                                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-hover:text-blue-400 transition-colors pointer-events-none" />
-                                                {formData.end_date ? (
-                                                    format(new Date(formData.end_date), "PPP", { locale: it })
-                                                ) : (
-                                                    <span className="text-white/20">Seleziona data</span>
-                                                )}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 backdrop-blur-xl" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={formData.end_date ? new Date(formData.end_date) : undefined}
-                                                onSelect={(date) => setFormData(prev => ({ ...prev, end_date: date ? format(date, "yyyy-MM-dd") : "" }))}
-                                                initialFocus
-                                                locale={it}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                            </div>
-
-                            {/* Business logic (conditional) */}
-                            {formData.trip_intent === 'BUSINESS' && (
-                                <div className="bg-slate-900/40 p-10 rounded-[32px] border border-blue-500/10 space-y-10">
-                                    <Label className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] flex items-center gap-3">
-                                        Settaggio Orari Lavoro
-                                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                    </Label>
-
-                                    <div className="space-y-5">
-                                        <p className="text-xs font-bold text-white/60 px-1 uppercase tracking-widest">Seleziona Giorni Operativi</p>
-                                        <div className="flex flex-wrap gap-3">
-                                            {[
-                                                { id: 'Monday', label: 'Lun' },
-                                                { id: 'Tuesday', label: 'Mar' },
-                                                { id: 'Wednesday', label: 'Mer' },
-                                                { id: 'Thursday', label: 'Gio' },
-                                                { id: 'Friday', label: 'Ven' },
-                                                { id: 'Saturday', label: 'Sab' },
-                                                { id: 'Sunday', label: 'Dom' }
-                                            ].map(day => (
-                                                <button
-                                                    key={day.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const currentDays = (formData.work_days || '').split(',').filter(d => d);
-                                                        let newDays;
-                                                        if (currentDays.includes(day.id)) {
-                                                            newDays = currentDays.filter(d => d !== day.id);
-                                                        } else {
-                                                            newDays = [...currentDays, day.id];
-                                                        }
-                                                        setFormData({ ...formData, work_days: newDays.join(',') });
-                                                    }}
-                                                    className={`w-14 h-14 rounded-2xl text-xs font-black transition-all border flex items-center justify-center uppercase ${(formData.work_days || '').includes(day.id)
-                                                        ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]'
-                                                        : 'bg-white/[0.03] text-white/30 border-white/10 hover:border-white/20'
-                                                        }`}
-                                                >
-                                                    {day.label}
-                                                </button>
+                                {/* Dynamic Names Inputs */}
+                                {formData.participant_names.length > 0 && (
+                                    <div className="animate-fade-in">
+                                        <label className="block text-sm font-bold mb-3 text-primary-blue flex items-center gap-2">
+                                            Chi viene con te?
+                                            <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                        </label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                            {formData.participant_names.map((name, idx) => (
+                                                <input
+                                                    key={idx}
+                                                    type="text"
+                                                    value={name}
+                                                    onChange={(e) => handleNameChange(idx, e.target.value)}
+                                                    placeholder={`Nome Amico ${idx + 2}`}
+                                                    required
+                                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 
+                                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                             transition-all outline-none bg-white text-sm"
+                                                />
                                             ))}
                                         </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                        <div className="space-y-2.5">
-                                            <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">Breakdown Inizio</Label>
-                                            <Input
-                                                id="work_start_time"
-                                                name="work_start_time"
-                                                value={formData.work_start_time}
-                                                onChange={handleChange}
-                                                type="time"
-                                                className="bg-white/[0.03] border-white/10 text-white h-13 rounded-xl [color-scheme:dark]"
-                                            />
+                                        {/* AVVISO NOMI */}
+                                        <div style={{
+                                            padding: '1rem',
+                                            background: '#fff7ed',
+                                            borderRadius: '12px',
+                                            border: '1px solid #ffedd5',
+                                            display: 'flex',
+                                            gap: '12px',
+                                            alignItems: 'flex-start'
+                                        }}>
+                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#9a3412' }}>!</span>
+                                            <div>
+                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>ATTENZIONE AI NOMI</strong>
+                                                <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>
+                                                    Inserisci i <b>NOMI</b> con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan.
+                                                    Questo permetterà loro di votare la destinazione dal loro account!
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2.5">
-                                            <Label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">Fine Sessione</Label>
-                                            <Input
-                                                id="work_end_time"
-                                                name="work_end_time"
-                                                value={formData.work_end_time}
-                                                onChange={handleChange}
-                                                type="time"
-                                                className="bg-white/[0.03] border-white/10 text-white h-13 rounded-xl [color-scheme:dark]"
-                                            />
-                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Solo Details */}
+                        {!isGroup && (
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Budget Totale (€)
+                                </label>
+                                <input
+                                    name="budget"
+                                    value={formData.budget}
+                                    onChange={handleChange}
+                                    type="number"
+                                    placeholder="es. 1500"
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none"
+                                />
+                            </div>
+                        )}
+
+                        {/* Dates */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Dal
+                                </label>
+                                <input
+                                    name="start_date"
+                                    value={formData.start_date}
+                                    onChange={handleChange}
+                                    type="date"
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Al
+                                </label>
+                                <input
+                                    name="end_date"
+                                    value={formData.end_date}
+                                    onChange={handleChange}
+                                    type="date"
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Work Hours & Days (Business Only) */}
+                        {formData.trip_intent === 'BUSINESS' && (
+                            <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
+                                <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
+                                    Orario e Giorni di Lavoro
+                                    <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                </label>
+
+                                <div className="space-y-3">
+                                    <p className="text-xs text-blue-600 font-medium">In quali giorni lavorerai?</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { id: 'Monday', label: 'Lun' },
+                                            { id: 'Tuesday', label: 'Mar' },
+                                            { id: 'Wednesday', label: 'Mer' },
+                                            { id: 'Thursday', label: 'Gio' },
+                                            { id: 'Friday', label: 'Ven' },
+                                            { id: 'Saturday', label: 'Sab' },
+                                            { id: 'Sunday', label: 'Dom' }
+                                        ].map(day => (
+                                            <button
+                                                key={day.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    const currentDays = (formData.work_days || '').split(',').filter(d => d);
+                                                    let newDays;
+                                                    if (currentDays.includes(day.id)) {
+                                                        newDays = currentDays.filter(d => d !== day.id);
+                                                    } else {
+                                                        newDays = [...currentDays, day.id];
+                                                    }
+                                                    setFormData({ ...formData, work_days: newDays.join(',') });
+                                                }}
+                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${(formData.work_days || '').includes(day.id)
+                                                    ? 'bg-primary-blue text-white shadow-md scale-105'
+                                                    : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
+                                                    }`}
+                                            >
+                                                {day.label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                            Inizio Lavoro
+                                        </label>
+                                        <input
+                                            name="work_start_time"
+                                            value={formData.work_start_time}
+                                            onChange={handleChange}
+                                            type="time"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
+                                            Fine Lavoro
+                                        </label>
+                                        <input
+                                            name="work_end_time"
+                                            value={formData.work_end_time}
+                                            onChange={handleChange}
+                                            type="time"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                                     transition-all outline-none bg-white text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-blue-500 italic">L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.</p>
+                            </div>
+                        )}
+
+                        {/* Preferences */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Cosa non può mancare?
+                                </label>
+                                <textarea
+                                    name="must_have"
+                                    value={formData.must_have}
+                                    onChange={handleChange}
+                                    placeholder="es. Musei, Spiagge, Shopping..."
+                                    rows="4"
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none resize-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-text-main">
+                                    Cosa vorresti evitare?
+                                </label>
+                                <textarea
+                                    name="must_avoid"
+                                    value={formData.must_avoid}
+                                    onChange={handleChange}
+                                    placeholder="es. Club, Trekking faticosi..."
+                                    rows="4"
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
+                                             transition-all outline-none resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            className="btn btn-primary w-full py-4 text-lg font-bold
+                                     disabled:opacity-50 disabled:cursor-not-allowed
+                                     transform active:scale-95 transition-all"
+                            disabled={isGenerating}
+                        >
+                            {isGenerating ? (
+                                <span className="flex items-center justify-center">
+                                    <span className="spinner"></span>
+                                    Generazione in corso...
+                                </span>
+                            ) : (
+                                isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'
                             )}
-
-                            {/* Preferences Split */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between px-1">
-                                        <Label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            Must-Have (Essenze)
-                                        </Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full bg-white/5 border border-white/5 text-emerald-400/60 hover:text-emerald-400 hover:bg-emerald-500/10">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 text-white/80 p-4 rounded-2xl shadow-2xl">
-                                                <p className="text-xs leading-relaxed">
-                                                    <b className="text-emerald-400">Consiglio:</b> Inserisci attività specifiche che l'AI deve assolutamente includere, come "Cerca ramen shop a Shinjuku" o "Pomeriggio di surf".
-                                                </p>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    <Textarea
-                                        id="must_have"
-                                        name="must_have"
-                                        value={formData.must_have}
-                                        onChange={handleChange}
-                                        placeholder="Cosa non può mancare?"
-                                        className="bg-white/[0.03] border-white/10 text-white min-h-[140px] rounded-3xl p-6 focus:ring-blue-500/20 resize-none placeholder:text-white/10"
-                                    />
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between px-1">
-                                        <Label className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                            Must-Avoid (Limitazioni)
-                                        </Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full bg-white/5 border border-white/5 text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 text-white/80 p-4 rounded-2xl shadow-2xl">
-                                                <p className="text-xs leading-relaxed">
-                                                    <b className="text-rose-400">Consiglio:</b> Indica preferenze alimentari o attività che odi, come "No musei di storia" o "Evita zone con troppa folla".
-                                                </p>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    <Textarea
-                                        id="must_avoid"
-                                        name="must_avoid"
-                                        value={formData.must_avoid}
-                                        onChange={handleChange}
-                                        placeholder="Cosa vorresti evitare?"
-                                        className="bg-white/[0.03] border-white/10 text-white min-h-[140px] rounded-3xl p-6 focus:ring-blue-500/20 resize-none placeholder:text-white/10"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* CTAs */}
-                            <div className="pt-6">
-                                <Button
-                                    type="submit"
-                                    variant="premium"
-                                    disabled={isGenerating}
-                                    className="w-full h-18 text-xl font-black uppercase tracking-[0.15em] rounded-[24px] shadow-[0_20px_40px_rgba(37,99,235,0.2)] hover:shadow-[0_25px_50px_rgba(37,99,235,0.3)] hover:-translate-y-1 transition-all"
-                                >
-                                    {isGenerating ? (
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-                                            <span>Sincronizzazione AI...</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-3">
-                                            <span>{isGroup ? 'Lancia Proposta di Gruppo' : 'Genera Itinerario Magico'}</span>
-                                        </div>
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

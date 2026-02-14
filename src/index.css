@@ -27,23 +27,40 @@
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+
+  /* Shadcn Variables */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
 }
 
 /* Dark Mode Variables - Deep Blue/Noir Aesthetics */
 [data-theme='dark'] {
   --primary-blue: #3b82f6;
-  /* Lighter blue for dark bg */
   --primary-blue-light: #60a5fa;
   --secondary-blue: #1e293b;
-  /* Darker secondary */
   --accent-orange: #f59e0b;
   --accent-green: #34d399;
-  /* Brighter green */
   --dark-navy: #020617;
   --bg-creme: #0f172a;
-  /* Deep Slate */
   --bg-white: #1e293b;
-  /* Card background */
   --bg-soft-gray: #334155;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
@@ -53,16 +70,35 @@
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
 }
 
-/* Base Styles con Tailwind */
 @layer base {
   * {
-    @apply m-0 p-0 box-border;
+    @apply border-border m-0 p-0 box-border;
   }
 
   body {
-    @apply antialiased leading-relaxed;
+    @apply bg-background text-foreground antialiased leading-relaxed;
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-creme);
     color: var(--text-main);

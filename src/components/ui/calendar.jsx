@@ -27,20 +27,20 @@ function Calendar({
                 ),
                 nav_button_previous: "absolute left-1",
                 nav_button_next: "absolute right-1",
-                table: "w-full border-collapse space-y-1",
-                head_row: "flex w-full justify-between",
+                table: "w-full space-y-1",
+                head_row: "grid grid-cols-7 w-full mb-2",
                 head_cell:
-                    "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex items-center justify-center",
-                row: "flex w-full mt-2 justify-between",
+                    "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] flex items-center justify-center h-9",
+                row: "grid grid-cols-7 w-full mt-2",
                 cell: cn(
-                    "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md w-9 h-9 flex items-center justify-center",
+                    "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md w-full h-9 flex items-center justify-center",
                     props.mode === "range"
                         ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has(>.day-range-start)]:rounded-l-md last:[&:has(>.day-range-end)]:rounded-r-md"
                         : "[&:has(>.day-selected)]:rounded-md"
                 ),
                 day: cn(
                     buttonVariants({ variant: "ghost" }),
-                    "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+                    "h-9 w-9 p-0 font-normal aria-selected:opacity-100 flex items-center justify-center rounded-full"
                 ),
                 day_range_start: "day-range-start",
                 day_range_end: "day-range-end",
@@ -58,6 +58,12 @@ function Calendar({
             components={{
                 IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
                 IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+            }}
+            formatters={{
+                formatWeekdayName: (date) => {
+                    const days = ['D', 'L', 'M', 'M', 'G', 'V', 'S'];
+                    return days[date.getDay()];
+                }
             }}
             {...props}
         />

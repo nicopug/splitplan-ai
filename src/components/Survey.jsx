@@ -1,4 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+import {
+    Calendar as CalendarIcon,
+    MapPin,
+    Plane,
+    Users,
+    Wallet,
+    ArrowLeft,
+    Sparkles,
+    Briefcase,
+    PalmTree,
+    Train,
+    Car
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
@@ -99,25 +120,35 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Leisure */}
-                        <div
+                        <Button
+                            variant={formData.trip_intent === 'LEISURE' ? 'default' : 'outline'}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all hover:scale-105",
+                                formData.trip_intent === 'LEISURE' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                            )}
                             onClick={() => handleIntentSelect('LEISURE')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-green group text-center"
                         >
-                            <div className="text-6xl mb-4">🏖️</div>
-                            <h3 className="text-xl font-bold mb-2">Vacanza</h3>
-                            <p className="text-sm text-gray-500">Relax, divertimento e scoperta. L'AI creerà un itinerario bilanciato tra svago e cultura.</p>
-                        </div>
+                            <PalmTree className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-white" : "text-primary-blue")} />
+                            <div className="text-center">
+                                <p className="text-xl font-bold">Vacanza</p>
+                                <p className={cn("text-xs font-normal", formData.trip_intent === 'LEISURE' ? "text-blue-100" : "text-gray-500")}>Relax, divertimento e scoperta.</p>
+                            </div>
+                        </Button>
 
-                        {/* Business */}
-                        <div
+                        <Button
+                            variant={formData.trip_intent === 'BUSINESS' ? 'default' : 'outline'}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all hover:scale-105",
+                                formData.trip_intent === 'BUSINESS' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                            )}
                             onClick={() => handleIntentSelect('BUSINESS')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
                         >
-                            <div className="text-6xl mb-4">💼</div>
-                            <h3 className="text-xl font-bold mb-2">Lavoro</h3>
-                            <p className="text-sm text-gray-500">Efficienza e produttività. L'AI ottimizzerà per coworking, Wi-Fi e pasti veloci.</p>
-                        </div>
+                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-white" : "text-primary-blue")} />
+                            <div className="text-center">
+                                <p className="text-xl font-bold">Lavoro</p>
+                                <p className={cn("text-xs font-normal", formData.trip_intent === 'BUSINESS' ? "text-blue-100" : "text-gray-500")}>Efficienza e produttività.</p>
+                            </div>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -138,32 +169,50 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* CAR */}
-                        <div
+                        <Button
+                            variant={formData.transport_mode === 'CAR' ? 'default' : 'outline'}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
+                                formData.transport_mode === 'CAR' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                            )}
                             onClick={() => handleTransportSelect('CAR')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-blue group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Macchina</h3>
-                            <p className="text-sm text-gray-500">Usa la tua auto (stimiamo noi pedaggi e carburante).</p>
-                        </div>
+                            <Car className={cn("w-10 h-10", formData.transport_mode === 'CAR' ? "text-white" : "text-primary-blue")} />
+                            <div className="text-center">
+                                <p className="text-lg font-bold">Macchina</p>
+                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'CAR' ? "text-blue-100" : "text-gray-500")}>Pedaggi e carburante inclusi.</p>
+                            </div>
+                        </Button>
 
-                        {/* TRAIN */}
-                        <div
+                        <Button
+                            variant={formData.transport_mode === 'TRAIN' ? 'default' : 'outline'}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
+                                formData.transport_mode === 'TRAIN' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                            )}
                             onClick={() => handleTransportSelect('TRAIN')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-secondary-teal group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Treno</h3>
-                            <p className="text-sm text-gray-500">Viaggia sui binari con i link pronti di Trainline.</p>
-                        </div>
+                            <Train className={cn("w-10 h-10", formData.transport_mode === 'TRAIN' ? "text-white" : "text-primary-blue")} />
+                            <div className="text-center">
+                                <p className="text-lg font-bold">Treno</p>
+                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'TRAIN' ? "text-blue-100" : "text-gray-500")}>Link diretti Trainline.</p>
+                            </div>
+                        </Button>
 
-                        {/* FLIGHT */}
-                        <div
+                        <Button
+                            variant={formData.transport_mode === 'FLIGHT' ? 'default' : 'outline'}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
+                                formData.transport_mode === 'FLIGHT' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                            )}
                             onClick={() => handleTransportSelect('FLIGHT')}
-                            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-accent-orange group text-center"
                         >
-                            <h3 className="text-xl font-bold mb-2">Volo</h3>
-                            <p className="text-sm text-gray-500">Decolla verso la meta con le migliori offerte Skyscanner.</p>
-                        </div>
+                            <Plane className={cn("w-10 h-10", formData.transport_mode === 'FLIGHT' ? "text-white" : "text-primary-blue")} />
+                            <div className="text-center">
+                                <p className="text-lg font-bold">Volo</p>
+                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'FLIGHT' ? "text-blue-100" : "text-gray-500")}>Migliori offerte Skyscanner.</p>
+                            </div>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -176,18 +225,26 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                 {/* Header */}
                 <div className="text-center mb-8 md:mb-12">
-                    <button
-                        onClick={() => setStep(0)}
-                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.5rem', cursor: 'pointer' }}
-                    >
-                        ← Cambia Scopo ({formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'})
-                    </button>
-                    <button
-                        onClick={() => setStep(1)}
-                        style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem', cursor: 'pointer', marginLeft: '8px' }}
-                    >
-                        ← Cambia Mezzo ({formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'})
-                    </button>
+                    <div className="flex justify-center gap-2 mb-4">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setStep(0)}
+                            className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
+                        >
+                            <ArrowLeft className="w-3 h-3 mr-1" />
+                            {formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setStep(1)}
+                            className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
+                        >
+                            <ArrowLeft className="w-3 h-3 mr-1" />
+                            {formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'}
+                        </Button>
+                    </div>
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                         Definiamo i dettagli
                     </h2>
@@ -202,36 +259,30 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Destination & Airport */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Destinazione
-                                </label>
-                                <input
+                            <div className="space-y-2">
+                                <Label htmlFor="destination">Destinazione</Label>
+                                <Input
+                                    id="destination"
                                     name="destination"
                                     value={formData.destination}
                                     onChange={handleChange}
-                                    type="text"
                                     placeholder="es. Europa, Giappone..."
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="h-12"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
+                            <div className="space-y-2">
+                                <Label htmlFor="departure_airport">
                                     {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
-                                </label>
-                                <input
+                                </Label>
+                                <Input
+                                    id="departure_airport"
                                     name="departure_airport"
                                     value={formData.departure_airport}
                                     onChange={handleChange}
-                                    type="text"
                                     placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="h-12"
                                 />
                             </div>
                         </div>
@@ -240,27 +291,23 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {isGroup && (
                             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold mb-2 text-text-main">
-                                            Budget Totale (€)
-                                        </label>
-                                        <input
+                                    <div className="space-y-2">
+                                        <Label htmlFor="group-budget">Budget Totale (€)</Label>
+                                        <Input
+                                            id="group-budget"
                                             name="budget"
                                             value={formData.budget}
                                             onChange={handleChange}
                                             type="number"
                                             placeholder="es. 3000"
                                             required
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                            className="h-12 bg-white"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-bold mb-2 text-text-main">
-                                            Numero Persone
-                                        </label>
-                                        <input
+                                    <div className="space-y-2">
+                                        <Label htmlFor="num_people">Numero Persone</Label>
+                                        <Input
+                                            id="num_people"
                                             name="num_people"
                                             value={formData.num_people}
                                             onChange={handleChange}
@@ -268,9 +315,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white"
+                                            className="h-12 bg-white"
                                         />
                                     </div>
                                 </div>
@@ -284,16 +329,13 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         </label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                             {formData.participant_names.map((name, idx) => (
-                                                <input
+                                                <Input
                                                     key={idx}
-                                                    type="text"
                                                     value={name}
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={`Nome Amico ${idx + 2}`}
                                                     required
-                                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                             transition-all outline-none bg-white text-sm"
+                                                    className="h-10 bg-white"
                                                 />
                                             ))}
                                         </div>
@@ -324,55 +366,92 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Solo Details */}
                         {!isGroup && (
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Budget Totale (€)
-                                </label>
-                                <input
+                            <div className="space-y-2">
+                                <Label htmlFor="solo-budget">Budget Totale (€)</Label>
+                                <Input
+                                    id="solo-budget"
                                     name="budget"
                                     value={formData.budget}
                                     onChange={handleChange}
                                     type="number"
                                     placeholder="es. 1500"
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
+                                    className="h-12"
                                 />
                             </div>
                         )}
 
                         {/* Dates */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Dal
-                                </label>
-                                <input
-                                    name="start_date"
-                                    value={formData.start_date}
-                                    onChange={handleChange}
-                                    type="date"
-                                    required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
-                                />
+                            <div className="space-y-2">
+                                <Label>Data Partenza</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal h-12 rounded-xl",
+                                                !formData.start_date && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {formData.start_date ? (
+                                                format(new Date(formData.start_date), "PPP", { locale: it })
+                                            ) : (
+                                                <span>Seleziona data</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const formatted = format(date, "yyyy-MM-dd");
+                                                    setFormData({ ...formData, start_date: formatted });
+                                                }
+                                            }}
+                                            initialFocus
+                                            locale={it}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Al
-                                </label>
-                                <input
-                                    name="end_date"
-                                    value={formData.end_date}
-                                    onChange={handleChange}
-                                    type="date"
-                                    required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none"
-                                />
+                            <div className="space-y-2">
+                                <Label>Data Ritorno</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal h-12 rounded-xl",
+                                                !formData.end_date && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {formData.end_date ? (
+                                                format(new Date(formData.end_date), "PPP", { locale: it })
+                                            ) : (
+                                                <span>Seleziona data</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const formatted = format(date, "yyyy-MM-dd");
+                                                    setFormData({ ...formData, end_date: formatted });
+                                                }
+                                            }}
+                                            initialFocus
+                                            locale={it}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
 
@@ -396,9 +475,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             { id: 'Saturday', label: 'Sab' },
                                             { id: 'Sunday', label: 'Dom' }
                                         ].map(day => (
-                                            <button
+                                            <Button
                                                 key={day.id}
                                                 type="button"
+                                                variant={(formData.work_days || '').includes(day.id) ? 'default' : 'outline'}
+                                                size="sm"
                                                 onClick={() => {
                                                     const currentDays = (formData.work_days || '').split(',').filter(d => d);
                                                     let newDays;
@@ -409,44 +490,36 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     }
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
-                                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${(formData.work_days || '').includes(day.id)
-                                                    ? 'bg-primary-blue text-white shadow-md scale-105'
-                                                    : 'bg-white text-gray-400 border border-gray-200 hover:border-primary-blue'
-                                                    }`}
+                                                className={cn(
+                                                    "rounded-full h-8 px-4",
+                                                    (formData.work_days || '').includes(day.id) && "shadow-md bg-primary-blue"
+                                                )}
                                             >
                                                 {day.label}
-                                            </button>
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
-                                            Inizio Lavoro
-                                        </label>
-                                        <input
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-gray-500">Inizio Lavoro</Label>
+                                        <Input
                                             name="work_start_time"
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white text-sm"
+                                            className="h-12 bg-white"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold mb-1 text-gray-500 uppercase">
-                                            Fine Lavoro
-                                        </label>
-                                        <input
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-gray-500">Fine Lavoro</Label>
+                                        <Input
                                             name="work_end_time"
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none bg-white text-sm"
+                                            className="h-12 bg-white"
                                         />
                                     </div>
                                 </div>
@@ -456,55 +529,53 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Preferences */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Cosa non può mancare?
-                                </label>
+                            <div className="space-y-2">
+                                <Label>Cosa non può mancare?</Label>
                                 <textarea
                                     name="must_have"
                                     value={formData.must_have}
                                     onChange={handleChange}
                                     placeholder="es. Musei, Spiagge, Shopping..."
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 
                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none"
+                                             transition-all outline-none resize-none bg-white text-sm"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-2 text-text-main">
-                                    Cosa vorresti evitare?
-                                </label>
+                            <div className="space-y-2">
+                                <Label>Cosa vorresti evitare?</Label>
                                 <textarea
                                     name="must_avoid"
                                     value={formData.must_avoid}
                                     onChange={handleChange}
                                     placeholder="es. Club, Trekking faticosi..."
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 
                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none"
+                                             transition-all outline-none resize-none bg-white text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Submit Button */}
-                        <button
+                        <Button
                             type="submit"
-                            className="btn btn-primary w-full py-4 text-lg font-bold
-                                     disabled:opacity-50 disabled:cursor-not-allowed
-                                     transform active:scale-95 transition-all"
+                            size="lg"
+                            className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl shadow-blue-100 mt-4"
                             disabled={isGenerating}
                         >
                             {isGenerating ? (
-                                <span className="flex items-center justify-center">
-                                    <span className="spinner"></span>
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="spinner w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                                     Generazione in corso...
                                 </span>
                             ) : (
-                                isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'
+                                <span className="flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5" />
+                                    {isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'}
+                                </span>
                             )}
-                        </button>
+                        </Button>
                     </form>
                 </div>
             </div>

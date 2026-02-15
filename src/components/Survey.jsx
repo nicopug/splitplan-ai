@@ -15,7 +15,7 @@ import {
     ArrowLeft,
     Sparkles,
     Briefcase,
-    PalmTree,
+    TreePalm,
     Train,
     Car
 } from 'lucide-react';
@@ -128,7 +128,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
                         >
-                            <PalmTree className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-white" : "text-primary-blue")} />
+                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-white" : "text-primary-blue")} />
                             <div className="text-center">
                                 <p className="text-xl font-bold">Vacanza</p>
                                 <p className={cn("text-xs font-normal", formData.trip_intent === 'LEISURE' ? "text-blue-100" : "text-gray-500")}>Relax, divertimento e scoperta.</p>

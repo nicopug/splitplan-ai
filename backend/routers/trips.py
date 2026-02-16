@@ -100,15 +100,16 @@ async def extract_receipt(
             Se un dato non è presente, usa null o 0.0.
             """
 
-        # Invio a Gemini con l'immagine
+        # Invio a Gemini con l'immagine/file
+        # Usiamo i tipi ufficiali dell'SDK per massima compatibilità
         response = await ai_client.aio.models.generate_content(
             model=AI_MODEL,
             contents=[
                 prompt,
-                {
-                    "mime_type": file.content_type,
-                    "data": contents
-                }
+                genai.types.Part.from_bytes(
+                    data=contents,
+                    mime_type=file.content_type
+                )
             ]
         )
 

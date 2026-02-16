@@ -175,6 +175,19 @@ export const confirmHotel = async (tripId, hotelData) => {
     return handleResponse(response);
 };
 
+export const extractReceiptData = async (file, type) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    const response = await fetch(`${API_URL}/trips/extract-receipt`, {
+        method: "POST",
+        headers: getAuthHeadersMultipart(),
+        body: formData
+    });
+    return handleResponse(response);
+};
+
 export const resetHotel = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/reset-hotel`, {
         method: 'POST',

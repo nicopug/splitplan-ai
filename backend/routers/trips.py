@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Body, status, UploadFile, File, Form
 from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
 import os
@@ -60,6 +60,72 @@ class HotelSelectionRequest(SQLModel):
     hotel_cost: Optional[float] = 0.0
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
+
+@router.post("/extract-receipt")
+async def extract_receipt(
+    type: str = Form(...), # 'hotel' o 'transport'
+    file: UploadFile = File(...),
+    current_user: Account = Depends(get_current_user)
+):
+    if not ai_client:
+        raise HTTPException(status_code=500, detail="AI Client non inizializzato.")
+
+    try:
+        # Leggi il contenuto del file
+        contents = await file.read()
+        
+        # Prompt specifico in base al tipo
+        if type == 'hotel':
+            prompt = """
+            Analizza questa ricevuta o conferma di prenotazione HOTEL / AIRBNB.
+            Estrai i seguenti dati in formato JSON puro, senza markdown:
+            {
+                "hotel_name": "Nome della struttura",
+                "hotel_address": "Indirizzo completo",
+                "hotel_cost": 0.0 (costo totale in Euro),
+                "arrival_time": "HH:MM" (orario di check-in o arrivo previsto),
+                "return_time": "HH:MM" (orario di check-out o partenza prevista)
+            }
+            Se un dato non è presente, usa null o 0.0.
+            """
+        else:
+            prompt = """
+            Analizza questa ricevuta o conferma di prenotazione VOLO / TRENO / BUS.
+            Estrai i seguenti dati in formato JSON puro, senza markdown:
+            {
+                "transport_cost": 0.0 (costo totale in Euro),
+                "arrival_time": "HH:MM" (orario di arrivo a destinazione),
+                "return_time": "HH:MM" (orario di partenza per il ritorno)
+            }
+            Se un dato non è presente, usa null o 0.0.
+            """
+
+        # Invio a Gemini con l'immagine
+        response = await ai_client.aio.models.generate_content(
+            model=AI_MODEL,
+            contents=[
+                prompt,
+                {
+                    "mime_type": file.content_type,
+                    "data": contents
+                }
+            ]
+        )
+
+        raw_text = response.text.strip()
+        print(f"[DEBUG] Receipt AI Response: {raw_text}")
+
+        # Pulizia JSON
+        import re
+        json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group())
+        
+        raise HTTPException(status_code=500, detail="Impossibile leggere i dati dalla ricevuta.")
+
+    except Exception as e:
+        print(f"[Receipt Error] {e}")
+        raise HTTPException(status_code=500, detail=f"Errore analisi ricevuta: {str(e)}")
 
 class ChatRequest(SQLModel):
     message: str

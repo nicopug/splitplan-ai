@@ -121,32 +121,34 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Button
-                            variant={formData.trip_intent === 'LEISURE' ? 'default' : 'outline'}
+                            variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all hover:scale-105",
-                                formData.trip_intent === 'LEISURE' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
+                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                formData.trip_intent === 'LEISURE' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
                         >
-                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-white" : "text-primary-blue")} />
+                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
                                 <p className="text-xl font-bold">Vacanza</p>
-                                <p className={cn("text-xs font-normal", formData.trip_intent === 'LEISURE' ? "text-blue-100" : "text-gray-500")}>Relax, divertimento e scoperta.</p>
+                                <p className="text-xs font-normal opacity-70">Relax, divertimento e scoperta.</p>
                             </div>
                         </Button>
 
                         <Button
-                            variant={formData.trip_intent === 'BUSINESS' ? 'default' : 'outline'}
+                            variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all hover:scale-105",
-                                formData.trip_intent === 'BUSINESS' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
+                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                formData.trip_intent === 'BUSINESS' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleIntentSelect('BUSINESS')}
                         >
-                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-white" : "text-primary-blue")} />
+                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
                                 <p className="text-xl font-bold">Lavoro</p>
-                                <p className={cn("text-xs font-normal", formData.trip_intent === 'BUSINESS' ? "text-blue-100" : "text-gray-500")}>Efficienza e produttività.</p>
+                                <p className="text-xs font-normal opacity-70">Efficienza e produttività.</p>
                             </div>
                         </Button>
                     </div>
@@ -170,47 +172,50 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <Button
-                            variant={formData.transport_mode === 'CAR' ? 'default' : 'outline'}
+                            variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
-                                formData.transport_mode === 'CAR' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
+                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                formData.transport_mode === 'CAR' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('CAR')}
                         >
-                            <Car className={cn("w-10 h-10", formData.transport_mode === 'CAR' ? "text-white" : "text-primary-blue")} />
+                            <Car className={cn("w-10 h-10", formData.transport_mode === 'CAR' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
                                 <p className="text-lg font-bold">Macchina</p>
-                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'CAR' ? "text-blue-100" : "text-gray-500")}>Pedaggi e carburante inclusi.</p>
+                                <p className="text-[10px] font-normal opacity-70">Pedaggi e carburante inclusi.</p>
                             </div>
                         </Button>
 
                         <Button
-                            variant={formData.transport_mode === 'TRAIN' ? 'default' : 'outline'}
+                            variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
-                                formData.transport_mode === 'TRAIN' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
+                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                formData.transport_mode === 'TRAIN' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('TRAIN')}
                         >
-                            <Train className={cn("w-10 h-10", formData.transport_mode === 'TRAIN' ? "text-white" : "text-primary-blue")} />
+                            <Train className={cn("w-10 h-10", formData.transport_mode === 'TRAIN' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
                                 <p className="text-lg font-bold">Treno</p>
-                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'TRAIN' ? "text-blue-100" : "text-gray-500")}>Link diretti Trainline.</p>
+                                <p className="text-[10px] font-normal opacity-70">Link diretti Trainline.</p>
                             </div>
                         </Button>
 
                         <Button
-                            variant={formData.transport_mode === 'FLIGHT' ? 'default' : 'outline'}
+                            variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all hover:scale-105",
-                                formData.transport_mode === 'FLIGHT' ? "shadow-2xl shadow-blue-200" : "hover:border-primary-blue hover:bg-blue-50/50"
+                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
+                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                formData.transport_mode === 'FLIGHT' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('FLIGHT')}
                         >
-                            <Plane className={cn("w-10 h-10", formData.transport_mode === 'FLIGHT' ? "text-white" : "text-primary-blue")} />
+                            <Plane className={cn("w-10 h-10", formData.transport_mode === 'FLIGHT' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
                                 <p className="text-lg font-bold">Volo</p>
-                                <p className={cn("text-[10px] font-normal", formData.transport_mode === 'FLIGHT' ? "text-blue-100" : "text-gray-500")}>Migliori offerte Skyscanner.</p>
+                                <p className="text-[10px] font-normal opacity-70">Migliori offerte Skyscanner.</p>
                             </div>
                         </Button>
                     </div>

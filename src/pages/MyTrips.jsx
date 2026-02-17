@@ -62,9 +62,9 @@ const MyTrips = () => {
                         fontFamily: "'Outfit', sans-serif",
                         fontWeight: '800',
                         fontSize: '3.5rem',
-                        textShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        textShadow: '0 4px 12px rgba(0, 58, 133, 0.1)'
                     }}>I miei Viaggi</h1>
-                    <p style={{ opacity: 0.9, fontSize: '1.1rem' }}>La tua cronologia avventure su SplitPlan</p>
+                    <p style={{ opacity: 1, fontSize: '1.1rem', color: 'white' }}>La tua cronologia avventure su SplitPlan</p>
                 </div>
             </div>
 

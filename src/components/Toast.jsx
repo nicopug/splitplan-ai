@@ -36,10 +36,10 @@ const Toast = () => {
                 >
                     <Alert variant={getVariant(toast.type)} className="border-none bg-white/95 backdrop-blur-md shadow-none relative pr-12">
                         {getIcon(toast.type)}
-                        <AlertTitle className="capitalize text-sm font-bold">
+                        <AlertTitle className="capitalize text-sm font-extrabold pr-4">
                             {toast.type === 'error' ? 'Attenzione' : toast.type === 'success' ? 'Ottimo!' : 'Info'}
                         </AlertTitle>
-                        <AlertDescription className="text-gray-600 font-medium">
+                        <AlertDescription className="text-gray-600 font-medium pr-4">
                             {toast.message}
                         </AlertDescription>
 

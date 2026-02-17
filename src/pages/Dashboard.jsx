@@ -14,8 +14,8 @@ import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CreditCard, CheckCircle2 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { Button } from './ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
 
 const Dashboard = () => {
     const { id } = useParams();

@@ -123,9 +123,18 @@ const MyTrips = () => {
                                             <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)' }}>
                                                 {trip.destination || trip.name}
                                             </h4>
-                                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.2rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                                                 <span>📅 {new Date(trip.start_date).toLocaleDateString()}</span>
                                                 <span>👥 {trip.num_people} {trip.num_people === 1 ? 'persona' : 'persone'}</span>
+                                                <span style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.3rem',
+                                                    color: trip.trip_intent === 'BUSINESS' ? '#6366f1' : '#f59e0b',
+                                                    fontWeight: '700'
+                                                }}>
+                                                    {trip.trip_intent === 'BUSINESS' ? '💼 Lavoro' : '🏖️ Vacanza'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

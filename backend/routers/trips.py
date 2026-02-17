@@ -120,13 +120,19 @@ async def extract_receipt(
         import re
         json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
         if json_match:
-            return json.loads(json_match.group())
+            try:
+                data = json.loads(json_match.group())
+                return {"success": True, "data": data}
+            except Exception as je:
+                print(f"[JSON Error] {je}")
         
-        raise HTTPException(status_code=500, detail="Impossibile leggere i dati dalla ricevuta.")
+        # Soft failure: file read but no data found
+        return {"success": False, "data": {}, "message": "L'IA non è riuscita a estrarre i dati. Compila pure a mano."}
 
     except Exception as e:
         print(f"[Receipt Error] {e}")
-        raise HTTPException(status_code=500, detail=f"Errore analisi ricevuta: {str(e)}")
+        # Hard failure: API or client error
+        return {"success": False, "data": {}, "message": f"Errore tecnico: {str(e)}"}
 
 class ChatRequest(SQLModel):
     message: str

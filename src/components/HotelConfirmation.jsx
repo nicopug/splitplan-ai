@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { confirmHotel, extractReceiptData } from '../api';
 import { useToast } from '../context/ToastContext';
-import { Upload, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { Upload, FileText, Sparkles, Loader2, Info, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) => {
     const { showToast } = useToast();
@@ -14,6 +15,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
     const [returnTime, setReturnTime] = useState('');
     const [loading, setLoading] = useState(false);
     const [extracting, setExtracting] = useState(null); // 'hotel' o 'transport'
+    const [extractionError, setExtractionError] = useState(null);
 
     const hotelInputRef = useRef(null);
     const transportInputRef = useRef(null);
@@ -21,25 +23,32 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
     const handleExtract = async (file, type) => {
         if (!file) return;
         setExtracting(type);
+        setExtractionError(null);
         showToast(`Lettura ricevuta ${type === 'hotel' ? 'hotel' : 'trasporto'} in corso...`, "info");
 
         try {
-            const data = await extractReceiptData(file, type);
-            if (type === 'hotel') {
-                if (data.hotel_name) setHotelName(data.hotel_name);
-                if (data.hotel_address) setHotelAddress(data.hotel_address);
-                if (data.hotel_cost) setHotelCost(data.hotel_cost.toString());
-                if (data.arrival_time) setArrivalTime(data.arrival_time);
-                if (data.return_time) setReturnTime(data.return_time);
+            const res = await extractReceiptData(file, type);
+
+            if (res.success) {
+                const data = res.data;
+                if (type === 'hotel') {
+                    if (data.hotel_name) setHotelName(data.hotel_name);
+                    if (data.hotel_address) setHotelAddress(data.hotel_address);
+                    if (data.hotel_cost) setHotelCost(data.hotel_cost.toString());
+                    if (data.arrival_time) setArrivalTime(data.arrival_time);
+                    if (data.return_time) setReturnTime(data.return_time);
+                } else {
+                    if (data.transport_cost) setFlightCost(data.transport_cost.toString());
+                    if (data.arrival_time) setArrivalTime(data.arrival_time);
+                    if (data.return_time) setReturnTime(data.return_time);
+                }
+                showToast("Dati estratti con successo! Verifica i campi.", "success");
             } else {
-                if (data.transport_cost) setFlightCost(data.transport_cost.toString());
-                if (data.arrival_time) setArrivalTime(data.arrival_time);
-                if (data.return_time) setReturnTime(data.return_time);
+                setExtractionError(res.message || "L'IA non è riuscita a leggere i dati. Compila pure a mano.");
             }
-            showToast("Dati estratti con successo! Verifica i campi.", "success");
         } catch (error) {
             console.error("Extraction error:", error);
-            showToast("Errore durante l'estrazione dei dati. Prova manualmente.", "error");
+            setExtractionError("Servizio di analisi temporaneamente non disponibile. Procedi manualmente.");
         } finally {
             setExtracting(null);
         }
@@ -99,6 +108,26 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     Prenota {trip.transport_mode === 'TRAIN' ? 'treni e hotel' : trip.transport_mode === 'CAR' ? 'l’hotel' : 'voli e hotel'} dai link sopra, poi inserisci i dettagli qui.<br />
                     L'AI creerà l'itinerario basandosi sul tuo orario di arrivo e posizione.
                 </p>
+
+                {extractionError && (
+                    <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <Alert variant="info" className="bg-blue-50/50 border-blue-100 flex items-start gap-4 pr-12">
+                            <Info className="h-5 w-5 text-blue-500 mt-1 shrink-0" />
+                            <div className="flex-1">
+                                <AlertTitle className="text-blue-800 font-bold mb-1">Nota dall'AI SplitPlan</AlertTitle>
+                                <AlertDescription className="text-blue-700 font-medium">
+                                    {extractionError}
+                                </AlertDescription>
+                            </div>
+                            <button
+                                onClick={() => setExtractionError(null)}
+                                className="absolute top-4 right-4 p-1 hover:bg-blue-100 rounded-lg transition-colors text-blue-400 hover:text-blue-600 outline-none"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </Alert>
+                    </div>
+                )}
 
                 {/* Automation Buttons */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '2.5rem' }}>

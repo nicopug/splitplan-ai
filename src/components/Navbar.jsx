@@ -100,17 +100,19 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-4 user-menu-container relative">
                                 <div className="flex items-center gap-3">
-                                    {/* Credit Counter */}
-                                    <button
-                                        onClick={() => setShowCreditsShop(true)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl transition-all duration-200 group"
-                                        title="Negozio Crediti"
-                                    >
-                                        <span className="text-base group-hover:scale-125 transition-transform duration-300">🪙</span>
-                                        <span className="text-xs font-bold text-yellow-700">
-                                            {user.credits || 0} <span className="hidden sm:inline">Crediti</span>
-                                        </span>
-                                    </button>
+                                    {/* Credit Counter - Only for non-premium users */}
+                                    {!user.is_subscribed && (
+                                        <button
+                                            onClick={() => setShowCreditsShop(true)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl transition-all duration-200 group"
+                                            title="Negozio Crediti"
+                                        >
+                                            <span className="text-base group-hover:scale-125 transition-transform duration-300">🪙</span>
+                                            <span className="text-xs font-bold text-yellow-700">
+                                                {user.credits || 0} <span className="hidden sm:inline">Crediti</span>
+                                            </span>
+                                        </button>
+                                    )}
 
                                     {/* Moved Theme Switcher here */}
                                     <button

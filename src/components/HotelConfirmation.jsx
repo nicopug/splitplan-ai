@@ -206,8 +206,8 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
-                            {trip.transport_mode === 'FLIGHT' ? 'Arrivo Volo (Andat)' :
-                                trip.transport_mode === 'TRAIN' ? 'Arrivo Treno (Andat)' : 'Arrivo a Destinazione'}
+                            {trip.transport_mode === 'FLIGHT' ? 'Arrivo Volo (Andata)' :
+                                trip.transport_mode === 'TRAIN' ? 'Arrivo Treno (Andata)' : 'Arrivo a Destinazione'}
                         </label>
                         <input
                             type="time"

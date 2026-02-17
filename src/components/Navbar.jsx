@@ -6,6 +6,7 @@ const Navbar = () => {
     const [user, setUser] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showCreditsShop, setShowCreditsShop] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
@@ -99,6 +100,18 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-4 user-menu-container relative">
                                 <div className="flex items-center gap-3">
+                                    {/* Credit Counter */}
+                                    <button
+                                        onClick={() => setShowCreditsShop(true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl transition-all duration-200 group"
+                                        title="Negozio Crediti"
+                                    >
+                                        <span className="text-base group-hover:scale-125 transition-transform duration-300">🪙</span>
+                                        <span className="text-xs font-bold text-yellow-700">
+                                            {user.credits || 0} <span className="hidden sm:inline">Crediti</span>
+                                        </span>
+                                    </button>
+
                                     {/* Moved Theme Switcher here */}
                                     <button
                                         onClick={toggleTheme}
@@ -254,6 +267,99 @@ const Navbar = () => {
                     </div>
                 )}
             </div>
+
+            {/* Credits Shop Modal */}
+            {showCreditsShop && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div
+                        className="bg-white dark:bg-[#1a1a1a] w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10 animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6 md:p-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-black text-text-main dark:text-white">Negozio Crediti 🪙</h2>
+                                    <p className="text-sm text-gray-500">Sblocca viaggi Premium o funzioni AI</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowCreditsShop(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors"
+                                >
+                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="grid gap-4">
+                                {/* Pack 1 */}
+                                <div className="p-4 rounded-2xl border-2 border-gray-100 dark:border-white/5 hover:border-primary-blue transition-all group flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-3xl">🪙</div>
+                                        <div>
+                                            <div className="font-bold text-text-main dark:text-white text-lg">1 Credito</div>
+                                            <div className="text-xs text-gray-500">Sblocca 1 viaggio Premium</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            await import('../api').then(api => api.buyCredits(1));
+                                            setUser(JSON.parse(localStorage.getItem('user')));
+                                            setShowCreditsShop(false);
+                                        }}
+                                        className="btn btn-primary px-4 py-2 text-sm font-bold"
+                                    >
+                                        3,99€
+                                    </button>
+                                </div>
+
+                                {/* Pack 3 */}
+                                <div className="p-4 rounded-2xl border-2 border-primary-blue/30 bg-blue-50/10 hover:border-primary-blue transition-all group relative overflow-hidden flex items-center justify-between">
+                                    <div className="absolute top-0 right-0 bg-primary-blue text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-tighter">I Più Scelti</div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-3xl">🪙🪙🪙</div>
+                                        <div>
+                                            <div className="font-bold text-text-main dark:text-white text-lg">3 Crediti</div>
+                                            <div className="text-xs text-gray-500">Risparmia il 25%</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            await import('../api').then(api => api.buyCredits(3));
+                                            setUser(JSON.parse(localStorage.getItem('user')));
+                                            setShowCreditsShop(false);
+                                        }}
+                                        className="btn btn-primary px-4 py-2 text-sm font-bold"
+                                    >
+                                        8,99€
+                                    </button>
+                                </div>
+
+                                {/* Subscription */}
+                                <div className="p-4 rounded-2xl border-2 border-purple-500/30 bg-purple-50/10 hover:border-purple-500 transition-all group flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-3xl">💎</div>
+                                        <div>
+                                            <div className="font-bold text-text-main dark:text-white text-lg">Abbonamento Pro</div>
+                                            <div className="text-xs text-gray-500">Viaggi illimitati ogni mese</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => navigate('/#pricing')}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2 text-sm font-bold transition-all"
+                                    >
+                                        9,99€/mese
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p className="mt-6 text-center text-[10px] text-gray-400">
+                                Transazioni sicure gestite da Stripe. I crediti non scadono mai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Inline Animation */}
             <style jsx>{`

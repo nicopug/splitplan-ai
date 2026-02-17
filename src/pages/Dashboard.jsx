@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -13,6 +13,9 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Sparkles, Lock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Button } from './ui/button';
 
 const Dashboard = () => {
     const { id } = useParams();
@@ -141,6 +144,8 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
+
+            const isPremium = user?.is_subscribed || data.is_premium;
 
             // Remote voting state check moved to participant data match below
 
@@ -299,6 +304,49 @@ const Dashboard = () => {
                     zIndex: 100
                 }}>
                     Sei in modalità Sola Lettura.
+                </div>
+            )}
+
+            {/* Premium Soft Paywall Banner */}
+            {user && !user.is_subscribed && trip && !trip.is_premium && (
+                <div className="container mt-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                        <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-5">
+                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+                                    <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-xl md:text-2xl font-black mb-1">Sblocca la Potenza dell'IA 🚀</h3>
+                                    <p className="text-blue-100 text-sm md:text-base font-medium max-w-xl leading-relaxed">
+                                        Libera tutto il potenziale: Itinerario ottimizzato, Logistica automatica,
+                                        Chat AI senza limiti e molto altro.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                <Button
+                                    onClick={async () => {
+                                        try {
+                                            const res = await unlockTrip(trip.id);
+                                            showToast(res.message, "success");
+                                            fetchTrip(); // Refresh trip data
+                                            // Update local user credits
+                                            const updatedUser = { ...user, credits: res.credits };
+                                            setUser(updatedUser);
+                                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                                        } catch (e) {
+                                            showToast(e.message, "error");
+                                        }
+                                    }}
+                                    className="bg-white text-blue-700 hover:bg-blue-50 h-10 px-6 rounded-xl font-bold border-none shadow-lg text-sm"
+                                >
+                                    Sblocca ora (1 🪙)
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -513,7 +561,7 @@ const Dashboard = () => {
                         {trip.status === 'BOOKED' && (
                             <>
                                 {/* 1. Logistics (Premium only) */}
-                                {user?.is_subscribed && !trip.accommodation && (
+                                {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
                                     <Logistics trip={trip} />
                                 )}
 
@@ -551,6 +599,7 @@ const Dashboard = () => {
                                             onConfirm={fetchTrip}
                                             setIsGenerating={setIsGeneratingItinerary}
                                             setProgress={setItineraryProgress}
+                                            isPremium={user?.is_subscribed || trip.is_premium}
                                         />
                                     ) : (
                                         <div className="container" style={{ marginTop: '2rem' }}>

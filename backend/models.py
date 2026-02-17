@@ -12,6 +12,7 @@ class Account(SQLModel, table=True):
     reset_in_progress: bool = False
     google_calendar_token: Optional[str] = Field(default=None) # JSON dump of tokens
     is_calendar_connected: bool = False
+    credits: int = Field(default=0)
 
 
 class TripBase(SQLModel):
@@ -52,6 +53,7 @@ class TripBase(SQLModel):
     real_destination: Optional[str] = ""
     share_token: Optional[str] = Field(default=None, index=True)
     transport_mode: str = "FLIGHT"
+    is_premium: bool = Field(default=False)
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

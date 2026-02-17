@@ -261,6 +261,36 @@ export const hideTrip = async (tripId) => {
     return handleResponse(response);
 };
 
+export const buyCredits = async (amount) => {
+    const response = await fetch(`${API_URL}/trips/buy-credits?amount=${amount}`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    const data = await handleResponse(response);
+    // Aggiorna credits nell'utente locale
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+        user.credits = data.credits;
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+    return data;
+};
+
+export const unlockTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/unlock`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    const data = await handleResponse(response);
+    // Aggiorna credits nell'utente locale
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+        user.credits = data.credits;
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+    return data;
+};
+
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {

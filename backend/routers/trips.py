@@ -1382,3 +1382,43 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         session.rollback()
         print(f"[Chat Error] {e}")
         raise HTTPException(status_code=500, detail=f"Errore elaborazione chat: {str(e)}")
+@router.post("/buy-credits")
+async def buy_credits(amount: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Simula l'acquisto di crediti"""
+    try:
+        current_account.credits += amount
+        session.add(current_account)
+        session.commit()
+        session.refresh(current_account)
+        return {"status": "success", "credits": current_account.credits}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{trip_id}/unlock")
+async def unlock_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Sblocca un viaggio usando 1 credito"""
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip:
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+        
+        if trip.is_premium:
+            return {"status": "error", "message": "Il viaggio è già premium"}
+        
+        if current_account.credits < 1:
+            raise HTTPException(status_code=403, detail="Crediti insufficienti. Acquistane altri nel negozio!")
+            
+        current_account.credits -= 1
+        trip.is_premium = True
+        
+        session.add(current_account)
+        session.add(trip)
+        session.commit()
+        
+        return {"status": "success", "message": "Viaggio sbloccato!", "credits": current_account.credits}
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

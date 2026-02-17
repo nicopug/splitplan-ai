@@ -348,7 +348,7 @@ const Navbar = () => {
                                         onClick={() => navigate('/#pricing')}
                                         className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2 text-sm font-bold transition-all"
                                     >
-                                        9,99€/mese
+                                        4,99€/mese
                                     </button>
                                 </div>
                             </div>
@@ -356,6 +356,15 @@ const Navbar = () => {
                             <p className="mt-6 text-center text-[10px] text-gray-400">
                                 Transazioni sicure gestite da Stripe. I crediti non scadono mai.
                             </p>
+
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={() => setShowCreditsShop(false)}
+                                    className="text-sm font-bold text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors py-2 px-4"
+                                >
+                                    Annulla
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

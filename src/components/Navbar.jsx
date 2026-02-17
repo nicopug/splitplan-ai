@@ -155,6 +155,15 @@ const Navbar = () => {
                                                 </svg>
                                                 I miei Viaggi
                                             </Link>
+                                            <Link
+                                                to="/market"
+                                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                                </svg>
+                                                Negozio
+                                            </Link>
                                         </div>
                                         <div className="p-2">
                                             <button

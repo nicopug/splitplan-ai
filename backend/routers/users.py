@@ -107,15 +107,15 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
                 subtype=MessageType.html
             )
             
-            # Configure SMTP
+            # Configure SMTP (Resend uses port 465 with SSL)
             conf = ConnectionConfig(
                 MAIL_USERNAME=smtp_user,
                 MAIL_PASSWORD=smtp_password,
                 MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
-                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-                MAIL_STARTTLS=True,
-                MAIL_SSL_TLS=False,
+                MAIL_PORT=int(os.getenv("SMTP_PORT", 465)),
+                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.resend.com"),
+                MAIL_STARTTLS=False,
+                MAIL_SSL_TLS=True,
                 USE_CREDENTIALS=True,
                 VALIDATE_CERTS=True
             )
@@ -204,7 +204,8 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "name": account.name,
             "surname": account.surname,
             "email": account.email,
-            "is_subscribed": account.is_subscribed
+            "is_subscribed": account.is_subscribed,
+            "credits": account.credits
         }
     }
 
@@ -282,10 +283,10 @@ async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends
                 MAIL_USERNAME=smtp_user,
                 MAIL_PASSWORD=smtp_password,
                 MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
-                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-                MAIL_STARTTLS=True,
-                MAIL_SSL_TLS=False,
+                MAIL_PORT=int(os.getenv("SMTP_PORT", 465)),
+                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.resend.com"),
+                MAIL_STARTTLS=False,
+                MAIL_SSL_TLS=True,
                 USE_CREDENTIALS=True,
                 VALIDATE_CERTS=True
             )

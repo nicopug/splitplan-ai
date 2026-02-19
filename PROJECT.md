@@ -180,7 +180,7 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 - [ ] **Mappe offline** — menzionate come feature Pro ma non implementate
 - [x] **Gestione abbonamenti** — logica di scadenza abbonamento, disattivazione rinnovo e visualizzazione stato nel Market
 - [ ] **Admin panel** — nessuna interfaccia di amministrazione per gestire utenti, monitorare utilizzo API, ecc.
-- [ ] **Test automatizzati** — nessun test unitario o di integrazione presente
+- [x] **Test automatizzati** — suite di test unitari e di integrazione per il backend (pytest)
 
 ### 🟢 Priorità Bassa / Future Features
 - [ ] **App mobile nativa** (React Native o Flutter)

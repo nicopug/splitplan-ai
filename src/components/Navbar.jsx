@@ -68,7 +68,7 @@ const Navbar = () => {
                             </span>
                         </Link>
 
-                        {/* Desktop Links - Reduced size and moved here */}
+                        {/* Desktop Links */}
                         <div className="hidden lg:flex items-center gap-6">
                             {location.pathname === '/' && (
                                 <>
@@ -100,7 +100,6 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-4 user-menu-container relative">
                                 <div className="flex items-center gap-3">
-                                    {/* Credit Counter - Only for non-premium users */}
                                     {!user.is_subscribed && (
                                         <button
                                             onClick={() => setShowCreditsShop(true)}
@@ -114,7 +113,6 @@ const Navbar = () => {
                                         </button>
                                     )}
 
-                                    {/* Moved Theme Switcher here */}
                                     <button
                                         onClick={toggleTheme}
                                         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-lg"
@@ -123,7 +121,6 @@ const Navbar = () => {
                                         {theme === 'dark' ? '☀️' : '🌙'}
                                     </button>
 
-                                    {/* Interactive User Button */}
                                     <button
                                         onClick={() => setShowUserMenu(!showUserMenu)}
                                         className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
@@ -141,7 +138,6 @@ const Navbar = () => {
                                     </button>
                                 </div>
 
-                                {/* Dropdown Menu (Epic Games Style) */}
                                 {showUserMenu && (
                                     <div className="absolute top-full right-0 mt-2 w-56 bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-[100] animate-slideDownFast">
                                         <div className="p-3 border-b border-white/5">
@@ -218,60 +214,96 @@ const Navbar = () => {
 
                 {/* Mobile Menu Dropdown */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden border-t border-gray-200 py-4 animate-slideDown">
-                        <div className="flex flex-col gap-4">
+                    <div className="md:hidden border-t border-white/10 py-4 animate-slideDown bg-[#1a1a1a] rounded-b-2xl shadow-2xl overflow-hidden mt-0">
+                        <div className="flex flex-col gap-1 px-2">
+                            {/* Theme Toggle in Mobile */}
                             <button
                                 onClick={toggleTheme}
-                                className="px-4 py-2 text-left font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                                className="px-4 py-3 text-left font-bold text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group"
                             >
-                                {theme === 'dark' ? '☀️ Modalità Chiara' : '🌙 Modalità Scura'}
+                                <span className="flex items-center gap-3">
+                                    <span className="text-xl group-hover:scale-110 transition-transform">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                                    {theme === 'dark' ? 'Modalità Chiara' : 'Modalità Scura'}
+                                </span>
+                                <div className={`w-10 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-primary-blue' : 'bg-gray-600'}`}>
+                                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${theme === 'dark' ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                                </div>
                             </button>
+
+                            <div className="h-px bg-white/5 my-2 mx-4"></div>
 
                             {location.pathname === '/' && (
                                 <>
                                     <a
                                         href="#how-it-works"
-                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                        className="px-4 py-3 font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                                     >
                                         Come Funziona
                                     </a>
                                     <a
                                         href="#features"
-                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                        className="px-4 py-3 font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                                     >
                                         Funzionalità
                                     </a>
                                     <a
                                         href="#pricing"
-                                        className="px-4 py-2 font-medium text-text-main hover:bg-gray-100 rounded-lg transition-colors"
+                                        className="px-4 py-3 font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                                     >
                                         Prezzi
                                     </a>
-                                    <div className="border-t border-gray-200 my-2"></div>
+                                    <div className="h-px bg-white/5 my-2 mx-4"></div>
                                 </>
                             )}
 
                             {user ? (
-                                <>
-                                    <div className="px-4 py-2">
-                                        <span className="font-semibold text-text-main flex items-center gap-2">
+                                <div className="space-y-1">
+                                    <div className="px-4 py-3 mb-2">
+                                        <div className="text-[0.65rem] uppercase tracking-wider font-bold text-gray-500 mb-1">Account</div>
+                                        <div className="font-black text-white text-lg flex items-center gap-2">
                                             Ciao, {user.name}
                                             {user.is_subscribed && <span className="text-xl">💎</span>}
-                                        </span>
+                                        </div>
                                     </div>
+
+                                    <Link
+                                        to="/my-trips"
+                                        className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                                    >
+                                        <svg className="w-5 h-5 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                        <span className="font-bold">I miei Viaggi</span>
+                                    </Link>
+
+                                    <Link
+                                        to="/market"
+                                        className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                                    >
+                                        <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                        </svg>
+                                        <span className="font-bold">Negozio</span>
+                                    </Link>
+
+                                    <div className="h-px bg-white/5 my-3 mx-4"></div>
+
                                     <button
                                         onClick={handleLogout}
-                                        className="mx-4 btn-secondary px-4 py-2 text-sm rounded-lg text-center"
+                                        className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors text-left font-bold"
                                     >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
                                         Esci
                                     </button>
-                                </>
+                                </div>
                             ) : (
                                 <Link
                                     to="/auth"
-                                    className="mx-4 btn btn-primary px-6 py-2.5 text-center"
+                                    className="mx-4 my-2 btn btn-primary px-6 py-3.5 text-center font-black shadow-lg shadow-blue-500/20"
                                 >
-                                    Accedi
+                                    Accedi Subito
                                 </Link>
                             )}
                         </div>
@@ -279,7 +311,6 @@ const Navbar = () => {
                 )}
             </div>
 
-            {/* Credits Shop Modal */}
             {showCreditsShop && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div
@@ -303,7 +334,6 @@ const Navbar = () => {
                             </div>
 
                             <div className="grid gap-4">
-                                {/* Pack 1 */}
                                 <div className="p-4 rounded-2xl border-2 border-gray-100 dark:border-white/5 hover:border-primary-blue transition-all group flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="text-3xl">🪙</div>
@@ -324,7 +354,6 @@ const Navbar = () => {
                                     </button>
                                 </div>
 
-                                {/* Pack 3 */}
                                 <div className="p-4 rounded-2xl border-2 border-primary-blue/30 bg-blue-50/10 hover:border-primary-blue transition-all group relative overflow-hidden flex items-center justify-between">
                                     <div className="absolute top-0 right-0 bg-primary-blue text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-tighter">I Più Scelti</div>
                                     <div className="flex items-center gap-4">
@@ -346,7 +375,6 @@ const Navbar = () => {
                                     </button>
                                 </div>
 
-                                {/* Subscription */}
                                 <div className="p-4 rounded-2xl border-2 border-purple-500/30 bg-purple-50/10 hover:border-purple-500 transition-all group flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="text-3xl">💎</div>
@@ -381,7 +409,6 @@ const Navbar = () => {
                 </div>
             )}
 
-            {/* Inline Animation */}
             <style jsx>{`
                 @keyframes slideDown {
                     from {

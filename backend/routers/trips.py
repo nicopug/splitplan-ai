@@ -552,6 +552,13 @@ async def get_user_stats(session: Session = Depends(get_session), current_accoun
             )
         ).one() or 0.0
 
+        # Aggiungiamo la quota parte di hotel e trasporti per ogni viaggio
+        for t in trips:
+            # Calcoliamo la quota per persona (il campo transport_cost e hotel_cost sono il totale del viaggio)
+            num = (t.num_people or 1)
+            total_spent += (t.transport_cost or 0) / num
+            total_spent += (t.hotel_cost or 0) / num
+
         # Calcolo giorni totali e città uniche per i viaggi completati
         total_days = 0
         unique_cities = set()

@@ -1496,15 +1496,14 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         try:
             if 'T' in dt_str:
                 dt = datetime.fromisoformat(dt_str.replace('Z', ''))
-                return dt.strftime("%d/%m/%Y %H:%M")
-            return dt_str
+                return dt
+            return None
         except:
-            return dt_str
+            return None
 
-    def format_pdf_date(d_str):
+    def format_pdf_date_only(d_str):
         if not d_str: return ""
         try:
-            # Prova YYYY-MM-DD
             dt = datetime.strptime(d_str, "%Y-%m-%d")
             return dt.strftime("%d/%m/%Y")
         except:
@@ -1519,96 +1518,143 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
-    # Font standard (FPDF supporta Helvetica per default)
+    # Header Design
+    pdf.set_fill_color(25, 42, 86) # Dark Navy
+    pdf.rect(0, 0, 210, 40, 'F')
+    
     pdf.set_font("Helvetica", "B", 24)
-    pdf.set_text_color(25, 42, 86) # Dark Navy
-    pdf.cell(0, 20, "SplitPlan - Itinerario di Viaggio", ln=True, align="C")
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_y(10)
+    pdf.cell(0, 15, "SPLITPLAN", ln=True, align="C")
     
-    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, f"Il tuo viaggio a {trip.real_destination or trip.destination}", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Trip Info Section
     pdf.set_text_color(0, 0, 0)
-    pdf.cell(0, 10, f"{trip.name}", ln=True, align="C")
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.cell(0, 10, f"{trip.name}", ln=True)
     
-    pdf.set_font("Helvetica", "I", 12)
-    pdf.cell(0, 10, f"Destinazione: {trip.real_destination or trip.destination}", ln=True, align="C")
-    pdf.cell(0, 10, f"Date: {format_pdf_date(trip.start_date)} - {format_pdf_date(trip.end_date)}", ln=True, align="C")
-    pdf.ln(10)
-    
-    # Itinerario
-    pdf.set_font("Helvetica", "B", 16)
-    pdf.set_fill_color(232, 236, 241)
-    pdf.cell(0, 12, "  Itinerario", ln=True, fill=True)
+    pdf.set_font("Helvetica", "I", 11)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(0, 7, f"Periodo: {format_pdf_date_only(trip.start_date)} - {format_pdf_date_only(trip.end_date)}", ln=True)
     pdf.ln(5)
-    
-    if not itinerary:
-        pdf.set_font("Helvetica", "", 12)
-        pdf.cell(0, 10, "Nessun itinerario generato per questo viaggio.", ln=True)
-    else:
-        for item in itinerary:
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.set_text_color(0, 122, 255) # Blue
-            # Aumentato a 45 per gestire DD/MM/YYYY HH:MM senza overlap
-            pdf.cell(45, 8, f"{format_pdf_datetime(item.start_time)}", ln=False)
-            
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 8, f"{item.title}", ln=True)
-            
-            if item.description:
-                pdf.set_font("Helvetica", "", 10)
-                pdf.set_text_color(80, 80, 80)
-                pdf.multi_cell(0, 6, f"{item.description}")
-            
-            pdf.ln(3)
-
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(10)
-    
-    # Hotel
+
+    # 1. Alloggio (Moved to top)
     if trip.accommodation:
-        if pdf.get_y() > 250: pdf.add_page()
         pdf.set_font("Helvetica", "B", 16)
-        pdf.set_fill_color(232, 236, 241)
-        pdf.cell(0, 12, "  Alloggio", ln=True, fill=True)
-        pdf.ln(5)
+        pdf.set_fill_color(240, 244, 255)
+        pdf.set_text_color(25, 42, 86)
+        pdf.cell(0, 12, "   Alloggio", ln=True, fill=True)
+        pdf.ln(4)
         
+        pdf.set_text_color(0, 0, 0)
         pdf.set_font("Helvetica", "B", 12)
         pdf.cell(0, 8, f"Hotel: {trip.accommodation}", ln=True)
         if trip.accommodation_location:
             pdf.set_font("Helvetica", "", 10)
-            pdf.cell(0, 6, f"Indirizzo: {trip.accommodation_location}", ln=True)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(0, 6, f"Indirizzo: {trip.accommodation_location}")
         pdf.ln(10)
 
-    # Spese
+    # 2. Itinerario (Grouped by Day)
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_fill_color(240, 244, 255)
+    pdf.set_text_color(25, 42, 86)
+    pdf.cell(0, 12, "   Itinerario Giornaliero", ln=True, fill=True)
+    pdf.ln(5)
+    
+    if not itinerary:
+        pdf.set_font("Helvetica", "", 12)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(0, 10, "Nessun itinerario generato per questo viaggio.", ln=True)
+    else:
+        current_date_str = None
+        day_count = 0
+        
+        for item in itinerary:
+            dt = format_pdf_datetime(item.start_time)
+            if not dt: continue
+            
+            date_str = dt.strftime("%Y-%m-%d")
+            
+            # Nuovo Giorno
+            if date_str != current_date_str:
+                current_date_str = date_str
+                day_count += 1
+                
+                if pdf.get_y() > 240: pdf.add_page()
+                
+                pdf.ln(4)
+                pdf.set_font("Helvetica", "B", 14)
+                pdf.set_text_color(0, 122, 255) # SplitPlan Blue
+                pdf.cell(0, 10, f"Giorno {day_count} - {dt.strftime('%d/%m/%Y')}", ln=True)
+                pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 50, pdf.get_y())
+                pdf.ln(2)
+            
+            # Attività
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_text_color(50, 50, 50)
+            # Solo ORARIO
+            time_display = dt.strftime("%H:%M")
+            pdf.cell(20, 8, f"{time_display}", ln=False)
+            
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(0, 8, f"{item.title}", ln=True)
+            
+            if item.description:
+                pdf.set_font("Helvetica", "", 9)
+                pdf.set_text_color(100, 100, 100)
+                pdf.set_x(30) # Indent description
+                pdf.multi_cell(0, 5, f"{item.description}")
+            
+            pdf.ln(2)
+
+    pdf.ln(10)
+    
+    # 3. Spese
     if expenses:
-        pdf.add_page()
+        if pdf.get_y() > 180: pdf.add_page()
         pdf.set_font("Helvetica", "B", 16)
-        pdf.set_fill_color(232, 236, 241)
-        pdf.cell(0, 12, "  Riepilogo Spese", ln=True, fill=True)
+        pdf.set_fill_color(240, 244, 255)
+        pdf.set_text_color(25, 42, 86)
+        pdf.cell(0, 12, "   Riepilogo Spese", ln=True, fill=True)
         pdf.ln(5)
         
         total_eur = sum(e.amount for e in expenses)
         
         # Tabella intestazione
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(30, 8, "Data", border=1)
-        pdf.cell(80, 8, "Descrizione", border=1)
-        pdf.cell(30, 8, "Categoria", border=1)
-        pdf.cell(40, 8, "Importo (EUR)", border=1, ln=True)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_fill_color(25, 42, 86)
+        pdf.cell(30, 8, " Data", border=0, fill=True)
+        pdf.cell(80, 8, " Descrizione", border=0, fill=True)
+        pdf.cell(30, 8, " Categoria", border=0, fill=True)
+        pdf.cell(50, 8, " Importo (EUR)", border=0, fill=True, ln=True)
         
-        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Helvetica", "", 9)
+        fill = False
         for e in expenses:
-            pdf.cell(30, 8, format_pdf_date(e.date), border=1)
-            pdf.cell(80, 8, str(e.description)[:40], border=1)
-            pdf.cell(30, 8, str(e.category), border=1)
-            pdf.cell(40, 8, f"{e.amount:.2f} EUR", border=1, ln=True)
+            pdf.set_fill_color(245, 247, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(30, 8, format_pdf_date_only(e.date), border=0, fill=True)
+            pdf.cell(80, 8, f" {str(e.description)[:40]}", border=0, fill=True)
+            pdf.cell(30, 8, f" {str(e.category)}", border=0, fill=True)
+            pdf.cell(50, 8, f" {e.amount:.2f} EUR", border=0, fill=True, ln=True)
+            fill = not fill
             
         pdf.ln(5)
         pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(0, 10, f"Totale: {total_eur:.2f} EUR", ln=True, align="R")
+        pdf.set_text_color(0, 122, 255)
+        pdf.cell(0, 10, f"TOTALE SPESE: {total_eur:.2f} EUR", ln=True, align="R")
 
     # Genera i bytes del PDF
     pdf_bytes = pdf.output()
     
-    # Se pdf_bytes è un'istanza di bytearray o simile, lo convertiamo se necessario
     if isinstance(pdf_bytes, bytearray):
         pdf_bytes = bytes(pdf_bytes)
 

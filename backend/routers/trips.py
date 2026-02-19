@@ -1491,6 +1491,25 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     # Controllo Premium (Export PDF è una feature premium)
     require_premium(current_account, trip)
 
+    def format_pdf_datetime(dt_str):
+        if not dt_str: return ""
+        try:
+            if 'T' in dt_str:
+                dt = datetime.fromisoformat(dt_str.replace('Z', ''))
+                return dt.strftime("%d/%m/%Y %H:%M")
+            return dt_str
+        except:
+            return dt_str
+
+    def format_pdf_date(d_str):
+        if not d_str: return ""
+        try:
+            # Prova YYYY-MM-DD
+            dt = datetime.strptime(d_str, "%Y-%m-%d")
+            return dt.strftime("%d/%m/%Y")
+        except:
+            return d_str
+
     # Fetch data
     itinerary = sorted(trip.itinerary_items, key=lambda x: (x.start_time))
     expenses = trip.expenses
@@ -1511,7 +1530,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     
     pdf.set_font("Helvetica", "I", 12)
     pdf.cell(0, 10, f"Destinazione: {trip.real_destination or trip.destination}", ln=True, align="C")
-    pdf.cell(0, 10, f"Date: {trip.start_date} - {trip.end_date}", ln=True, align="C")
+    pdf.cell(0, 10, f"Date: {format_pdf_date(trip.start_date)} - {format_pdf_date(trip.end_date)}", ln=True, align="C")
     pdf.ln(10)
     
     # Itinerario
@@ -1527,7 +1546,8 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         for item in itinerary:
             pdf.set_font("Helvetica", "B", 12)
             pdf.set_text_color(0, 122, 255) # Blue
-            pdf.cell(35, 8, f"{item.start_time}", ln=False)
+            # Aumentato a 45 per gestire DD/MM/YYYY HH:MM senza overlap
+            pdf.cell(45, 8, f"{format_pdf_datetime(item.start_time)}", ln=False)
             
             pdf.set_font("Helvetica", "B", 12)
             pdf.set_text_color(0, 0, 0)
@@ -1576,7 +1596,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         
         pdf.set_font("Helvetica", "", 10)
         for e in expenses:
-            pdf.cell(30, 8, str(e.date), border=1)
+            pdf.cell(30, 8, format_pdf_date(e.date), border=1)
             pdf.cell(80, 8, str(e.description)[:40], border=1)
             pdf.cell(30, 8, str(e.category), border=1)
             pdf.cell(40, 8, f"{e.amount:.2f} EUR", border=1, ln=True)

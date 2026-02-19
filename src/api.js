@@ -286,6 +286,21 @@ export const hideTrip = async (tripId) => {
     return handleResponse(response);
 };
 
+export const completeTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/complete`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const getUserStats = async () => {
+    const response = await fetch(`${API_URL}/trips/stats`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 export const buyCredits = async (amount) => {
     const response = await fetch(`${API_URL}/trips/buy-credits?amount=${amount}`, {
         method: "POST",

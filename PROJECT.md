@@ -187,7 +187,7 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 - [ ] **Integrazione Amadeus API** per prezzi voli reali (era stata iniziata ma rimossa)
 - [ ] **Raccomandazioni ristoranti** tramite Overpass API (POI discovery)
 - [ ] **Sondaggi pre-viaggio** (Survey component già presente ma non integrato nel flusso principale)
-- [ ] **Storico viaggi** con statistiche personali
+- [ ] **Storico viaggi & Statistiche** — Implementazione della sezione archivio con dashboard di riepilogo per i viaggi conclusi.
 - [ ] **Integrazione con altri calendari** (Apple Calendar, Outlook)
 - [ ] **Supporto multi-lingua** (attualmente solo italiano nell'UI)
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -511,6 +511,45 @@ const Dashboard = () => {
                                 </button>
                             )
                         ))}
+
+                        {/* Status Management for Organizer */}
+                        {isOrganizer && trip.status === 'BOOKED' && (
+                            <button
+                                onClick={async () => {
+                                    const confirmed = await showConfirm(
+                                        "Concludi Viaggio",
+                                        "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia."
+                                    );
+                                    if (confirmed) {
+                                        try {
+                                            await completeTrip(id);
+                                            showToast("Viaggio concluso! Lo trovi nel tuo archivio.", "success");
+                                            fetchTrip();
+                                        } catch (e) {
+                                            showToast("Errore: " + e.message, "error");
+                                        }
+                                    }
+                                }}
+                                className="hover-lift"
+                                style={{
+                                    background: '#10b981',
+                                    color: 'white',
+                                    padding: '0.6rem 1.2rem',
+                                    borderRadius: '14px',
+                                    border: '1px solid #059669',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '700',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)'
+                                }}
+                            >
+                                <CheckCircle2 className="w-4 h-4" />
+                                Concludi Viaggio
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

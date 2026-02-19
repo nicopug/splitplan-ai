@@ -515,6 +515,100 @@ async def get_my_trips(session: Session = Depends(get_session), current_account:
         print(f"[ERROR] get_my_trips: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/stats")
+async def get_user_stats(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Calcola statistiche aggregate per l'utente corrente"""
+    try:
+        # Trova tutti i viaggi a cui partecipa l'utente
+        participants = session.exec(
+            select(Participant).where(
+                Participant.account_id == current_account.id,
+                Participant.is_active == True
+            )
+        ).all()
+        
+        trip_ids = [p.trip_id for p in participants]
+        if not trip_ids:
+            return {
+                "total_trips": 0,
+                "completed_trips": 0,
+                "total_spent": 0.0,
+                "total_days": 0,
+                "unique_cities": 0,
+                "cities_list": []
+            }
+            
+        trips = session.exec(
+            select(Trip).where(Trip.id.in_(trip_ids))
+        ).all()
+        
+        completed_trips = [t for t in trips if t.status == "COMPLETED"]
+        
+        # Calcolo spesa totale (somma di tutte le spese caricate dall'utente in questi viaggi)
+        total_spent = session.exec(
+            select(func.sum(Expense.amount)).where(
+                Expense.trip_id.in_(trip_ids),
+                Expense.payer_id.in_([p.id for p in participants])
+            )
+        ).one() or 0.0
+
+        # Calcolo giorni totali e città uniche per i viaggi completati
+        total_days = 0
+        unique_cities = set()
+        for t in completed_trips:
+            unique_cities.add(t.destination or t.real_destination)
+            try:
+                # Gestiamo il formato ISO della data
+                d1 = datetime.fromisoformat(t.start_date.replace('Z', ''))
+                d2 = datetime.fromisoformat(t.end_date.replace('Z', ''))
+                total_days += abs((d2 - d1).days) + 1
+            except:
+                pass
+
+        return {
+            "total_trips": len(trips),
+            "completed_trips": len(completed_trips),
+            "total_spent": round(total_spent, 2),
+            "total_days": total_days,
+            "unique_cities": len(unique_cities),
+            "cities_list": list(unique_cities)
+        }
+    except Exception as e:
+        print(f"[ERROR] get_user_stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{trip_id}/complete")
+async def complete_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Segna un viaggio come concluso"""
+    try:
+        trip = session.get(Trip, trip_id)
+        if not trip:
+            raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        # Solo l'organizzatore può chiudere il viaggio
+        participant = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip_id,
+                Participant.account_id == current_account.id
+            )
+        ).first()
+        
+        if not participant or not participant.is_organizer:
+            raise HTTPException(status_code=403, detail="Solo l'organizzatore può segnare il viaggio come concluso")
+            
+        trip.status = "COMPLETED"
+        session.add(trip)
+        session.commit()
+        return {"status": "success", "message": "Viaggio archiviato con successo"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"[ERROR] complete_trip: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @router.post("/{trip_id}/hide")
 async def hide_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Nasconde un viaggio dalla cronologia dell'utente (imposta is_active=False per il partecipante)"""

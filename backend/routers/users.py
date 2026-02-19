@@ -299,17 +299,21 @@ async def toggle_subscription(
 
 @router.post("/cancel-subscription")
 async def cancel_subscription(email: str = Body(..., embed=True), session: Session = Depends(get_session)):
-    """Disattiva il rinnovo automatico."""
+    """Termina l'abbonamento immediatamente."""
     statement = select(Account).where(Account.email == email)
     account = session.exec(statement).first()
     if not account:
         raise HTTPException(status_code=404, detail="Account non trovato")
     
+    account.is_subscribed = False
+    account.subscription_plan = None
+    account.subscription_expiry = None
     account.auto_renew = False
+    
     session.add(account)
     session.commit()
     
-    return {"status": "success", "message": "Rinnovo automatico disattivato. L'abbonamento rimarrà attivo fino alla scadenza.", "auto_renew": False}
+    return {"status": "success", "message": "Abbonamento annullato con successo. Sei tornato al piano Free.", "is_subscribed": False}
 
 @router.post("/forgot-password")
 async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends(get_session)):

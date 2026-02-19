@@ -60,6 +60,9 @@ const Market = () => {
             showToast(res.message, "success");
             const updatedUser = {
                 ...user,
+                is_subscribed: false,
+                subscription_plan: null,
+                subscription_expiry: null,
                 auto_renew: false
             };
             localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -147,7 +150,7 @@ const Market = () => {
                                                 onClick={handleCancelRenew}
                                                 className="text-[9px] text-red-500 font-black hover:underline mt-1 uppercase"
                                             >
-                                                Disattiva Rinnovo
+                                                Annulla Abbonamento
                                             </button>
                                         ) : (
                                             <p className="text-[9px] text-orange-500 font-black mt-1 uppercase">Rinnovo Disattivato</p>
@@ -192,7 +195,7 @@ const Market = () => {
                                                 onClick={handleCancelRenew}
                                                 className="text-[9px] text-red-400/80 font-black hover:underline mt-1 uppercase"
                                             >
-                                                Disattiva Rinnovo
+                                                Annulla Abbonamento
                                             </button>
                                         ) : (
                                             <p className="text-[9px] text-orange-400 font-black mt-1 uppercase">Rinnovo Disattivato</p>

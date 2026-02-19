@@ -4,9 +4,9 @@ from typing import List, Dict, Any
 from datetime import datetime
 import math
 
-from ..database import get_session
-from ..models import Trip, Participant, Expense, SQLModel
-from ..utils.currency import convert_to_euro, get_exchange_rates
+from database import get_session
+from models import Trip, Participant, Expense, SQLModel
+from utils.currency import convert_to_euro, get_exchange_rates
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 

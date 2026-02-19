@@ -15,9 +15,9 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
-from ..database import get_session
-from ..auth import get_current_user
-from ..models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account, Expense, Photo
+from database import get_session
+from auth import get_current_user
+from models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account, Expense, Photo
 
 # Caricamento variabili ambiente
 load_dotenv()

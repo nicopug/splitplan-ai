@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from typing import Optional, List, Dict
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlmodel import Session, select
-from ..database import get_session
-from ..auth import get_current_user
-from ..models import Account
+from database import get_session
+from auth import get_current_user
+from models import Account
 import os
 import json
 import logging

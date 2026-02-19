@@ -1,11 +1,19 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from .database import create_db_and_tables
-from .routers import trips, photos, users, expenses, itinerary
+from database import create_db_and_tables
+from routers import trips, photos, users, expenses, itinerary
 
 # --- CONFIGURAZIONE APP ---
 # root_path="/api" è fondamentale per il deployment su Vercel
-app = FastAPI(root_path="/api")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Tenta di creare le tabelle all'avvio
+    create_db_and_tables()
+    yield
+
+# root_path="/api" è fondamentale per il deployment su Vercel
+app = FastAPI(root_path="/api", lifespan=lifespan)
 
 # --- CONFIGURAZIONE CORS ---
 # Permette al frontend di parlare con il backend
@@ -29,14 +37,8 @@ app.include_router(photos.router)
 app.include_router(users.router)
 app.include_router(expenses.router)
 app.include_router(itinerary.router)
-from .routers import calendar
+from routers import calendar
 app.include_router(calendar.router)
-
-# --- AVVIO AUTOMATICO DB ---
-@app.on_event("startup")
-def on_startup():
-    # Tenta di creare le tabelle all'avvio
-    create_db_and_tables()
 
 # --- ENDPOINT MANUALE PER FORZARE LA CREAZIONE TABELLE ---
 # Usa questo se Supabase rimane vuoto dopo il deploy
@@ -46,13 +48,13 @@ def init_db():
     return {"message": "Database tables created successfully! Check Supabase now."}
 
 from sqlmodel import text
-from .database import get_session
+from database import get_session
 
 @app.get("/migrate-db-calendar")
 def migrate_db_calendar():
     # Helper temporaneo per aggiungere le colonne mancanti su Supabase
     try:
-        from .database import engine
+        from database import engine
         with engine.connect() as conn:
             conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"))
             conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"))

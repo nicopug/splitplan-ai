@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select, SQLModel
 from typing import List, Optional
 
-from ..database import get_session
-from ..models import ItineraryItem
+from database import get_session
+from models import ItineraryItem
 
 router = APIRouter(prefix="/itinerary", tags=["itinerary"])
 

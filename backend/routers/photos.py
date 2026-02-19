@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlmodel import Session, select
 from supabase import create_client, Client
 
-from ..database import get_session
-from ..models import Photo, Trip
+from database import get_session
+from models import Photo, Trip
 
 router = APIRouter(prefix="/trips", tags=["photos"])
 

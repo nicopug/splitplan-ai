@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session, select
 from typing import List, Optional
-from ..database import get_session
-from ..models import Account, Participant
-from ..auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token
+from database import get_session
+from models import Account, Participant
+from auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token
 from datetime import datetime, timedelta
 from pydantic import EmailStr, BaseModel
 import os

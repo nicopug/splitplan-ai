@@ -1,3 +1,10 @@
+import sys
+import os
+from pathlib import Path
+
+# Add the backend directory to sys.path to handle Vercel deployment imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware

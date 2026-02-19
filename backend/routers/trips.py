@@ -1,4 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, status, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+import io
+from fpdf import FPDF
+
 from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
 import os
@@ -1476,3 +1480,122 @@ async def unlock_trip(trip_id: int, session: Session = Depends(get_session), cur
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{trip_id}/export-pdf")
+async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Esporta l'itinerario e le spese del viaggio in formato PDF"""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+    
+    # Controllo Premium (Export PDF è una feature premium)
+    require_premium(current_account, trip)
+
+    # Fetch data
+    itinerary = sorted(trip.itinerary_items, key=lambda x: (x.start_time))
+    expenses = trip.expenses
+    
+    # Creazione PDF
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    
+    # Font standard (FPDF supporta Helvetica per default)
+    pdf.set_font("Helvetica", "B", 24)
+    pdf.set_text_color(25, 42, 86) # Dark Navy
+    pdf.cell(0, 20, "SplitPlan - Itinerario di Viaggio", ln=True, align="C")
+    
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, f"{trip.name}", ln=True, align="C")
+    
+    pdf.set_font("Helvetica", "I", 12)
+    pdf.cell(0, 10, f"Destinazione: {trip.real_destination or trip.destination}", ln=True, align="C")
+    pdf.cell(0, 10, f"Date: {trip.start_date} - {trip.end_date}", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Itinerario
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_fill_color(232, 236, 241)
+    pdf.cell(0, 12, "  Itinerario", ln=True, fill=True)
+    pdf.ln(5)
+    
+    if not itinerary:
+        pdf.set_font("Helvetica", "", 12)
+        pdf.cell(0, 10, "Nessun itinerario generato per questo viaggio.", ln=True)
+    else:
+        for item in itinerary:
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(0, 122, 255) # Blue
+            pdf.cell(35, 8, f"{item.start_time}", ln=False)
+            
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(0, 8, f"{item.title}", ln=True)
+            
+            if item.description:
+                pdf.set_font("Helvetica", "", 10)
+                pdf.set_text_color(80, 80, 80)
+                pdf.multi_cell(0, 6, f"{item.description}")
+            
+            pdf.ln(3)
+
+    pdf.ln(10)
+    
+    # Hotel
+    if trip.accommodation:
+        if pdf.get_y() > 250: pdf.add_page()
+        pdf.set_font("Helvetica", "B", 16)
+        pdf.set_fill_color(232, 236, 241)
+        pdf.cell(0, 12, "  Alloggio", ln=True, fill=True)
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 8, f"Hotel: {trip.accommodation}", ln=True)
+        if trip.accommodation_location:
+            pdf.set_font("Helvetica", "", 10)
+            pdf.cell(0, 6, f"Indirizzo: {trip.accommodation_location}", ln=True)
+        pdf.ln(10)
+
+    # Spese
+    if expenses:
+        pdf.add_page()
+        pdf.set_font("Helvetica", "B", 16)
+        pdf.set_fill_color(232, 236, 241)
+        pdf.cell(0, 12, "  Riepilogo Spese", ln=True, fill=True)
+        pdf.ln(5)
+        
+        total_eur = sum(e.amount for e in expenses)
+        
+        # Tabella intestazione
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(30, 8, "Data", border=1)
+        pdf.cell(80, 8, "Descrizione", border=1)
+        pdf.cell(30, 8, "Categoria", border=1)
+        pdf.cell(40, 8, "Importo (EUR)", border=1, ln=True)
+        
+        pdf.set_font("Helvetica", "", 10)
+        for e in expenses:
+            pdf.cell(30, 8, str(e.date), border=1)
+            pdf.cell(80, 8, str(e.description)[:40], border=1)
+            pdf.cell(30, 8, str(e.category), border=1)
+            pdf.cell(40, 8, f"{e.amount:.2f} EUR", border=1, ln=True)
+            
+        pdf.ln(5)
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 10, f"Totale: {total_eur:.2f} EUR", ln=True, align="R")
+
+    # Genera i bytes del PDF
+    pdf_bytes = pdf.output()
+    
+    # Se pdf_bytes è un'istanza di bytearray o simile, lo convertiamo se necessario
+    if isinstance(pdf_bytes, bytearray):
+        pdf_bytes = bytes(pdf_bytes)
+
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=SplitPlan_{trip_id}.pdf"
+        }
+    )

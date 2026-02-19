@@ -172,11 +172,11 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 - [ ] **Integrazione Stripe reale** — il pagamento crediti/abbonamenti è attualmente simulato; serve implementare Stripe Checkout con webhook per aggiornare lo stato abbonamento
 - [x] **Differenziazione Free vs Premium** — il gate dei contenuti premium non è ancora completamente enforced lato backend per tutti gli endpoint
 - [ ] **Email transazionali** — il sistema di verifica email e reset password richiede un provider SMTP configurato in produzione (es. SendGrid, Resend)
-- [ ] **Rate limiting AI** — nessun limite alle chiamate Gemini per utente free; rischio di costi API elevati
+- [x] **Rate limiting AI** — nessun limite alle chiamate Gemini per utente free; rischio di costi API elevati
 
 ### 🟡 Priorità Media
 - [ ] **Notifiche real-time** — nessun sistema di notifica quando un partecipante vota o l'itinerario viene generato (WebSocket o polling)
-- [ ] **Export PDF** — funzionalità menzionata nel marketing ma non implementata
+- [x] **Export PDF** — funzionalità per scaricare l'itinerario e le spese in formato PDF
 - [ ] **Mappe offline** — menzionate come feature Pro ma non implementate
 - [ ] **Gestione abbonamenti** — nessuna logica di scadenza abbonamento, cancellazione o rinnovo automatico
 - [ ] **Admin panel** — nessuna interfaccia di amministrazione per gestire utenti, monitorare utilizzo API, ecc.

@@ -246,6 +246,31 @@ export const joinTrip = async (token) => {
     return handleResponse(response);
 };
 
+export const exportTripPDF = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/export-pdf`, {
+        headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+        let errorMessage = "Errore durante l'esportazione del PDF";
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorMessage;
+        } catch (e) { }
+        throw new Error(errorMessage);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SplitPlan_Viaggio_${tripId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};
+
 export const getUserTrips = async () => {
     const response = await fetch(`${API_URL}/trips/my-trips`, {
         headers: getAuthHeaders()

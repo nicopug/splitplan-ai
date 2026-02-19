@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF } from '../api';
 import Survey from '../components/Survey';
 import Voting from '../components/Voting';
 import Timeline from '../components/Timeline';
@@ -13,7 +13,7 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Sparkles, Lock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 
@@ -280,6 +280,15 @@ const Dashboard = () => {
             } finally {
                 setLoading(false);
             }
+        }
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            await exportTripPDF(id);
+            showToast("✨ PDF generato con successo!", "success");
+        } catch (e) {
+            showToast("Errore esportazione: " + e.message, "error");
         }
     };
 
@@ -633,23 +642,44 @@ const Dashboard = () => {
                                     <div className="container" style={{ marginTop: '2rem' }}>
                                         <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
-                                            {isOrganizer && (
+                                            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                                                 <button
-                                                    onClick={handleResetHotel}
+                                                    onClick={handleExportPDF}
+                                                    className="btn-glass"
                                                     style={{
-                                                        background: 'rgba(59, 130, 246, 0.1)',
-                                                        color: '#2563eb',
-                                                        border: '1px solid rgba(37, 99, 235, 0.2)',
                                                         padding: '0.5rem 1rem',
                                                         borderRadius: '12px',
                                                         fontSize: '0.8rem',
                                                         fontWeight: '700',
-                                                        cursor: 'pointer'
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem',
+                                                        background: 'rgba(255,255,255,0.1)',
+                                                        color: 'var(--text-main)',
+                                                        border: '1px solid rgba(0,0,0,0.1)'
                                                     }}
                                                 >
-                                                    Modifica Logistica
+                                                    <FileDown className="w-4 h-4" />
+                                                    PDF
                                                 </button>
-                                            )}
+                                                {isOrganizer && (
+                                                    <button
+                                                        onClick={handleResetHotel}
+                                                        style={{
+                                                            background: 'rgba(59, 130, 246, 0.1)',
+                                                            color: '#2563eb',
+                                                            border: '1px solid rgba(37, 99, 235, 0.2)',
+                                                            padding: '0.5rem 1rem',
+                                                            borderRadius: '12px',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: '700',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        Modifica Logistica
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {trip.trip_intent !== 'BUSINESS' && (

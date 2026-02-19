@@ -178,7 +178,7 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 - [ ] **Notifiche real-time** — nessun sistema di notifica quando un partecipante vota o l'itinerario viene generato (WebSocket o polling)
 - [x] **Export PDF** — funzionalità per scaricare l'itinerario e le spese in formato PDF
 - [ ] **Mappe offline** — menzionate come feature Pro ma non implementate
-- [ ] **Gestione abbonamenti** — nessuna logica di scadenza abbonamento, cancellazione o rinnovo automatico
+- [x] **Gestione abbonamenti** — logica di scadenza abbonamento, disattivazione rinnovo e visualizzazione stato nel Market
 - [ ] **Admin panel** — nessuna interfaccia di amministrazione per gestire utenti, monitorare utilizzo API, ecc.
 - [ ] **Test automatizzati** — nessun test unitario o di integrazione presente
 

@@ -4,6 +4,7 @@ from typing import List, Optional
 from ..database import get_session
 from ..models import Account, Participant
 from ..auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token
+from datetime import datetime, timedelta
 from pydantic import EmailStr, BaseModel
 import os
 from dotenv import load_dotenv
@@ -68,6 +69,17 @@ async def migrate_subscription_plan(session: Session = Depends(get_session)):
         return {"message": "Migrazione completata con successo! Campo subscription_plan aggiunto."}
     except Exception as e:
         return {"error": str(e), "message": "Errore durante la migrazione del campo subscription_plan."}
+
+
+@router.get("/migrate-subscription-management")
+async def migrate_subscription_management(session: Session = Depends(get_session)):
+    try:
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_expiry VARCHAR;"))
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT TRUE;"))
+        session.commit()
+        return {"message": "Migrazione completata con successo! Campi gestione abbonamento aggiunti."}
+    except Exception as e:
+        return {"error": str(e), "message": "Errore durante la migrazione dei campi gestione abbonamento."}
 
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):
@@ -225,7 +237,9 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "email": account.email,
             "is_subscribed": account.is_subscribed,
             "credits": account.credits,
-            "subscription_plan": account.subscription_plan
+            "subscription_plan": account.subscription_plan,
+            "subscription_expiry": account.subscription_expiry,
+            "auto_renew": account.auto_renew
         }
     }
 
@@ -254,13 +268,23 @@ async def toggle_subscription(
     if not account.is_subscribed:
         account.is_subscribed = True
         account.subscription_plan = plan or "MONTHLY"
+        
+        # Calcolo scadenza
+        days = 365 if account.subscription_plan == "ANNUAL" else 30
+        expiry_date = datetime.now() + timedelta(days=days)
+        account.subscription_expiry = expiry_date.strftime("%Y-%m-%d")
+        account.auto_renew = True
     else:
         # Se è già iscritto, ma viene passato un piano diverso, aggiorniamo il piano invece di toggle (es. da mensile ad annuale)
         if plan and account.subscription_plan != plan:
             account.subscription_plan = plan
+            days = 365 if plan == "ANNUAL" else 30
+            expiry_date = datetime.now() + timedelta(days=days)
+            account.subscription_expiry = expiry_date.strftime("%Y-%m-%d")
         else:
             account.is_subscribed = False
             account.subscription_plan = None
+            account.subscription_expiry = None
             
     session.add(account)
     session.commit()
@@ -268,8 +292,24 @@ async def toggle_subscription(
     
     return {
         "is_subscribed": account.is_subscribed, 
-        "subscription_plan": account.subscription_plan
+        "subscription_plan": account.subscription_plan,
+        "subscription_expiry": account.subscription_expiry,
+        "auto_renew": account.auto_renew
     }
+
+@router.post("/cancel-subscription")
+async def cancel_subscription(email: str = Body(..., embed=True), session: Session = Depends(get_session)):
+    """Disattiva il rinnovo automatico."""
+    statement = select(Account).where(Account.email == email)
+    account = session.exec(statement).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account non trovato")
+    
+    account.auto_renew = False
+    session.add(account)
+    session.commit()
+    
+    return {"status": "success", "message": "Rinnovo automatico disattivato. L'abbonamento rimarrà attivo fino alla scadenza.", "auto_renew": False}
 
 @router.post("/forgot-password")
 async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends(get_session)):

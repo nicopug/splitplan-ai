@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buyCredits, toggleSubscription } from '../api';
+import { buyCredits, toggleSubscription, cancelSubscription } from '../api';
 import { useToast } from '../context/ToastContext';
 import { Sparkles, CreditCard, Zap, Crown, CheckCircle2, ShoppingBag } from 'lucide-react';
 
@@ -30,8 +30,8 @@ const Market = () => {
         }
     };
 
-    const handleSubscribe = async () => {
-        if (user?.is_subscribed) return;
+    const handleSubscribe = async (plan) => {
+        if (user?.is_subscribed && user.subscription_plan === plan) return;
         setLoading(true);
         try {
             const res = await toggleSubscription(user.email, plan);
@@ -40,7 +40,27 @@ const Market = () => {
             const updatedUser = {
                 ...user,
                 is_subscribed: res.is_subscribed,
-                subscription_plan: res.subscription_plan
+                subscription_plan: res.subscription_plan,
+                subscription_expiry: res.subscription_expiry,
+                auto_renew: res.auto_renew
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (e) {
+            showToast(e.message, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCancelRenew = async () => {
+        setLoading(true);
+        try {
+            const res = await cancelSubscription(user.email);
+            showToast(res.message, "success");
+            const updatedUser = {
+                ...user,
+                auto_renew: false
             };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
@@ -117,7 +137,22 @@ const Market = () => {
                                         <CheckCircle2 className="w-5 h-5" />
                                         ATTIVO
                                     </div>
-                                    <p className="text-[10px] text-gray-400 uppercase font-black">Piano Mensile</p>
+                                    <div className="flex flex-col gap-1 items-center">
+                                        <p className="text-[10px] text-gray-400 uppercase font-black">Piano Mensile</p>
+                                        {user.subscription_expiry && (
+                                            <p className="text-[9px] text-gray-500 font-bold">Scade il: {new Date(user.subscription_expiry).toLocaleDateString('it-IT')}</p>
+                                        )}
+                                        {user.auto_renew ? (
+                                            <button
+                                                onClick={handleCancelRenew}
+                                                className="text-[9px] text-red-500 font-black hover:underline mt-1 uppercase"
+                                            >
+                                                Disattiva Rinnovo
+                                            </button>
+                                        ) : (
+                                            <p className="text-[9px] text-orange-500 font-black mt-1 uppercase">Rinnovo Disattivato</p>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
                                 <>
@@ -147,7 +182,22 @@ const Market = () => {
                                         <CheckCircle2 className="w-5 h-5" />
                                         ATTIVO
                                     </div>
-                                    <p className="text-[10px] text-gray-500 uppercase font-black">Massima Trasparenza</p>
+                                    <div className="flex flex-col gap-1 items-center">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black">Massima Trasparenza</p>
+                                        {user.subscription_expiry && (
+                                            <p className="text-[9px] text-gray-400 font-bold">Scade il: {new Date(user.subscription_expiry).toLocaleDateString('it-IT')}</p>
+                                        )}
+                                        {user.auto_renew ? (
+                                            <button
+                                                onClick={handleCancelRenew}
+                                                className="text-[9px] text-red-400/80 font-black hover:underline mt-1 uppercase"
+                                            >
+                                                Disattiva Rinnovo
+                                            </button>
+                                        ) : (
+                                            <p className="text-[9px] text-orange-400 font-black mt-1 uppercase">Rinnovo Disattivato</p>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
                                 <>

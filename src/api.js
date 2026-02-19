@@ -420,6 +420,15 @@ export const toggleSubscription = async (email, plan = null) => {
     return handleResponse(response);
 };
 
+export const cancelSubscription = async (email) => {
+    const response = await fetch(`${API_URL}/users/cancel-subscription`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+};
+
 export const forgotPassword = async (email) => {
     const response = await fetch(`${API_URL}/users/forgot-password`, {
         method: "POST",

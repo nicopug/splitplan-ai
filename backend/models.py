@@ -16,6 +16,8 @@ class Account(SQLModel, table=True):
     daily_ai_usage: int = Field(default=0)
     last_usage_reset: Optional[str] = Field(default=None)
     subscription_plan: Optional[str] = Field(default=None) # 'MONTHLY', 'ANNUAL', or None
+    subscription_expiry: Optional[str] = Field(default=None) # ISO format date
+    auto_renew: bool = Field(default=True)
 
 
 class TripBase(SQLModel):

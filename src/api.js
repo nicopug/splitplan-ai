@@ -386,11 +386,11 @@ export const verifyEmail = async (token) => {
     return handleResponse(response);
 };
 
-export const toggleSubscription = async (email) => {
+export const toggleSubscription = async (email, plan = null) => {
     const response = await fetch(`${API_URL}/users/toggle-subscription`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, plan }),
     });
     return handleResponse(response);
 };

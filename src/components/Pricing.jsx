@@ -23,42 +23,70 @@ const Pricing = ({ user }) => {
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
                     <h2>Scegli il tuo piano</h2>
                 </div>
-                <div className="grid-2" style={{ justifyContent: 'center', maxWidth: '800px', margin: '0 auto' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '2rem',
+                    width: '100%',
+                    marginTop: '2rem'
+                }}>
                     {/* Free Plan */}
                     <div style={{
                         background: 'var(--bg-white)',
                         padding: '3rem 2rem',
                         borderRadius: '24px',
                         border: '1px solid #e0e0e0',
-                        width: '100%',
-                        maxWidth: '350px',
-                        margin: '0 auto'
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
                         <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Viaggiatore</h3>
                         <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
                         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Tutto l'essenziale per organizzare.</p>
-                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)' }}>
-                            <li style={{ marginBottom: '1rem' }}>Pianificazione AI Base</li>
-                            <li style={{ marginBottom: '1rem' }}>Itinerari Smart</li>
-                            <li style={{ marginBottom: '1rem' }}>Prenotazioni Integrate</li>
-                            <li style={{ marginBottom: '1rem' }}>Chat di Gruppo</li>
+                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)', padding: 0 }}>
+                            <li style={{ marginBottom: '1rem' }}>✓ 20 Chiamate AI / giorno</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ Itinerari Smart</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ Chat di Gruppo</li>
                         </ul>
-                        <div style={{ textAlign: 'center' }}>
+                        <div style={{ textAlign: 'center', marginTop: 'auto' }}>
                             {isLoggedIn && !isPremium && <PlanBadge />}
                         </div>
                     </div>
 
-                    {/* Premium Plan */}
-                    <div className="premium-card-offset" style={{
+                    {/* Monthly Plan */}
+                    <div style={{
+                        background: '#f8faff',
+                        padding: '3rem 2rem',
+                        borderRadius: '24px',
+                        border: '2px solid var(--primary-blue)',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Pro Mensile</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/mese</span></div>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Per chi vuole il controllo totale.</p>
+                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)', padding: 0 }}>
+                            <li style={{ marginBottom: '1rem' }}>✓ AI Illimitata</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ PDF Automation</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ Assistenza Prioritaria</li>
+                        </ul>
+                        <div style={{ textAlign: 'center', marginTop: 'auto' }}>
+                            {isLoggedIn && isPremium && user.subscription_plan === 'MONTHLY' && <PlanBadge />}
+                            {isLoggedIn && user.subscription_plan !== 'MONTHLY' && (
+                                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>Abbonati</button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Annual Plan */}
+                    <div style={{
                         background: 'var(--dark-navy)',
                         padding: '3rem 2rem',
                         borderRadius: '24px',
                         boxShadow: 'var(--shadow-lg)',
-                        width: '100%',
-                        maxWidth: '350px',
                         position: 'relative',
                         color: 'white',
-                        margin: '0 auto'
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
                         <div style={{
                             position: 'absolute',
@@ -73,21 +101,20 @@ const Pricing = ({ user }) => {
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
                         }}>
-                            CONSIGLIATO
+                            SALVA 50%
                         </div>
-                        <h3 style={{ color: 'white', fontSize: '1.5rem' }}>L'Organizzatore</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
-                        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Per chi vuole il controllo totale.</p>
-                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left' }}>
-                            <li style={{ marginBottom: '1rem' }}>CFO del Viaggio (Gestione Debiti)</li>
-                            <li style={{ marginBottom: '1rem' }}>Budget Guard (Alert Spese)</li>
-                            <li style={{ marginBottom: '1rem' }}>Assistenza AI Prioritaria</li>
-                            <li style={{ marginBottom: '1rem' }}>Export Video Ricordi</li>
+                        <h3 style={{ color: 'white', fontSize: '1.5rem' }}>Pro Annuale</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€29.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/anno</span></div>
+                        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Il miglior valore per veri esploratori.</p>
+                        <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', padding: 0 }}>
+                            <li style={{ marginBottom: '1rem' }}>✓ Tutto di Pro Mensile</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ Badge Esclusivo</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ Blocco Prezzo</li>
                         </ul>
-                        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                            {isLoggedIn && isPremium && <PlanBadge />}
-                            {isLoggedIn && !isPremium && (
-                                <button className="btn btn-accent" style={{ width: '100%' }}>Passa a Premium</button>
+                        <div style={{ textAlign: 'center', marginTop: 'auto' }}>
+                            {isLoggedIn && isPremium && user.subscription_plan === 'ANNUAL' && <PlanBadge />}
+                            {isLoggedIn && user.subscription_plan !== 'ANNUAL' && (
+                                <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>Abbonati</button>
                             )}
                         </div>
                     </div>

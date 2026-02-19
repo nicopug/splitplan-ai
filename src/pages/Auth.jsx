@@ -71,17 +71,17 @@ const Auth = ({ onLogin }) => {
         }
     };
 
-    const handlePlanChoice = async (isPremium) => {
+    const handlePlanChoice = async (planType) => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
-            if (isPremium) {
-                const res = await toggleSubscription(user.email);
+            if (planType) {
+                const res = await toggleSubscription(user.email, planType);
                 user.is_subscribed = res.is_subscribed;
+                user.subscription_plan = res.subscription_plan;
                 localStorage.setItem('user', JSON.stringify(user));
             }
             navigate('/');
-            // Force reload to update navbar
-            window.location.reload();
+            setTimeout(() => window.location.reload(), 100);
         } catch (err) {
             setError("Errore durante l'attivazione: " + err.message);
         }
@@ -114,32 +114,27 @@ const Auth = ({ onLogin }) => {
                 localStorage.setItem('token', res.access_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
-                // Notify parent immediately
                 if (onLogin) onLogin(res.user);
 
-                // Show plan selection ONLY if we just registered
                 if (localStorage.getItem('pending_plan_selection') === 'true') {
                     localStorage.removeItem('pending_plan_selection');
                     setShowPlanSelection(true);
                 } else {
                     navigate('/');
-                    // Small delay to ensure state propagates before reload if necessary
                     setTimeout(() => window.location.reload(), 100);
                 }
             } else {
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');
                 }
-                const res = await register({
+                await register({
                     name: formData.name,
                     surname: formData.surname,
                     email: formData.email,
                     password: formData.password
                 });
 
-                // Mark that we need to show plan selection on first login
                 localStorage.setItem('pending_plan_selection', 'true');
-
                 setMessage("Registrazione completata! Controlla la tua email per verificare l'account prima di accedere.");
                 setIsLogin(true);
             }
@@ -153,48 +148,58 @@ const Auth = ({ onLogin }) => {
     if (showPlanSelection) {
         return (
             <div className="auth-container">
-                <div className="auth-glass-card plan-selection">
+                <div className="auth-glass-card plan-selection" style={{ maxWidth: '1000px' }}>
                     <h2 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>Scegli il tuo Piano</h2>
                     <p style={{ marginBottom: '2.5rem', opacity: 0.8 }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
 
-                    <div className="plans-grid">
-                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0', margin: '0 auto', width: '100%' }}>
-                            <div>
+                    <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', width: '100%' }}>
+                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ flex: 1 }}>
                                 <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Viaggiatore</h3>
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
-                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>Tutto l'essenziale per organizzare.</p>
-                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>Pianificazione AI Base</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Itinerari Smart</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Prenotazioni Integrate</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Chat di Gruppo</li>
+                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: '#666' }}>Tutto l'essenziale per organizzare.</p>
+                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ 20 Chiamate AI / giorno</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Itinerari Smart</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Chat di Gruppo</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice(false)} className="btn btn-secondary btn-full">Seleziona</button>
+                            <button onClick={() => handlePlanChoice(null)} className="btn btn-secondary btn-full">Inizia Gratis</button>
                         </div>
 
-                        <div className="plan-card premium premium-card-offset" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white', margin: '0 auto', width: '100%' }}>
-                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>CONSIGLIATO</div>
-                            <div>
-                                <h3 style={{ fontSize: '1.5rem', color: 'white' }}>L'Organizzatore</h3>
-                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/mese</span></div>
-                                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>Per chi vuole il controllo totale.</p>
-                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>CFO del Viaggio</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Budget Guard (Alert Spese)</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Assistenza AI Prioritaria</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>Export Video Ricordi</li>
+                        <div className="plan-card" style={{ padding: '2rem', background: '#f8faff', borderRadius: '24px', border: '2px solid var(--primary-blue)', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ flex: 1 }}>
+                                <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Pro Mensile</h3>
+                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: '#666' }}>/mese</span></div>
+                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: '#666' }}>Per chi vuole il controllo totale.</p>
+                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ AI Illimitata</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ PDF Automation</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Assistenza Prioritaria</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice(true)} className="btn btn-accent btn-full">Attiva Premium</button>
+                            <button onClick={() => handlePlanChoice('MONTHLY')} className="btn btn-primary btn-full">Scegli Mensile</button>
+                        </div>
+
+                        <div className="plan-card premium" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>RISPARMIA 50%</div>
+                            <div style={{ flex: 1 }}>
+                                <h3 style={{ fontSize: '1.5rem', color: 'white' }}>Pro Annuale</h3>
+                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€29.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/anno</span></div>
+                                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>Il miglior valore per veri esploratori.</p>
+                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Tutto di Pro Mensile</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Badge Esclusivo</li>
+                                    <li style={{ marginBottom: '0.8rem' }}>✓ Blocco Prezzo</li>
+                                </ul>
+                            </div>
+                            <button onClick={() => handlePlanChoice('ANNUAL')} className="btn btn-accent btn-full">Scegli Annuale</button>
                         </div>
                     </div>
-
                 </div>
             </div>
         );
     }
-
 
     if (showForgot) {
 

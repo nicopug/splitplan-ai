@@ -15,6 +15,7 @@ class Account(SQLModel, table=True):
     credits: int = Field(default=0)
     daily_ai_usage: int = Field(default=0)
     last_usage_reset: Optional[str] = Field(default=None)
+    subscription_plan: Optional[str] = Field(default=None) # 'MONTHLY', 'ANNUAL', or None
 
 
 class TripBase(SQLModel):

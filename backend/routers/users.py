@@ -60,6 +60,15 @@ async def migrate_rate_limit_fields(session: Session = Depends(get_session)):
     except Exception as e:
         return {"error": str(e), "message": "Errore durante la migrazione dei campi rate limit."}
 
+@router.get("/migrate-subscription-plan")
+async def migrate_subscription_plan(session: Session = Depends(get_session)):
+    try:
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR;"))
+        session.commit()
+        return {"message": "Migrazione completata con successo! Campo subscription_plan aggiunto."}
+    except Exception as e:
+        return {"error": str(e), "message": "Errore durante la migrazione del campo subscription_plan."}
+
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):
     print(f"DEBUG: Registrazione richiesta per {req.email}")
@@ -215,7 +224,8 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "surname": account.surname,
             "email": account.email,
             "is_subscribed": account.is_subscribed,
-            "credits": account.credits
+            "credits": account.credits,
+            "subscription_plan": account.subscription_plan
         }
     }
 
@@ -230,18 +240,36 @@ async def get_me(email: str = Body(..., embed=True), session: Session = Depends(
     return account
 
 @router.post("/toggle-subscription")
-async def toggle_subscription(email: str = Body(..., embed=True), session: Session = Depends(get_session)):
+async def toggle_subscription(
+    email: str = Body(..., embed=True), 
+    plan: Optional[str] = Body(None, embed=True), # 'MONTHLY' o 'ANNUAL'
+    session: Session = Depends(get_session)
+):
     statement = select(Account).where(Account.email == email)
     account = session.exec(statement).first()
     if not account:
         raise HTTPException(status_code=404, detail="Account non trovato")
     
-    account.is_subscribed = not account.is_subscribed
+    # Se stiamo attivando, impostiamo il piano. Se stiamo disattivando, lo puliamo.
+    if not account.is_subscribed:
+        account.is_subscribed = True
+        account.subscription_plan = plan or "MONTHLY"
+    else:
+        # Se è già iscritto, ma viene passato un piano diverso, aggiorniamo il piano invece di toggle (es. da mensile ad annuale)
+        if plan and account.subscription_plan != plan:
+            account.subscription_plan = plan
+        else:
+            account.is_subscribed = False
+            account.subscription_plan = None
+            
     session.add(account)
     session.commit()
     session.refresh(account)
     
-    return {"is_subscribed": account.is_subscribed}
+    return {
+        "is_subscribed": account.is_subscribed, 
+        "subscription_plan": account.subscription_plan
+    }
 
 @router.post("/forgot-password")
 async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends(get_session)):

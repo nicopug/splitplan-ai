@@ -34,10 +34,14 @@ const Market = () => {
         if (user?.is_subscribed) return;
         setLoading(true);
         try {
-            await toggleSubscription(user.email);
+            const res = await toggleSubscription(user.email, plan);
             showToast("Benvenuto in SplitPlan Pro! 💎", "success");
             // Aggiorna local user
-            const updatedUser = { ...user, is_subscribed: true };
+            const updatedUser = {
+                ...user,
+                is_subscribed: res.is_subscribed,
+                subscription_plan: res.subscription_plan
+            };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
         } catch (e) {
@@ -107,7 +111,7 @@ const Market = () => {
                         <h3 className="text-xl font-black text-text-main dark:text-white mb-2">SplitPlan Pro</h3>
                         <p className="text-sm text-gray-500 mb-6 font-medium">Accesso illimitato <br /> per un intero mese</p>
                         <div className="mt-auto w-full">
-                            {user.is_subscribed ? (
+                            {user.is_subscribed && user.subscription_plan === 'MONTHLY' ? (
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="text-primary-blue font-black flex items-center gap-1">
                                         <CheckCircle2 className="w-5 h-5" />
@@ -119,11 +123,11 @@ const Market = () => {
                                 <>
                                     <div className="text-3xl font-black text-text-main dark:text-white mb-6">4,99€<span className="text-xs text-gray-400 font-medium">/mese</span></div>
                                     <button
-                                        onClick={handleSubscribe}
-                                        disabled={loading}
+                                        onClick={() => handleSubscribe('MONTHLY')}
+                                        disabled={loading || user.subscription_plan === 'ANNUAL'}
                                         className="w-full py-4 bg-purple-600 text-white hover:bg-purple-700 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20"
                                     >
-                                        Abbonati
+                                        {user.subscription_plan === 'ANNUAL' ? 'Piano Annuale Attivo' : 'Abbonati'}
                                     </button>
                                 </>
                             )}
@@ -137,7 +141,7 @@ const Market = () => {
                         <h3 className="text-xl font-black text-white mb-2 relative z-10">Piano Annuale</h3>
                         <p className="text-sm text-gray-400 mb-6 font-medium relative z-10">Il miglior valore <br /> per i grandi viaggiatori</p>
                         <div className="mt-auto w-full relative z-10">
-                            {user.is_subscribed ? (
+                            {user.is_subscribed && user.subscription_plan === 'ANNUAL' ? (
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="text-yellow-400 font-black flex items-center gap-1">
                                         <CheckCircle2 className="w-5 h-5" />
@@ -149,7 +153,7 @@ const Market = () => {
                                 <>
                                     <div className="text-3xl font-black text-white mb-6">29,99€<span className="text-xs text-gray-500 font-medium">/anno</span></div>
                                     <button
-                                        onClick={handleSubscribe}
+                                        onClick={() => handleSubscribe('ANNUAL')}
                                         disabled={loading}
                                         className="w-full py-4 bg-white text-black hover:bg-yellow-400 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-xl"
                                     >

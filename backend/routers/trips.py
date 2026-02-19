@@ -61,12 +61,53 @@ class HotelSelectionRequest(SQLModel):
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
 
+def check_rate_limit(account: Account, session: Session):
+    """
+    Verifica e incrementa il limite di utilizzo AI giornaliero.
+    Free: 20 chiamate/giorno.
+    Pro: Illimitato (per ora).
+    """
+    if account.is_subscribed:
+        return # Gli utenti abbonati non hanno limiti (o molto alti)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Reset giornaliero
+    if account.last_usage_reset != today:
+        account.daily_ai_usage = 0
+        account.last_usage_reset = today
+        session.add(account)
+        session.commit()
+    
+    # Controllo soglia (es. 20 chiamate)
+    FREE_LIMIT = 20
+    if account.daily_ai_usage >= FREE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Hai raggiunto il limite giornaliero di {FREE_LIMIT} chiamate AI per utenti Free. Passa a Pro per navigare senza limiti!"
+        )
+    
+    # Incremento
+    account.daily_ai_usage += 1
+    session.add(account)
+    session.commit()
+
+def require_premium(account: Account, trip: Trip):
+    """Solleva un 403 se l'utente non è abbonato e il viaggio non è sbloccato."""
+    if not account.is_subscribed and not trip.is_premium:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Funzionalità Premium. Sblocca il viaggio con un credito o abbonati per accedere."
+        )
+
 @router.post("/extract-receipt")
 async def extract_receipt(
     type: str = Form(...), # 'hotel' o 'transport'
     file: UploadFile = File(...),
-    current_user: Account = Depends(get_current_user)
+    current_user: Account = Depends(get_current_user),
+    session: Session = Depends(get_session)
 ):
+    check_rate_limit(current_user, session)
     if not ai_client:
         raise HTTPException(status_code=500, detail="AI Client non inizializzato.")
 
@@ -350,6 +391,7 @@ async def optimize_itinerary(trip_id: int, session: Session = Depends(get_sessio
 @router.post("/{trip_id}/estimate-budget")
 async def estimate_budget(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Stima i costi della vita locale tramite AI"""
+    check_rate_limit(current_account, session)
     try:
         trip = session.get(Trip, trip_id)
         if not trip: 
@@ -671,6 +713,10 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         trip = session.get(Trip, trip_id)
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+        # RATE LIMIT & PREMIUM GATE
+        check_rate_limit(current_account, session)
+        require_premium(current_account, trip)
             
         # Aggiornamento dati viaggio
         trip.budget_per_person = prefs.budget / prefs.num_people
@@ -1066,6 +1112,10 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         trip = session.get(Trip, trip_id)
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        # RATE LIMIT & PREMIUM GATE
+        check_rate_limit(current_account, session)
+        require_premium(current_account, trip)
         
         trip.accommodation = hotel_data.hotel_name
         trip.accommodation_location = hotel_data.hotel_address
@@ -1289,6 +1339,10 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         trip = session.get(Trip, trip_id)
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
+            
+        # RATE LIMIT & PREMIUM GATE
+        check_rate_limit(current_account, session)
+        require_premium(current_account, trip)
             
         itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
         

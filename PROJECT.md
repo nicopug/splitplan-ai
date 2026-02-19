@@ -170,7 +170,7 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 
 ### 🔴 Priorità Alta
 - [ ] **Integrazione Stripe reale** — il pagamento crediti/abbonamenti è attualmente simulato; serve implementare Stripe Checkout con webhook per aggiornare lo stato abbonamento
-- [ ] **Differenziazione Free vs Premium** — il gate dei contenuti premium non è ancora completamente enforced lato backend per tutti gli endpoint
+- [x] **Differenziazione Free vs Premium** — il gate dei contenuti premium non è ancora completamente enforced lato backend per tutti gli endpoint
 - [ ] **Email transazionali** — il sistema di verifica email e reset password richiede un provider SMTP configurato in produzione (es. SendGrid, Resend)
 - [ ] **Rate limiting AI** — nessun limite alle chiamate Gemini per utente free; rischio di costi API elevati
 

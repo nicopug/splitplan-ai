@@ -50,6 +50,16 @@ async def migrate_db_security(session: Session = Depends(get_session)):
     except Exception as e:
         return {"error": str(e), "message": "Potrebbe essere che la colonna esiste già o c'è un errore di connessione."}
 
+@router.get("/migrate-rate-limit-fields")
+async def migrate_rate_limit_fields(session: Session = Depends(get_session)):
+    try:
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS daily_ai_usage INTEGER DEFAULT 0;"))
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS last_usage_reset VARCHAR;"))
+        session.commit()
+        return {"message": "Migrazione completata con successo! Campi rate limit aggiunti."}
+    except Exception as e:
+        return {"error": str(e), "message": "Errore durante la migrazione dei campi rate limit."}
+
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):
     print(f"DEBUG: Registrazione richiesta per {req.email}")
@@ -204,7 +214,8 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "name": account.name,
             "surname": account.surname,
             "email": account.email,
-            "is_subscribed": account.is_subscribed
+            "is_subscribed": account.is_subscribed,
+            "credits": account.credits
         }
     }
 

@@ -13,6 +13,8 @@ class Account(SQLModel, table=True):
     google_calendar_token: Optional[str] = Field(default=None) # JSON dump of tokens
     is_calendar_connected: bool = False
     credits: int = Field(default=0)
+    daily_ai_usage: int = Field(default=0)
+    last_usage_reset: Optional[str] = Field(default=None)
 
 
 class TripBase(SQLModel):

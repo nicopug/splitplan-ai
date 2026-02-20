@@ -179,7 +179,13 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
     """Riceve e gestisce i webhook di Stripe"""
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
-
+    try:
+        if WEBHOOK_SECRET:
+            event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
+        else:
+            # In sviluppo senza webhook secret, parsiamo direttamente
+            import json
+            event = json.loads(payload)
     except (ValueError, stripe.error.SignatureVerificationError) as e:
         print(f"[Webhook Error] Signature: {e}")
         raise HTTPException(status_code=400, detail="Firma webhook non valida")

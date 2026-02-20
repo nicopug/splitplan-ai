@@ -161,7 +161,7 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
                         credits_text = f"+{product['credits']} Crediti" if "credits" in product else f"Piano {product['plan']}"
                         
                         message = MessageSchema(
-                            subject=f"Ricevuta di acquisto SplitPlan 💳",
+                            subject=f"Ricevuta di acquisto SplitPlan \U0001f4b3",
                             recipients=[account.email],
                             body=purchase_receipt_email(
                                 name=account.name,

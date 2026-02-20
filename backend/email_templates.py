@@ -23,7 +23,7 @@ def base_template(content: str) -> str:
                         <!-- HEADER -->
                         <tr>
                             <td style="background: linear-gradient(135deg, #23599E 0%, #1a4580 50%, #0f2d54 100%); border-radius: 24px 24px 0 0; padding: 40px 40px 30px 40px; text-align: center;">
-                                <div style="font-size: 36px; margin-bottom: 8px;">✈️</div>
+                                <div style="font-size: 36px; margin-bottom: 8px;">\u2708\ufe0f</div>
                                 <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; font-style: italic;">
                                     Split<span style="color: #7cb8ff;">Plan</span>
                                 </h1>
@@ -74,7 +74,7 @@ def verification_email(name: str, verification_url: str) -> str:
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">
             <div style="display: inline-block; background-color: #e8f4fd; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
-                🔐
+                \U0001f510
             </div>
             <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
                 Verifica il tuo Account
@@ -95,7 +95,7 @@ def verification_email(name: str, verification_url: str) -> str:
                       text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
                       letter-spacing: 0.5px; text-transform: uppercase;
                       box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
-                ✓&nbsp;&nbsp;Verifica Email
+                \u2713&nbsp;&nbsp;Verifica Email
             </a>
         </div>
 
@@ -118,7 +118,7 @@ def reset_password_email(name: str, reset_url: str) -> str:
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">
             <div style="display: inline-block; background-color: #fef3e8; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
-                🔑
+                \U0001f511
             </div>
             <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
                 Reset della Password
@@ -139,14 +139,14 @@ def reset_password_email(name: str, reset_url: str) -> str:
                       text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
                       letter-spacing: 0.5px; text-transform: uppercase;
                       box-shadow: 0 4px 15px rgba(232, 124, 62, 0.35);">
-                🔑&nbsp;&nbsp;Reimposta Password
+                \U0001f511&nbsp;&nbsp;Reimposta Password
             </a>
         </div>
 
         <!-- SECURITY NOTE -->
         <div style="background-color: #fff8f3; border-left: 4px solid #E87C3E; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 24px 0;">
             <p style="color: #c45a1e; font-size: 12px; font-weight: 700; margin: 0;">
-                ⚠️ Se non hai richiesto tu il reset, ignora questa email. La tua password rimarrà invariata.
+                \u26a0\ufe0f Se non hai richiesto tu il reset, ignora questa email. La tua password rimarrà invariata.
             </p>
         </div>
 
@@ -162,7 +162,7 @@ def booking_confirmation_email(name: str, trip_name: str, destination: str, date
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">
             <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
-                🎉
+                \U0001f389
             </div>
             <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
                 Viaggio Confermato!
@@ -210,7 +210,7 @@ def booking_confirmation_email(name: str, trip_name: str, destination: str, date
                       text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
                       letter-spacing: 0.5px; text-transform: uppercase;
                       box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
-                📅&nbsp;&nbsp;Vedi Itinerario
+                \U0001f4c5&nbsp;&nbsp;Vedi Itinerario
             </a>
         </div>
 
@@ -226,7 +226,7 @@ def purchase_receipt_email(name: str, product_name: str, amount: str, credits_ad
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">
             <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
-                💳
+                \U0001f4b3
             </div>
             <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
                 Ricevuta d'Acquisto
@@ -273,7 +273,7 @@ def purchase_receipt_email(name: str, product_name: str, amount: str, credits_ad
                style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 16px 48px;
                       text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
                       letter-spacing: 0.5px; text-transform: uppercase;">
-                🛍️&nbsp;&nbsp;Torna al Market
+                \U0001f6cd\ufe0f&nbsp;&nbsp;Torna al Market
             </a>
         </div>
 

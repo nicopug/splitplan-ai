@@ -1393,7 +1393,7 @@ async def vote_proposal(
                             itinerary_url = f"{frontend_url}/dashboard/{trip.id}"
                             
                             message = MessageSchema(
-                                subject=f"SplitPlan: Viaggio Confermato! ✈️ {trip.name}",
+                                subject=f"SplitPlan: Viaggio Confermato! \u2708\ufe0f {trip.name}",
                                 recipients=[organizer_account.email],
                                 body=booking_confirmation_email(
                                     name=organizer_account.name,

@@ -157,6 +157,13 @@ def reset_password_email(name: str, reset_url: str) -> str:
         <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
             Se il pulsante non funziona, copia e incolla questo link nel browser:
         </p>
+        <p style="color: #23599E; font-size: 12px; word-break: break-all; margin: 8px 0 0 0;">
+            <a href="{reset_url}" style="color: #23599E; text-decoration: underline;">{reset_url}</a>
+        </p>
+    """
+    return base_template(content)
+
+
 def booking_confirmation_email(name: str, trip_name: str, destination: str, dates: str, price: str, itinerary_url: str) -> str:
     """Template email per la conferma della prenotazione del viaggio."""
     content = f"""

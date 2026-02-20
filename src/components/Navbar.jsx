@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
-const Navbar = () => {
-    const [user, setUser] = useState(null);
+const Navbar = ({ user: propUser }) => {
+    const [user, setUser] = useState(propUser);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showCreditsShop, setShowCreditsShop] = useState(false);
@@ -12,11 +12,15 @@ const Navbar = () => {
     const location = useLocation();
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        if (propUser) {
+            setUser(propUser);
+        } else {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
         }
-    }, []);
+    }, [propUser]);
 
     // Chiudi menu quando cambia pagina
     useEffect(() => {
@@ -126,11 +130,11 @@ const Navbar = () => {
                                         className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-primary-blue text-white flex items-center justify-center font-bold text-sm">
-                                            {user.name.charAt(0).toUpperCase()}
+                                            {user?.name?.charAt(0).toUpperCase() || '?'}
                                         </div>
                                         <span className="font-semibold text-text-main text-sm flex items-center gap-2">
-                                            {user.name}
-                                            {user.is_subscribed && <span className="text-lg">💎</span>}
+                                            {user?.name || 'Utente'}
+                                            {user?.is_subscribed && <span className="text-lg">💎</span>}
                                         </span>
                                         <svg className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -261,8 +265,8 @@ const Navbar = () => {
                                     <div className="px-4 py-3 mb-2">
                                         <div className="text-[0.65rem] uppercase tracking-wider font-bold text-gray-500 mb-1">Account</div>
                                         <div className="font-black text-white text-lg flex items-center gap-2">
-                                            Ciao, {user.name}
-                                            {user.is_subscribed && <span className="text-xl">💎</span>}
+                                            Ciao, {user?.name || 'Utente'}
+                                            {user?.is_subscribed && <span className="text-xl">💎</span>}
                                         </div>
                                     </div>
 

@@ -112,7 +112,8 @@ function App() {
           <Route path="/share/:token" element={<ShareTrip />} />
           <Route path="/market" element={<Market />} />
           <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
-            const newUser = { ...user, ...u };
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            const newUser = { ...stored, ...u };
             setUser(newUser);
             localStorage.setItem('user', JSON.stringify(newUser));
           }} />} />

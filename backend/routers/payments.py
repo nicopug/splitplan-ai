@@ -259,11 +259,15 @@ async def verify_session(
 
             return {
                 "status": "paid",
+                "id": current_account.id,
+                "email": current_account.email,
+                "name": current_account.name,
+                "surname": current_account.surname,
                 "credits": current_account.credits,
-                "product_type": product_type,
                 "is_subscribed": current_account.is_subscribed,
                 "subscription_plan": current_account.subscription_plan,
                 "subscription_expiry": current_account.subscription_expiry,
+                "product_type": product_type,
             }
 
         return {"status": checkout_session.payment_status}

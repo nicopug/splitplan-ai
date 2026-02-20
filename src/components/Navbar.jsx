@@ -344,9 +344,7 @@ const Navbar = () => {
                                     </div>
                                     <button
                                         onClick={async () => {
-                                            await import('../api').then(api => api.buyCredits(1));
-                                            setUser(JSON.parse(localStorage.getItem('user')));
-                                            setShowCreditsShop(false);
+                                            await import('../api').then(api => api.createCheckout('credit_1'));
                                         }}
                                         className="btn btn-primary px-4 py-2 text-sm font-bold"
                                     >
@@ -365,9 +363,7 @@ const Navbar = () => {
                                     </div>
                                     <button
                                         onClick={async () => {
-                                            await import('../api').then(api => api.buyCredits(3));
-                                            setUser(JSON.parse(localStorage.getItem('user')));
-                                            setShowCreditsShop(false);
+                                            await import('../api').then(api => api.createCheckout('credit_3'));
                                         }}
                                         className="btn btn-primary px-4 py-2 text-sm font-bold"
                                     >

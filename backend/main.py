@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from database import create_db_and_tables
-from routers import trips, photos, users, expenses, itinerary
+from routers import trips, photos, users, expenses, itinerary, payments
 
 # --- CONFIGURAZIONE APP ---
 # root_path="/api" è fondamentale per il deployment su Vercel
@@ -44,6 +44,7 @@ app.include_router(photos.router)
 app.include_router(users.router)
 app.include_router(expenses.router)
 app.include_router(itinerary.router)
+app.include_router(payments.router)
 from routers import calendar
 app.include_router(calendar.router)
 

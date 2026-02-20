@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buyCredits, toggleSubscription, cancelSubscription } from '../api';
+import { createCheckout, toggleSubscription, cancelSubscription, createPortalSession } from '../api';
 import { useToast } from '../context/ToastContext';
 import { Sparkles, CreditCard, Zap, Crown, CheckCircle2, ShoppingBag } from 'lucide-react';
 
@@ -17,15 +17,13 @@ const Market = () => {
         }
     }, []);
 
-    const handleBuyCredits = async (amount) => {
+    const handleCheckout = async (productType) => {
         setLoading(true);
         try {
-            const data = await buyCredits(amount);
-            showToast(`Hai acquistato ${amount} crediti!`, "success");
-            setUser(JSON.parse(localStorage.getItem('user')));
+            await createCheckout(productType);
+            // Il redirect avviene dentro createCheckout
         } catch (e) {
-            showToast(e.message, "error");
-        } finally {
+            showToast(e.message || "Errore nel checkout", "error");
             setLoading(false);
         }
     };
@@ -101,7 +99,7 @@ const Market = () => {
                         <div className="mt-auto w-full">
                             <div className="text-3xl font-black text-text-main dark:text-white mb-6">3,99€</div>
                             <button
-                                onClick={() => handleBuyCredits(1)}
+                                onClick={() => handleCheckout('credit_1')}
                                 disabled={loading}
                                 className="w-full py-4 bg-gray-100 dark:bg-white/5 hover:bg-yellow-400 hover:text-black rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest"
                             >
@@ -119,7 +117,7 @@ const Market = () => {
                         <div className="mt-auto w-full">
                             <div className="text-3xl font-black text-text-main dark:text-white mb-6">8,99€</div>
                             <button
-                                onClick={() => handleBuyCredits(3)}
+                                onClick={() => handleCheckout('credit_3')}
                                 disabled={loading}
                                 className="w-full py-4 bg-primary-blue text-white hover:bg-blue-600 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-primary-blue/20"
                             >
@@ -161,7 +159,7 @@ const Market = () => {
                                 <>
                                     <div className="text-3xl font-black text-text-main dark:text-white mb-6">4,99€<span className="text-xs text-gray-400 font-medium">/mese</span></div>
                                     <button
-                                        onClick={() => handleSubscribe('MONTHLY')}
+                                        onClick={() => handleCheckout('sub_monthly')}
                                         disabled={loading || user.subscription_plan === 'ANNUAL'}
                                         className="w-full py-4 bg-purple-600 text-white hover:bg-purple-700 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20"
                                     >
@@ -206,7 +204,7 @@ const Market = () => {
                                 <>
                                     <div className="text-3xl font-black text-white mb-6">29,99€<span className="text-xs text-gray-500 font-medium">/anno</span></div>
                                     <button
-                                        onClick={() => handleSubscribe('ANNUAL')}
+                                        onClick={() => handleCheckout('sub_annual')}
                                         disabled={loading}
                                         className="w-full py-4 bg-white text-black hover:bg-yellow-400 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-xl"
                                     >

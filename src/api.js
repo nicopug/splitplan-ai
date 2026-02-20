@@ -301,19 +301,41 @@ export const getUserStats = async () => {
     return handleResponse(response);
 };
 
-export const buyCredits = async (amount) => {
-    const response = await fetch(`${API_URL}/trips/buy-credits?amount=${amount}`, {
+export const createCheckout = async (productType) => {
+    const response = await fetch(`${API_URL}/payments/create-checkout`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ product_type: productType })
+    });
+    const data = await handleResponse(response);
+    // Redirect a Stripe Checkout
+    window.location.href = data.url;
+};
+
+export const verifyCheckoutSession = async (sessionId) => {
+    const response = await fetch(`${API_URL}/payments/verify-session?session_id=${sessionId}`, {
+        headers: getAuthHeaders()
+    });
+    const data = await handleResponse(response);
+    // Aggiorna utente locale con i dati aggiornati
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && data) {
+        if (data.credits !== undefined) user.credits = data.credits;
+        if (data.is_subscribed !== undefined) user.is_subscribed = data.is_subscribed;
+        if (data.subscription_plan !== undefined) user.subscription_plan = data.subscription_plan;
+        if (data.subscription_expiry !== undefined) user.subscription_expiry = data.subscription_expiry;
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+    return data;
+};
+
+export const createPortalSession = async () => {
+    const response = await fetch(`${API_URL}/payments/portal`, {
         method: "POST",
         headers: getAuthHeaders()
     });
     const data = await handleResponse(response);
-    // Aggiorna credits nell'utente locale
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-        user.credits = data.credits;
-        localStorage.setItem('user', JSON.stringify(user));
-    }
-    return data;
+    window.location.href = data.url;
 };
 
 export const unlockTrip = async (tripId) => {

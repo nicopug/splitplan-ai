@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import ShareTrip from './pages/ShareTrip';
 import CalendarCallback from './pages/CalendarCallback';
 import Market from './pages/Market';
+import CheckoutSuccess from './pages/CheckoutSuccess';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
 import { useToast } from './context/ToastContext';
@@ -110,6 +111,7 @@ function App() {
           <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
           <Route path="/share/:token" element={<ShareTrip />} />
           <Route path="/market" element={<Market />} />
+          <Route path="/checkout-success" element={<CheckoutSuccess />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

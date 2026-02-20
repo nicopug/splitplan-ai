@@ -169,25 +169,25 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 ## 🚧 Cosa Manca / Da Fare
 
 ### 🔴 Priorità Alta
-- [ ] **Integrazione Stripe reale** — il pagamento crediti/abbonamenti è attualmente simulato; serve implementare Stripe Checkout con webhook per aggiornare lo stato abbonamento
+- [x] **Integrazione Stripe reale** — il pagamento crediti/abbonamenti è attualmente simulato; serve implementare Stripe Checkout con webhook per aggiornare lo stato abbonamento
 - [x] **Differenziazione Free vs Premium** — il gate dei contenuti premium non è ancora completamente enforced lato backend per tutti gli endpoint
-- [ ] **Email transazionali** — il sistema di verifica email e reset password richiede un provider SMTP configurato in produzione (es. SendGrid, Resend)
 - [x] **Rate limiting AI** — nessun limite alle chiamate Gemini per utente free; rischio di costi API elevati
+- [ ] **Email transazionali** — il sistema di verifica email e reset password richiede un provider SMTP configurato in produzione (es. SendGrid, Resend)
 
 ### 🟡 Priorità Media
-- [ ] **Notifiche real-time** — nessun sistema di notifica quando un partecipante vota o l'itinerario viene generato (WebSocket o polling)
 - [x] **Export PDF** — funzionalità per scaricare l'itinerario e le spese in formato PDF
-- [ ] **Mappe offline** — menzionate come feature Pro ma non implementate
 - [x] **Gestione abbonamenti** — logica di scadenza abbonamento, disattivazione rinnovo e visualizzazione stato nel Market
-- [ ] **Admin panel** — nessuna interfaccia di amministrazione per gestire utenti, monitorare utilizzo API, ecc.
 - [x] **Test automatizzati** — suite di test unitari e di integrazione per il backend (pytest)
+- [ ] **Admin panel** — nessuna interfaccia di amministrazione per gestire utenti, monitorare utilizzo API, ecc.
+- [ ] **Mappe offline** — menzionate come feature Pro ma non implementate
+- [ ] **Notifiche real-time** — nessun sistema di notifica quando un partecipante vota o l'itinerario viene generato (WebSocket o polling)
 
 ### 🟢 Priorità Bassa / Future Features
+- [x] **Storico viaggi & Statistiche** — Implementazione della sezione archivio con dashboard di riepilogo per i viaggi conclusi.
 - [ ] **App mobile nativa** (React Native o Flutter)
 - [ ] **Integrazione Amadeus API** per prezzi voli reali (era stata iniziata ma rimossa)
 - [ ] **Raccomandazioni ristoranti** tramite Overpass API (POI discovery)
 - [ ] **Sondaggi pre-viaggio** (Survey component già presente ma non integrato nel flusso principale)
-- [ ] **Storico viaggi & Statistiche** — Implementazione della sezione archivio con dashboard di riepilogo per i viaggi conclusi.
 - [ ] **Integrazione con altri calendari** (Apple Calendar, Outlook)
 - [ ] **Supporto multi-lingua** (attualmente solo italiano nell'UI)
 

@@ -10,6 +10,7 @@ import os
 from dotenv import load_dotenv
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from sqlalchemy import text
+from email_templates import verification_email, reset_password_email
 
 load_dotenv()
 
@@ -18,6 +19,25 @@ router = APIRouter(prefix="/users", tags=["users"])
 # --- SMTP Config check ---
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     print("[WARNING] SMTP Credentials not found in .env. Email sending will fail.")
+
+def get_smtp_config():
+    """Configurazione SMTP centralizzata."""
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    if not smtp_user or not smtp_password:
+        return None, None, None
+    conf = ConnectionConfig(
+        MAIL_USERNAME=smtp_user,
+        MAIL_PASSWORD=smtp_password,
+        MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
+        MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
+        MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+        MAIL_STARTTLS=True,
+        MAIL_SSL_TLS=False,
+        USE_CREDENTIALS=True,
+        VALIDATE_CERTS=True
+    )
+    return smtp_user, smtp_password, conf
 
 class RegisterRequest(BaseModel):
     name: str
@@ -102,8 +122,7 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
     session.refresh(new_account)
 
     # Send verification email via SMTP (fastapi-mail)
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_user, smtp_password, smtp_conf = get_smtp_config()
     
     if smtp_user and smtp_password:
         try:
@@ -111,47 +130,13 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
             frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
             verification_url = f"{frontend_url}/verify?token={verification_token}"
             message = MessageSchema(
-                subject="Verifica il tuo account SplitPlan",
+                subject="Verifica il tuo account SplitPlan ✈️",
                 recipients=[req.email],
-                body=f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h1 style="color: #23599E;">Benvenuto su SplitPlan!</h1>
-                        <p>Ciao <strong>{req.name}</strong>,</p>
-                        <p>Grazie per esserti registrato. Clicca il pulsante qui sotto per verificare il tuo account:</p>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{verification_url}" 
-                               style="background: #23599E; color: white; padding: 15px 30px; 
-                                      text-decoration: none; border-radius: 8px; font-weight: bold;">
-                                Verifica Email
-                            </a>
-                        </div>
-                        <p style="color: #666; font-size: 0.9em;">
-                            Se non riesci a cliccare il pulsante, copia e incolla questo link nel browser:<br/>
-                            <a href="{verification_url}">{verification_url}</a>
-                        </p>
-                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
-                        <p style="color: #999; font-size: 0.8em;">
-                            Se non hai richiesto questa registrazione, ignora questa email.
-                        </p>
-                    </div>
-                """,
+                body=verification_email(name=req.name, verification_url=verification_url),
                 subtype=MessageType.html
             )
-            
-            # Configure SMTP
-            conf = ConnectionConfig(
-                MAIL_USERNAME=smtp_user,
-                MAIL_PASSWORD=smtp_password,
-                MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
-                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-                MAIL_STARTTLS=True,
-                MAIL_SSL_TLS=False,
-                USE_CREDENTIALS=True,
-                VALIDATE_CERTS=True
-            )
 
-            fm = FastMail(conf)
+            fm = FastMail(smtp_conf)
             await fm.send_message(message)
             print(f"[OK] Email SMTP inviata a {req.email}")
             
@@ -323,8 +308,7 @@ async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends
     if not account:
         return {"message": "Se l'email è registrata, riceverai un link di reset."}
     
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_user, smtp_password, smtp_conf = get_smtp_config()
     
     if smtp_user and smtp_password:
         try:
@@ -333,47 +317,13 @@ async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends
             reset_url = f"{frontend_url}/reset-password?token={reset_token}"
             
             message = MessageSchema(
-                subject="Reset della password SplitPlan",
+                subject="Reset della password SplitPlan 🔑",
                 recipients=[req.email],
-                body=f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h1 style="color: #23599E;">Reset Password</h1>
-                        <p>Ciao <strong>{account.name}</strong>,</p>
-                        <p>Abbiamo ricevuto una richiesta di reset per la tua password. Clicca il pulsante qui sotto per impostarne una nuova:</p>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{reset_url}" 
-                               style="background: #E87C3E; color: white; padding: 15px 30px; 
-                                      text-decoration: none; border-radius: 8px; font-weight: bold;">
-                                Reimposta Password
-                            </a>
-                        </div>
-                        <p style="color: #666; font-size: 0.9em;">Il link scadrà tra 1 ora.</p>
-                        <p style="color: #666; font-size: 0.9em;">
-                            Se non riesci a cliccare il pulsante, copia e incolla questo link nel browser:<br/>
-                            <a href="{reset_url}">{reset_url}</a>
-                        </p>
-                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
-                        <p style="color: #999; font-size: 0.8em;">
-                            Se non hai richiesto tu il reset, ignora questa email.
-                        </p>
-                    </div>
-                """,
+                body=reset_password_email(name=account.name, reset_url=reset_url),
                 subtype=MessageType.html
             )
-            
-            conf = ConnectionConfig(
-                MAIL_USERNAME=smtp_user,
-                MAIL_PASSWORD=smtp_password,
-                MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
-                MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-                MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-                MAIL_STARTTLS=True,
-                MAIL_SSL_TLS=False,
-                USE_CREDENTIALS=True,
-                VALIDATE_CERTS=True
-            )
 
-            fm = FastMail(conf)
+            fm = FastMail(smtp_conf)
             await fm.send_message(message)
             return {"message": "Email di reset inviata correttamente."}
             

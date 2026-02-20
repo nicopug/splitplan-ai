@@ -4,7 +4,7 @@ import { verifyCheckoutSession } from '../api';
 import { useToast } from '../context/ToastContext';
 import { CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 
-const CheckoutSuccess = () => {
+const CheckoutSuccess = ({ onUserUpdate }) => {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('loading'); // loading, success, error
     const [data, setData] = useState(null);
@@ -22,6 +22,9 @@ const CheckoutSuccess = () => {
             try {
                 const result = await verifyCheckoutSession(sessionId);
                 setData(result);
+                if (onUserUpdate) {
+                    onUserUpdate(result);
+                }
                 setStatus('success');
                 showToast("Pagamento completato con successo! 🎉", "success");
             } catch (e) {

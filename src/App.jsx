@@ -111,7 +111,11 @@ function App() {
           <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
           <Route path="/share/:token" element={<ShareTrip />} />
           <Route path="/market" element={<Market />} />
-          <Route path="/checkout-success" element={<CheckoutSuccess />} />
+          <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
+            const newUser = { ...user, ...u };
+            setUser(newUser);
+            localStorage.setItem('user', JSON.stringify(newUser));
+          }} />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

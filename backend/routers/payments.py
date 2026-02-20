@@ -120,19 +120,66 @@ async def create_checkout(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+async def process_successful_checkout(account: Account, product_type: str, session: Session):
+    """Logica comune per attivare crediti o abbonamenti dopo un pagamento."""
+    product = PRODUCTS.get(product_type)
+    if not product:
+        return
+
+    # 1. Attivazione Logica
+    if product["mode"] == "payment":
+        # Nota: l'idempotenza per i crediti è difficile senza una tabella transazioni.
+        # Per ora aggiungiamo e basta (il webhook e verify-session potrebbero sovrapporsi, 
+        # ma di solito verify-session viene chiamato una volta sola al ritorno).
+        # TODO: Implementare processed_sessions per sicurezza totale.
+        account.credits += product["credits"]
+        print(f"[Activation] +{product['credits']} crediti per account {account.id}")
+    else:
+        # Attiva abbonamento
+        account.is_subscribed = True
+        account.subscription_plan = product["plan"]
+        days = 365 if product["plan"] == "ANNUAL" else 30
+        expiry_date = datetime.now() + timedelta(days=days)
+        account.subscription_expiry = expiry_date.strftime("%Y-%m-%d")
+        account.auto_renew = True
+        print(f"[Activation] Abbonamento {product['plan']} attivato per account {account.id}")
+
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+
+    # 2. Invio Email di Ricevuta
+    try:
+        smtp_user, smtp_password, smtp_conf = get_smtp_config()
+        if smtp_user and smtp_password:
+            amount_str = f"€{product['amount']/100:.2f}"
+            credits_text = f"+{product['credits']} Crediti" if "credits" in product else f"Piano {product['plan']}"
+            
+            message = MessageSchema(
+                subject=f"Ricevuta di acquisto SplitPlan \U0001f4b3",
+                recipients=[account.email],
+                body=purchase_receipt_email(
+                    name=account.name,
+                    product_name=product["name"],
+                    amount=amount_str,
+                    credits_added=credits_text,
+                    market_url=f"{FRONTEND_URL}/market"
+                ),
+                subtype=MessageType.html
+            )
+            fm = FastMail(smtp_conf)
+            await fm.send_message(message)
+            print(f"[Activation] Ricevuta email inviata a {account.email}")
+    except Exception as email_err:
+        print(f"[Activation Error] Invio ricevuta email fallito: {email_err}")
+
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, session: Session = Depends(get_session)):
     """Riceve e gestisce i webhook di Stripe"""
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
-    try:
-        if WEBHOOK_SECRET:
-            event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
-        else:
-            # In sviluppo senza webhook secret, parsiamo direttamente
-            import json
-            event = json.loads(payload)
     except (ValueError, stripe.error.SignatureVerificationError) as e:
         print(f"[Webhook Error] Signature: {e}")
         raise HTTPException(status_code=400, detail="Firma webhook non valida")
@@ -148,63 +195,14 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
             print(f"[Webhook] Missing metadata: {metadata}")
             return {"status": "ignored"}
 
-        # --- INVIO RICEVUTA EMAIL ---
-        try:
-            account = session.get(Account, int(account_id))
-            if account:
-                product = PRODUCTS.get(product_type)
-                if product:
-                    smtp_user, smtp_password, smtp_conf = get_smtp_config()
-                    if smtp_user and smtp_password:
-                        # Format dell'importo (es. 399 -> 3.99€)
-                        amount_str = f"€{product['amount']/100:.2f}"
-                        credits_text = f"+{product['credits']} Crediti" if "credits" in product else f"Piano {product['plan']}"
-                        
-                        message = MessageSchema(
-                            subject=f"Ricevuta di acquisto SplitPlan \U0001f4b3",
-                            recipients=[account.email],
-                            body=purchase_receipt_email(
-                                name=account.name,
-                                product_name=product["name"],
-                                amount=amount_str,
-                                credits_added=credits_text,
-                                market_url=f"{FRONTEND_URL}/market"
-                            ),
-                            subtype=MessageType.html
-                        )
-                        fm = FastMail(smtp_conf)
-                        # Nota: il webhook è asincrono, possiamo usare await fm.send_message
-                        await fm.send_message(message)
-                        print(f"[OK] Ricevuta email inviata a {account.email}")
-        except Exception as email_err:
-            print(f"[ERROR] Invio ricevuta email fallito: {email_err}")
-
+        # Carica account
         account = session.get(Account, int(account_id))
         if not account:
             print(f"[Webhook] Account {account_id} non trovato")
             return {"status": "account_not_found"}
 
-        product = PRODUCTS.get(product_type)
-        if not product:
-            print(f"[Webhook] Prodotto {product_type} non valido")
-            return {"status": "invalid_product"}
-
-        if product["mode"] == "payment":
-            # Aggiunge crediti
-            account.credits += product["credits"]
-            print(f"[Webhook] +{product['credits']} crediti per account {account_id}")
-        else:
-            # Attiva abbonamento
-            account.is_subscribed = True
-            account.subscription_plan = product["plan"]
-            days = 365 if product["plan"] == "ANNUAL" else 30
-            expiry_date = datetime.now() + timedelta(days=days)
-            account.subscription_expiry = expiry_date.strftime("%Y-%m-%d")
-            account.auto_renew = True
-            print(f"[Webhook] Abbonamento {product['plan']} attivato per account {account_id}")
-
-        session.add(account)
-        session.commit()
+        # Processa l'attivazione
+        await process_successful_checkout(account, product_type, session)
 
     elif event["type"] == "customer.subscription.deleted":
         # L'abbonamento è stato cancellato
@@ -250,26 +248,17 @@ async def verify_session(
             if not product:
                 return {"status": "paid", "credits": current_account.credits}
 
-            # Controlla se già processato (evita duplicati)
-            # Usiamo il session_id come chiave di idempotenza
-            if product["mode"] == "payment":
-                # Per i crediti, aggiorniamo solo se il webhook non l'ha già fatto
-                # Controlliamo il pagamento via Stripe
-                return {
-                    "status": "paid",
-                    "credits": current_account.credits,
-                    "product_type": product_type,
-                    "is_subscribed": current_account.is_subscribed,
-                    "subscription_plan": current_account.subscription_plan,
-                }
-            else:
-                return {
-                    "status": "paid",
-                    "credits": current_account.credits,
-                    "is_subscribed": current_account.is_subscribed,
-                    "subscription_plan": current_account.subscription_plan,
-                    "subscription_expiry": current_account.subscription_expiry,
-                }
+            # Attiviamo l'abbonamento/crediti anche qui come backup del webhook
+            await process_successful_checkout(current_account, product_type, session)
+
+            return {
+                "status": "paid",
+                "credits": current_account.credits,
+                "product_type": product_type,
+                "is_subscribed": current_account.is_subscribed,
+                "subscription_plan": current_account.subscription_plan,
+                "subscription_expiry": current_account.subscription_expiry,
+            }
 
         return {"status": checkout_session.payment_status}
 

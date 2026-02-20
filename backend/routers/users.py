@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from sqlalchemy import text
 from email_templates import verification_email, reset_password_email
+from utils.email_utils import get_smtp_config
 
 load_dotenv()
 
@@ -19,25 +20,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 # --- SMTP Config check ---
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     print("[WARNING] SMTP Credentials not found in .env. Email sending will fail.")
-
-def get_smtp_config():
-    """Configurazione SMTP centralizzata."""
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    if not smtp_user or not smtp_password:
-        return None, None, None
-    conf = ConnectionConfig(
-        MAIL_USERNAME=smtp_user,
-        MAIL_PASSWORD=smtp_password,
-        MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
-        MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-        MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-        MAIL_STARTTLS=True,
-        MAIL_SSL_TLS=False,
-        USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True
-    )
-    return smtp_user, smtp_password, conf
 
 class RegisterRequest(BaseModel):
     name: str

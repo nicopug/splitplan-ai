@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 from database import get_session
 from models import Account
 from auth import get_current_user
+from fastapi_mail import FastMail, MessageSchema, MessageType
+from email_templates import purchase_receipt_email
+from utils.email_utils import get_smtp_config
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -144,6 +147,37 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
         if not account_id or not product_type:
             print(f"[Webhook] Missing metadata: {metadata}")
             return {"status": "ignored"}
+
+        # --- INVIO RICEVUTA EMAIL ---
+        try:
+            account = session.get(Account, int(account_id))
+            if account:
+                product = PRODUCTS.get(product_type)
+                if product:
+                    smtp_user, smtp_password, smtp_conf = get_smtp_config()
+                    if smtp_user and smtp_password:
+                        # Format dell'importo (es. 399 -> 3.99€)
+                        amount_str = f"€{product['amount']/100:.2f}"
+                        credits_text = f"+{product['credits']} Crediti" if "credits" in product else f"Piano {product['plan']}"
+                        
+                        message = MessageSchema(
+                            subject=f"Ricevuta di acquisto SplitPlan 💳",
+                            recipients=[account.email],
+                            body=purchase_receipt_email(
+                                name=account.name,
+                                product_name=product["name"],
+                                amount=amount_str,
+                                credits_added=credits_text,
+                                market_url=f"{FRONTEND_URL}/market"
+                            ),
+                            subtype=MessageType.html
+                        )
+                        fm = FastMail(smtp_conf)
+                        # Nota: il webhook è asincrono, possiamo usare await fm.send_message
+                        await fm.send_message(message)
+                        print(f"[OK] Ricevuta email inviata a {account.email}")
+        except Exception as email_err:
+            print(f"[ERROR] Invio ricevuta email fallito: {email_err}")
 
         account = session.get(Account, int(account_id))
         if not account:

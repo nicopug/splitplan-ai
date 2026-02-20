@@ -18,6 +18,9 @@ from dotenv import load_dotenv
 from database import get_session
 from auth import get_current_user
 from models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, SQLModel, Account, Expense, Photo
+from fastapi_mail import FastMail, MessageSchema, MessageType
+from email_templates import booking_confirmation_email
+from utils.email_utils import get_smtp_config
 
 # Caricamento variabili ambiente
 load_dotenv()
@@ -1377,6 +1380,36 @@ async def vote_proposal(
                 session.add(trip)
                 session.commit()
                 print(f"[SUCCESS] Consenso raggiunto! Vincitore: {best_p.destination}")
+
+                # --- INVIO EMAIL DI CONFERMA ALL'ORGANIZZATORE ---
+                try:
+                    organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
+                    organizer_account = session.get(Account, organizer.account_id) if organizer and organizer.account_id else None
+                    
+                    if organizer_account:
+                        smtp_user, smtp_password, smtp_conf = get_smtp_config()
+                        if smtp_user and smtp_password:
+                            frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
+                            itinerary_url = f"{frontend_url}/dashboard/{trip.id}"
+                            
+                            message = MessageSchema(
+                                subject=f"SplitPlan: Viaggio Confermato! ✈️ {trip.name}",
+                                recipients=[organizer_account.email],
+                                body=booking_confirmation_email(
+                                    name=organizer_account.name,
+                                    trip_name=trip.name,
+                                    destination=trip.destination,
+                                    dates=f"{trip.start_date} - {trip.end_date}",
+                                    price=f"€{best_p.price_estimate}",
+                                    itinerary_url=itinerary_url
+                                ),
+                                subtype=MessageType.html
+                            )
+                            fm = FastMail(smtp_conf)
+                            await fm.send_message(message)
+                            print(f"[OK] Email di conferma inviata a {organizer_account.email}")
+                except Exception as email_err:
+                    print(f"[ERROR] Invio email conferma fallito: {email_err}")
         
         return {
             "status": "voted", 

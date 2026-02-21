@@ -1511,7 +1511,7 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         RICHIESTA UTENTE: "{req.message}"
         
         ISTRUZIONI:
-        1. Rispondi cordialmente in ITALIANO.
+        1. Rispondi cordialmente in {current_account.language.upper()}.
         2. Se l'utente vuole CAMBIARE o SPOSTARE qualcosa, devi fare DELETE dell'item corrente (usando il suo ID) e ADD di quello nuovo con i dati corretti.
         3. IMPORTANTE: Se riorganizzi l'itinerario, assicurati di NON PERDERE attività. Se cancelli un giorno per spostarlo, devi RIGENERARE tutte le attività di quel giorno.
         4. Se l'utente vuole aggiungere attività ricorrenti (es. ogni mattina), crea un comando ADD per ogni giorno del viaggio.
@@ -1652,6 +1652,47 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         except:
             return d_str
 
+    # Dizionario Traduzioni PDF
+    pdf_labels = {
+        "it": {
+            "header": "SPLITPLAN",
+            "your_trip": "Il tuo viaggio a",
+            "period": "Periodo",
+            "lodging": "Alloggio",
+            "hotel": "Hotel",
+            "address": "Indirizzo",
+            "itinerary": "Itinerario del Viaggio",
+            "finances": "Riepilogo Spese",
+            "total_spent": "TOTALE SPESE",
+            "per_person": "a persona",
+            "date": "Data",
+            "description": "Descrizione",
+            "category": "Categoria",
+            "amount": "Importo (EUR)",
+            "payer": "Pagato da",
+            "day": "Giorno"
+        },
+        "en": {
+            "header": "SPLITPLAN",
+            "your_trip": "Your trip to",
+            "period": "Period",
+            "lodging": "Accommodation",
+            "hotel": "Hotel",
+            "address": "Address",
+            "itinerary": "Travel Itinerary",
+            "finances": "Expense Summary",
+            "total_spent": "TOTAL EXPENSES",
+            "per_person": "per person",
+            "date": "Date",
+            "description": "Description",
+            "category": "Category",
+            "amount": "Amount (EUR)",
+            "payer": "Paid by",
+            "day": "Day"
+        }
+    }
+    L = pdf_labels.get(current_account.language, pdf_labels["it"])
+
     # Fetch data
     itinerary = sorted(trip.itinerary_items, key=lambda x: (x.start_time))
     expenses = trip.expenses
@@ -1668,10 +1709,10 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     pdf.set_font("Helvetica", "B", 24)
     pdf.set_text_color(255, 255, 255)
     pdf.set_y(10)
-    pdf.cell(0, 15, "SPLITPLAN", ln=True, align="C")
+    pdf.cell(0, 15, L["header"], ln=True, align="C")
     
     pdf.set_font("Helvetica", "B", 14)
-    pdf.cell(0, 10, f"Il tuo viaggio a {trip.real_destination or trip.destination}", ln=True, align="C")
+    pdf.cell(0, 10, f"{L['your_trip']} {trip.real_destination or trip.destination}", ln=True, align="C")
     pdf.ln(10)
     
     # Trip Info Section
@@ -1681,7 +1722,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     
     pdf.set_font("Helvetica", "I", 11)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 7, f"Periodo: {format_pdf_date_only(trip.start_date)} - {format_pdf_date_only(trip.end_date)}", ln=True)
+    pdf.cell(0, 7, f"{L['period']}: {format_pdf_date_only(trip.start_date)} - {format_pdf_date_only(trip.end_date)}", ln=True)
     pdf.ln(5)
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(10)
@@ -1691,29 +1732,29 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         pdf.set_font("Helvetica", "B", 16)
         pdf.set_fill_color(240, 244, 255)
         pdf.set_text_color(25, 42, 86)
-        pdf.cell(0, 12, "   Alloggio", ln=True, fill=True)
+        pdf.cell(0, 12, f"   {L['lodging']}", ln=True, fill=True)
         pdf.ln(4)
         
         pdf.set_text_color(0, 0, 0)
         pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(0, 8, f"Hotel: {trip.accommodation}", ln=True)
+        pdf.cell(0, 8, f"{L['hotel']}: {trip.accommodation}", ln=True)
         if trip.accommodation_location:
             pdf.set_font("Helvetica", "", 10)
             pdf.set_text_color(80, 80, 80)
-            pdf.multi_cell(0, 6, f"Indirizzo: {trip.accommodation_location}")
+            pdf.multi_cell(0, 8, f"{L['address']}: {trip.accommodation_location}")
         pdf.ln(10)
 
     # 2. Itinerario (Grouped by Day)
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_fill_color(240, 244, 255)
     pdf.set_text_color(25, 42, 86)
-    pdf.cell(0, 12, "   Itinerario Giornaliero", ln=True, fill=True)
+    pdf.cell(0, 12, f"   {L['itinerary']}", ln=True, fill=True)
     pdf.ln(5)
     
     if not itinerary:
         pdf.set_font("Helvetica", "", 12)
         pdf.set_text_color(0, 0, 0)
-        pdf.cell(0, 10, "Nessun itinerario generato per questo viaggio.", ln=True)
+        pdf.cell(0, 10, "No itinerary generated yet." if current_account.language == "en" else "Nessun itinerario generato per questo viaggio.", ln=True)
     else:
         current_date_str = None
         day_count = 0
@@ -1734,7 +1775,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
                 pdf.ln(4)
                 pdf.set_font("Helvetica", "B", 14)
                 pdf.set_text_color(0, 122, 255) # SplitPlan Blue
-                pdf.cell(0, 10, f"Giorno {day_count} - {dt.strftime('%d/%m/%Y')}", ln=True)
+                pdf.cell(0, 10, f"{L['day']} {day_count} - {dt.strftime('%d/%m/%Y')}", ln=True)
                 pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 50, pdf.get_y())
                 pdf.ln(2)
             
@@ -1765,7 +1806,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         pdf.set_font("Helvetica", "B", 16)
         pdf.set_fill_color(240, 244, 255)
         pdf.set_text_color(25, 42, 86)
-        pdf.cell(0, 12, "   Riepilogo Spese", ln=True, fill=True)
+        pdf.cell(0, 12, f"   {L['finances']}", ln=True, fill=True)
         pdf.ln(5)
         
         total_eur = sum(e.amount for e in expenses)
@@ -1774,10 +1815,10 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(255, 255, 255)
         pdf.set_fill_color(25, 42, 86)
-        pdf.cell(30, 8, " Data", border=0, fill=True)
-        pdf.cell(80, 8, " Descrizione", border=0, fill=True)
-        pdf.cell(30, 8, " Categoria", border=0, fill=True)
-        pdf.cell(50, 8, " Importo (EUR)", border=0, fill=True, ln=True)
+        pdf.cell(30, 8, f" {L['date']}", border=0, fill=True)
+        pdf.cell(80, 8, f" {L['description']}", border=0, fill=True)
+        pdf.cell(30, 8, f" {L['category']}", border=0, fill=True)
+        pdf.cell(50, 8, f" {L['amount']}", border=0, fill=True, ln=True)
         
         pdf.set_text_color(0, 0, 0)
         pdf.set_font("Helvetica", "", 9)
@@ -1793,7 +1834,7 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         pdf.ln(5)
         pdf.set_font("Helvetica", "B", 12)
         pdf.set_text_color(0, 122, 255)
-        pdf.cell(0, 10, f"TOTALE SPESE: {total_eur:.2f} EUR", ln=True, align="R")
+        pdf.cell(0, 10, f"{L['total_spent']}: {total_eur:.2f} EUR", ln=True, align="R")
 
     # Genera i bytes del PDF
     pdf_bytes = pdf.output()

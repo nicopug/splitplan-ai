@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { estimateBudget, updateTrip, getExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
 const Budget = ({ trip, onUpdate }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
     const [isEstimating, setIsEstimating] = useState(false);
@@ -34,14 +36,14 @@ const Budget = ({ trip, onUpdate }) => {
     const handleApplyAsExpense = async () => {
         if (!estimation) return;
         const confirmed = await showConfirm(
-            "Conferma Spesa Prevista",
-            `Vuoi aggiungere la stima AI di €${(Number(estimation.total_estimated_per_person) * (trip.num_people || 1)).toFixed(2)} come spesa prevista?`
+            t('budget.confirmApply', "Conferma Spesa Prevista"),
+            t('budget.confirmApplyDesc', { amount: (Number(estimation.total_estimated_per_person) * (trip.num_people || 1)).toFixed(2) })
         );
         if (confirmed) {
             setAppliedAIExpense(Number(estimation.total_estimated_per_person) * (trip.num_people || 1));
             setEstimation(null);
             setShowSimulation(false);
-            showToast("Proiezione aggiornata!", "success");
+            showToast(t('budget.toast.applied', "Proiezione aggiornata!"), "success");
         }
     };
 
@@ -49,7 +51,7 @@ const Budget = ({ trip, onUpdate }) => {
         setAppliedAIExpense(0);
         setEstimation(null);
         setShowSimulation(false);
-        showToast("Proiezione rimossa", "info");
+        showToast(t('budget.toast.removed', "Proiezione rimossa"), "info");
     }, []);
 
     const handleEstimate = async () => {
@@ -59,12 +61,12 @@ const Budget = ({ trip, onUpdate }) => {
             if (data && data.total_estimated_per_person) {
                 setEstimation(data);
                 setShowSimulation(true);
-                showToast("Stima AI completata!", "success");
+                showToast(t('budget.toast.estimated', "Stima AI completata!"), "success");
             } else {
                 throw new Error("Dati AI incompleti");
             }
         } catch (e) {
-            showToast("Errore stima: " + e.message, "error");
+            showToast(t('budget.toast.error', "Errore stima: ") + e.message, "error");
         } finally {
             setIsEstimating(false);
         }
@@ -127,15 +129,24 @@ const Budget = ({ trip, onUpdate }) => {
         // --- Category Mapping Helper ---
         const getCategoryInfo = (id) => {
             const map = {
-                'Food': { label: 'Cibo', color: '#3b82f6' },
-                'Transport': { label: 'Trasporti locali', color: '#f59e0b' },
-                'Travel_Road': { label: 'Carburante/Pedaggi', color: '#ff6400' },
-                'Lodging': { label: 'Alloggio (Hotel)', color: '#10b981' },
-                'Activity': { label: 'Attività', color: '#8b5cf6' },
-                'Shopping': { label: 'Shopping', color: '#ec4899' },
-                'Flight': { label: trip.transport_mode === 'TRAIN' ? 'Treno' : (trip.transport_mode === 'CAR' ? 'Viaggio' : 'Volo'), color: '#0ea5e9' },
-                'Other': { label: 'Altro', color: '#94a3b8' }
+                'Food': { label: t('budget.categories.Food', 'Cibo'), color: '#3b82f6' },
+                'Transport': { label: t('budget.categories.Transport', 'Trasporti locali'), color: '#f59e0b' },
+                'Travel_Road': { label: t('budget.categories.Travel_Road', 'Carburante/Pedaggi'), color: '#ff6400' },
+                'Lodging': { label: t('budget.categories.Lodging', 'Alloggio (Hotel)'), color: '#10b981' },
+                'Activity': { label: t('budget.categories.Activity', 'Attività'), color: '#8b5cf6' },
+                'Shopping': { label: t('budget.categories.Shopping', 'Shopping'), color: '#ec4899' },
+                'Flight': { label: t('budget.categories.Flight', 'Volo'), color: '#0ea5e9' },
+                'Train': { label: t('budget.categories.Train', 'Treno'), color: '#0ea5e9' },
+                'Road': { label: t('budget.categories.Road', 'Viaggio'), color: '#0ea5e9' },
+                'Other': { label: t('budget.categories.Other', 'Altro'), color: '#94a3b8' }
             };
+
+            // Fix label for 'Flight' based on transport_mode
+            if (id === 'Flight') {
+                if (trip.transport_mode === 'TRAIN') map[id].label = t('budget.categories.Train', 'Treno');
+                else if (trip.transport_mode === 'CAR') map[id].label = t('budget.categories.Road', 'Viaggio');
+            }
+
             return map[id] || map['Other'];
         };
 
@@ -155,7 +166,7 @@ const Budget = ({ trip, onUpdate }) => {
             finalCategories.push({
                 id: 'Remaining',
                 amount: remaining,
-                label: 'Disponibile',
+                label: t('budget.categories.Available', 'Disponibile'),
                 color: '#f1f5f9',
                 isRemaining: true
             });
@@ -243,15 +254,15 @@ const Budget = ({ trip, onUpdate }) => {
     return (
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Analisi Budget
+                {t('budget.title', 'Analisi Budget')}
             </h2>
 
             {/* Top Cards: Spent vs Remaining */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)', background: 'var(--bg-white)' }}>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>Speso Totale</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>{t('budget.totalSpent', 'Speso Totale')}</div>
                     <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>di €{stats.totalBudget.toFixed(0)} iniziali</div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}</div>
                 </div>
                 <div className="glass-card" style={{
                     padding: '1.5rem',
@@ -260,7 +271,7 @@ const Budget = ({ trip, onUpdate }) => {
                     background: 'var(--bg-white)'
                 }}>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>
-                        {stats.isOverBudget ? 'Sforamento' : 'Disponibilità'}
+                        {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
                     </div>
                     <div style={{
                         fontSize: '2rem',
@@ -270,7 +281,7 @@ const Budget = ({ trip, onUpdate }) => {
                         €{Math.abs(stats.remaining).toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                        {stats.isOverBudget ? 'Sei andato oltre il budget' : 'Ancora spendibili'}
+                        {stats.isOverBudget ? t('budget.spentOver', 'Sei andato oltre il budget') : t('budget.spentStill', 'Ancora spendibili')}
                     </div>
                 </div>
             </div>
@@ -279,7 +290,7 @@ const Budget = ({ trip, onUpdate }) => {
 
                 {/* Left Column: Chart & Categories */}
                 <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Suddivisione Spese</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t('budget.categoriesTitle', 'Suddivisione Spese')}</h3>
 
                     {stats.categories.length > 0 ? (
                         <>
@@ -341,7 +352,7 @@ const Budget = ({ trip, onUpdate }) => {
                     ) : (
                         <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
                             <div style={{ fontSize: '3rem' }}>🤔</div>
-                            <p>Ancora nessuna spesa registrata per mostrare il grafico.</p>
+                            <p>{t('budget.noExpenses', 'Ancora nessuna spesa registrata per mostrare il grafico.')}</p>
                         </div>
                     )}
                 </div>
@@ -351,8 +362,8 @@ const Budget = ({ trip, onUpdate }) => {
 
                     {/* Progress Bar (Integrated) */}
                     <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
-                        <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ fontWeight: '700', fontSize: '1rem', marginRight: '8px' }}>Utilizzo Budget </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <span style={{ fontWeight: '700', fontSize: '1rem', marginRight: '8px' }}>{t('budget.usage', 'Utilizzo Budget')} </span>
                             <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
                         </div>
                         <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>
@@ -364,9 +375,9 @@ const Budget = ({ trip, onUpdate }) => {
                             }} />
                         </div>
                         <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem', fontStyle: 'italic' }}>
-                            {stats.percentUsed > 80 ? 'Attenzione! Hai quasi esaurito il budget prefissato.' :
-                                stats.percentUsed > 50 ? 'Sei a metà del budget. Gestisci bene le prossime spese!' :
-                                    'Ottimo lavoro, il budget è ancora ampiamente sotto controllo.'}
+                            {stats.percentUsed > 80 ? t('budget.usageHigh', 'Attenzione! Hai quasi esaurito il budget prefissato.') :
+                                stats.percentUsed > 50 ? t('budget.usageMid', 'Sei a metà del budget. Gestisci bene le prossime spese!') :
+                                    t('budget.usageLow', 'Ottimo lavoro, il budget è ancora ampiamente sotto controllo.')}
                         </p>
                     </div>
 
@@ -378,17 +389,17 @@ const Budget = ({ trip, onUpdate }) => {
                             border: '1px solid #dbeafe'
                         }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Focus Valuta: {stats.localCurrency} 💱
+                                {t('budget.currencyFocus', { currency: stats.localCurrency })}
                             </h3>
                             <div style={{ marginBottom: '1rem' }}>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Tasso medio applicato</div>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t('budget.avgRate', 'Tasso medio applicato')}</div>
                                 <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e40af' }}>
                                     1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}
                                 </div>
                             </div>
                             <div style={{ padding: '1rem', background: 'white', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                                 <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.2rem' }}>
-                                    {stats.isOverBudget ? 'Sforamento' : 'Disponibilità'} in valuta locale
+                                    {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')} in valuta locale
                                 </div>
                                 <div style={{ fontSize: '1.4rem', fontWeight: '900', color: stats.isOverBudget ? '#ef4444' : '#10b981' }}>
                                     {(Math.abs(stats.remaining) * stats.localRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} {stats.localCurrency}
@@ -400,12 +411,12 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* AI Estimation Section */}
                     <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-white)' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            Simulazione AI
+                            {t('budget.aiSimulation', 'Simulazione AI')}
                         </h3>
                         {!estimation ? (
                             <>
                                 <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1.5rem' }}>
-                                    Vuoi sapere quanto spenderai indicativamente a {trip.destination}? La nostra AI calcola per te il costo della vita locale.
+                                    {t('budget.aiSimulationDesc', { destination: trip.destination })}
                                 </p>
                                 <button
                                     onClick={handleEstimate}
@@ -413,14 +424,14 @@ const Budget = ({ trip, onUpdate }) => {
                                     className="btn btn-secondary"
                                     style={{ width: '100%', padding: '0.8rem' }}
                                 >
-                                    {isEstimating ? 'Analizzando...' : 'Calcola Proiezione'}
+                                    {isEstimating ? t('budget.calculatingBtn', 'Analizzando...') : t('budget.calculateBtn', 'Calcola Proiezione')}
                                 </button>
                             </>
                         ) : (
                             <div className="animate-in">
                                 <div style={{ background: 'var(--bg-soft-gray)', padding: '1rem', borderRadius: '16px', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <span style={{ fontSize: '0.8rem' }}>Stima locale / pers:</span>
+                                        <span style={{ fontSize: '0.8rem' }}>{t('budget.localEst', 'Stima locale / pers:')}</span>
                                         <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person}</span>
                                     </div>
                                     <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
@@ -428,8 +439,8 @@ const Budget = ({ trip, onUpdate }) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button onClick={handleApplyAsExpense} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>Applica</button>
-                                    <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5, fontSize: '0.8rem' }}>Chiudi</button>
+                                    <button onClick={handleApplyAsExpense} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>{t('budget.applyBtn', 'Applica')}</button>
+                                    <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5, fontSize: '0.8rem' }}>{t('budget.closeBtn', 'Chiudi')}</button>
                                 </div>
                             </div>
                         )}

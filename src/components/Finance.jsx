@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { theme } = useTheme();
     const [tab, setTab] = useState('summary');
@@ -21,22 +23,22 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const [category, setCategory] = useState('Food');
 
     const currencies = [
-        { code: 'EUR', symbol: '€', label: 'Euro' },
-        { code: 'USD', symbol: '$', label: 'Dollaro USA' },
-        { code: 'JPY', symbol: '¥', label: 'Yen Giapponese' },
-        { code: 'GBP', symbol: '£', label: 'Sterlina' },
-        { code: 'CHF', symbol: 'CHF', label: 'Franco Svizzero' },
-        { code: 'AED', symbol: 'د.إ', label: 'Dirham' }
+        { code: 'EUR', symbol: '€', label: t('finance.currencies.EUR', 'Euro') },
+        { code: 'USD', symbol: '$', label: t('finance.currencies.USD', 'Dollaro USA') },
+        { code: 'JPY', symbol: '¥', label: t('finance.currencies.JPY', 'Yen Giapponese') },
+        { code: 'GBP', symbol: '£', label: t('finance.currencies.GBP', 'Sterlina') },
+        { code: 'CHF', symbol: 'CHF', label: t('finance.currencies.CHF', 'Franco Svizzero') },
+        { code: 'AED', symbol: 'د.إ', label: t('finance.currencies.AED', 'Dirham') }
     ];
 
     const categories = [
-        { id: 'Food', label: 'Cibo & Drink', icon: '🍕' },
-        { id: 'Transport', label: 'Movimenti Locali', icon: '🚌' },
-        { id: 'Travel_Road', label: 'Auto/Pedaggi', icon: '🚗' },
-        { id: 'Lodging', label: 'Alloggio', icon: '🏨' },
-        { id: 'Activity', label: 'Attività', icon: '🎡' },
-        { id: 'Shopping', label: 'Shopping', icon: '🛍️' },
-        { id: 'Other', label: 'Altro', icon: '📦' }
+        { id: 'Food', label: t('finance.categories.Food', 'Cibo & Drink'), icon: '🍕' },
+        { id: 'Transport', label: t('finance.categories.Transport', 'Movimenti Locali'), icon: '🚌' },
+        { id: 'Travel_Road', label: t('finance.categories.Travel_Road', 'Auto/Pedaggi'), icon: '🚗' },
+        { id: 'Lodging', label: t('finance.categories.Lodging', 'Alloggio'), icon: '🏨' },
+        { id: 'Activity', label: t('finance.categories.Activity', 'Attività'), icon: '🎡' },
+        { id: 'Shopping', label: t('finance.categories.Shopping', 'Shopping'), icon: '🛍️' },
+        { id: 'Other', label: t('finance.categories.Other', 'Altro'), icon: '📦' }
     ];
 
     const fetchData = async () => {
@@ -60,7 +62,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             }
         } catch (e) {
             console.error(e);
-            showToast("Errore nel caricamento: " + e.message, "error");
+            showToast(t('finance.toast.loadError', "Errore nel caricamento: ") + e.message, "error");
         } finally {
             setLoading(false);
         }
@@ -125,7 +127,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const handleAddExpense = async (e) => {
         e.preventDefault();
         if (!payerId) {
-            showToast("Seleziona chi ha pagato!", "info");
+            showToast(t('finance.toast.selectPayer', "Seleziona chi ha pagato!"), "info");
             return;
         }
         try {
@@ -141,7 +143,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             setTitle('');
             setAmount('');
             setCurrency('EUR');
-            showToast("Spesa aggiunta! 💸", "success");
+            showToast(t('finance.toast.expenseAdded', "Spesa aggiunta! 💸"), "success");
             fetchData();
         } catch (error) {
             showToast("Errore: " + error.message, "error");
@@ -149,13 +151,13 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Sei sicuro di voler eliminare questa spesa?")) return;
+        if (!window.confirm(t('finance.confirmDelete', "Sei sicuro di voler eliminare questa spesa?"))) return;
         try {
             await deleteExpense(id);
-            showToast("Spesa eliminata", "success");
+            showToast(t('finance.toast.expenseDeleted', "Spesa eliminata"), "success");
             fetchData();
         } catch (error) {
-            showToast("Errore durante l'eliminazione", "error");
+            showToast(t('common.error', "Errore"), "error");
         }
     };
 
@@ -178,7 +180,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     return (
         <div className="container section">
             <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Gestione Spese
+                {t('finance.title', 'Gestione Spese')}
             </h2>
 
             {/* Global Stats Dashboard */}
@@ -195,11 +197,11 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                 boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
             }}>
                 <div style={{ textAlign: 'center', borderRight: '1px solid #eee' }}>
-                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Totale Speso</div>
+                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('finance.totalSpent', 'Totale Speso')}</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{stats.total.toFixed(2)}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>A persona</div>
+                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('finance.perPerson', 'A persona')}</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-orange)' }}>€{stats.perPerson.toFixed(2)}</div>
                 </div>
             </div>
@@ -207,7 +209,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             {loading ? (
                 <div className="text-center py-12">
                     <div className="spinner-large" style={{ margin: '0 auto 1.5rem' }}></div>
-                    <p className="text-muted">Analisi finanziaria in corso...</p>
+                    <p className="text-muted">{t('finance.loading', 'Analisi finanziaria in corso...')}</p>
                 </div>
             ) : (
                 <>
@@ -221,7 +223,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 color: tab === 'summary' ? '#2562eb' : '#64748b'
                             }}
                         >
-                            Bilanci ⚖️
+                            {t('finance.tabs.balances', 'Bilanci ⚖️')}
                         </button>
                         <button
                             onClick={() => setTab('list')}
@@ -232,14 +234,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 color: tab === 'list' ? '#2562eb' : '#64748b'
                             }}
                         >
-                            Lista 🧾
+                            {t('finance.tabs.list', 'Lista 🧾')}
                         </button>
                     </div>
 
                     {!readOnly && (
                         <div className="text-center" style={{ marginBottom: '2rem' }}>
                             <button onClick={() => setShowForm(!showForm)} className="btn-modern-primary">
-                                {showForm ? 'Annulla' : '+ Nuova Spesa'}
+                                {showForm ? t('finance.cancel', 'Annulla') : t('finance.addExpense', '+ Nuova Spesa')}
                             </button>
                         </div>
                     )}
@@ -248,16 +250,16 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                         <div className="glass-card" style={{ maxWidth: '450px', margin: '0 auto 2.5rem', padding: '2rem' }}>
                             <form onSubmit={handleAddExpense}>
                                 <div style={{ marginBottom: '1.2rem' }}>
-                                    <label className="form-label-modern">Cosa?</label>
-                                    <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="es. Cena Sushi" className="form-input-modern" />
+                                    <label className="form-label-modern">{t('finance.form.title', 'Cosa?')}</label>
+                                    <input value={title} onChange={e => setTitle(e.target.value)} required placeholder={t('finance.form.titlePlaceholder', "es. Cena Sushi")} className="form-input-modern" />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
                                     <div>
-                                        <label className="form-label-modern">Importo</label>
+                                        <label className="form-label-modern">{t('finance.form.amount', 'Importo')}</label>
                                         <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="form-input-modern" />
                                     </div>
                                     <div>
-                                        <label className="form-label-modern">Valuta</label>
+                                        <label className="form-label-modern">{t('finance.form.currency', 'Valuta')}</label>
                                         <select value={currency} onChange={e => setCurrency(e.target.value)} className="form-input-modern">
                                             {currencies.map(c => (
                                                 <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
@@ -266,7 +268,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: '1.2rem' }}>
-                                    <label className="form-label-modern">Categoria</label>
+                                    <label className="form-label-modern">{t('finance.form.category', 'Categoria')}</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                                         {categories.map(cat => (
                                             <div
@@ -291,14 +293,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label className="form-label-modern">Chi ha pagato?</label>
+                                    <label className="form-label-modern">{t('finance.form.payer', 'Chi ha pagato?')}</label>
                                     <select value={payerId} onChange={e => setPayerId(e.target.value)} className="form-input-modern">
                                         {participants.map(p => (
                                             <option key={p.id} value={p.id}>{p.name}</option>
                                         ))}
                                     </select>
                                 </div>
-                                <button type="submit" className="btn-modern-primary" style={{ width: '100%' }}>Aggiungi Spesa 💸</button>
+                                <button type="submit" className="btn-modern-primary" style={{ width: '100%' }}>{t('finance.form.submit', 'Aggiungi Spesa 💸')}</button>
                             </form>
                         </div>
                     )}
@@ -308,7 +310,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                             {expenses.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧾</div>
-                                    <p className="text-muted">Ancora nessuna spesa registrata.</p>
+                                    <p className="text-muted">{t('finance.emptyState', 'Ancora nessuna spesa registrata.')}</p>
                                 </div>
                             ) : (
                                 [...expenses].reverse().map(exp => (
@@ -330,7 +332,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontWeight: '700', fontSize: '1.05rem', color: '#1e293b' }}>{exp.description}</div>
                                                 <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                                                    Pagato da <span style={{ color: '#0f172a', fontWeight: '600' }}>{getUserName(exp.payer_id)}</span>
+                                                    {t('finance.paidBy', 'Pagato da')} <span style={{ color: '#0f172a', fontWeight: '600' }}>{getUserName(exp.payer_id)}</span>
                                                 </div>
                                             </div>
                                             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -371,13 +373,13 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     color: theme === 'dark' ? '#ffffff' : '#000000'
                                 }}
                             >
-                                Bilancio Debiti/Crediti
+                                {t('finance.balancesTitle', 'Bilancio Debiti/Crediti')}
                             </h3>
                             {balances.length === 0 ? (
                                 <div className="text-center py-12 glass-card dark:bg-white/10">
                                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-                                    <p style={{ fontWeight: '600', color: theme === 'dark' ? '#ffffff' : '#000000' }}>Tutti in pari!</p>
-                                    <p className="text-muted dark:text-gray-400" style={{ fontSize: '0.9rem' }}>Nessuno deve soldi a nessuno.</p>
+                                    <p style={{ fontWeight: '600', color: theme === 'dark' ? '#ffffff' : '#000000' }}>{t('finance.balancedTitle', 'Tutti in pari!')}</p>
+                                    <p className="text-muted dark:text-gray-400" style={{ fontSize: '0.9rem' }}>{t('finance.balancedDesc', 'Nessuno deve soldi a nessuno.')}</p>
                                 </div>
                             ) : (
                                 balances.map((b, idx) => (
@@ -391,7 +393,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                                     <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUserName(b.debtor_id)}</strong>
                                                 </div>
                                                 <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
-                                                    deve dare a <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUserName(b.creditor_id)}</strong>
+                                                    {t('finance.owesTo', 'deve dare a')} <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUserName(b.creditor_id)}</strong>
                                                 </div>
                                             </div>
                                             <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#ef4444' }}>
@@ -404,9 +406,9 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                             {!readOnly && (
                                 <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#eff6ff', borderRadius: '16px', border: '1px dashed #3b82f6' }}>
-                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>Tip di SplitPlan AI</h4>
+                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>{t('finance.tipTitle', 'Tip di SplitPlan AI')}</h4>
                                     <p style={{ fontSize: '0.85rem', color: '#1e40af', lineHeight: '1.4' }}>
-                                        I bilanci vengono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.
+                                        {t('finance.tipDesc', 'I bilanci vengono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.')}
                                     </p>
                                 </div>
                             )}

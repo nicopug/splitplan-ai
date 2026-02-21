@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { chatWithAI } from '../api';
 
 const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) => {
+    const { t } = useTranslation();
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
@@ -31,7 +33,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                 onItineraryUpdate(data.itinerary);
             }
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'ai', text: "Scusa, si è verificato un errore nel processare la tua richiesta." }]);
+            setMessages(prev => [...prev, { role: 'ai', text: t('chatbot.error', "Scusa, si è verificato un errore nel processare la tua richiesta.") }]);
         } finally {
             setLoading(false);
         }
@@ -70,8 +72,8 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     alignItems: 'center'
                 }}>
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>Assistente AI</h3>
-                        <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>Esclusivo per utenti Premium</p>
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>{t('chatbot.aiAssistant', 'Assistente AI')}</h3>
+                        <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>{t('chatbot.premiumOnly', 'Esclusivo per utenti Premium')}</p>
                     </div>
                     {onClose && (
                         <button
@@ -124,7 +126,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     ))}
                     {loading && (
                         <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-white)', color: 'var(--text-muted)', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
-                            L'AI sta modificando l'itinerario...
+                            {t('chatbot.loading', "L'AI sta modificando l'itinerario...")}
                         </div>
                     )}
 
@@ -141,7 +143,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             gap: '0.5rem'
                         }}>
                             <span style={{ fontSize: '1.5rem' }}></span>
-                            <p style={{ margin: 0 }}>Puoi chiedere di aggiungere, modificare o eliminare attività nell'itinerario.</p>
+                            <p style={{ margin: 0 }}>{t('chatbot.hint', "Puoi chiedere di aggiungere, modificare o eliminare attività nell'itinerario.")}</p>
                         </div>
                     )}
 
@@ -158,7 +160,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Es: 'Aggiungi una cena stasera alle 20'"
+                        placeholder={t('chatbot.placeholder', "Es: 'Aggiungi una cena stasera alle 20'")}
                         style={{
                             flex: 1,
                             padding: '0.75rem 1rem',
@@ -170,7 +172,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                         }}
                     />
                     <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '0.75rem 1.5rem' }}>
-                        Invia
+                        {t('chatbot.send', 'Invia')}
                     </button>
                 </form>
             </div>

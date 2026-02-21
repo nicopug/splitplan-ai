@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { confirmHotel, extractReceiptData } from '../api';
 import { useToast } from '../context/ToastContext';
 import { Upload, FileText, Sparkles, Loader2, Info, X } from 'lucide-react';
@@ -6,6 +7,7 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const [hotelName, setHotelName] = useState('');
     const [hotelAddress, setHotelAddress] = useState('');
@@ -24,7 +26,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
         if (!file) return;
         setExtracting(type);
         setExtractionError(null);
-        showToast(`Lettura ricevuta ${type === 'hotel' ? 'hotel' : 'trasporto'} in corso...`, "info");
+        showToast(t('hotelConfirm.toast.reading', { type: type === 'hotel' ? 'hotel' : 'trasporto' }), "info");
 
         try {
             const res = await extractReceiptData(file, type);
@@ -42,7 +44,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     if (data.arrival_time) setArrivalTime(data.arrival_time);
                     if (data.return_time) setReturnTime(data.return_time);
                 }
-                showToast("Dati estratti con successo! Verifica i campi.", "success");
+                showToast(t('hotelConfirm.toast.success', "Dati estratti con successo! Verifica i campi."), "success");
             } else {
                 setExtractionError(res.message || "L'IA non è riuscita a leggere i dati. Compila pure a mano.");
             }
@@ -88,11 +90,11 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
             await new Promise(r => setTimeout(r, 800));
 
-            showToast("Logistica confermata! Itinerario generato.", "success");
+            showToast(t('hotelConfirm.toast.confirmed', "Logistica confermata! Itinerario generato."), "success");
             onConfirm();
         } catch (error) {
             console.error("Error confirming hotel:", error);
-            showToast("Errore nella conferma dell'hotel.", "error");
+            showToast(t('hotelConfirm.toast.error', "Errore nella conferma dell'hotel."), "error");
         } finally {
             setLoading(false);
             if (setIsGenerating) setIsGenerating(false);
@@ -103,10 +105,13 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
     return (
         <div className="section container" style={{ marginTop: '2rem' }}>
             <div className="card" style={{ padding: '2rem', borderTop: '4px solid #ff006e', borderRadius: '24px', background: 'white' }}>
-                <h3 style={{ color: '#ff006e', textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Step 2: Conferma Logistica</h3>
+                <h3 style={{ color: '#ff006e', textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('hotelConfirm.title', 'Step 2: Conferma Logistica')}</h3>
                 <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666', fontSize: '0.9rem' }}>
-                    Prenota {trip.transport_mode === 'TRAIN' ? 'treni e hotel' : trip.transport_mode === 'CAR' ? 'l’hotel' : 'voli e hotel'} dai link sopra, poi inserisci i dettagli qui.<br />
-                    L'AI creerà l'itinerario basandosi sul tuo orario di arrivo e posizione.
+                    <span dangerouslySetInnerHTML={{
+                        __html: t('hotelConfirm.subtitle', {
+                            mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : trip.transport_mode === 'CAR' ? t('hotelConfirm.modeCar') : t('hotelConfirm.modeFlight')
+                        })
+                    }} />
                 </p>
 
                 {extractionError && (
@@ -114,7 +119,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                         <Alert variant="info" className="bg-blue-50/50 border-blue-100 flex items-start gap-4 pr-12">
                             <Info className="h-5 w-5 text-blue-500 mt-1 shrink-0" />
                             <div className="flex-1">
-                                <AlertTitle className="text-blue-800 font-bold mb-1">Nota dall'AI SplitPlan</AlertTitle>
+                                <AlertTitle className="text-blue-800 font-bold mb-1">{t('hotelConfirm.aiNote', "Nota dall'AI SplitPlan")}</AlertTitle>
                                 <AlertDescription className="text-blue-700 font-medium">
                                     {extractionError}
                                 </AlertDescription>
@@ -147,7 +152,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             className="h-12 px-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary-blue hover:bg-blue-50 transition-all flex items-center gap-2"
                         >
                             {extracting === 'hotel' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-primary-blue" />}
-                            <span className="text-sm font-semibold">Carica prenotazione Hotel</span>
+                            <span className="text-sm font-semibold">{t('hotelConfirm.uploadHotel', "Carica prenotazione Hotel")}</span>
                         </Button>
                     </div>
 
@@ -169,7 +174,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             >
                                 {extracting === 'transport' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-primary-blue" />}
                                 <span className="text-sm font-semibold">
-                                    Carica prenotazione {trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'}
+                                    {t('hotelConfirm.uploadTransport', { mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : t('hotelConfirm.modeFlight') })}
                                 </span>
                             </Button>
                         </div>
@@ -178,12 +183,12 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                 <form onSubmit={handleSubmit} style={{ maxWidth: '650px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>Nome Hotel / Airbnb</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.hotelLabel', 'Nome Hotel / Airbnb')}</label>
                         <input
                             type="text"
                             value={hotelName}
                             onChange={(e) => setHotelName(e.target.value)}
-                            placeholder="Es. Hotel Colosseo"
+                            placeholder={t('hotelConfirm.hotelPlaceholder', "Es. Hotel Colosseo")}
                             required
                             style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.2s' }}
                             onFocus={(e) => e.target.style.borderColor = '#ff006e'}
@@ -192,12 +197,12 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     </div>
 
                     <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>Indirizzo / Zona</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.addressLabel', 'Indirizzo / Zona')}</label>
                         <input
                             type="text"
                             value={hotelAddress}
                             onChange={(e) => setHotelAddress(e.target.value)}
-                            placeholder="Es. Via dei Fori Imperiali, Roma"
+                            placeholder={t('hotelConfirm.addressPlaceholder', "Es. Via dei Fori Imperiali, Roma")}
                             required
                             style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.2s' }}
                             onFocus={(e) => e.target.style.borderColor = '#ff006e'}
@@ -208,7 +213,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     {trip.transport_mode !== 'CAR' && (
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
-                                Costo {trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'} Totale (€)
+                                {t('hotelConfirm.transportCostLabel', { mode: trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo' })}
                             </label>
                             <input
                                 type="number"
@@ -222,7 +227,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     )}
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>Costo Hotel Totale (€)</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.hotelCostLabel', 'Costo Hotel Totale (€)')}</label>
                         <input
                             type="number"
                             value={hotelCost}
@@ -235,8 +240,8 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
-                            {trip.transport_mode === 'FLIGHT' ? 'Arrivo Volo (Andata)' :
-                                trip.transport_mode === 'TRAIN' ? 'Arrivo Treno (Andata)' : 'Arrivo a Destinazione'}
+                            {trip.transport_mode === 'FLIGHT' ? t('hotelConfirm.arrivalLabel', { mode: 'Volo' }) :
+                                trip.transport_mode === 'TRAIN' ? t('hotelConfirm.arrivalLabel', { mode: 'Treno' }) : t('hotelConfirm.arrivalDest', 'Arrivo a Destinazione')}
                         </label>
                         <input
                             type="time"
@@ -249,8 +254,8 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
-                            {trip.transport_mode === 'FLIGHT' ? 'Partenza Volo (Ritorno)' :
-                                trip.transport_mode === 'TRAIN' ? 'Partenza Treno (Ritorno)' : 'Partenza per il Ritorno'}
+                            {trip.transport_mode === 'FLIGHT' ? t('hotelConfirm.returnLabel', { mode: 'Volo' }) :
+                                trip.transport_mode === 'TRAIN' ? t('hotelConfirm.returnLabel', { mode: 'Treno' }) : t('hotelConfirm.returnStart', 'Partenza per il Ritorno')}
                         </label>
                         <input
                             type="time"
@@ -271,12 +276,12 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             {loading ? (
                                 <span className="flex items-center gap-2 justify-center">
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Generazione Itinerario...
+                                    {t('hotelConfirm.generatingBtn', 'Generazione Itinerario...')}
                                 </span>
                             ) : (
                                 <span className="flex items-center gap-2 justify-center">
                                     <Sparkles className="w-5 h-5" />
-                                    Salva e Genera Itinerario
+                                    {t('hotelConfirm.submitBtn', 'Salva e Genera Itinerario')}
                                 </span>
                             )}
                         </Button>

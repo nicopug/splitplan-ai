@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { voteProposal, getParticipants, generateShareLink, getProposals } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
 const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
     const [proposals, setProposals] = useState(initialProposals || []);
@@ -92,14 +94,14 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
     const handleVote = async (proposalId) => {
         if (!selectedUser && !isSolo) {
-            showToast("Seleziona chi sta votando!", "info");
+            showToast(t('voting.toast.selectVoter', "Seleziona chi sta votando!"), "info");
             return;
         }
 
         const voterId = isSolo ? (participants[0]?.id) : selectedUser;
 
         if (!voterId) {
-            showToast("Errore: Partecipante non trovato.", "error");
+            showToast(t('voting.toast.voterNotFound', "Errore: Partecipante non trovato."), "error");
             return;
         }
 
@@ -113,17 +115,17 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
             }
 
             if (res.trip_status === 'BOOKED' || res.trip_status === 'CONSENSUS_REACHED') {
-                if (!isSolo) showToast("Consenso raggiunto! Si procede.", "success");
+                if (!isSolo) showToast(t('voting.toast.consensusReached', "Consenso raggiunto! Si procede."), "success");
                 onVoteComplete();
             } else {
                 // Global marker removed to allow other participants on same device to vote
                 localStorage.setItem(`splitplan_voted_session_${trip.id}_${voterId}`, 'true');
                 setHasVoted(true);
                 const voterName = participants.find(p => p.id == voterId)?.name || 'Utente';
-                showToast(`Voto di ${voterName} registrato! (${res.votes_count}/${res.required})`, "success");
+                showToast(t('voting.toast.voteRegistered', { voterName, count: res.votes_count, total: res.required }), "success");
             }
         } catch (e) {
-            showToast("Errore voto: " + e.message, "error");
+            showToast(t('voting.common.error', "Errore voto: ") + e.message, "error");
         } finally {
             if (!isSolo) setLoadingProposalId(null);
         }
@@ -137,17 +139,17 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
             if (navigator.share) {
                 await navigator.share({
-                    title: 'Vota la nostra meta su SplitPlan!',
-                    text: `Ehi! Il nostro viaggio a ${trip.destination} è pronto. Entra, registrati con il tuo nome e vota la tua meta preferita!`,
+                    title: t('voting.shareTitle', 'Vota la nostra meta su SplitPlan!'),
+                    text: t('voting.shareText', { destination: trip.destination }),
                     url: shareUrl,
                 });
             } else {
                 await navigator.clipboard.writeText(shareUrl);
-                showToast("🔗 Link di voto copiato! Invialo ai tuoi amici.", "success");
+                showToast(t('voting.toast.shareSuccess', "🔗 Link di voto copiato! Invialo ai tuoi amici."), "success");
             }
         } catch (e) {
             console.error(e);
-            showToast("Errore condivisione", "error");
+            showToast(t('voting.toast.shareError', "Errore condivisione"), "error");
         } finally {
             setIsSharing(false);
         }
@@ -174,16 +176,12 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                             maxWidth: '600px',
                             boxShadow: 'var(--shadow-lg)'
                         }}>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-blue)', marginBottom: '1.5rem', letterSpacing: '2px' }}>VOTED</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-blue)', marginBottom: '1.5rem', letterSpacing: '2px' }}>{t('voting.votedTitle', 'VOTED')}</div>
                             <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
-                                Voto Registrato!
+                                {t('voting.votedSubtitle', 'Voto Registrato!')}
                             </h2>
                             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem' }}>
-                                Grazie per aver espresso la tua preferenza.
-                                <br /><br />
-                                <strong>L'organizzatore deve ora finire di pianificare il viaggio.</strong>
-                                <br />
-                                Una volta completato, chiedi di farti mandare il <b>link di sola lettura</b> per vedere l'itinerario finale.
+                                <span dangerouslySetInnerHTML={{ __html: t('voting.votedDesc') }} />
                             </p>
                             <div style={{
                                 display: 'inline-block',
@@ -194,7 +192,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                 fontWeight: '700',
                                 fontSize: '0.9rem'
                             }}>
-                                Puoi chiudere questa pagina.
+                                {t('voting.closePage', 'Puoi chiudere questa pagina.')}
                             </div>
                         </div>
                     </div>
@@ -203,13 +201,13 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                         {/* Header */}
                         <div className="text-center mb-8 md:mb-12">
                             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                                {isSolo ? 'Scegli la tua Meta' : 'Vota la destinazione'}
+                                {isSolo ? t('voting.titleSolo', 'Scegli la tua Meta') : t('voting.titleGroup', 'Vota la destinazione')}
                             </h2>
 
                             {!isSolo && (
                                 <div className="space-y-6">
                                     <p className="text-text-muted text-base md:text-lg">
-                                        Il gruppo deve raggiungere il consenso. ({stats.count}/{stats.total} voti)
+                                        {t('voting.groupConsensus', { count: stats.count, total: stats.total })}
                                     </p>
 
                                     <div className="flex flex-col items-center gap-4">
@@ -217,8 +215,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                             <div style={{ maxWidth: '500px', marginBottom: '1rem' }} className="animate-fade-in">
                                                 <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '16px', border: '1px solid #dbeafe' }}>
                                                     <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0 }}>
-                                                        <strong>Organizzatore:</strong> Manda il link qui sotto ai tuoi amici.
-                                                        Quando entreranno, il sistema li riconoscerà per nome e permetterà loro di votare!
+                                                        <span dangerouslySetInnerHTML={{ __html: t('voting.organizerTip') }} />
                                                     </p>
                                                 </div>
                                             </div>
@@ -226,12 +223,12 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                                         {currentUserParticipant ? (
                                             <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
-                                                Ciao {currentUserParticipant.name}, stai votando per te stesso
+                                                {t('voting.greeting', { name: currentUserParticipant.name })}
                                             </div>
                                         ) : (
                                             <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
                                                 <label className="font-bold text-sm md:text-base text-text-main">
-                                                    Vota per:
+                                                    {t('voting.voteFor', 'Vota per:')}
                                                 </label>
                                                 <select
                                                     value={selectedUser || ''}
@@ -256,7 +253,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                                 disabled={isSharing}
                                                 className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-primary-blue hover:text-white transition-all shadow-md group"
                                             >
-                                                <span>{isSharing ? 'Generando...' : '🔗 Condividi per il voto'}</span>
+                                                <span>{isSharing ? t('voting.shareBtnGenerating', 'Generando...') : t('voting.shareBtn', '🔗 Condividi per il voto')}</span>
                                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9.158a3 3 0 100-2.684 3 3 0 000 2.684z" />
                                                 </svg>
@@ -272,7 +269,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                         {loadingProposals ? (
                             <div className="text-center py-12">
                                 <div className="spinner-large" style={{ margin: '0 auto' }}></div>
-                                <p className="mt-4 text-text-muted">Caricamento mete in corso...</p>
+                                <p className="mt-4 text-text-muted">{t('voting.loading', 'Caricamento mete in corso...')}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -319,12 +316,12 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                                 {loadingProposalId === prop.id ? (
                                                     <>
                                                         <span className="spinner border-current"></span>
-                                                        {isSolo ? 'Conferma...' : 'Invio...'}
+                                                        {isSolo ? t('voting.confirming', 'Conferma...') : t('voting.sending', 'Invio...')}
                                                     </>
                                                 ) : (
                                                     isSolo
-                                                        ? "Scegli e Procedi"
-                                                        : (votedId === prop.id ? 'Votato' : 'Vota Questa')
+                                                        ? t('voting.chooseAndProceed', "Scegli e Procedi")
+                                                        : (votedId === prop.id ? t('voting.voted', 'Votato') : t('voting.voteThis', 'Vota Questa'))
                                                 )}
                                             </button>
                                         </div>
@@ -335,8 +332,8 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                         {!loadingProposals && proposals.length === 0 && (
                             <div className="text-center py-12">
-                                <div className="text-2xl font-bold text-gray-300 mb-4">No Data</div>
-                                <p className="text-text-muted text-lg">Nessuna proposta disponibile.</p>
+                                <div className="text-2xl font-bold text-gray-300 mb-4">{t('voting.emptyTitle', 'No Data')}</div>
+                                <p className="text-text-muted text-lg">{t('voting.emptyDesc', 'Nessuna proposta disponibile.')}</p>
                             </div>
                         )}
                     </>

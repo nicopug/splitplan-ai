@@ -16,10 +16,12 @@ import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
     const [trip, setTrip] = useState(null);
@@ -32,7 +34,7 @@ const Dashboard = () => {
     const [isOrganizer, setIsOrganizer] = useState(false);
     const [hasVoted, setHasVoted] = useState(false);
     const [chatMessages, setChatMessages] = useState([
-        { role: 'ai', text: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }
+        { role: 'ai', text: t('dashboard.chatWelcome', { defaultValue: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }) }
     ]);
     const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false);
     const [itineraryProgress, setItineraryProgress] = useState(0);
@@ -135,7 +137,7 @@ const Dashboard = () => {
                 window.location.href = data.auth_url;
             }
         } catch (e) {
-            showToast("Errore connessione calendar: " + e.message, "error");
+            showToast(t('dashboard.calendarError', 'Errore connessione calendar: ') + e.message, "error");
         }
     };
 
@@ -238,7 +240,7 @@ const Dashboard = () => {
         setLoading(true);
         await fetchTrip();
         setLoading(false);
-        showToast("Viaggio Confermato!", "success");
+        showToast(t('dashboard.tripConfirmed', 'Viaggio Confermato!'), "success");
     };
 
     const handleOptimize = async () => {
@@ -246,9 +248,9 @@ const Dashboard = () => {
             await optimizeItinerary(id);
             const items = await getItinerary(id);
             setItinerary(items);
-            showToast("✨ Itinerario ottimizzato!", "success");
+            showToast(t('dashboard.itineraryOptimized', '✨ Itinerario ottimizzato!'), "success");
         } catch (e) {
-            showToast("Errore ottimizzazione: " + e.message, "error");
+            showToast(t('dashboard.optimizeError', 'Errore ottimizzazione: ') + e.message, "error");
         }
     };
 
@@ -258,22 +260,22 @@ const Dashboard = () => {
             const res = await generateShareLink(id);
             const shareUrl = `${window.location.origin}/share/${res.share_token}`;
             await navigator.clipboard.writeText(shareUrl);
-            showToast("🔗 Link di condivisione copiato negli appunti!", "success");
+            showToast(t('dashboard.shareSuccess', '🔗 Link di condivisione copiato negli appunti!'), "success");
         } catch (e) {
-            showToast("Errore condivisione: " + e.message, "error");
+            showToast(t('dashboard.shareError', 'Errore condivisione: ') + e.message, "error");
         }
     };
 
     const handleResetHotel = async () => {
         const confirmed = await showConfirm(
-            "Modifica Logistica",
-            "Vuoi davvero resettare la logistica? L'itinerario attuale verrà eliminato e dovrà essere rigenerato dopo aver inserito i nuovi dati dell'hotel."
+            t('dashboard.confirmResetLogistics', 'Modifica Logistica'),
+            t('dashboard.confirmResetLogisticsDesc', "Vuoi davvero resettare la logistica? L'itinerario attuale verrà eliminato e dovrà essere rigenerato dopo aver inserito i nuovi dati dell'hotel.")
         );
         if (confirmed) {
             try {
                 setLoading(true);
                 await resetHotel(id);
-                showToast("Logistica resettata con successo", "success");
+                showToast(t('dashboard.logisticsResetSuccess', "Logistica resettata con successo"), "success");
                 await fetchTrip();
             } catch (e) {
                 showToast("Errore: " + e.message, "error");
@@ -286,14 +288,14 @@ const Dashboard = () => {
     const handleExportPDF = async () => {
         try {
             await exportTripPDF(id);
-            showToast("✨ PDF generato con successo!", "success");
+            showToast(t('dashboard.pdfSuccess', '✨ PDF generato con successo!'), "success");
         } catch (e) {
-            showToast("Errore esportazione: " + e.message, "error");
+            showToast(t('dashboard.pdfError', 'Errore esportazione: ') + e.message, "error");
         }
     };
 
-    if (loading) return <div className="section text-center">Caricamento in corso...</div>;
-    if (!trip) return <div className="section text-center">Viaggio non trovato</div>;
+    if (loading) return <div className="section text-center">{t('dashboard.loading', 'Caricamento in corso...')}</div>;
+    if (!trip) return <div className="section text-center">{t('dashboard.tripNotFound', 'Viaggio non trovato')}</div>;
 
     return (
         <div style={{ paddingTop: 'var(--header-height)' }}>
@@ -312,7 +314,7 @@ const Dashboard = () => {
                     right: 0,
                     zIndex: 100
                 }}>
-                    Sei in modalità Sola Lettura.
+                    {t('dashboard.readOnly', 'Sei in modalità Sola Lettura.')}
                 </div>
             )}
 
@@ -327,10 +329,9 @@ const Dashboard = () => {
                                     <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
                                 </div>
                                 <div className="text-left">
-                                    <h3 className="text-xl md:text-2xl font-black mb-1">Sblocca la Potenza dell'IA 🚀</h3>
+                                    <h3 className="text-xl md:text-2xl font-black mb-1">{t('dashboard.unlockTitle', "Sblocca la Potenza dell'IA 🚀")}</h3>
                                     <p className="text-blue-100 text-sm md:text-base font-medium max-w-xl leading-relaxed">
-                                        Libera tutto il potenziale: Itinerario ottimizzato, Logistica automatica,
-                                        Chat AI senza limiti e molto altro.
+                                        {t('dashboard.unlockDesc', "Libera tutto il potenziale: Itinerario ottimizzato, Logistica automatica, Chat AI senza limiti e molto altro.")}
                                     </p>
                                 </div>
                             </div>
@@ -351,7 +352,7 @@ const Dashboard = () => {
                                     }}
                                     className="bg-white text-blue-700 hover:bg-blue-50 h-10 px-6 rounded-xl font-bold border-none shadow-lg text-sm"
                                 >
-                                    Sblocca ora (1 🪙)
+                                    {t('dashboard.unlockBtn', 'Sblocca ora (1 🪙)')}
                                 </Button>
                             </div>
                         </div>
@@ -376,7 +377,7 @@ const Dashboard = () => {
                         fontSize: '0.8rem',
                         fontWeight: '700',
                         color: 'rgba(255,255,255,0.8)'
-                    }}>Dashboard Viaggio</span>
+                    }}>{t('dashboard.title', 'Dashboard Viaggio')}</span>
                     <h1 style={{
                         color: 'white',
                         marginBottom: '0.5rem',
@@ -399,7 +400,7 @@ const Dashboard = () => {
                                 border: '1px solid rgba(255,255,255,0.3)',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                             }}>
-                                {user.is_subscribed ? 'PREMIUM ABBONATO' : 'UTENTE FREE'}
+                                {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM ABBONATO') : t('dashboard.freeUser', 'UTENTE FREE')}
                             </span>
                             {trip.status !== 'PLANNING' && (
                                 <span className="glass-panel" style={{
@@ -411,8 +412,8 @@ const Dashboard = () => {
                                     fontWeight: '800',
                                     border: '1px solid rgba(255,255,255,0.3)',
                                 }}>
-                                    {trip.transport_mode === 'TRAIN' ? 'TRENO' :
-                                        trip.transport_mode === 'CAR' ? 'AUTO' : 'AEREO'}
+                                    {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
+                                        trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
                                 </span>
                             )}
                         </div>
@@ -437,7 +438,7 @@ const Dashboard = () => {
                                     transition: 'all 0.3s ease',
                                 }}
                             >
-                                Condividi Viaggio (Sola Lettura)
+                                {t('dashboard.shareBtn', 'Condividi Viaggio (Sola Lettura)')}
                             </button>
 
                             {trip.trip_intent === 'BUSINESS' && (
@@ -463,9 +464,9 @@ const Dashboard = () => {
                                     }}
                                 >
                                     {isCalendarConnected ? (
-                                        <>✓ Calendar Connesso</>
+                                        <>✓ {t('dashboard.calendarConnected', 'Calendar Connesso')}</>
                                     ) : (
-                                        <>📅 Connetti Google Calendar</>
+                                        <>📅 {t('dashboard.connectCalendar', 'Connetti Google Calendar')}</>
                                     )}
                                 </button>
                             )}
@@ -480,11 +481,11 @@ const Dashboard = () => {
                         gap: '0.75rem'
                     }}>
                         {[
-                            { id: 'TRIP', label: 'Viaggio', condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
-                            { id: 'CHAT', label: 'Chat AI', condition: trip.status === 'BOOKED' },
-                            { id: 'BUDGET', label: 'Budget', condition: trip.status === 'BOOKED' },
-                            { id: 'FINANCE', label: 'CFO & Spese', condition: user && trip.trip_type !== 'SOLO' },
-                            { id: 'PHOTOS', label: 'Foto' }
+                            { id: 'TRIP', label: t('dashboard.tabs.trip', 'Viaggio'), condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
+                            { id: 'CHAT', label: t('dashboard.tabs.chat', 'Chat AI'), condition: trip.status === 'BOOKED' },
+                            { id: 'BUDGET', label: t('dashboard.tabs.budget', 'Budget'), condition: trip.status === 'BOOKED' },
+                            { id: 'FINANCE', label: t('dashboard.tabs.finance', 'CFO & Spese'), condition: user && trip.trip_type !== 'SOLO' },
+                            { id: 'PHOTOS', label: t('dashboard.tabs.photos', 'Foto') }
                         ].map(btn => (
                             (!btn.hasOwnProperty('condition') || btn.condition) && (
                                 <button
@@ -517,16 +518,16 @@ const Dashboard = () => {
                             <button
                                 onClick={async () => {
                                     const confirmed = await showConfirm(
-                                        "Concludi Viaggio",
-                                        "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia."
+                                        t('dashboard.confirmCompleteTitle', "Concludi Viaggio"),
+                                        t('dashboard.confirmCompleteDesc', "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia.")
                                     );
                                     if (confirmed) {
                                         try {
                                             await completeTrip(id);
-                                            showToast("Viaggio concluso! Lo trovi nel tuo archivio.", "success");
+                                            showToast(t('dashboard.tripCompleted', "Viaggio concluso! Lo trovi nel tuo archivio."), "success");
                                             fetchTrip();
                                         } catch (e) {
-                                            showToast("Errore: " + e.message, "error");
+                                            showToast(t('common.error', "Errore") + ": " + e.message, "error");
                                         }
                                     }
                                 }}
@@ -547,7 +548,7 @@ const Dashboard = () => {
                                 }}
                             >
                                 <CheckCircle2 className="w-4 h-4" />
-                                Concludi Viaggio
+                                {t('dashboard.completeTrip', 'Concludi Viaggio')}
                             </button>
                         )}
                     </div>
@@ -627,13 +628,13 @@ const Dashboard = () => {
                                             boxShadow: 'var(--shadow-md)'
                                         }}>
                                             <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
-                                            <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>Pianifica il tuo prossimo viaggio</h3>
+                                            <h3 style={{ color: 'var(--primary-blue)', marginBottom: '0.5rem' }}>{t('dashboard.guestCta.title', 'Pianifica il tuo prossimo viaggio')}</h3>
                                             <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-                                                Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.
+                                                {t('dashboard.guestCta.desc', 'Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.')}
                                             </p>
                                             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                                                <button onClick={() => navigate('/auth')} className="btn btn-primary">Registrati Gratis</button>
-                                                <button onClick={() => navigate('/auth')} className="btn btn-secondary">Accedi</button>
+                                                <button onClick={() => navigate('/auth')} className="btn btn-primary">{t('dashboard.guestCta.register', 'Registrati Gratis')}</button>
+                                                <button onClick={() => navigate('/auth')} className="btn btn-secondary">{t('dashboard.guestCta.login', 'Accedi')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -661,15 +662,16 @@ const Dashboard = () => {
                                             }} className="animate-fade-in">
                                                 <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}></div>
                                                 <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
-                                                    Consenso Raggiunto!
+                                                    {t('dashboard.consensusReached', 'Consenso Raggiunto!')}
                                                 </h2>
                                                 <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
-                                                    Ottime notizie! Il gruppo ha scelto <b>{trip.destination}</b> come meta ufficiale.
-                                                    <br /><br />
-                                                    L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.
+                                                    {t('dashboard.consensusDesc', {
+                                                        defaultValue: "Ottime notizie! Il gruppo ha scelto {{destination}} come meta ufficiale. L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.",
+                                                        destination: trip.destination
+                                                    })}
                                                 </p>
                                                 <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                                                    In attesa della conferma finale...
+                                                    {t('dashboard.waitingConfirmation', 'In attesa della conferma finale...')}
                                                 </div>
                                             </div>
                                         </div>
@@ -680,7 +682,7 @@ const Dashboard = () => {
                                 {trip.accommodation && itinerary && itinerary.length > 0 && (
                                     <div className="container" style={{ marginTop: '2rem' }}>
                                         <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h2 style={{ marginBottom: 0 }}>Il tuo Itinerario</h2>
+                                            <h2 style={{ marginBottom: 0 }}>{t('dashboard.itineraryTitle', 'Il tuo Itinerario')}</h2>
                                             <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                                                 <button
                                                     onClick={handleExportPDF}
@@ -699,7 +701,7 @@ const Dashboard = () => {
                                                     }}
                                                 >
                                                     <FileDown className="w-4 h-4" />
-                                                    PDF
+                                                    {t('dashboard.exportPdf', 'PDF')}
                                                 </button>
                                                 {isOrganizer && (
                                                     <button
@@ -715,7 +717,7 @@ const Dashboard = () => {
                                                             cursor: 'pointer'
                                                         }}
                                                     >
-                                                        Modifica Logistica
+                                                        {t('dashboard.editLogistics', 'Modifica Logistica')}
                                                     </button>
                                                 )}
                                             </div>

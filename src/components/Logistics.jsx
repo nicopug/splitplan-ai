@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Logistics = ({ trip }) => {
+    const { t } = useTranslation();
     // Defensive Format Dates
     const formatDate = (dateString) => {
         try {
@@ -22,7 +24,7 @@ const Logistics = ({ trip }) => {
 
     // Safety check for destination name
     // Usiamo real_destination (es. "Paris") per i link di ricerca, destination (titolo creativo) solo come fallback
-    const destName = trip.real_destination || trip.destination || "Destinazione";
+    const destName = trip.real_destination || trip.destination || t('logistics.destinationFallback', 'Destinazione');
 
     const start = formatDate(trip.start_date);
     const end = formatDate(trip.end_date);
@@ -43,8 +45,8 @@ const Logistics = ({ trip }) => {
     return (
         <div className="section container">
             <div className="text-center" style={{ marginBottom: '2rem' }}>
-                <h2>Logistica & Prenotazioni</h2>
-                <p>I link pronti per prenotare subito, senza impazzire.</p>
+                <h2>{t('logistics.title', 'Logistica & Prenotazioni')}</h2>
+                <p>{t('logistics.subtitle', 'I link pronti per prenotare subito, senza impazzire.')}</p>
             </div>
 
             <div className="grid-2" style={{ gap: '2rem' }}>
@@ -56,9 +58,9 @@ const Logistics = ({ trip }) => {
                 }}>
                     {trip.transport_mode === 'TRAIN' ? (
                         <>
-                            <h3 style={{ color: '#ff6400' }}>Treni (Trainline)</h3>
+                            <h3 style={{ color: '#ff6400' }}>{t('logistics.trainsTitle', 'Treni (Trainline)')}</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Prenota il tuo biglietto del treno da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong>.
+                                {t('logistics.trainsDesc', { origin: trip.departure_city || origin, destination: destName, defaultValue: 'Prenota il tuo biglietto del treno da {{origin}} a {{destination}}.' })}
                             </p>
                             <a
                                 href={`https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`}
@@ -67,24 +69,24 @@ const Logistics = ({ trip }) => {
                                 className="btn"
                                 style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                Cerca Treni
+                                {t('logistics.searchTrains', 'Cerca Treni')}
                             </a>
                         </>
                     ) : trip.transport_mode === 'CAR' ? (
                         <>
-                            <h3 style={{ color: '#003580' }}>Viaggio in Auto</h3>
+                            <h3 style={{ color: '#003580' }}>{t('logistics.carTitle', 'Viaggio in Auto')}</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Pensiamo che userai la tua auto per questo viaggio verso <strong>{destName}</strong>.
+                                {t('logistics.carDesc', { destination: destName, defaultValue: 'Pensiamo che userai la tua auto per questo viaggio verso {{destination}}.' })}
                             </p>
                             <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '12px', fontSize: '0.9rem', color: '#475569' }}>
-                                Abbiamo incluso una stima di carburante e pedaggi nel tuo <b>Budget</b>.
+                                {t('logistics.carBudget', 'Abbiamo incluso una stima di carburante e pedaggi nel tuo Budget.')}
                             </div>
                         </>
                     ) : (
                         <>
-                            <h3 style={{ color: '#00a698' }}>Voli (Skyscanner)</h3>
+                            <h3 style={{ color: '#00a698' }}>{t('logistics.flightsTitle', 'Voli (Skyscanner)')}</h3>
                             <p style={{ margin: '1rem 0', color: '#666' }}>
-                                Cerca voli diretti da <strong>{trip.departure_city || origin}</strong> a <strong>{destName}</strong> per {numPeople} persone.
+                                {t('logistics.flightsDesc', { origin: trip.departure_city || origin, destination: destName, count: numPeople, defaultValue: 'Cerca voli diretti da {{origin}} a {{destination}} per {{count}} persone.' })}
                             </p>
                             <a
                                 href={flightLink}
@@ -93,7 +95,7 @@ const Logistics = ({ trip }) => {
                                 className="btn"
                                 style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                Cerca Voli
+                                {t('logistics.searchFlights', 'Cerca Voli')}
                             </a>
                         </>
                     )}
@@ -101,9 +103,9 @@ const Logistics = ({ trip }) => {
 
                 {/* HOTELS */}
                 <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #003580' }}>
-                    <h3 style={{ color: '#003580' }}>Hotel (Booking.com)</h3>
+                    <h3 style={{ color: '#003580' }}>{t('logistics.hotelsTitle', 'Hotel (Booking.com)')}</h3>
                     <p style={{ margin: '1rem 0', color: '#666' }}>
-                        Le migliori offerte a <strong>{destName}</strong>.
+                        {t('logistics.hotelsDesc', { destination: destName, defaultValue: 'Le migliori offerte a {{destination}}.' })}
                     </p>
                     <a
                         href={hotelLink}
@@ -112,7 +114,7 @@ const Logistics = ({ trip }) => {
                         className="btn"
                         style={{ background: '#003580', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                     >
-                        Cerca Hotel
+                        {t('logistics.searchHotels', 'Cerca Hotel')}
                     </a>
                 </div>
             </div>

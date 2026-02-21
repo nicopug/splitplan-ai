@@ -1,5 +1,5 @@
-// Initial state restore - Force redeploy
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -39,6 +39,7 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [globalError, setGlobalError] = useState(null);
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -66,12 +67,12 @@ function App() {
   if (globalError) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', paddingTop: '10rem' }}>
-        <h2>Ops! Il sito ha riscontrato un problema critico</h2>
+        <h2>{t('app.errorTitle', 'Ops! Il sito ha riscontrato un problema critico')}</h2>
         <pre style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '8px', display: 'inline-block', color: 'red', marginTop: '1rem' }}>
           {globalError}
         </pre>
         <div style={{ marginTop: '2rem' }}>
-          <button onClick={() => window.location.href = '/'} className="btn btn-primary">Riavvia App</button>
+          <button onClick={() => window.location.href = '/'} className="btn btn-primary">{t('app.restartBtn', 'Riavvia App')}</button>
         </div>
       </div>
     );
@@ -94,7 +95,7 @@ function App() {
             right: 0,
             zIndex: 9999
           }}>
-            Modalità Offline - Stai visualizzando i dati salvati
+            {t('app.offlineBanner', 'Modalità Offline - Stai visualizzando i dati salvati')}
           </div>
         )}
         <Toast />

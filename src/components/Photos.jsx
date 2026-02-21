@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { uploadPhoto, getPhotos, deletePhoto } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 
 const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
     const [photos, setPhotos] = useState((readOnly && sharedPhotos) ? sharedPhotos : []);
@@ -32,8 +34,8 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
 
     const handleDelete = async (photoId) => {
         const confirmed = await showConfirm(
-            "Elimina Foto",
-            "Sei sicuro di voler eliminare questa foto? L'azione è irreversibile."
+            t('photos.deleteConfirmTitle', "Elimina Foto"),
+            t('photos.deleteConfirmDesc', "Sei sicuro di voler eliminare questa foto? L'azione è irreversibile.")
         );
         if (!confirmed) return;
 
@@ -43,9 +45,9 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
             if (selectedPhoto && selectedPhoto.id === photoId) {
                 setSelectedPhoto(null); // Chiudi se elimini la foto aperta
             }
-            showToast("Foto eliminata con successo.", "success");
+            showToast(t('photos.toast.photoDeleted', "Foto eliminata con successo."), "success");
         } catch (error) {
-            showToast("Errore nell'eliminazione della foto: " + error.message, "error");
+            showToast(t('photos.toast.deleteError', "Errore nell'eliminazione della foto: ") + error.message, "error");
         }
     };
 
@@ -58,9 +60,9 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
         try {
             await uploadPhoto(trip.id, file);
             await fetchPhotos(); // Refresh list
-            showToast("Foto caricata con successo!", "success");
+            showToast(t('photos.toast.photoUploaded', "Foto caricata con successo!"), "success");
         } catch (error) {
-            showToast("Errore nel caricamento della foto: " + error.message, "error");
+            showToast(t('photos.toast.uploadError', "Errore nel caricamento della foto: ") + error.message, "error");
         } finally {
             setLoading(false);
         }
@@ -70,8 +72,8 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
     return (
         <div className="container section">
             <div className="text-center" style={{ marginBottom: '3rem' }}>
-                <h2>Foto del viaggio</h2>
-                <p>Cattura e condividi i momenti migliori con il tuo gruppo.</p>
+                <h2>{t('photos.title', 'Foto del viaggio')}</h2>
+                <p>{t('photos.subtitle', 'Cattura e condividi i momenti migliori con il tuo gruppo.')}</p>
 
                 {!readOnly && (
                     <button
@@ -80,7 +82,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                         disabled={loading}
                         style={{ background: 'var(--accent-orange)', marginTop: '1rem' }}
                     >
-                        {loading ? 'Caricamento...' : '+ Aggiungi Foto'}
+                        {loading ? t('photos.loading', 'Caricamento...') : t('photos.addPhoto', '+ Aggiungi Foto')}
                     </button>
                 )}
                 <input
@@ -94,8 +96,8 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
 
             {photos.length === 0 ? (
                 <div className="text-center" style={{ padding: '4rem', background: 'white', borderRadius: '24px', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '1rem' }}>No Photos</div>
-                    <p className="text-muted">Non ci sono ancora foto. Sii il primo a caricarne una!</p>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '1rem' }}>{t('photos.emptyTitle', 'No Photos')}</div>
+                    <p className="text-muted">{t('photos.emptyDesc', 'Non ci sono ancora foto. Sii il primo a caricarne una!')}</p>
                 </div>
             ) : (
                 <div className="grid-3" style={{ gap: '1.5rem' }}>
@@ -118,7 +120,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                         >
                             <img
                                 src={photo.url}
-                                alt={photo.caption || "Trip photo"}
+                                alt={photo.caption || t('photos.alt.tripPhoto', "Foto del viaggio")}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -151,7 +153,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                                     }}
                                     onMouseOver={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)'}
                                     onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
-                                    title="Elimina foto"
+                                    title={t('photos.deletePhoto', "Elimina foto")}
                                 >
                                     ×
                                 </button>
@@ -182,7 +184,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                 >
                     <img
                         src={selectedPhoto.url}
-                        alt="Full size"
+                        alt={t('photos.alt.fullSize', "Foto intera")}
                         style={{
                             maxWidth: '100%',
                             maxHeight: '90vh',

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Timeline = ({ items }) => {
+    const { t, i18n } = useTranslation();
     // Safety Check for Null/Undefined items
     if (!items || !Array.isArray(items) || items.length === 0) {
         return null;
@@ -10,7 +12,7 @@ const Timeline = ({ items }) => {
     const grouped = (items || []).reduce((acc, item) => {
         if (!item) return acc;
         try {
-            let date = "Data Sconosciuta";
+            let date = t('timeline.unknownDate', "Data Sconosciuta");
             if (item.start_time) {
                 // Handle "YYYY-MM-DDTHH:mm:ss" vs just "YYYY-MM-DD"
                 if (typeof item.start_time === 'string' && item.start_time.includes('T')) {
@@ -82,7 +84,7 @@ const Timeline = ({ items }) => {
                                 fontFamily: "'Outfit', sans-serif",
                                 fontWeight: '700'
                             }}>
-                                Giorno {idx + 1} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', marginLeft: '8px' }}>• {new Date(date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                {t('timeline.day', { index: idx + 1 })} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', marginLeft: '8px' }}>• {new Date(date).toLocaleDateString(i18n.language === 'it' ? 'it-IT' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                             </h3>
                         </div>
 
@@ -121,7 +123,7 @@ const Timeline = ({ items }) => {
                                                 try {
                                                     if (!item.start_time) return "N/A";
                                                     const d = new Date(item.start_time);
-                                                    return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                                    return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString(i18n.language === 'it' ? 'it-IT' : 'en-US', { hour: '2-digit', minute: '2-digit' });
                                                 } catch { return "N/A"; }
                                             })()}
                                         </div>

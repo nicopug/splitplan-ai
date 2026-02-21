@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -22,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
+    const { t, i18n } = useTranslation();
     const isGroup = trip.trip_type === 'GROUP';
 
     const [step, setStep] = useState(0);
@@ -112,10 +114,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                            Qual è lo scopo del viaggio?
+                            {t('survey.step0Title', 'Qual è lo scopo del viaggio?')}
                         </h2>
                         <p className="text-lg text-text-muted">
-                            Questo ci aiuterà a personalizzare l'itinerario perfetto per te.
+                            {t('survey.step0Desc', "Questo ci aiuterà a personalizzare l'itinerario perfetto per te.")}
                         </p>
                     </div>
 
@@ -131,8 +133,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         >
                             <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-xl font-bold">Vacanza</p>
-                                <p className="text-xs font-normal opacity-70">Relax, divertimento e scoperta.</p>
+                                <p className="text-xl font-bold">{t('survey.leisureTitle', 'Vacanza')}</p>
+                                <p className="text-xs font-normal opacity-70">{t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}</p>
                             </div>
                         </Button>
 
@@ -147,8 +149,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         >
                             <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-xl font-bold">Lavoro</p>
-                                <p className="text-xs font-normal opacity-70">Efficienza e produttività.</p>
+                                <p className="text-xl font-bold">{t('survey.businessTitle', 'Lavoro')}</p>
+                                <p className="text-xs font-normal opacity-70">{t('survey.businessDesc', 'Efficienza e produttività.')}</p>
                             </div>
                         </Button>
                     </div>
@@ -163,10 +165,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                            Qual è il tuo mezzo di trasporto?
+                            {t('survey.step1Title', 'Qual è il tuo mezzo di trasporto?')}
                         </h2>
                         <p className="text-lg text-text-muted">
-                            Scegli come vuoi raggiungere la tua destinazione.
+                            {t('survey.step1Desc', 'Scegli come vuoi raggiungere la tua destinazione.')}
                         </p>
                     </div>
 
@@ -182,8 +184,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         >
                             <Car className={cn("w-10 h-10", formData.transport_mode === 'CAR' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-lg font-bold">Macchina</p>
-                                <p className="text-[10px] font-normal opacity-70">Pedaggi e carburante inclusi.</p>
+                                <p className="text-lg font-bold">{t('survey.carTitle', 'Macchina')}</p>
+                                <p className="text-[10px] font-normal opacity-70">{t('survey.carDesc', 'Pedaggi e carburante inclusi.')}</p>
                             </div>
                         </Button>
 
@@ -198,8 +200,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         >
                             <Train className={cn("w-10 h-10", formData.transport_mode === 'TRAIN' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-lg font-bold">Treno</p>
-                                <p className="text-[10px] font-normal opacity-70">Link diretti Trainline.</p>
+                                <p className="text-lg font-bold">{t('survey.trainTitle', 'Treno')}</p>
+                                <p className="text-[10px] font-normal opacity-70">{t('survey.trainDesc', 'Link diretti Trainline.')}</p>
                             </div>
                         </Button>
 
@@ -214,8 +216,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         >
                             <Plane className={cn("w-10 h-10", formData.transport_mode === 'FLIGHT' ? "text-primary-blue" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-lg font-bold">Volo</p>
-                                <p className="text-[10px] font-normal opacity-70">Migliori offerte Skyscanner.</p>
+                                <p className="text-lg font-bold">{t('survey.flightTitle', 'Volo')}</p>
+                                <p className="text-[10px] font-normal opacity-70">{t('survey.flightDesc', 'Migliori offerte Skyscanner.')}</p>
                             </div>
                         </Button>
                     </div>
@@ -238,7 +240,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
                         >
                             <ArrowLeft className="w-3 h-3 mr-1" />
-                            {formData.trip_intent === 'BUSINESS' ? 'Lavoro' : 'Vacanza'}
+                            {formData.trip_intent === 'BUSINESS' ? t('survey.businessTitle', 'Lavoro') : t('survey.leisureTitle', 'Vacanza')}
                         </Button>
                         <Button
                             variant="secondary"
@@ -247,14 +249,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
                         >
                             <ArrowLeft className="w-3 h-3 mr-1" />
-                            {formData.transport_mode === 'CAR' ? 'Auto' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Volo'}
+                            {formData.transport_mode === 'CAR' ? t('survey.carTitle', 'Auto') : formData.transport_mode === 'TRAIN' ? t('survey.trainTitle', 'Treno') : t('survey.flightTitle', 'Volo')}
                         </Button>
                     </div>
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                        Definiamo i dettagli
+                        {t('survey.step2Title', 'Definiamo i dettagli')}
                     </h2>
                     <p className="text-base md:text-lg text-text-muted">
-                        Aiutaci a costruire il viaggio perfetto per {isGroup ? 'il gruppo' : 'te'}.
+                        {t('survey.subtitle', {
+                            target: isGroup ? t('survey.targetGroup', 'il gruppo') : t('survey.targetSolo', 'te'),
+                            defaultValue: 'Aiutaci a costruire il viaggio perfetto per {{target}}.'
+                        })}
                     </p>
                 </div>
 
@@ -265,27 +270,27 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Destination & Airport */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="destination">Destinazione</Label>
+                                <Label htmlFor="destination">{t('survey.destinationLabel', 'Destinazione')}</Label>
                                 <Input
                                     id="destination"
                                     name="destination"
                                     value={formData.destination}
                                     onChange={handleChange}
-                                    placeholder="es. Europa, Giappone..."
+                                    placeholder={t('survey.destinationPlaceholder', 'es. Europa, Giappone...')}
                                     required
                                     className="h-12"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="departure_airport">
-                                    {formData.transport_mode === 'FLIGHT' ? 'Aeroporto Partenza' : 'Città di Partenza'}
+                                    {formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportLabel', 'Aeroporto Partenza') : t('survey.departureCityLabel', 'Città di Partenza')}
                                 </Label>
                                 <Input
                                     id="departure_airport"
                                     name="departure_airport"
                                     value={formData.departure_airport}
                                     onChange={handleChange}
-                                    placeholder={formData.transport_mode === 'FLIGHT' ? "es. MXP, FCO" : "es. Milano, Roma"}
+                                    placeholder={formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportPlaceholder', "es. MXP, FCO") : t('survey.departureCityPlaceholder', "es. Milano, Roma")}
                                     required
                                     className="h-12"
                                 />
@@ -297,20 +302,20 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="group-budget">Budget Totale (€)</Label>
+                                        <Label htmlFor="group-budget">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
                                         <Input
                                             id="group-budget"
                                             name="budget"
                                             value={formData.budget}
                                             onChange={handleChange}
                                             type="number"
-                                            placeholder="es. 3000"
+                                            placeholder={t('survey.budgetPlaceholder', 'es. 3000')}
                                             required
                                             className="h-12 bg-white"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="num_people">Numero Persone</Label>
+                                        <Label htmlFor="num_people">{t('survey.numPeopleLabel', 'Numero Persone')}</Label>
                                         <Input
                                             id="num_people"
                                             name="num_people"
@@ -329,7 +334,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                 {formData.participant_names.length > 0 && (
                                     <div className="animate-fade-in">
                                         <label className="block text-sm font-bold mb-3 text-primary-blue flex items-center gap-2">
-                                            Chi viene con te?
+                                            {t('survey.participantNamesLabel', 'Chi viene con te?')}
                                             <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                         </label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -338,7 +343,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     key={idx}
                                                     value={name}
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
-                                                    placeholder={`Nome Amico ${idx + 2}`}
+                                                    placeholder={t('survey.participantNamePlaceholder', { index: idx + 2, defaultValue: `Nome Amico ${idx + 2}` })}
                                                     required
                                                     className="h-10 bg-white"
                                                 />
@@ -357,10 +362,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         }}>
                                             <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#9a3412' }}>!</span>
                                             <div>
-                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>ATTENZIONE AI NOMI</strong>
+                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>{t('survey.namesWarningTitle', 'ATTENZIONE AI NOMI')}</strong>
                                                 <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>
-                                                    Inserisci i <b>NOMI</b> con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan.
-                                                    Questo permetterà loro di votare la destinazione dal loro account!
+                                                    {t('survey.namesWarningDesc', 'Inserisci i NOMI con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan. Questo permetterà loro di votare la destinazione dal loro account!')}
                                                 </p>
                                             </div>
                                         </div>
@@ -372,14 +376,14 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Solo Details */}
                         {!isGroup && (
                             <div className="space-y-2">
-                                <Label htmlFor="solo-budget">Budget Totale (€)</Label>
+                                <Label htmlFor="solo-budget">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
                                 <Input
                                     id="solo-budget"
                                     name="budget"
                                     value={formData.budget}
                                     onChange={handleChange}
                                     type="number"
-                                    placeholder="es. 1500"
+                                    placeholder={t('survey.budgetPlaceholder', 'es. 1500')}
                                     required
                                     className="h-12"
                                 />
@@ -389,7 +393,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {/* Dates */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                             <div className="space-y-2">
-                                <Label>Data Partenza</Label>
+                                <Label>{t('survey.startDateLabel', 'Data Partenza')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
@@ -401,9 +405,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {formData.start_date ? (
-                                                format(new Date(formData.start_date), "PPP", { locale: it })
+                                                format(new Date(formData.start_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })
                                             ) : (
-                                                <span>Seleziona data</span>
+                                                <span>{t('survey.selectDate', 'Seleziona data')}</span>
                                             )}
                                         </Button>
                                     </PopoverTrigger>
@@ -418,13 +422,13 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                 }
                                             }}
                                             initialFocus
-                                            locale={it}
+                                            locale={i18n.language === 'en' ? undefined : it}
                                         />
                                     </PopoverContent>
                                 </Popover>
                             </div>
                             <div className="space-y-2">
-                                <Label>Data Ritorno</Label>
+                                <Label>{t('survey.endDateLabel', 'Data Ritorno')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
@@ -436,9 +440,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {formData.end_date ? (
-                                                format(new Date(formData.end_date), "PPP", { locale: it })
+                                                format(new Date(formData.end_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })
                                             ) : (
-                                                <span>Seleziona data</span>
+                                                <span>{t('survey.selectDate', 'Seleziona data')}</span>
                                             )}
                                         </Button>
                                     </PopoverTrigger>
@@ -453,7 +457,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                 }
                                             }}
                                             initialFocus
-                                            locale={it}
+                                            locale={i18n.language === 'en' ? undefined : it}
                                         />
                                     </PopoverContent>
                                 </Popover>
@@ -464,21 +468,21 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         {formData.trip_intent === 'BUSINESS' && (
                             <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
                                 <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
-                                    Orario e Giorni di Lavoro
+                                    {t('survey.workHoursLabel', 'Orario e Giorni di Lavoro')}
                                     <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                 </label>
 
                                 <div className="space-y-3">
-                                    <p className="text-xs text-blue-600 font-medium">In quali giorni lavorerai?</p>
+                                    <p className="text-xs text-blue-600 font-medium">{t('survey.workDaysQuestion', 'In quali giorni lavorerai?')}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {[
-                                            { id: 'Monday', label: 'Lun' },
-                                            { id: 'Tuesday', label: 'Mar' },
-                                            { id: 'Wednesday', label: 'Mer' },
-                                            { id: 'Thursday', label: 'Gio' },
-                                            { id: 'Friday', label: 'Ven' },
-                                            { id: 'Saturday', label: 'Sab' },
-                                            { id: 'Sunday', label: 'Dom' }
+                                            { id: 'Monday', label: t('survey.days.Monday', 'Lun') },
+                                            { id: 'Tuesday', label: t('survey.days.Tuesday', 'Mar') },
+                                            { id: 'Wednesday', label: t('survey.days.Wednesday', 'Mer') },
+                                            { id: 'Thursday', label: t('survey.days.Thursday', 'Gio') },
+                                            { id: 'Friday', label: t('survey.days.Friday', 'Ven') },
+                                            { id: 'Saturday', label: t('survey.days.Saturday', 'Sab') },
+                                            { id: 'Sunday', label: t('survey.days.Sunday', 'Dom') }
                                         ].map(day => (
                                             <Button
                                                 key={day.id}
@@ -508,7 +512,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <Label className="text-xs uppercase text-gray-500">Inizio Lavoro</Label>
+                                        <Label className="text-xs uppercase text-gray-500">{t('survey.workStartLabel', 'Inizio Lavoro')}</Label>
                                         <Input
                                             name="work_start_time"
                                             value={formData.work_start_time}
@@ -518,7 +522,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs uppercase text-gray-500">Fine Lavoro</Label>
+                                        <Label className="text-xs uppercase text-gray-500">{t('survey.workEndLabel', 'Fine Lavoro')}</Label>
                                         <Input
                                             name="work_end_time"
                                             value={formData.work_end_time}
@@ -528,19 +532,19 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         />
                                     </div>
                                 </div>
-                                <p className="text-xs text-blue-500 italic">L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.</p>
+                                <p className="text-xs text-blue-500 italic">{t('survey.workAiNote', "L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.")}</p>
                             </div>
                         )}
 
                         {/* Preferences */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div className="space-y-2">
-                                <Label>Cosa non può mancare?</Label>
+                                <Label>{t('survey.mustHaveLabel', 'Cosa non può mancare?')}</Label>
                                 <textarea
                                     name="must_have"
                                     value={formData.must_have}
                                     onChange={handleChange}
-                                    placeholder="es. Musei, Spiagge, Shopping..."
+                                    placeholder={t('survey.mustHavePlaceholder', 'es. Musei, Spiagge, Shopping...')}
                                     rows="4"
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 
                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
@@ -548,12 +552,12 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Cosa vorresti evitare?</Label>
+                                <Label>{t('survey.mustAvoidLabel', 'Cosa vorresti evitare?')}</Label>
                                 <textarea
                                     name="must_avoid"
                                     value={formData.must_avoid}
                                     onChange={handleChange}
-                                    placeholder="es. Club, Trekking faticosi..."
+                                    placeholder={t('survey.mustAvoidPlaceholder', 'es. Club, Trekking faticosi...')}
                                     rows="4"
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 
                                              focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
@@ -572,12 +576,12 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             {isGenerating ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <span className="spinner w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                    Generazione in corso...
+                                    {t('survey.submitGenerating', 'Generazione in corso...')}
                                 </span>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <Sparkles className="w-5 h-5" />
-                                    {isGroup ? 'Crea il Piano e Invita' : 'Genera Opzioni'}
+                                    {isGroup ? t('survey.submitCreateGroup', 'Crea il Piano e Invita') : t('survey.submitGenerateSolo', 'Genera Opzioni')}
                                 </span>
                             )}
                         </Button>

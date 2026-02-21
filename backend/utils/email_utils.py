@@ -12,7 +12,7 @@ def get_smtp_config():
         MAIL_PASSWORD=smtp_password,
         MAIL_FROM=os.getenv("SMTP_FROM", smtp_user),
         MAIL_PORT=int(os.getenv("SMTP_PORT", 587)),
-        MAIL_SERVER=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+        MAIL_SERVER=os.getenv("SMTP_HOST", "smtp-relay.brevo.com"),
         MAIL_STARTTLS=True,
         MAIL_SSL_TLS=False,
         USE_CREDENTIALS=True,

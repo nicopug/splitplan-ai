@@ -3,8 +3,8 @@ from fastapi_mail import ConnectionConfig
 
 def get_smtp_config():
     """Configurazione SMTP centralizzata."""
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
     if not smtp_user or not smtp_password:
         return None, None, None
     smtp_port = int(os.getenv("SMTP_PORT", 587))

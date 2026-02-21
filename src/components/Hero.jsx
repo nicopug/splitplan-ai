@@ -3,11 +3,13 @@ import { createTrip } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { useTranslation } from 'react-i18next';
 
 const Hero = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const { showPrompt } = useModal();
+    const { t } = useTranslation();
     const [user, setUser] = useState(null);
     const [showTypeSelection, setShowTypeSelection] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -30,9 +32,9 @@ const Hero = () => {
     const handleCreateTrip = async (type) => {
         setShowTypeSelection(false);
 
-        const title = type === 'SOLO' ? "Nuova Avventura Solitaria" : "Nuovo Viaggio di Gruppo";
-        const message = type === 'SOLO' ? "Come vuoi chiamare la tua avventura?" : "Che nome diamo a questo viaggio?";
-        const placeholder = type === 'SOLO' ? "Es: Il mio viaggio" : "Es: Weekend a Parigi";
+        const title = type === 'SOLO' ? t('hero.createSoloTitle') : t('hero.createGroupTitle');
+        const message = type === 'SOLO' ? t('hero.createSoloMessage') : t('hero.createGroupMessage');
+        const placeholder = type === 'SOLO' ? t('hero.createSoloPlaceholder') : t('hero.createGroupPlaceholder');
 
         const tripName = await showPrompt(title, message, placeholder);
         if (!tripName) return;
@@ -43,7 +45,7 @@ const Hero = () => {
                 name: tripName,
                 trip_type: type
             });
-            showToast("Viaggio creato con successo!", "success");
+            showToast(t('hero.successMessage'), "success");
             navigate(`/trip/${data.trip_id}`);
         } catch (error) {
             showToast("Errore: " + error.message, "error");
@@ -62,17 +64,16 @@ const Hero = () => {
                     {/* Content - Ordine mobile: 2, Desktop: 1 */}
                     <div className="space-y-4 md:space-y-6 text-center lg:text-left order-2 lg:order-1">
                         <span className="inline-block text-xs sm:text-sm uppercase tracking-widest text-accent-orange font-bold">
-                            Il Futuro dei Viaggi è Qui
+                            {t('hero.badge')}
                         </span>
 
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                            L'Agente di Viaggio AI <br className="hidden sm:block" />
-                            <span className="text-accent-green">All-in-One</span>
+                            {t('hero.titlePrefix')} <br className="hidden sm:block" />
+                            <span className="text-accent-green">{t('hero.titleHighlight')}</span>
                         </h1>
 
                         <p className="text-base sm:text-lg lg:text-xl text-text-muted max-w-xl mx-auto lg:mx-0">
-                            Dimentica le chat infinite e i file Excel. SplitPlan è il tuo Agente, Mediatore e CFO personale.
-                            Organizza viaggi perfetti senza stress.
+                            {t('hero.description')}
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
@@ -84,10 +85,10 @@ const Hero = () => {
                                 {loading ? (
                                     <>
                                         <span className="spinner"></span>
-                                        Caricamento...
+                                        {t('common.loading')}
                                     </>
                                 ) : (
-                                    'Inizia Ora'
+                                    t('hero.cta')
                                 )}
                             </button>
                         </div>
@@ -116,7 +117,7 @@ const Hero = () => {
                     <div className="bg-bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl animate-slideUp border border-gray-100 dark:border-white/10">
 
                         <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-primary-blue">
-                            Come viaggi oggi?
+                            {t('hero.selectionTitle')}
                         </h2>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,10 +133,10 @@ const Hero = () => {
 
                                 </div>
                                 <h3 className="text-lg md:text-xl font-bold mb-2 text-primary-blue group-hover:text-white transition-colors">
-                                    In Gruppo
+                                    {t('hero.groupTitle')}
                                 </h3>
                                 <p className="text-sm text-gray-600 group-hover:text-white group-hover:text-opacity-90 transition-colors">
-                                    Risolvi i conflitti e dividi le spese.
+                                    {t('hero.groupDesc')}
                                 </p>
                             </button>
 
@@ -150,10 +151,10 @@ const Hero = () => {
 
                                 </div>
                                 <h3 className="text-lg md:text-xl font-bold mb-2 text-accent-orange group-hover:text-white transition-colors">
-                                    Da Solo
+                                    {t('hero.soloTitle')}
                                 </h3>
                                 <p className="text-sm text-gray-600 group-hover:text-white group-hover:text-opacity-90 transition-colors">
-                                    Ritmo tuo, zero compromessi.
+                                    {t('hero.soloDesc')}
                                 </p>
                             </button>
                         </div>
@@ -163,7 +164,7 @@ const Hero = () => {
                             className="w-full mt-6 py-3 text-gray-600 hover:text-gray-900 
                                      transition-colors rounded-lg hover:bg-gray-50"
                         >
-                            Annulla
+                            {t('common.cancel')}
                         </button>
                     </div>
                 </div>

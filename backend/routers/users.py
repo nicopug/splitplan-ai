@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List, Optional
 from database import get_session
 from models import Account, Participant
-from auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token
+from auth import get_password_hash, verify_password, create_access_token, decode_token, create_verification_token, create_reset_token, get_current_user
 from datetime import datetime, timedelta
 from pydantic import EmailStr, BaseModel
 import os
@@ -82,6 +82,15 @@ async def migrate_subscription_management(session: Session = Depends(get_session
         return {"message": "Migrazione completata con successo! Campi gestione abbonamento aggiunti."}
     except Exception as e:
         return {"error": str(e), "message": "Errore durante la migrazione dei campi gestione abbonamento."}
+
+@router.get("/migrate-language-field")
+async def migrate_language_field(session: Session = Depends(get_session)):
+    try:
+        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS language VARCHAR DEFAULT 'it';"))
+        session.commit()
+        return {"message": "Migrazione completata con successo! Campo language aggiunto."}
+    except Exception as e:
+        return {"error": str(e), "message": "Errore durante la migrazione del campo language."}
 
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):
@@ -206,7 +215,8 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "credits": account.credits,
             "subscription_plan": account.subscription_plan,
             "subscription_expiry": account.subscription_expiry,
-            "auto_renew": account.auto_renew
+            "auto_renew": account.auto_renew,
+            "language": account.language
         }
     }
 
@@ -340,3 +350,15 @@ async def reset_password(req: ResetPasswordRequest, session: Session = Depends(g
     session.commit()
     
     return {"message": "Password aggiornata con successo! Ora puoi accedere."}
+
+@router.post("/update-language")
+async def update_language(
+    language: str = Body(..., embed=True), 
+    current_account: Account = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    current_account.language = language
+    session.add(current_account)
+    session.commit()
+    session.refresh(current_account)
+    return {"status": "success", "language": current_account.language}

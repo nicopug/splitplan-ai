@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Pricing = ({ user }) => {
+    const { t } = useTranslation();
     const isPremium = user?.is_subscribed;
     const isLoggedIn = !!user;
 
@@ -14,14 +16,14 @@ const Pricing = ({ user }) => {
             fontWeight: 'bold',
             display: 'inline-block'
         }}>
-            Il tuo Piano
+            {t('pricing.badge')}
         </div>
     );
     return (
         <section id="pricing" className="section">
             <div className="container">
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
-                    <h2>Scegli il tuo piano</h2>
+                    <h2>{t('pricing.title')}</h2>
                 </div>
                 <div style={{
                     display: 'grid',
@@ -39,13 +41,13 @@ const Pricing = ({ user }) => {
                         display: 'flex',
                         flexDirection: 'column'
                     }}>
-                        <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Viaggiatore</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Tutto l'essenziale per organizzare.</p>
+                        <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>{t('pricing.free_name')}</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>{t('pricing.free_price')}</div>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('pricing.free_desc')}</p>
                         <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)', padding: 0 }}>
-                            <li style={{ marginBottom: '1rem' }}>✓ 20 Chiamate AI / giorno</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ Itinerari Smart</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ Chat di Gruppo</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.free_feat1')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.free_feat2')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.free_feat3')}</li>
                         </ul>
                         <div style={{ textAlign: 'center', marginTop: 'auto' }}>
                             {isLoggedIn && !isPremium && <PlanBadge />}
@@ -61,18 +63,18 @@ const Pricing = ({ user }) => {
                         display: 'flex',
                         flexDirection: 'column'
                     }}>
-                        <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>Pro Mensile</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/mese</span></div>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Per chi vuole il controllo totale.</p>
+                        <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem' }}>{t('pricing.pro_monthly_name')}</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>{t('pricing.pro_monthly_price')}<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t('pricing.per_month')}</span></div>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('pricing.pro_monthly_desc')}</p>
                         <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', color: 'var(--text-main)', padding: 0 }}>
-                            <li style={{ marginBottom: '1rem' }}>✓ AI Illimitata</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ PDF Automation</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ Assistenza Prioritaria</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_monthly_feat1')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_monthly_feat2')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_monthly_feat3')}</li>
                         </ul>
                         <div style={{ textAlign: 'center', marginTop: 'auto' }}>
                             {isLoggedIn && isPremium && user.subscription_plan === 'MONTHLY' && <PlanBadge />}
                             {isLoggedIn && user.subscription_plan !== 'MONTHLY' && (
-                                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>Abbonati</button>
+                                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>{t('pricing.subscribe')}</button>
                             )}
                         </div>
                     </div>
@@ -101,20 +103,20 @@ const Pricing = ({ user }) => {
                             fontWeight: 'bold',
                             whiteSpace: 'nowrap'
                         }}>
-                            SALVA 50%
+                            {t('pricing.save_50')}
                         </div>
-                        <h3 style={{ color: 'white', fontSize: '1.5rem' }}>Pro Annuale</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€29.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/anno</span></div>
-                        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>Il miglior valore per veri esploratori.</p>
+                        <h3 style={{ color: 'white', fontSize: '1.5rem' }}>{t('pricing.pro_annual_name')}</h3>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>{t('pricing.pro_annual_price')}<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>{t('pricing.per_year')}</span></div>
+                        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('pricing.pro_annual_desc')}</p>
                         <ul style={{ listStyle: 'none', margin: '2rem 0', textAlign: 'left', padding: 0 }}>
-                            <li style={{ marginBottom: '1rem' }}>✓ Tutto di Pro Mensile</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ Badge Esclusivo</li>
-                            <li style={{ marginBottom: '1rem' }}>✓ Blocco Prezzo</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_annual_feat1')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_annual_feat2')}</li>
+                            <li style={{ marginBottom: '1rem' }}>✓ {t('pricing.pro_annual_feat3')}</li>
                         </ul>
                         <div style={{ textAlign: 'center', marginTop: 'auto' }}>
                             {isLoggedIn && isPremium && user.subscription_plan === 'ANNUAL' && <PlanBadge />}
                             {isLoggedIn && user.subscription_plan !== 'ANNUAL' && (
-                                <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>Abbonati</button>
+                                <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => window.location.href = '/market'}>{t('pricing.subscribe')}</button>
                             )}
                         </div>
                     </div>

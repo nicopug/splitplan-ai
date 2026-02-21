@@ -135,6 +135,7 @@ async def extract_receipt(
                 "return_time": "HH:MM" (orario di check-out o partenza prevista)
             }
             Se un dato non è presente, usa null o 0.0.
+            LINGUA: {current_user.language.upper()}.
             """
         else:
             prompt = """
@@ -146,6 +147,7 @@ async def extract_receipt(
                 "return_time": "HH:MM" (orario di partenza per il ritorno)
             }
             Se un dato non è presente, usa null o 0.0.
+            LINGUA: {current_user.language.upper()}.
             """
 
         # Invio a Gemini con l'immagine/file
@@ -448,7 +450,7 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
             "total_estimated_per_person": 0.0, 
             "advice": "Un consiglio utile..."
         }}
-        LINGUA: ITALIANO.
+        LINGUA: {current_account.language.upper()}.
         """
         
         response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -894,7 +896,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 - 'destination_english' deve essere il nome della città principale in INGLESE.
                 - 'destination_italian' deve essere il nome della città principale in ITALIANO.
                 - 'image_search_term' deve contenere 1 o 2 parole chiave in INGLESE specifiche per quel tema.
-                LINGUA: ITALIANO.
+                LINGUA: {current_account.language.upper()}.
                 """
                 
                 response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -1032,11 +1034,16 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         # 2.5 BUSINES CALENDAR INTEGRATION
         calendar_prompt = ""
         organization_name = ""
-        # Cerchiamo l'organizzatore per accedere al suo calendario
+        # Cerchiamo l'organizzatore per accedere al suo calendario e preferenze lingua
         organizer_part = next((p for p in trip.participants if p.is_organizer), None)
+        organizer_account = None
+        if organizer_part and organizer_part.account_id:
+            organizer_account = session.get(Account, organizer_part.account_id)
         
-        if trip.trip_intent == "BUSINESS" and organizer_part and organizer_part.account_id:
-             organizer_account = session.get(Account, organizer_part.account_id)
+        # Preferenza lingua
+        lang = organizer_account.language.upper() if organizer_account else "ITALIANO"
+
+        if trip.trip_intent == "BUSINESS" and organizer_account:
              if organizer_account and organizer_account.is_calendar_connected and organizer_account.google_calendar_token:
                  try:
                      print(f"[System] Fetching calendar events for Organizer {organizer_account.email}...")
@@ -1122,7 +1129,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                 }}
             ]
         }}
-        LINGUA: ITALIANO.
+        LINGUA: {lang}.
         """
         
         response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
@@ -1517,6 +1524,7 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
             "reply": "Messaggio di conferma",
             "commands": []
         }}
+        LINGUA: {current_account.language.upper()}.
         """
         
         if not ai_client: 

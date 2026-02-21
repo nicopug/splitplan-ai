@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = ({ user: propUser }) => {
     const [user, setUser] = useState(propUser);
@@ -8,8 +9,29 @@ const Navbar = ({ user: propUser }) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showCreditsShop, setShowCreditsShop] = useState(false);
     const { theme, toggleTheme } = useTheme();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const currentLanguage = i18n.language || 'it';
+
+    const changeLanguage = async (lng) => {
+        i18n.changeLanguage(lng);
+        if (user) {
+            try {
+                const api = await import('../api');
+                await api.updateLanguage(lng);
+                console.log("Language updated in DB:", lng);
+
+                // Aggiorna lo stato utente locale per riflettere il cambiamento se necessario
+                const updatedUser = { ...user, language: lng };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+            } catch (err) {
+                console.error("Failed to update language in DB:", err);
+            }
+        }
+    };
 
     useEffect(() => {
         if (propUser) {
@@ -80,19 +102,19 @@ const Navbar = ({ user: propUser }) => {
                                         href="#how-it-works"
                                         className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
                                     >
-                                        Come Funziona
+                                        {t('nav.howItWorks')}
                                     </a>
                                     <a
                                         href="#features"
                                         className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
                                     >
-                                        Funzionalità
+                                        {t('nav.features')}
                                     </a>
                                     <a
                                         href="#pricing"
                                         className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
                                     >
-                                        Prezzi
+                                        {t('nav.pricing')}
                                     </a>
                                 </>
                             )}
@@ -112,10 +134,26 @@ const Navbar = ({ user: propUser }) => {
                                         >
                                             <span className="text-base group-hover:scale-125 transition-transform duration-300">🪙</span>
                                             <span className="text-xs font-bold text-yellow-700">
-                                                {user.credits || 0} <span className="hidden sm:inline">Crediti</span>
+                                                {user.credits || 0} <span className="hidden sm:inline">{t('nav.credits')}</span>
                                             </span>
                                         </button>
                                     )}
+
+                                    {/* Language Switcher */}
+                                    <div className="flex bg-gray-100/50 dark:bg-white/5 rounded-xl p-1 gap-1">
+                                        <button
+                                            onClick={() => changeLanguage('it')}
+                                            className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('it') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                                        >
+                                            IT
+                                        </button>
+                                        <button
+                                            onClick={() => changeLanguage('en')}
+                                            className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('en') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                                        >
+                                            EN
+                                        </button>
+                                    </div>
 
                                     <button
                                         onClick={toggleTheme}
@@ -153,7 +191,7 @@ const Navbar = ({ user: propUser }) => {
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                                 </svg>
-                                                I miei Viaggi
+                                                {t('nav.myTrips')}
                                             </Link>
                                             <Link
                                                 to="/market"
@@ -162,7 +200,7 @@ const Navbar = ({ user: propUser }) => {
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                                 </svg>
-                                                Negozio
+                                                {t('nav.market')}
                                             </Link>
                                         </div>
                                         <div className="p-2">
@@ -173,7 +211,7 @@ const Navbar = ({ user: propUser }) => {
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                                 </svg>
-                                                Esci
+                                                {t('nav.logout')}
                                             </button>
                                         </div>
                                     </div>
@@ -188,8 +226,23 @@ const Navbar = ({ user: propUser }) => {
                                 >
                                     {theme === 'dark' ? '☀️' : '🌙'}
                                 </button>
+                                {/* Language Switcher for non-logged users */}
+                                <div className="flex bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1">
+                                    <button
+                                        onClick={() => changeLanguage('it')}
+                                        className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('it') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                                    >
+                                        IT
+                                    </button>
+                                    <button
+                                        onClick={() => changeLanguage('en')}
+                                        className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('en') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                                    >
+                                        EN
+                                    </button>
+                                </div>
                                 <Link to="/auth" className="btn btn-primary px-6 py-2.5 text-sm font-bold">
-                                    Accedi
+                                    {t('nav.login')}
                                 </Link>
                             </div>
                         )}

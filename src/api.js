@@ -504,3 +504,18 @@ export const exchangeCalendarToken = async (code, state) => {
     });
     return handleResponse(response);
 };
+export const updateLanguage = async (language) => {
+    const response = await fetch(`${API_URL}/users/update-language`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ language })
+    });
+    const data = await handleResponse(response);
+    // Aggiorna lingua nell'utente locale
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+        user.language = data.language;
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+    return data;
+};

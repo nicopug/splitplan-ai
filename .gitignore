@@ -11,3 +11,7 @@ build/
 backend/client_secret.json
 APPUNTI.MD
 hotel.txt
+.agent/
+.claude/
+.vscode/
+.brain/

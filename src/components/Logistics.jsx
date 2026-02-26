@@ -33,11 +33,18 @@ const Logistics = ({ trip }) => {
     // Deep Links
     let flightLink = "#";
     let hotelLink = "#";
+    let trainLink = "#";
 
     try {
         flightLink = `https://www.skyscanner.it/trasporti/voli/${origin}/${dest}/${start}/${end}/?adultsv2=${numPeople}&cabinclass=economy&ref=home&rtn=1`;
         const safeDestName = encodeURIComponent(destName);
         hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
+
+        const parseTrainTime = (d, time) => d ? `${d.split('T')[0]}T${time}` : "";
+        const trainOrigin = encodeURIComponent(trip.departure_city || origin);
+        const trainOutward = parseTrainTime(trip.start_date, "08:00:00");
+        const trainInward = parseTrainTime(trip.end_date, "10:00:00");
+        trainLink = `https://www.thetrainline.com/book/results?journeySearchType=return&origin=${trainOrigin}&destination=${safeDestName}&outwardDate=${trainOutward}&outwardDateType=departAfter&inwardDate=${trainInward}&inwardDateType=departAfter&selectedTab=train`;
     } catch (e) {
         console.warn("Link generation error", e);
     }
@@ -63,7 +70,7 @@ const Logistics = ({ trip }) => {
                                 {t('logistics.trainsDesc', { origin: trip.departure_city || origin, destination: destName, defaultValue: 'Prenota il tuo biglietto del treno da {{origin}} a {{destination}}.' })}
                             </p>
                             <a
-                                href={`https://www.thetrainline.com/it/cerca/${encodeURIComponent(trip.departure_city || origin)}/${encodeURIComponent(destName)}/${trip.start_date}/${trip.end_date}?adults=${numPeople}`}
+                                href={trainLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn"

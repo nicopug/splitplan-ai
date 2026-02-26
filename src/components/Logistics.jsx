@@ -40,11 +40,11 @@ const Logistics = ({ trip }) => {
         const safeDestName = encodeURIComponent(destName);
         hotelLink = `https://www.booking.com/searchresults.html?ss=${safeDestName}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
 
-        const parseTrainTime = (d, time) => d ? `${d.split('T')[0]}T${time}` : "";
+
         const trainOrigin = encodeURIComponent(trip.departure_city || origin);
-        const trainOutward = parseTrainTime(trip.start_date, "08:00:00");
-        const trainInward = parseTrainTime(trip.end_date, "10:00:00");
-        trainLink = `https://www.thetrainline.com/book/results?journeySearchType=return&origin=${trainOrigin}&destination=${safeDestName}&outwardDate=${trainOutward}&outwardDateType=departAfter&inwardDate=${trainInward}&inwardDateType=departAfter&selectedTab=train`;
+        const outward = trip.start_date ? trip.start_date.split('T')[0] : "";
+        const inward = trip.end_date ? trip.end_date.split('T')[0] : "";
+        trainLink = `https://www.thetrainline.com/it/cerca/${trainOrigin}/${safeDestName}/${outward}/${inward}?adults=${numPeople}`;
     } catch (e) {
         console.warn("Link generation error", e);
     }

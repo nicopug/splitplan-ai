@@ -198,12 +198,20 @@ export const resetHotel = async (tripId) => {
 
 export const chatWithAI = async (tripId, message, history = []) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/chat`, {
-        method: "POST",
+        method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history })
     });
     return handleResponse(response);
 };
+
+export const getTrainlineUrn = async (city) => {
+    const response = await fetch(`${API_URL}/trips/trainline-urn?city=${encodeURIComponent(city)}`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 
 export const estimateBudget = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/estimate-budget`, {

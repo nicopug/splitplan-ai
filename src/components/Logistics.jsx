@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getTrainlineUrn } from '../api';
+import { searchStation, generateTrainlineURL } from '../utils/trainline';
 
 const Logistics = ({ trip }) => {
     const { t } = useTranslation();
     const [trainUrl, setTrainUrl] = useState("https://www.thetrainline.com/it");
-    const [isLoadingTrain, setIsLoadingTrain] = useState(false);
     // Defensive Format Dates
     const formatDate = (dateString) => {
         try {
@@ -34,24 +33,26 @@ const Logistics = ({ trip }) => {
     const numPeople = trip.num_people || 1;
 
     useEffect(() => {
-        const fetchTrainUrl = async () => {
+        const buildTrainLocal = () => {
             if (trip.transport_mode === 'TRAIN') {
-                setIsLoadingTrain(true);
                 try {
                     const departure = trip.departure_city || trip.departure_airport || "Milano";
                     const destination = trip.real_destination || trip.destination || "Roma";
 
-                    const originData = await getTrainlineUrn(departure);
-                    const destData = await getTrainlineUrn(destination);
+                    const depMatches = searchStation(departure);
+                    const destMatches = searchStation(destination);
 
-                    const outward = trip.start_date ? trip.start_date.split('T')[0] : "";
-                    const inward = trip.end_date ? trip.end_date.split('T')[0] : "";
-                    const passengers = trip.num_people || 1;
+                    if (depMatches.length > 0 && destMatches.length > 0) {
+                        const outward = trip.start_date ? trip.start_date.split('T')[0] : "";
+                        const inward = trip.end_date ? trip.end_date.split('T')[0] : "";
 
-                    if (originData?.urn && destData?.urn && outward && inward) {
-                        const originUrn = encodeURIComponent(originData.urn);
-                        const destUrn = encodeURIComponent(destData.urn);
-                        const link = `https://www.thetrainline.com/book/results?journeySearchType=return&origin=${originUrn}&destination=${destUrn}&outwardDate=${outward}T08:00:00&outwardDateType=departAfter&inwardDate=${inward}T10:00:00&inwardDateType=departAfter&selectedTab=train&adults=${passengers}`;
+                        const link = generateTrainlineURL({
+                            origin: depMatches[0],
+                            destination: destMatches[0],
+                            outwardDate: `${outward}T08:00:00`,
+                            inwardDate: inward ? `${inward}T10:00:00` : undefined,
+                            warningsOff: true
+                        });
                         setTrainUrl(link);
                     } else {
                         setTrainUrl('https://www.thetrainline.com/it');
@@ -59,12 +60,10 @@ const Logistics = ({ trip }) => {
                 } catch (e) {
                     console.error("Error building Trainline link", e);
                     setTrainUrl('https://www.thetrainline.com/it');
-                } finally {
-                    setIsLoadingTrain(false);
                 }
             }
         };
-        fetchTrainUrl();
+        buildTrainLocal();
     }, [trip]);
 
     // Deep Links
@@ -104,9 +103,9 @@ const Logistics = ({ trip }) => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn"
-                                style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none', opacity: isLoadingTrain ? 0.7 : 1, pointerEvents: isLoadingTrain ? 'none' : 'auto' }}
+                                style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
                             >
-                                {isLoadingTrain ? t('logistics.loadingTrains', 'Caricamento...') : t('logistics.searchTrains', 'Cerca Treni')}
+                                {t('logistics.searchTrains', 'Cerca Treni')}
                             </a>
                         </>
                     ) : trip.transport_mode === 'CAR' ? (

@@ -1625,23 +1625,6 @@ async def unlock_trip(trip_id: int, session: Session = Depends(get_session), cur
         session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/trainline-urn")
-async def get_trainline_urn(city: str = Query(..., description="Nome della città")):
-    """Richiama Trainline per ottenere l'URN di una città per i deep link"""
-    try:
-        url = f"https://www.thetrainline.com/api/locations-search/v2/search?searchTerm={quote(city)}&locale=it-IT"
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(url, headers={"Accept": "application/json"})
-            if resp.status_code == 200:
-                data = resp.json()
-                locations = data.get("searchLocations", [])
-                if locations:
-                    return {"urn": locations[0].get("code")}
-        return {"urn": None}
-    except Exception as e:
-        print(f"Error fetching Trainline URN: {e}")
-        return {"urn": None}
-
 @router.get("/{trip_id}/export-pdf")
 async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Esporta l'itinerario e le spese del viaggio in formato PDF"""

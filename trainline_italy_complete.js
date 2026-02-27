@@ -122,7 +122,7 @@ const TRAINLINE_STATIONS = {
     //  EMILIA-ROMAGNA
     // ══════════════════════════════════════
 
-    "Bologna Centrale": { id: "8500", uic: "8300229", city: "Bologna", region: "Emilia-R.", verified: false },
+    "Bologna Centrale": { id: "10456", uic: "8300229", city: "Bologna", region: "Emilia-R.", verified: false },
     "Parma": { id: "8551", uic: "8300218", city: "Parma", region: "Emilia-R.", verified: false },
     "Modena": { id: "8552", uic: "8300223", city: "Modena", region: "Emilia-R.", verified: false },
     "Reggio Emilia AV": { id: "8553", uic: "8300220", city: "Reggio E.", region: "Emilia-R.", verified: false },
@@ -162,7 +162,7 @@ const TRAINLINE_STATIONS = {
     //  LAZIO
     // ══════════════════════════════════════
 
-    "Roma Termini": { id: "8700", uic: "8308409", city: "Roma", region: "Lazio", verified: false },
+    "Roma Termini": { id: "8542", uic: "8308409", city: "Roma", region: "Lazio", verified: false },
     "Roma Tiburtina": { id: "8701", uic: "8308410", city: "Roma", region: "Lazio", verified: false },
     "Roma Ostiense": { id: "8702", uic: "8308411", city: "Roma", region: "Lazio", verified: false },
     "Roma Fiumicino Aeroporto": { id: "8703", uic: "8308415", city: "Roma", region: "Lazio", verified: false },

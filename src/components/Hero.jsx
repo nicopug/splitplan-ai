@@ -137,9 +137,6 @@ const Hero = () => {
                                     }}>{emoji}</span>
                                 ))}
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: '#7b7b9a' }}>
-                                Già usato da <span style={{ color: '#a78bfa', fontWeight: 700 }}>+200</span> viaggiatori
-                            </span>
                         </div>
                     </div>
 

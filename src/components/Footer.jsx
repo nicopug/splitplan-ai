@@ -131,7 +131,6 @@ const Footer = () => {
                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                         fontWeight: '600'
                     }}>
-                        Made with ✨ AI
                     </span>
                 </div>
             </div>

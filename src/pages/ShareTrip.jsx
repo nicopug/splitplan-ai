@@ -106,7 +106,7 @@ const ShareTrip = ({ isJoinMode = false }) => {
                 <p className="text-muted">{error || "Il link potrebbe essere scaduto o non valido."}</p>
 
                 {error && (
-                    <div style={{ marginTop: '2rem', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid #ddd' }}>
+                    <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}>
                         <strong>Dettaglio Tecnico:</strong> {error}
                     </div>
                 )}
@@ -127,21 +127,21 @@ const ShareTrip = ({ isJoinMode = false }) => {
             <div style={{ paddingTop: 'calc(var(--header-height, 60px) + 3rem)' }}>
                 {banner}
 
-                <div style={{ background: 'var(--primary-blue)', color: 'white', padding: '3rem 0', textAlign: 'center' }}>
+                <div className="glass-card" style={{ borderBottom: '1px solid var(--border-subtle)', padding: '3rem 0', textAlign: 'center', background: 'rgba(13, 13, 24, 0.8)' }}>
                     <div className="container">
-                        <span style={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Viaggio di {organizerName}</span>
-                        <h1 style={{ color: 'white', marginBottom: '1.5rem' }}>{trip?.name || 'Viaggio'}</h1>
+                        <span style={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>Viaggio di {organizerName}</span>
+                        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400" style={{ marginBottom: '1.5rem', fontWeight: '900' }}>{trip?.name || 'Viaggio'}</h1>
 
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <button
                                 onClick={() => setView('TRIP')}
-                                style={{ background: view === 'TRIP' ? 'white' : 'transparent', color: view === 'TRIP' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
+                                style={{ background: view === 'TRIP' ? 'var(--accent-violet)' : 'transparent', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '20px', border: '1px solid var(--accent-violet)', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.3s' }}
                             >
                                 Itinerario
                             </button>
                             <button
                                 onClick={() => setView('PHOTOS')}
-                                style={{ background: view === 'PHOTOS' ? 'white' : 'transparent', color: view === 'PHOTOS' ? 'var(--primary-blue)' : 'white', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid white', cursor: 'pointer' }}
+                                style={{ background: view === 'PHOTOS' ? 'var(--accent-violet)' : 'transparent', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '20px', border: '1px solid var(--accent-violet)', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.3s' }}
                             >
                                 Foto
                             </button>
@@ -153,23 +153,23 @@ const ShareTrip = ({ isJoinMode = false }) => {
                     {view === 'TRIP' && (
                         <>
                             <div style={{ marginBottom: '2rem' }}>
-                                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
-                                    <h3 style={{ color: 'var(--primary-blue)' }}>Informazioni</h3>
+                                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-subtle)', marginBottom: '2rem' }}>
+                                    <h3 style={{ color: 'var(--accent-cyan)' }}>Informazioni</h3>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#666' }}>Destinazione</label>
-                                            <strong>{trip?.destination || 'N/A'}</strong>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Destinazione</label>
+                                            <strong style={{ color: 'var(--text-primary)' }}>{trip?.destination || 'N/A'}</strong>
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#666' }}>Periodo</label>
-                                            <strong>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Periodo</label>
+                                            <strong style={{ color: 'var(--text-primary)' }}>
                                                 {trip?.start_date ? new Date(trip.start_date).toLocaleDateString() : 'N/A'} -
                                                 {trip?.end_date ? new Date(trip.end_date).toLocaleDateString() : 'N/A'}
                                             </strong>
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#666' }}>Partecipanti</label>
-                                            <strong>{trip?.num_people || '1'}</strong>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Partecipanti</label>
+                                            <strong style={{ color: 'var(--text-primary)' }}>{trip?.num_people || '1'}</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -194,12 +194,12 @@ const ShareTrip = ({ isJoinMode = false }) => {
                 </div>
 
                 {!user && (
-                    <div className="section text-center py-12" style={{ background: '#f8f9fa', marginTop: '4rem', borderTop: '1px solid #eee' }}>
-                        <h3>Vuoi organizzare il tuo prossimo viaggio così?</h3>
+                    <div className="section text-center py-12" style={{ background: 'var(--bg-elevated)', marginTop: '4rem', borderTop: '1px solid var(--border-subtle)', borderRadius: '32px 32px 0 0' }}>
+                        <h3 className="text-white">Vuoi organizzare il tuo prossimo viaggio così?</h3>
                         <p className="mb-6 text-muted">Crea itinerari AI, dividi le spese e condividi i ricordi con SplitPlan.</p>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                            <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>Registrati Gratis</Link>
-                            <Link to="/auth" className="btn btn-secondary" style={{ padding: '0.8rem 2rem' }}>Accedi</Link>
+                            <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem', background: 'var(--accent-violet)', border: 'none' }}>Registrati Gratis</Link>
+                            <Link to="/auth" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', border: '1px solid var(--accent-violet)' }}>Accedi</Link>
                         </div>
                     </div>
                 )}

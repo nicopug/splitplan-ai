@@ -383,7 +383,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 </div>
                             ) : (
                                 balances.map((b, idx) => (
-                                    <div key={idx} className="balance-card-premium bg-white dark:bg-gray-100 border-gray-200">
+                                    <div key={idx} className="balance-card-premium bg-[#131325] border-violet-500/20">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <div className="user-avatar-mini" style={{ background: '#3b82f6' }}>
                                                 {getUserName(b.debtor_id).substring(0, 1).toUpperCase()}

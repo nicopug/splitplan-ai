@@ -191,7 +191,6 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 - [ ] **Raccomandazioni ristoranti** tramite Overpass API (POI discovery)
 - [ ] **Sondaggi pre-viaggio** (Survey component già presente ma non integrato nel flusso principale)
 
-
 ---
 
 ## 📊 Utenti & Feedback

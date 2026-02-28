@@ -70,27 +70,31 @@ const Navbar = ({ user: propUser }) => {
     };
 
     return (
-        <nav className="sticky top-0 z-50 bg-bg-creme border-b border-gray-200 dark:border-white/10 backdrop-blur-sm bg-opacity-95">
+        <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
             <div className="container">
                 <div className="flex items-center justify-between h-20 md:h-24">
 
                     {/* Logo & Navigation Links */}
                     <div className="flex items-center gap-8">
                         <Link to="/" className="flex items-center gap-2.5 group">
-                            <div className="w-10 h-10 md:w-11 md:h-11 bg-primary-blue rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                                <svg className="w-6 h-6 md:w-6.5 md:h-6.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div style={{
+                                width: '40px', height: '40px',
+                                background: 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
+                                borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 0 16px rgba(139,92,246,0.5)',
+                                transition: 'all 0.3s'
+                            }}
+                                onMouseOver={e => { e.currentTarget.style.boxShadow = '0 0 30px rgba(139,92,246,0.8)'; e.currentTarget.style.transform = 'scale(1.1) rotate(3deg)'; }}
+                                onMouseOut={e => { e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.5)'; e.currentTarget.style.transform = 'none'; }}
+                            >
+                                <svg style={{ width: '20px', height: '20px', color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 2 9 18zm0 0v-8" />
                                 </svg>
                             </div>
-                            <span className="text-xl md:text-2xl font-black tracking-tight flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                                <span className="bg-gradient-to-r from-primary-blue to-blue-400 bg-clip-text text-transparent">Split</span>
-                                <span
-                                    className="dark:text-white"
-                                    style={{ color: theme === 'dark' ? '#ffffff' : '#0f172a' }}
-                                >
-                                    Plan
-                                </span>
-                                <span className="text-primary-blue ml-0.5">.</span>
+                            <span style={{ fontSize: '1.35rem', fontWeight: '900', letterSpacing: '-0.02em', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center' }}>
+                                <span style={{ background: 'linear-gradient(135deg, #a78bfa, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Split</span>
+                                <span style={{ color: '#f0f0ff' }}>Plan</span>
+                                <span style={{ background: 'linear-gradient(135deg, #a78bfa, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginLeft: '1px' }}>.</span>
                             </span>
                         </Link>
 
@@ -98,24 +102,18 @@ const Navbar = ({ user: propUser }) => {
                         <div className="hidden lg:flex items-center gap-6">
                             {location.pathname === '/' && (
                                 <>
-                                    <a
-                                        href="#how-it-works"
-                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
-                                    >
-                                        {t('nav.howItWorks')}
-                                    </a>
-                                    <a
-                                        href="#features"
-                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
-                                    >
-                                        {t('nav.features')}
-                                    </a>
-                                    <a
-                                        href="#pricing"
-                                        className="text-[0.65rem] uppercase tracking-wider font-bold text-text-main opacity-60 hover:opacity-100 hover:text-primary-blue transition-all"
-                                    >
-                                        {t('nav.pricing')}
-                                    </a>
+                                    {['#how-it-works', '#features', '#pricing'].map((href, i) => (
+                                        <a key={href} href={href} style={{
+                                            fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em',
+                                            fontWeight: '700', color: '#4a4a6e', textDecoration: 'none',
+                                            transition: 'color 0.2s'
+                                        }}
+                                            onMouseOver={e => e.currentTarget.style.color = '#a78bfa'}
+                                            onMouseOut={e => e.currentTarget.style.color = '#4a4a6e'}
+                                        >
+                                            {[t('nav.howItWorks'), t('nav.features'), t('nav.pricing')][i]}
+                                        </a>
+                                    ))}
                                 </>
                             )}
                         </div>
@@ -129,35 +127,46 @@ const Navbar = ({ user: propUser }) => {
                                     {!user.is_subscribed && (
                                         <button
                                             onClick={() => setShowCreditsShop(true)}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl transition-all duration-200 group"
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px',
+                                                padding: '5px 12px', border: '1px solid rgba(234,179,8,0.3)',
+                                                borderRadius: '10px', background: 'rgba(234,179,8,0.08)',
+                                                cursor: 'pointer', transition: 'all 0.2s'
+                                            }}
                                             title="Negozio Crediti"
+                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(234,179,8,0.15)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,0.5)'; }}
+                                            onMouseOut={e => { e.currentTarget.style.background = 'rgba(234,179,8,0.08)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,0.3)'; }}
                                         >
-                                            <span className="text-base group-hover:scale-125 transition-transform duration-300">🪙</span>
-                                            <span className="text-xs font-bold text-yellow-700">
+                                            <span style={{ fontSize: '14px' }}>🪙</span>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#fbbf24' }}>
                                                 {user.credits || 0} <span className="hidden sm:inline">{t('nav.credits')}</span>
                                             </span>
                                         </button>
                                     )}
 
                                     {/* Language Switcher */}
-                                    <div className="flex bg-gray-100/50 dark:bg-white/5 rounded-xl p-1 gap-1">
-                                        <button
-                                            onClick={() => changeLanguage('it')}
-                                            className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('it') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-                                        >
-                                            IT
-                                        </button>
-                                        <button
-                                            onClick={() => changeLanguage('en')}
-                                            className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('en') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-                                        >
-                                            EN
-                                        </button>
+                                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '3px', gap: '2px' }}>
+                                        {['it', 'en'].map(lng => (
+                                            <button key={lng}
+                                                onClick={() => changeLanguage(lng)}
+                                                style={{
+                                                    padding: '3px 10px', fontSize: '10px', fontWeight: '800',
+                                                    borderRadius: '7px', border: 'none', cursor: 'pointer',
+                                                    textTransform: 'uppercase', transition: 'all 0.2s',
+                                                    background: currentLanguage.startsWith(lng) ? 'rgba(139,92,246,0.25)' : 'transparent',
+                                                    color: currentLanguage.startsWith(lng) ? '#a78bfa' : '#4a4a6e',
+                                                }}
+                                            >
+                                                {lng.toUpperCase()}
+                                            </button>
+                                        ))}
                                     </div>
 
                                     <button
                                         onClick={toggleTheme}
-                                        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-lg"
+                                        style={{ padding: '6px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px', opacity: 0.6, transition: 'opacity 0.2s' }}
+                                        onMouseOver={e => e.currentTarget.style.opacity = '1'}
+                                        onMouseOut={e => e.currentTarget.style.opacity = '0.6'}
                                         title="Cambia Tema"
                                     >
                                         {theme === 'dark' ? '☀️' : '🌙'}
@@ -165,16 +174,27 @@ const Navbar = ({ user: propUser }) => {
 
                                     <button
                                         onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '5px 10px', borderRadius: '10px', border: 'none',
+                                            background: 'transparent', cursor: 'pointer', transition: 'background 0.2s'
+                                        }}
+                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(139,92,246,0.08)'}
+                                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-primary-blue text-white flex items-center justify-center font-bold text-sm">
+                                        <div style={{
+                                            width: '32px', height: '32px', borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontWeight: '700', fontSize: '13px', color: '#fff'
+                                        }}>
                                             {user?.name?.charAt(0).toUpperCase() || '?'}
                                         </div>
-                                        <span className="font-semibold text-text-main text-sm flex items-center gap-2">
+                                        <span style={{ fontWeight: '600', color: '#d0d0e8', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             {user?.name || 'Utente'}
-                                            {user?.is_subscribed && <span className="text-lg">💎</span>}
+                                            {user?.is_subscribed && <span>💎</span>}
                                         </span>
-                                        <svg className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg style={{ width: '14px', height: '14px', color: '#4a4a6e', transition: 'transform 0.2s', transform: showUserMenu ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
@@ -218,28 +238,31 @@ const Navbar = ({ user: propUser }) => {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex items-center gap-4">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <button
                                     onClick={toggleTheme}
-                                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-lg"
+                                    style={{ padding: '6px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px', opacity: 0.6, transition: 'opacity 0.2s' }}
+                                    onMouseOver={e => e.currentTarget.style.opacity = '1'}
+                                    onMouseOut={e => e.currentTarget.style.opacity = '0.6'}
                                     title="Cambia Tema"
                                 >
                                     {theme === 'dark' ? '☀️' : '🌙'}
                                 </button>
-                                {/* Language Switcher for non-logged users */}
-                                <div className="flex bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1">
-                                    <button
-                                        onClick={() => changeLanguage('it')}
-                                        className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('it') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-                                    >
-                                        IT
-                                    </button>
-                                    <button
-                                        onClick={() => changeLanguage('en')}
-                                        className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${currentLanguage.startsWith('en') ? 'bg-white dark:bg-white/10 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-                                    >
-                                        EN
-                                    </button>
+                                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '3px', gap: '2px' }}>
+                                    {['it', 'en'].map(lng => (
+                                        <button key={lng}
+                                            onClick={() => changeLanguage(lng)}
+                                            style={{
+                                                padding: '3px 10px', fontSize: '10px', fontWeight: '800',
+                                                borderRadius: '7px', border: 'none', cursor: 'pointer',
+                                                textTransform: 'uppercase', transition: 'all 0.2s',
+                                                background: currentLanguage.startsWith(lng) ? 'rgba(139,92,246,0.25)' : 'transparent',
+                                                color: currentLanguage.startsWith(lng) ? '#a78bfa' : '#4a4a6e',
+                                            }}
+                                        >
+                                            {lng.toUpperCase()}
+                                        </button>
+                                    ))}
                                 </div>
                                 <Link to="/auth" className="btn btn-primary px-6 py-2.5 text-sm font-bold">
                                     {t('nav.login')}

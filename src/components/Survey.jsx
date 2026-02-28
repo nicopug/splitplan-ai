@@ -126,7 +126,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="outline"
                             className={cn(
                                 "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
-                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
                                 formData.trip_intent === 'LEISURE' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
@@ -142,7 +142,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="outline"
                             className={cn(
                                 "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
-                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
                                 formData.trip_intent === 'BUSINESS' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleIntentSelect('BUSINESS')}
@@ -177,7 +177,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="outline"
                             className={cn(
                                 "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
                                 formData.transport_mode === 'CAR' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('CAR')}
@@ -193,7 +193,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="outline"
                             className={cn(
                                 "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
                                 formData.transport_mode === 'TRAIN' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('TRAIN')}
@@ -209,7 +209,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="outline"
                             className={cn(
                                 "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#0f172a] border-gray-800 text-gray-400 hover:bg-primary-blue hover:text-white hover:border-primary-blue",
+                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
                                 formData.transport_mode === 'FLIGHT' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
                             )}
                             onClick={() => handleTransportSelect('FLIGHT')}
@@ -264,7 +264,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 </div>
 
                 {/* Form Container */}
-                <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg">
+                <div className="bg-[#0d0d18] border border-violet-500/20 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-[0_0_40px_rgba(139,92,246,0.1)]">
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {/* Destination & Airport */}
@@ -278,7 +278,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.destinationPlaceholder', 'es. Europa, Giappone...')}
                                     required
-                                    className="h-12"
+                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -292,14 +292,14 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportPlaceholder', "es. MXP, FCO") : t('survey.departureCityPlaceholder', "es. Milano, Roma")}
                                     required
-                                    className="h-12"
+                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                 />
                             </div>
                         </div>
 
                         {/* Group Details */}
                         {isGroup && (
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6 rounded-xl space-y-4">
+                            <div className="bg-[#131325] border border-violet-500/10 p-4 md:p-6 rounded-xl space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="group-budget">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
@@ -311,7 +311,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="number"
                                             placeholder={t('survey.budgetPlaceholder', 'es. 3000')}
                                             required
-                                            className="h-12 bg-white"
+                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -325,7 +325,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="h-12 bg-white"
+                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                         />
                                     </div>
                                 </div>
@@ -345,7 +345,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={t('survey.participantNamePlaceholder', { index: idx + 2, defaultValue: `Nome Amico ${idx + 2}` })}
                                                     required
-                                                    className="h-10 bg-white"
+                                                    className="h-10 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                                 />
                                             ))}
                                         </div>
@@ -353,17 +353,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         {/* AVVISO NOMI */}
                                         <div style={{
                                             padding: '1rem',
-                                            background: '#fff7ed',
+                                            background: 'rgba(239, 68, 68, 0.1)',
                                             borderRadius: '12px',
-                                            border: '1px solid #ffedd5',
+                                            border: '1px solid rgba(239, 68, 68, 0.25)',
                                             display: 'flex',
                                             gap: '12px',
                                             alignItems: 'flex-start'
                                         }}>
-                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#9a3412' }}>!</span>
+                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f87171' }}>!</span>
                                             <div>
-                                                <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '2px' }}>{t('survey.namesWarningTitle', 'ATTENZIONE AI NOMI')}</strong>
-                                                <p style={{ fontSize: '0.8rem', color: '#c2410c', lineHeight: '1.4', margin: 0 }}>
+                                                <strong style={{ fontSize: '0.85rem', color: '#fca5a5', display: 'block', marginBottom: '2px' }}>{t('survey.namesWarningTitle', 'ATTENZIONE AI NOMI')}</strong>
+                                                <p style={{ fontSize: '0.8rem', color: '#fecaca', lineHeight: '1.4', margin: 0 }}>
                                                     {t('survey.namesWarningDesc', 'Inserisci i NOMI con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan. Questo permetterà loro di votare la destinazione dal loro account!')}
                                                 </p>
                                             </div>
@@ -385,7 +385,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="number"
                                     placeholder={t('survey.budgetPlaceholder', 'es. 1500')}
                                     required
-                                    className="h-12"
+                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                 />
                             </div>
                         )}
@@ -399,8 +399,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-12 rounded-xl",
-                                                !formData.start_date && "text-muted-foreground"
+                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-violet-500/30 text-white hover:bg-white/10 hover:text-white",
+                                                !formData.start_date && "text-gray-400"
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -434,8 +434,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-12 rounded-xl",
-                                                !formData.end_date && "text-muted-foreground"
+                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-violet-500/30 text-white hover:bg-white/10 hover:text-white",
+                                                !formData.end_date && "text-gray-400"
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -466,8 +466,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Work Hours & Days (Business Only) */}
                         {formData.trip_intent === 'BUSINESS' && (
-                            <div className="bg-blue-50 p-6 rounded-xl space-y-6 animate-fade-in border border-blue-100">
-                                <label className="block text-sm font-bold text-primary-blue flex items-center gap-2">
+                            <div className="bg-[#131325] p-6 rounded-xl space-y-6 animate-fade-in border border-violet-500/20">
+                                <label className="block text-sm font-bold text-violet-400 flex items-center gap-2">
                                     {t('survey.workHoursLabel', 'Orario e Giorni di Lavoro')}
                                     <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
                                 </label>
@@ -518,7 +518,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-12 bg-white"
+                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -528,7 +528,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-12 bg-white"
+                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
                                         />
                                     </div>
                                 </div>
@@ -546,9 +546,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.mustHavePlaceholder', 'es. Musei, Spiagge, Shopping...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none bg-white text-sm"
+                                    className="w-full px-4 py-3 rounded-xl border border-violet-500/30 
+                                             focus:border-violet-500 focus:ring-2 focus:ring-violet-500 focus:ring-opacity-20
+                                             transition-all outline-none resize-none bg-white/5 text-white text-sm"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -559,9 +559,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.mustAvoidPlaceholder', 'es. Club, Trekking faticosi...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 
-                                             focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                             transition-all outline-none resize-none bg-white text-sm"
+                                    className="w-full px-4 py-3 rounded-xl border border-violet-500/30 
+                                             focus:border-violet-500 focus:ring-2 focus:ring-violet-500 focus:ring-opacity-20
+                                             transition-all outline-none resize-none bg-white/5 text-white text-sm"
                                 />
                             </div>
                         </div>

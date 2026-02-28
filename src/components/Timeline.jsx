@@ -57,7 +57,7 @@ const Timeline = ({ items }) => {
                             <div style={{
                                 width: '54px',
                                 height: '54px',
-                                background: 'var(--bg-white)',
+                                background: 'var(--bg-card)',
                                 borderRadius: '18px',
                                 border: '2px solid var(--primary-blue)',
                                 zIndex: 2,
@@ -91,7 +91,7 @@ const Timeline = ({ items }) => {
                         <div style={{ marginLeft: '65px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {grouped[date].map((item, i) => (
                                 <div key={item.id || i} className="hover-lift hover-scale" style={{
-                                    background: 'var(--bg-white)',
+                                    background: 'var(--bg-card)',
                                     padding: '1.2rem',
                                     borderRadius: '20px',
                                     boxShadow: '0 4px 15px rgba(0,0,0,0.03)',

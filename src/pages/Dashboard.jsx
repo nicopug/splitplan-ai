@@ -350,7 +350,7 @@ const Dashboard = () => {
                                             showToast(e.message, "error");
                                         }
                                     }}
-                                    className="bg-white text-blue-700 hover:bg-blue-50 h-10 px-6 rounded-xl font-bold border-none shadow-lg text-sm"
+                                    className="bg-[#131325] border border-violet-500/30 text-white hover:bg-violet-600 h-10 px-6 rounded-xl font-bold shadow-lg shadow-violet-500/10 text-sm transition-all"
                                 >
                                     {t('dashboard.unlockBtn', 'Sblocca ora (1 🪙)')}
                                 </Button>
@@ -653,24 +653,24 @@ const Dashboard = () => {
                                     ) : (
                                         <div className="container" style={{ marginTop: '2rem' }}>
                                             <div style={{
-                                                background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+                                                background: 'var(--bg-elevated)',
                                                 padding: '3rem',
                                                 borderRadius: '32px',
                                                 textAlign: 'center',
-                                                border: '1px solid #dbeafe',
-                                                boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
-                                            }} className="animate-fade-in">
+                                                border: '1px solid var(--border-subtle)',
+                                                boxShadow: 'var(--glow-cyan-sm)'
+                                            }} className="animate-fade-in glass-card">
                                                 <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}></div>
-                                                <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
+                                                <h2 style={{ color: 'var(--accent-cyan)', marginBottom: '1rem', fontWeight: '800' }}>
                                                     {t('dashboard.consensusReached', 'Consenso Raggiunto!')}
                                                 </h2>
-                                                <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: '#475569', lineHeight: '1.6' }}>
+                                                <p style={{ maxWidth: '500px', margin: '0 auto 2rem', fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
                                                     {t('dashboard.consensusDesc', {
                                                         defaultValue: "Ottime notizie! Il gruppo ha scelto {{destination}} come meta ufficiale. L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.",
                                                         destination: trip.destination
                                                     })}
                                                 </p>
-                                                <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'white', borderRadius: '16px', color: 'var(--primary-blue)', fontWeight: '700', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                <div style={{ display: 'inline-block', padding: '0.8rem 1.5rem', background: 'var(--bg-card)', borderRadius: '16px', color: 'var(--accent-cyan)', fontWeight: '700', fontSize: '0.9rem', border: '1px solid var(--border-subtle)' }}>
                                                     {t('dashboard.waitingConfirmation', 'In attesa della conferma finale...')}
                                                 </div>
                                             </div>

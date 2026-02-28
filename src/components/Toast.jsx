@@ -34,18 +34,18 @@ const Toast = () => {
                     key={toast.id}
                     className="animate-in slide-in-from-right-full duration-300 pointer-events-auto shadow-2xl rounded-2xl overflow-hidden"
                 >
-                    <Alert variant={getVariant(toast.type)} className="border-none bg-white/95 backdrop-blur-md shadow-none relative pr-12">
+                    <Alert variant={getVariant(toast.type)} className="border border-violet-500/20 bg-[#0d0d18]/95 backdrop-blur-md shadow-lg shadow-violet-500/10 relative pr-12 text-white">
                         {getIcon(toast.type)}
-                        <AlertTitle className="capitalize text-sm font-extrabold pr-4">
+                        <AlertTitle className="capitalize text-sm font-extrabold pr-4 text-white">
                             {toast.type === 'error' ? 'Attenzione' : toast.type === 'success' ? 'Ottimo!' : 'Info'}
                         </AlertTitle>
-                        <AlertDescription className="text-gray-600 font-medium pr-4">
+                        <AlertDescription className="text-gray-300 font-medium pr-4">
                             {toast.message}
                         </AlertDescription>
 
                         <button
                             onClick={() => removeToast(toast.id)}
-                            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600 outline-none"
+                            className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white outline-none"
                         >
                             <X className="w-4 h-4" />
                         </button>

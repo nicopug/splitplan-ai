@@ -153,7 +153,7 @@ const Auth = ({ onLogin }) => {
                     <p style={{ marginBottom: '2.5rem', opacity: 0.8 }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
 
                     <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', width: '100%' }}>
-                        <div className="plan-card" style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column' }}>
+                        <div className="plan-card glass-card" style={{ padding: '2rem', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ flex: 1 }}>
                                 <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Viaggiatore</h3>
                                 <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>

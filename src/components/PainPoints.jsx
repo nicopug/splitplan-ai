@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 const PainPoints = () => {
     const { t } = useTranslation();
     return (
-        <section className="section" style={{ background: 'var(--bg-white)' }}>
+        <section className="section" style={{ background: 'var(--bg-base)' }}>
             <div className="container">
                 <div className="text-center" style={{ marginBottom: '4rem' }}>
                     <h2 style={{ fontSize: '2rem' }}>{t('painPoints.title', 'Basta con il Caos Organizzativo')}</h2>

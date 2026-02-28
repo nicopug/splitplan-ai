@@ -95,7 +95,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
             </div>
 
             {photos.length === 0 ? (
-                <div className="text-center" style={{ padding: '4rem', background: 'white', borderRadius: '24px', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="text-center glass-card" style={{ padding: '4rem', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--glow-violet-sm)' }}>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '1rem' }}>{t('photos.emptyTitle', 'No Photos')}</div>
                     <p className="text-muted">{t('photos.emptyDesc', 'Non ci sono ancora foto. Sii il primo a caricarne una!')}</p>
                 </div>
@@ -107,7 +107,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                             style={{
                                 borderRadius: '16px',
                                 overflow: 'hidden',
-                                background: 'white',
+                                background: 'var(--bg-elevated)',
                                 boxShadow: 'var(--shadow-md)',
                                 aspectRatio: '1/1',
                                 position: 'relative',
@@ -199,7 +199,8 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                             position: 'absolute',
                             top: '20px',
                             right: '20px',
-                            background: 'white',
+                            background: 'var(--bg-elevated)',
+                            color: 'white',
                             border: 'none',
                             borderRadius: '50%',
                             width: '40px',

@@ -115,7 +115,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             maxWidth: '80%',
                             padding: '1rem',
                             borderRadius: '16px',
-                            background: msg.role === 'user' ? 'var(--primary-blue)' : 'var(--bg-white)',
+                            background: msg.role === 'user' ? 'var(--primary-blue)' : 'var(--bg-elevated)',
                             color: msg.role === 'user' ? 'white' : 'var(--text-main)',
                             boxShadow: 'var(--shadow-sm)',
                             border: msg.role === 'ai' ? '1px solid rgba(0,0,0,0.05)' : 'none',
@@ -125,7 +125,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                         </div>
                     ))}
                     {loading && (
-                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-white)', color: 'var(--text-muted)', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
+                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
                             {t('chatbot.loading', "L'AI sta modificando l'itinerario...")}
                         </div>
                     )}
@@ -167,7 +167,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             borderRadius: '12px',
                             border: '1px solid #ddd',
                             outline: 'none',
-                            background: 'var(--bg-white)',
+                            background: 'var(--bg-elevated)',
                             color: 'var(--text-main)'
                         }}
                     />

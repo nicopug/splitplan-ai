@@ -163,13 +163,15 @@ const MyTrips = () => {
                                             <div style={{
                                                 width: '60px',
                                                 height: '60px',
-                                                background: trip.status === 'COMPLETED' ? '#94a3b8' : 'var(--primary-blue)',
+                                                background: trip.status === 'COMPLETED'
+                                                    ? 'rgba(139,92,246,0.15)'
+                                                    : 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
                                                 borderRadius: '18px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 fontSize: '1.8rem',
-                                                boxShadow: trip.status === 'COMPLETED' ? 'none' : '0 8px 16px rgba(37, 99, 235, 0.2)'
+                                                boxShadow: trip.status === 'COMPLETED' ? 'none' : '0 0 20px rgba(139,92,246,0.4)'
                                             }}>
                                                 {trip.transport_mode === 'CAR' ? '🚗' : trip.transport_mode === 'TRAIN' ? '🚄' : '✈️'}
                                             </div>
@@ -193,16 +195,28 @@ const MyTrips = () => {
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <div style={{
-                                                    padding: '0.4rem 0.8rem',
-                                                    borderRadius: '10px',
-                                                    fontSize: '0.7rem',
+                                                    padding: '0.35rem 0.75rem',
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.65rem',
                                                     fontWeight: '800',
                                                     letterSpacing: '0.5px',
-                                                    background: trip.status === 'BOOKED' ? '#dcfce7' :
-                                                        trip.status === 'COMPLETED' ? '#f1f5f9' : '#fef9c3',
-                                                    color: trip.status === 'BOOKED' ? '#166534' :
-                                                        trip.status === 'COMPLETED' ? '#475569' : '#854d0e',
-                                                    textTransform: 'uppercase'
+                                                    textTransform: 'uppercase',
+                                                    background: trip.status === 'BOOKED'
+                                                        ? 'rgba(16,185,129,0.15)'
+                                                        : trip.status === 'COMPLETED'
+                                                            ? 'rgba(139,92,246,0.12)'
+                                                            : 'rgba(245,158,11,0.15)',
+                                                    color: trip.status === 'BOOKED'
+                                                        ? '#34d399'
+                                                        : trip.status === 'COMPLETED'
+                                                            ? '#a78bfa'
+                                                            : '#fbbf24',
+                                                    border: `1px solid ${trip.status === 'BOOKED'
+                                                            ? 'rgba(16,185,129,0.3)'
+                                                            : trip.status === 'COMPLETED'
+                                                                ? 'rgba(139,92,246,0.25)'
+                                                                : 'rgba(245,158,11,0.3)'
+                                                        }`
                                                 }}>
                                                     {trip.status === 'BOOKED' ? 'Confermato' :
                                                         trip.status === 'COMPLETED' ? 'Archiviato' : trip.status}
@@ -233,22 +247,24 @@ const MyTrips = () => {
                     margin: 0 auto;
                 }
                 .stat-card {
-                    background: white;
+                    background: #0d0d18;
                     padding: 1.5rem;
-                    border-radius: 24px;
-                    border: 1px solid #f1f5f9;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    border-radius: 20px;
+                    border: 1px solid rgba(139,92,246,0.15);
                     display: flex;
                     align-items: center;
                     gap: 1rem;
-                    transition: transform 0.3s ease;
+                    transition: all 0.3s ease;
                 }
                 .stat-card:hover {
-                    transform: translateY(-5px);
+                    transform: translateY(-4px);
+                    border-color: rgba(139,92,246,0.4);
+                    box-shadow: 0 0 20px rgba(139,92,246,0.1);
                 }
                 .stat-icon {
-                    font-size: 2rem;
-                    background: #f8fafc;
+                    font-size: 1.8rem;
+                    background: rgba(139,92,246,0.1);
+                    border: 1px solid rgba(139,92,246,0.2);
                     width: 50px;
                     height: 50px;
                     display: flex;
@@ -263,56 +279,62 @@ const MyTrips = () => {
                 .stat-value {
                     font-size: 1.4rem;
                     font-weight: 800;
-                    color: var(--text-main);
+                    background: linear-gradient(135deg, #a78bfa, #22d3ee);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
                 }
                 .stat-label {
-                    font-size: 0.75rem;
-                    color: var(--text-muted);
+                    font-size: 0.7rem;
+                    color: #7b7b9a;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
+                    margin-top: 2px;
                 }
 
                 .tabs-container {
                     display: flex;
-                    background: #f1f5f9;
-                    padding: 0.4rem;
-                    border-radius: 16px;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(139,92,246,0.12);
+                    padding: 0.35rem;
+                    border-radius: 14px;
                     margin-bottom: 2rem;
-                    gap: 0.4rem;
+                    gap: 0.35rem;
                 }
                 .tab-btn {
                     flex: 1;
-                    padding: 0.8rem;
+                    padding: 0.75rem;
                     border: none;
                     background: transparent;
-                    border-radius: 12px;
+                    border-radius: 10px;
                     font-weight: 700;
-                    color: #64748b;
+                    color: #7b7b9a;
                     cursor: pointer;
                     transition: all 0.2s;
+                    font-family: inherit;
+                    font-size: 0.9rem;
                 }
                 .tab-btn.active {
-                    background: white;
-                    color: var(--primary-blue);
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    background: rgba(139,92,246,0.18);
+                    color: #a78bfa;
+                    box-shadow: 0 0 12px rgba(139,92,246,0.15);
                 }
 
                 .trip-row-card {
-                    background: white;
+                    background: #0d0d18;
                     padding: 1.2rem 1.5rem;
-                    border-radius: 24px;
-                    border: 1px solid #f1f5f9;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    border-radius: 20px;
+                    border: 1px solid rgba(139,92,246,0.12);
                     cursor: pointer;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     position: relative;
                     overflow: hidden;
                 }
                 .trip-row-card:hover {
-                    transform: translateX(8px);
-                    border-color: var(--primary-blue);
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+                    transform: translateX(6px);
+                    border-color: rgba(139,92,246,0.4);
+                    box-shadow: 0 0 20px rgba(139,92,246,0.1);
                 }
                 .trip-row-card::before {
                     content: '';
@@ -321,34 +343,36 @@ const MyTrips = () => {
                     top: 0;
                     bottom: 0;
                     width: 0;
-                    background: var(--primary-blue);
+                    background: linear-gradient(180deg, #8b5cf6, #22d3ee);
                     transition: width 0.3s ease;
+                    border-radius: 0 2px 2px 0;
                 }
                 .trip-row-card:hover::before {
-                    width: 4px;
+                    width: 3px;
                 }
                 .hide-btn {
-                    background: #f1f5f9;
-                    border: none;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.08);
                     width: 32px;
                     height: 32px;
                     border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #94a3b8;
+                    color: #4a4a6e;
                     cursor: pointer;
                     transition: all 0.2s;
                     font-size: 0.8rem;
                     font-weight: bold;
                 }
                 .hide-btn:hover {
-                    background: #fee2e2;
-                    color: #ef4444;
+                    background: rgba(239,68,68,0.15);
+                    border-color: rgba(239,68,68,0.3);
+                    color: #f87171;
                     transform: rotate(90deg);
                 }
                 .btn-modern-primary {
-                    background: var(--primary-blue);
+                    background: linear-gradient(135deg, #8b5cf6, #22d3ee);
                     color: white;
                     padding: 0.8rem 2rem;
                     border: none;
@@ -356,19 +380,18 @@ const MyTrips = () => {
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.3s;
-                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+                    box-shadow: 0 0 20px rgba(139,92,246,0.3);
                 }
                 .btn-modern-primary:hover {
-                    background: #1d4ed8;
                     transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+                    box-shadow: 0 0 35px rgba(139,92,246,0.5);
                 }
                 .glass-card {
-                    background: rgba(255, 255, 255, 0.8);
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.3);
-                    border-radius: 32px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+                    background: rgba(13,13,24,0.85);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(139,92,246,0.2);
+                    border-radius: 24px;
+                    box-shadow: 0 0 40px rgba(139,92,246,0.08);
                 }
             `}</style>
         </div>

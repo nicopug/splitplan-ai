@@ -104,14 +104,14 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
     return (
         <div className="section container" style={{ marginTop: '2rem' }}>
-            <div className="card" style={{ padding: '2rem', borderTop: '4px solid #ff006e', borderRadius: '24px', background: 'white' }}>
-                <h3 style={{ color: '#ff006e', textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('hotelConfirm.title', 'Step 2: Conferma Logistica')}</h3>
+            <div className="glass-card" style={{ padding: '2rem', borderTop: '4px solid var(--accent-violet)', borderRadius: '24px', background: 'var(--bg-card)' }}>
+                <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400" style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('hotelConfirm.title', 'Step 2: Conferma Logistica')}</h3>
                 <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666', fontSize: '0.9rem' }}>
                     <span dangerouslySetInnerHTML={{
                         __html: t('hotelConfirm.subtitle', {
                             mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : trip.transport_mode === 'CAR' ? t('hotelConfirm.modeCar') : t('hotelConfirm.modeFlight')
                         })
-                    }} />
+                    }} className="text-gray-300" />
                 </p>
 
                 {extractionError && (
@@ -126,7 +126,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             </div>
                             <button
                                 onClick={() => setExtractionError(null)}
-                                className="absolute top-4 right-4 p-1 hover:bg-blue-100 rounded-lg transition-colors text-blue-400 hover:text-blue-600 outline-none"
+                                className="absolute top-4 right-4 p-1 hover:bg-violet-500/20 rounded-lg transition-colors text-blue-400 hover:text-white outline-none"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -149,7 +149,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             variant="outline"
                             onClick={() => hotelInputRef.current.click()}
                             disabled={extracting === 'hotel'}
-                            className="h-12 px-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary-blue hover:bg-blue-50 transition-all flex items-center gap-2"
+                            className="h-12 px-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-violet-500 hover:bg-violet-500/10 transition-all flex items-center gap-2"
                         >
                             {extracting === 'hotel' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-primary-blue" />}
                             <span className="text-sm font-semibold">{t('hotelConfirm.uploadHotel', "Carica prenotazione Hotel")}</span>
@@ -170,7 +170,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                 variant="outline"
                                 onClick={() => transportInputRef.current.click()}
                                 disabled={extracting === 'transport'}
-                                className="h-12 px-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary-blue hover:bg-blue-50 transition-all flex items-center gap-2"
+                                className="h-12 px-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-violet-500 hover:bg-violet-500/10 transition-all flex items-center gap-2"
                             >
                                 {extracting === 'transport' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-primary-blue" />}
                                 <span className="text-sm font-semibold">
@@ -183,36 +183,34 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                 <form onSubmit={handleSubmit} style={{ maxWidth: '650px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.hotelLabel', 'Nome Hotel / Airbnb')}</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{t('hotelConfirm.hotelLabel', 'Nome Hotel / Airbnb')}</label>
                         <input
                             type="text"
                             value={hotelName}
                             onChange={(e) => setHotelName(e.target.value)}
                             placeholder={t('hotelConfirm.hotelPlaceholder', "Es. Hotel Colosseo")}
                             required
-                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.2s' }}
-                            onFocus={(e) => e.target.style.borderColor = '#ff006e'}
-                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                            className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none', transition: 'all 0.2s' }}
                         />
                     </div>
 
                     <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.addressLabel', 'Indirizzo / Zona')}</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{t('hotelConfirm.addressLabel', 'Indirizzo / Zona')}</label>
                         <input
                             type="text"
                             value={hotelAddress}
                             onChange={(e) => setHotelAddress(e.target.value)}
                             placeholder={t('hotelConfirm.addressPlaceholder', "Es. Via dei Fori Imperiali, Roma")}
                             required
-                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.2s' }}
-                            onFocus={(e) => e.target.style.borderColor = '#ff006e'}
-                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                            className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none', transition: 'all 0.2s' }}
                         />
                     </div>
 
                     {trip.transport_mode !== 'CAR' && (
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
+                            <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                                 {t('hotelConfirm.transportCostLabel', { mode: trip.transport_mode === 'TRAIN' ? 'Treno' : 'Volo' })}
                             </label>
                             <input
@@ -221,25 +219,27 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                 onChange={(e) => setFlightCost(e.target.value)}
                                 placeholder="Es. 250"
                                 required
-                                style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }}
+                                className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                                style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none' }}
                             />
                         </div>
                     )}
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>{t('hotelConfirm.hotelCostLabel', 'Costo Hotel Totale (€)')}</label>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{t('hotelConfirm.hotelCostLabel', 'Costo Hotel Totale (€)')}</label>
                         <input
                             type="number"
                             value={hotelCost}
                             onChange={(e) => setHotelCost(e.target.value)}
                             placeholder="Es. 500"
                             required
-                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }}
+                            className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none' }}
                         />
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                             {trip.transport_mode === 'FLIGHT' ? t('hotelConfirm.arrivalLabel', { mode: 'Volo' }) :
                                 trip.transport_mode === 'TRAIN' ? t('hotelConfirm.arrivalLabel', { mode: 'Treno' }) : t('hotelConfirm.arrivalDest', 'Arrivo a Destinazione')}
                         </label>
@@ -248,12 +248,13 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             value={arrivalTime}
                             onChange={(e) => setArrivalTime(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }}
+                            className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none' }}
                         />
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: '#333' }}>
+                        <label style={{ display: 'block', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                             {trip.transport_mode === 'FLIGHT' ? t('hotelConfirm.returnLabel', { mode: 'Volo' }) :
                                 trip.transport_mode === 'TRAIN' ? t('hotelConfirm.returnLabel', { mode: 'Treno' }) : t('hotelConfirm.returnStart', 'Partenza per il Ritorno')}
                         </label>
@@ -262,7 +263,8 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             value={returnTime}
                             onChange={(e) => setReturnTime(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }}
+                            className="bg-white/5 border-violet-500/20 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
+                            style={{ width: '100%', padding: '0.9rem', borderRadius: '12px', border: '1px solid var(--border-medium)', outline: 'none' }}
                         />
                     </div>
 
@@ -270,8 +272,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-14 text-white font-bold text-lg rounded-2xl shadow-lg transition-all"
-                            style={{ background: '#ff006e' }}
+                            className="w-full h-14 bg-gradient-to-r from-violet-600 to-violet-400 text-white font-bold text-lg rounded-2xl shadow-lg shadow-violet-500/20 hover:scale-[1.02] transition-all border-none"
                         >
                             {loading ? (
                                 <span className="flex items-center gap-2 justify-center">

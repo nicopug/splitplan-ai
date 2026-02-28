@@ -259,7 +259,7 @@ const Budget = ({ trip, onUpdate }) => {
 
             {/* Top Cards: Spent vs Remaining */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)', background: 'var(--bg-white)' }}>
+                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)', background: 'var(--bg-card)' }}>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>{t('budget.totalSpent', 'Speso Totale')}</div>
                     <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
                     <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}</div>
@@ -268,7 +268,7 @@ const Budget = ({ trip, onUpdate }) => {
                     padding: '1.5rem',
                     textAlign: 'center',
                     borderBottom: stats.isOverBudget ? '4px solid #ef4444' : '4px solid #10b981',
-                    background: 'var(--bg-white)'
+                    background: 'var(--bg-card)'
                 }}>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>
                         {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
@@ -289,7 +289,7 @@ const Budget = ({ trip, onUpdate }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'start' }}>
 
                 {/* Left Column: Chart & Categories */}
-                <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
+                <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-card)' }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t('budget.categoriesTitle', 'Suddivisione Spese')}</h3>
 
                     {stats.categories.length > 0 ? (
@@ -361,7 +361,7 @@ const Budget = ({ trip, onUpdate }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                     {/* Progress Bar (Integrated) */}
-                    <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-white)' }}>
+                    <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-card)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <span style={{ fontWeight: '700', fontSize: '1rem', marginRight: '8px' }}>{t('budget.usage', 'Utilizzo Budget')} </span>
                             <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
@@ -397,7 +397,7 @@ const Budget = ({ trip, onUpdate }) => {
                                     1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}
                                 </div>
                             </div>
-                            <div style={{ padding: '1rem', background: 'white', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                            <div style={{ padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
                                 <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.2rem' }}>
                                     {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')} in valuta locale
                                 </div>
@@ -409,7 +409,7 @@ const Budget = ({ trip, onUpdate }) => {
                     )}
 
                     {/* AI Estimation Section */}
-                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-white)' }}>
+                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-card)' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {t('budget.aiSimulation', 'Simulazione AI')}
                         </h3>
@@ -450,7 +450,7 @@ const Budget = ({ trip, onUpdate }) => {
 
             <style>{`
                 .glass-card {
-                    background: var(--bg-white);
+                    background: var(--bg-card);
                     border-radius: 24px;
                     border: 1px solid #f1f5f9;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.04);

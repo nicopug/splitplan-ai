@@ -119,7 +119,7 @@ const Market = () => {
                             <button
                                 onClick={() => handleCheckout('credit_3')}
                                 disabled={loading}
-                                className="w-full py-4 bg-primary-blue text-white hover:bg-blue-600 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-primary-blue/20"
+                                className="w-full py-4 bg-primary-blue text-white hover:bg-violet-600 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-violet-500/20"
                             >
                                 Acquista
                             </button>

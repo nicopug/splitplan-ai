@@ -168,7 +168,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                         justifyContent: 'center'
                     }}>
                         <div style={{
-                            background: 'var(--bg-white)',
+                            background: 'var(--bg-card)',
                             padding: '3rem',
                             borderRadius: '32px',
                             textAlign: 'center',
@@ -236,7 +236,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                                         setSelectedUser(parseInt(e.target.value));
                                                         setVotedId(null);
                                                     }}
-                                                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white
+                                                    className="px-4 py-2 rounded-lg border border-violet-500/20 bg-[#131325] text-white
                                                      focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
                                                      transition-all outline-none min-w-[150px] text-sm md:text-base"
                                                 >
@@ -251,7 +251,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                             <button
                                                 onClick={handleShareVotingLink}
                                                 disabled={isSharing}
-                                                className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-primary-blue hover:text-white transition-all shadow-md group"
+                                                className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-all shadow-md group"
                                             >
                                                 <span>{isSharing ? t('voting.shareBtnGenerating', 'Generando...') : t('voting.shareBtn', '🔗 Condividi per il voto')}</span>
                                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,9 +276,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                 {proposals.map(prop => (
                                     <div
                                         key={prop.id}
-                                        className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl 
-                                         transition-all duration-300 transform hover:-translate-y-1
-                                         flex flex-col"
+                                        className="bg-[#0d0d18] rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(139,92,246,0.1)] hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-between border border-violet-500/20"
                                     >
                                         <div className="relative overflow-hidden h-48 md:h-56">
                                             <img

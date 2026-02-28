@@ -128,14 +128,6 @@ const Hero = () => {
                         {/* Social proof mini */}
                         <div className="flex items-center gap-3 justify-center lg:justify-start animate-fade-in delay-400" style={{ paddingTop: '0.5rem' }}>
                             <div style={{ display: 'flex', gap: '-4px' }}>
-                                {['🧑‍💻', '👩‍🎨', '🧑‍🚀', '👨‍💼'].map((emoji, i) => (
-                                    <span key={i} style={{
-                                        width: '28px', height: '28px', borderRadius: '50%',
-                                        border: '2px solid #000', background: '#131325',
-                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '14px', marginLeft: i > 0 ? '-8px' : '0'
-                                    }}>{emoji}</span>
-                                ))}
                             </div>
                         </div>
                     </div>

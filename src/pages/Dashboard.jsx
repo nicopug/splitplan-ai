@@ -11,9 +11,10 @@ import Photos from '../components/Photos';
 import Chatbot from '../components/Chatbot';
 import Budget from '../components/Budget';
 import Map from '../components/Map';
+import { SkeletonDashboard } from '../components/SkeletonLoader';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown } from 'lucide-react';
+import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, MessageSquare, Share2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -294,8 +295,8 @@ const Dashboard = () => {
         }
     };
 
-    if (loading) return <div className="section text-center">{t('dashboard.loading', 'Caricamento in corso...')}</div>;
-    if (!trip) return <div className="section text-center">{t('dashboard.tripNotFound', 'Viaggio non trovato')}</div>;
+    if (loading) return <SkeletonDashboard />;
+    if (!trip) return <div className="section text-center text-white/50 py-20">{t('dashboard.tripNotFound', 'Viaggio non trovato')}</div>;
 
     return (
         <div style={{ paddingTop: 'var(--header-height)' }}>
@@ -360,197 +361,110 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <div className="mesh-gradient" style={{
-                color: 'white',
-                padding: '4rem 0',
-                textAlign: 'center',
-                position: 'relative',
-                marginTop: !user ? '2.5rem' : 0,
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-            }}>
-                <div className="container animate-fade-in">
-                    <span style={{
-                        opacity: 0.9,
-                        textTransform: 'uppercase',
-                        letterSpacing: '2px',
-                        fontSize: '0.8rem',
-                        fontWeight: '700',
-                        color: 'rgba(255,255,255,0.8)'
-                    }}>{t('dashboard.title', 'Dashboard Viaggio')}</span>
-                    <h1 style={{
-                        color: 'white',
-                        marginBottom: '0.5rem',
-                        fontFamily: "'Outfit', sans-serif",
-                        fontWeight: '800',
-                        fontSize: '3.5rem',
-                        textShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                    }}>{trip.name}</h1>
+            <div className="relative pt-12 pb-8 md:pt-20 md:pb-12 bg-black border-b border-white/5 overflow-hidden">
+                {/* Subtle Grid Header */}
+                <div className="absolute inset-0 pointer-events-none opacity-10"
+                    style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
-                    {user && (
-                        <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                            <span className="glass-panel" style={{
-                                background: user.is_subscribed ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.2)',
-                                color: user.is_subscribed ? 'black' : 'white',
-                                padding: '4px 14px',
-                                borderRadius: '12px',
-                                fontSize: '0.75rem',
-                                fontWeight: '800',
-                                letterSpacing: '0.5px',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }}>
-                                {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM ABBONATO') : t('dashboard.freeUser', 'UTENTE FREE')}
-                            </span>
-                            {trip.status !== 'PLANNING' && (
-                                <span className="glass-panel" style={{
-                                    background: 'rgba(255,255,255,0.2)',
-                                    color: 'white',
-                                    padding: '4px 14px',
-                                    borderRadius: '12px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '800',
-                                    border: '1px solid rgba(255,255,255,0.3)',
-                                }}>
-                                    {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
-                                        trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
+                <div className="container relative z-10 text-center animate-fade-in">
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] md:text-xs font-black text-[#0070f3] uppercase tracking-[0.3em] mb-4">
+                            {t('dashboard.title', 'Dashboard Viaggio')}
+                        </span>
+                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6">
+                            {trip.name}
+                        </h1>
+
+                        {user && (
+                            <div className="flex justify-center gap-2 flex-wrap">
+                                <span className={cn(
+                                    "px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase",
+                                    user.is_subscribed ? "bg-[#0070f3] text-white shadow-[0_0_15px_rgba(0,112,243,0.3)]" : "bg-white/5 text-white/40 border border-white/10"
+                                )}>
+                                    {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM') : t('dashboard.freeUser', 'FREE')}
                                 </span>
-                            )}
-                        </div>
-                    )}
+                                {trip.status !== 'PLANNING' && (
+                                    <span className="bg-white/5 text-white/40 border border-white/10 px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
+                                        {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
+                                            trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     {user && isOrganizer && (
-                        <div style={{ marginTop: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', display: 'flex', gap: '0.75rem' }}>
                             <button
                                 onClick={handleShare}
-                                className="hover-scale hover-glow"
-                                style={{
-                                    background: 'rgba(255,255,255,0.15)',
-                                    backdropFilter: 'blur(10px)',
-                                    color: 'white',
-                                    padding: '0.6rem 1.5rem',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255,255,255,0.3)',
-                                    fontSize: '0.85rem',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.3s ease',
-                                }}
+                                title={t('dashboard.shareBtn', 'Condividi Viaggio')}
+                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-violet-600 hover:border-violet-600 transition-all shadow-lg"
                             >
-                                {t('dashboard.shareBtn', 'Condividi Viaggio (Sola Lettura)')}
+                                <Share2 className="w-4 h-4" />
                             </button>
 
-                            {trip.trip_intent === 'BUSINESS' && (
+                            {trip.status === 'BOOKED' && (
+                                <button
+                                    onClick={async () => {
+                                        const confirmed = await showConfirm(
+                                            t('dashboard.confirmCompleteTitle', "Concludi Viaggio"),
+                                            t('dashboard.confirmCompleteDesc', "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia.")
+                                        );
+                                        if (confirmed) {
+                                            try {
+                                                await completeTrip(id);
+                                                showToast(t('dashboard.tripCompleted', "Viaggio concluso! Lo trovi nel tuo archivio."), "success");
+                                                fetchTrip();
+                                            } catch (e) {
+                                                showToast(t('common.error', "Errore") + ": " + e.message, "error");
+                                            }
+                                        }
+                                    }}
+                                    title={t('dashboard.completeTrip', 'Concludi Viaggio')}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-lg"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            {trip.trip_intent === 'BUSINESS' && !isCalendarConnected && (
                                 <button
                                     onClick={handleConnectCalendar}
-                                    className="hover-scale hover-glow"
-                                    disabled={isCalendarConnected}
-                                    style={{
-                                        background: isCalendarConnected ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-                                        backdropFilter: 'blur(10px)',
-                                        color: isCalendarConnected ? '#4caf50' : 'white',
-                                        padding: '0.6rem 1.5rem',
-                                        borderRadius: '16px',
-                                        border: `1px solid ${isCalendarConnected ? 'rgba(76, 175, 80, 0.4)' : 'rgba(255, 255, 255, 0.4)'}`,
-                                        fontSize: '0.85rem',
-                                        fontWeight: '700',
-                                        cursor: isCalendarConnected ? 'default' : 'pointer',
-                                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-                                        transition: 'all 0.3s ease',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
-                                    }}
+                                    title={t('dashboard.connectCalendar', 'Connetti Google Calendar')}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-violet-600 transition-all shadow-lg"
                                 >
-                                    {isCalendarConnected ? (
-                                        <>✓ {t('dashboard.calendarConnected', 'Calendar Connesso')}</>
-                                    ) : (
-                                        <>📅 {t('dashboard.connectCalendar', 'Connetti Google Calendar')}</>
-                                    )}
+                                    <span>📅</span>
                                 </button>
                             )}
                         </div>
                     )}
 
-                    <div style={{
-                        marginTop: '2rem',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap',
-                        gap: '0.75rem'
-                    }}>
-                        {[
-                            { id: 'TRIP', label: t('dashboard.tabs.trip', 'Viaggio'), condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
-                            { id: 'CHAT', label: t('dashboard.tabs.chat', 'Chat AI'), condition: trip.status === 'BOOKED' },
-                            { id: 'BUDGET', label: t('dashboard.tabs.budget', 'Budget'), condition: trip.status === 'BOOKED' },
-                            { id: 'FINANCE', label: t('dashboard.tabs.finance', 'CFO & Spese'), condition: user && trip.trip_type !== 'SOLO' },
-                            { id: 'PHOTOS', label: t('dashboard.tabs.photos', 'Foto') }
-                        ].map(btn => (
-                            (!btn.hasOwnProperty('condition') || btn.condition) && (
-                                <button
-                                    key={btn.id}
-                                    onClick={() => setView(btn.id)}
-                                    className="hover-lift"
-                                    style={{
-                                        background: view === btn.id ? 'white' : 'rgba(255,255,255,0.1)',
-                                        backdropFilter: view === btn.id ? 'none' : 'blur(5px)',
-                                        color: view === btn.id ? 'var(--primary-blue)' : 'white',
-                                        padding: '0.6rem 1.2rem',
-                                        borderRadius: '14px',
-                                        border: view === btn.id ? '1px solid white' : '1px solid rgba(255,255,255,0.2)',
-                                        cursor: 'pointer',
-                                        fontSize: '0.9rem',
-                                        fontWeight: '700',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        boxShadow: view === btn.id ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
-                                    }}
-                                >
-                                    {btn.label}
-                                </button>
-                            )
-                        ))}
-
-                        {/* Status Management for Organizer */}
-                        {isOrganizer && trip.status === 'BOOKED' && (
-                            <button
-                                onClick={async () => {
-                                    const confirmed = await showConfirm(
-                                        t('dashboard.confirmCompleteTitle', "Concludi Viaggio"),
-                                        t('dashboard.confirmCompleteDesc', "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia.")
-                                    );
-                                    if (confirmed) {
-                                        try {
-                                            await completeTrip(id);
-                                            showToast(t('dashboard.tripCompleted', "Viaggio concluso! Lo trovi nel tuo archivio."), "success");
-                                            fetchTrip();
-                                        } catch (e) {
-                                            showToast(t('common.error', "Errore") + ": " + e.message, "error");
-                                        }
-                                    }
-                                }}
-                                className="hover-lift"
-                                style={{
-                                    background: '#10b981',
-                                    color: 'white',
-                                    padding: '0.6rem 1.2rem',
-                                    borderRadius: '14px',
-                                    border: '1px solid #059669',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '700',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)'
-                                }}
-                            >
-                                <CheckCircle2 className="w-4 h-4" />
-                                {t('dashboard.completeTrip', 'Concludi Viaggio')}
-                            </button>
-                        )}
+                    <div className="flex justify-center mt-12 pb-2">
+                        <div className="bg-white/5 backdrop-blur-3xl p-1.5 rounded-[24px] border border-white/10 flex gap-1 shadow-2xl overflow-x-auto no-scrollbar max-w-full">
+                            {[
+                                { id: 'TRIP', label: t('dashboard.tabs.trip', 'Viaggio'), icon: <MapIcon className="w-4 h-4" />, condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' },
+                                { id: 'CHAT', label: t('dashboard.tabs.chat', 'Chat AI'), icon: <Sparkles className="w-4 h-4" />, condition: trip.status === 'BOOKED' },
+                                { id: 'BUDGET', label: t('dashboard.tabs.budget', 'Budget'), icon: <Wallet className="w-4 h-4" />, condition: trip.status === 'BOOKED' },
+                                { id: 'FINANCE', label: t('dashboard.tabs.finance', 'CFO & Spese'), icon: <Coins className="w-4 h-4" />, condition: user && trip.trip_type !== 'SOLO' },
+                                { id: 'PHOTOS', label: t('dashboard.tabs.photos', 'Foto'), icon: <Camera className="w-4 h-4" /> }
+                            ].map(btn => (
+                                (!btn.hasOwnProperty('condition') || btn.condition) && (
+                                    <button
+                                        key={btn.id}
+                                        onClick={() => setView(btn.id)}
+                                        className={cn(
+                                            "flex items-center gap-2.5 px-6 py-3 rounded-[18px] text-[11px] md:text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap",
+                                            view === btn.id
+                                                ? "bg-white text-black shadow-[0_8px_20px_rgba(255,255,255,0.15)] scale-[1.02]"
+                                                : "text-white/40 hover:text-white hover:bg-white/5"
+                                        )}
+                                    >
+                                        <span className={cn(view === btn.id ? "text-black" : "text-[#0070f3]")}>{btn.icon}</span>
+                                        <span>{btn.label}</span>
+                                    </button>
+                                )
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -871,57 +785,57 @@ const Dashboard = () => {
 
 // Componente Overlay per la generazione AI
 const GeneratingOverlay = ({ progress }) => {
+    const { t } = useTranslation();
     const messages = [
-        "Analizzando la destinazione...",
-        "Ottimizzando i percorsi...",
-        "Cercando i migliori punti d'interesse...",
-        "Calcolando i tempi di percorrenza...",
-        "Quasi pronto! Ultimi ritocchi..."
+        t('dashboard.aiMsg1', "Analizzando la destinazione..."),
+        t('dashboard.aiMsg2', "Ottimizzando i percorsi..."),
+        t('dashboard.aiMsg3', "Cercando i migliori punti d'interesse..."),
+        t('dashboard.aiMsg4', "Calcolando i tempi di percorrenza..."),
+        t('dashboard.aiMsg5', "Quasi pronto! Ultimi ritocchi...")
     ];
     const msgIndex = Math.min(Math.floor(progress / 20), messages.length - 1);
 
     return (
         <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(255, 255, 255, 0.98)',
+            position: 'fixed', inset: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(10px)',
             zIndex: 9999,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
             padding: '2rem'
-        }}>
-            <div style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-                <div style={{ fontSize: '5rem', marginBottom: '2rem' }}>🚀</div>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-blue)', marginBottom: '1.5rem' }}>
-                    Sto creando il tuo viaggio...
+        }} className="animate-fade-in">
+            {/* Clean grid background for overlay */}
+            <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
+                backgroundSize: '40px 40px',
+                opacity: 0.5
+            }} />
+
+            <div style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }} className="relative z-10">
+                <div className="w-24 h-24 bg-[#0070f3]/20 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-glow-pulse">
+                    <Sparkles className="w-10 h-10 text-[#0070f3]" />
+                </div>
+
+                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'white', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
+                    {t('dashboard.aiGeneratingTitle', 'SplitPlan AI sta lavorando...')}
                 </h2>
-                <p style={{ color: '#475569', fontSize: '1.3rem', marginBottom: '3rem', fontWeight: '500' }}>
+                <p style={{ color: '#7b7b9a', fontSize: '1.1rem', marginBottom: '3rem', minHeight: '1.5em' }} className="animate-pulse-soft">
                     {messages[msgIndex]}
                 </p>
-                <div style={{
-                    width: '100%',
-                    height: '16px',
-                    background: '#f1f5f9',
-                    borderRadius: '30px',
-                    overflow: 'hidden',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
-                    marginBottom: '1rem'
-                }}>
-                    <div style={{
-                        width: `${progress}%`,
-                        height: '100%',
-                        background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
-                        transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
-                    }} />
+
+                <div className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <div
+                        style={{
+                            width: `${progress}%`,
+                            boxShadow: '0 0 30px rgba(0, 112, 243, 0.5)'
+                        }}
+                        className="h-full bg-[#0070f3] transition-all duration-500 ease-out"
+                    />
                 </div>
-                <div style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '1.5rem' }}>
+
+                <div className="mt-4 font-black text-white/50 text-sm tracking-widest tabular-nums">
                     {progress}%
                 </div>
             </div>

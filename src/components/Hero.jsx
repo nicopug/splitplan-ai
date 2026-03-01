@@ -47,16 +47,11 @@ const Hero = () => {
     return (
         <header className="section pt-8 pb-16 md:pt-16 md:pb-32 relative overflow-hidden" style={{ background: '#000' }}>
 
-            {/* Animated Background Orbs */}
-            <div className="orb orb-violet" style={{ width: '600px', height: '600px', top: '-200px', left: '-200px', opacity: 0.6 }} />
-            <div className="orb orb-cyan" style={{ width: '500px', height: '500px', top: '100px', right: '-200px', opacity: 0.5 }} />
-            <div className="orb orb-violet" style={{ width: '400px', height: '400px', bottom: '-150px', left: '30%', opacity: 0.3, animationDelay: '-2s' }} />
-
-            {/* Subtle grid overlay */}
+            {/* Clean grid overlay */}
             <div style={{
                 position: 'absolute', inset: 0, pointerEvents: 'none',
-                backgroundImage: 'linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)',
-                backgroundSize: '80px 80px'
+                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
+                backgroundSize: '40px 40px'
             }} />
 
             <div className="container relative z-10">
@@ -88,13 +83,12 @@ const Hero = () => {
 
                         {/* Heading */}
                         <h1 className="animate-slide-up delay-100" style={{
-                            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-                            fontWeight: '900', lineHeight: '1.08',
-                            color: '#f0f0ff'
+                            fontSize: 'clamp(3rem, 6vw, 5.5rem)',
+                            fontWeight: '900', lineHeight: '0.95',
+                            color: '#fff', letterSpacing: '-0.04em'
                         }}>
                             {t('hero.titlePrefix')}{' '}
-                            <br className="hidden sm:block" />
-                            <span className="gradient-text">{t('hero.titleHighlight')}</span>
+                            <span style={{ color: '#0070f3' }}>{t('hero.titleHighlight')}</span>
                         </h1>
 
                         {/* Description */}
@@ -132,45 +126,67 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    {/* Visual */}
-                    <div className="relative order-1 lg:order-2 animate-slide-left delay-200">
+                    {/* Product Perspective Visual */}
+                    <div className="relative order-1 lg:order-2 animate-slide-left delay-200" style={{ perspective: '1200px' }}>
                         <div style={{
-                            borderRadius: '24px', padding: '2px',
-                            background: 'linear-gradient(135deg, rgba(139,92,246,0.6), rgba(34,211,238,0.4))',
-                            boxShadow: '0 0 60px rgba(139,92,246,0.3), 0 0 120px rgba(34,211,238,0.15)'
-                        }}>
+                            transform: 'rotateY(-15deg) rotateX(8deg) scale(1.1)',
+                            transformStyle: 'preserve-3d',
+                            transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5), 0 30px 60px -30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)',
+                            background: '#0d0d18',
+                            overflow: 'hidden'
+                        }}
+                            className="hover:scale-105 transition-all duration-700"
+                        >
+                            <img
+                                src="/dashboard-preview.png"
+                                alt="SplitPlan Dashboard Pro"
+                                style={{ width: '100%', display: 'block', opacity: 0.9 }}
+                                loading="priority"
+                            />
+                            {/* Overlay glow */}
                             <div style={{
-                                borderRadius: '22px', overflow: 'hidden',
-                                background: '#0d0d18', padding: '3px'
-                            }}>
-                                <img
-                                    src="/dashboard-preview.png"
-                                    alt="SplitPlan Dashboard Preview"
-                                    style={{ width: '100%', borderRadius: '20px', display: 'block' }}
-                                    loading="lazy"
-                                />
+                                position: 'absolute', inset: 0,
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%)',
+                                pointerEvents: 'none'
+                            }} />
+                        </div>
+
+                        {/* Floating Micro-UI elements */}
+                        <div style={{
+                            position: 'absolute', top: '10%', right: '-30px', transform: 'translateZ(40px)',
+                            background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px',
+                            boxShadow: 'var(--shadow-lg)'
+                        }} className="animate-float">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#0070f3]/20 flex items-center justify-center">
+                                    <span style={{ fontSize: '1rem' }}>✨</span>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.65rem', color: '#7b7b9a' }}>AI Optimization</div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>99.8% Efficiency</div>
+                                </div>
                             </div>
                         </div>
-                        {/* Floating badge */}
+
                         <div style={{
-                            position: 'absolute', bottom: '-20px', left: '-20px',
-                            background: '#0d0d18', border: '1px solid rgba(139,92,246,0.3)',
-                            borderRadius: '16px', padding: '12px 18px',
-                            backdropFilter: 'blur(20px)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-                        }}>
-                            <div style={{ fontSize: '0.7rem', color: '#7b7b9a', marginBottom: '2px' }}>AI Planning</div>
-                            <div style={{ fontSize: '1rem', fontWeight: '700', color: '#a78bfa' }}>✨ Pronto in 30s</div>
-                        </div>
-                        <div style={{
-                            position: 'absolute', top: '-16px', right: '-16px',
-                            background: '#0d0d18', border: '1px solid rgba(34,211,238,0.3)',
-                            borderRadius: '16px', padding: '12px 18px',
-                            backdropFilter: 'blur(20px)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-                        }}>
-                            <div style={{ fontSize: '0.7rem', color: '#7b7b9a', marginBottom: '2px' }}>Proposta condivisa</div>
-                            <div style={{ fontSize: '1rem', fontWeight: '700', color: '#22d3ee' }}>💫 100% Consenso</div>
+                            position: 'absolute', bottom: '15%', left: '-40px', transform: 'translateZ(60px)',
+                            background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px',
+                            boxShadow: 'var(--shadow-lg)'
+                        }} className="animate-float-delayed">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                    <span style={{ fontSize: '1rem' }}>✅</span>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.65rem', color: '#7b7b9a' }}>Consensus</div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>Fully Resolved</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

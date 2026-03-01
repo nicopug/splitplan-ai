@@ -131,6 +131,12 @@
             "finance": "CFO & Spese",
             "photos": "Foto"
         },
+        "aiMsg1": "Analizzando la destinazione...",
+        "aiMsg2": "Ottimizzando i percorsi...",
+        "aiMsg3": "Cercando i migliori punti d'interesse...",
+        "aiMsg4": "Calcolando i tempi di percorrenza...",
+        "aiMsg5": "Quasi pronto! Ultimi ritocchi...",
+        "aiGeneratingTitle": "SplitPlan AI sta lavorando...",
         "completeTrip": "Concludi Viaggio",
         "confirmCompleteTitle": "Concludi Viaggio",
         "confirmCompleteDesc": "Vuoi segnare questo viaggio come concluso? Verrà spostato nell'archivio della tua cronologia.",

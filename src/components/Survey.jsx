@@ -27,6 +27,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
 
     const [step, setStep] = useState(0);
+    const totalSteps = 3;
+    const progress = ((step + 1) / totalSteps) * 100;
     const [formData, setFormData] = useState({
         destination: '',
         departure_airport: '',
@@ -110,7 +112,12 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
     if (step === 0) {
         return (
-            <div className="section py-8 md:py-12 animate-fade-in">
+            <div className="section py-8 md:py-20 animate-fade-in relative">
+                {/* Progress bar */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
+                    <div className="h-full bg-[#0070f3] transition-all duration-500" style={{ width: `${progress}%` }} />
+                </div>
+
                 <div className="container max-w-4xl">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
@@ -125,32 +132,32 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <Button
                             variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
-                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
-                                formData.trip_intent === 'LEISURE' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-[1.02]",
+                                "bg-[#0d0d18] border-white/10 text-gray-400 hover:border-[#0070f3]/50 hover:bg-[#0070f3]/5",
+                                formData.trip_intent === 'LEISURE' && "bg-[#0070f3]/10 border-[#0070f3] text-white shadow-[0_0_40px_rgba(0,112,243,0.1)]"
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
                         >
-                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-primary-blue" : "text-gray-500")} />
+                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-[#0070f3]" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-xl font-bold">{t('survey.leisureTitle', 'Vacanza')}</p>
-                                <p className="text-xs font-normal opacity-70">{t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}</p>
+                                <p className="text-xl font-black tracking-tight">{t('survey.leisureTitle', 'Vacanza')}</p>
+                                <p className="text-xs font-medium opacity-60 mt-1">{t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}</p>
                             </div>
                         </Button>
 
                         <Button
                             variant="outline"
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-105",
-                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
-                                formData.trip_intent === 'BUSINESS' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
+                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-[1.02]",
+                                "bg-[#0d0d18] border-white/10 text-gray-400 hover:border-[#0070f3]/50 hover:bg-[#0070f3]/5",
+                                formData.trip_intent === 'BUSINESS' && "bg-[#0070f3]/10 border-[#0070f3] text-white shadow-[0_0_40px_rgba(0,112,243,0.1)]"
                             )}
                             onClick={() => handleIntentSelect('BUSINESS')}
                         >
-                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-primary-blue" : "text-gray-500")} />
+                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-[#0070f3]" : "text-gray-500")} />
                             <div className="text-center">
-                                <p className="text-xl font-bold">{t('survey.businessTitle', 'Lavoro')}</p>
-                                <p className="text-xs font-normal opacity-70">{t('survey.businessDesc', 'Efficienza e produttività.')}</p>
+                                <p className="text-xl font-black tracking-tight">{t('survey.businessTitle', 'Lavoro')}</p>
+                                <p className="text-xs font-medium opacity-60 mt-1">{t('survey.businessDesc', 'Efficienza e produttività.')}</p>
                             </div>
                         </Button>
                     </div>
@@ -237,18 +244,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(0)}
-                            className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
+                            className="h-9 text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl px-4"
                         >
-                            <ArrowLeft className="w-3 h-3 mr-1" />
+                            <ArrowLeft className="w-3 h-3 mr-2" />
                             {formData.trip_intent === 'BUSINESS' ? t('survey.businessTitle', 'Lavoro') : t('survey.leisureTitle', 'Vacanza')}
                         </Button>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(1)}
-                            className="h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg px-3"
+                            className="h-9 text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl px-4"
                         >
-                            <ArrowLeft className="w-3 h-3 mr-1" />
+                            <ArrowLeft className="w-3 h-3 mr-2" />
                             {formData.transport_mode === 'CAR' ? t('survey.carTitle', 'Auto') : formData.transport_mode === 'TRAIN' ? t('survey.trainTitle', 'Treno') : t('survey.flightTitle', 'Volo')}
                         </Button>
                     </div>
@@ -278,7 +285,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.destinationPlaceholder', 'es. Europa, Giappone...')}
                                     required
-                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-[#0070f3] focus:ring-[#0070f3] rounded-xl"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -570,7 +577,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <Button
                             type="submit"
                             size="lg"
-                            className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl shadow-blue-100 mt-4"
+                            className="btn-primary w-full h-14 text-lg font-black rounded-2xl mt-4"
                             disabled={isGenerating}
                         >
                             {isGenerating ? (

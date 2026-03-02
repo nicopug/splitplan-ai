@@ -350,8 +350,8 @@ const Dashboard = () => {
 
             {/* Main Header Area */}
             <div className={`relative border-b border-white/5 bg-black/80 backdrop-blur-xl sticky top-[var(--header-height)] z-30 ${!user ? 'mt-10' : ''}`}>
-                <div className="container pt-12">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12">
+                <div className="container pt-8 text-left">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-6">
                         <div className="relative">
                             <span className="subtle-heading">{t('dashboard.title', 'Dashboard Viaggio')}</span>
                             <h1 className="text-white text-3xl md:text-5xl font-semibold tracking-tight uppercase mb-4">
@@ -424,7 +424,7 @@ const Dashboard = () => {
                                 <button
                                     key={btn.id}
                                     onClick={() => setView(btn.id)}
-                                    className={`flex items-center gap-2 pb-5 text-[9px] font-bold tracking-[0.25em] uppercase transition-all relative whitespace-nowrap ${view === btn.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+                                    className={`flex items-center gap-2 pb-3 text-[9px] font-bold tracking-[0.25em] uppercase transition-all relative whitespace-nowrap ${view === btn.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                                         }`}
                                 >
                                     {btn.icon}

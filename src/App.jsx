@@ -22,6 +22,13 @@ import { useToast } from './context/ToastContext';
 
 
 function Landing({ user }) {
+  useEffect(() => {
+    document.documentElement.classList.add('has-snap');
+    return () => {
+      document.documentElement.classList.remove('has-snap');
+    };
+  }, []);
+
   return (
     <>
       <Hero />

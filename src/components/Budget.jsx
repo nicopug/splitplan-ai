@@ -2,9 +2,13 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { estimateBudget, updateTrip, getExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
+import { Sparkles } from 'lucide-react';
+import { cn } from '../lib/utils';
+
 import { useModal } from '../context/ModalContext';
 
 const Budget = ({ trip, onUpdate }) => {
+    if (!trip) return null;
     const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
@@ -197,27 +201,22 @@ const Budget = ({ trip, onUpdate }) => {
 
     // Custom Donut Chart Component
     const DonutChart = ({ data }) => {
-        // Ensure data is array
         if (!data || !Array.isArray(data)) return null;
-
         const total = data.reduce((acc, curr) => acc + (curr.amount || 0), 0);
         if (total === 0) return null;
 
-        let currentAngle = -90;
         const radius = 70;
-        const strokeWidth = 25;
+        const strokeWidth = 20;
         const center = 100;
         const circumference = 2 * Math.PI * radius;
 
         return (
-            <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
-                <svg viewBox="0 0 200 200" style={{ transform: 'rotate(0deg)' }}>
+            <div className="relative w-48 h-48 mx-auto">
+                <svg viewBox="0 0 200 200" className="rotate-[-90deg]">
                     {data.map((item, i) => {
                         const itemAmount = item.amount || 0;
                         const percentage = (itemAmount / total) * 100;
                         const dashArray = (percentage * circumference) / 100;
-
-                        // Calculate cumulative offset
                         const offset = data.slice(0, i).reduce((sum, prev) => sum + ((prev.amount || 0) / total) * circumference, 0);
 
                         return (
@@ -231,238 +230,231 @@ const Budget = ({ trip, onUpdate }) => {
                                 strokeWidth={strokeWidth}
                                 strokeDasharray={`${dashArray} ${circumference}`}
                                 strokeDashoffset={-offset}
-                                strokeLinecap="butt"
-                                style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                                strokeLinecap="round"
+                                className="transition-all duration-700 ease-out"
                             />
                         );
                     })}
                 </svg>
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>Budget</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--accent-digital-blue-light)' }}>€{stats.totalBudget.toFixed(0)}</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span className="subtle-heading !mb-0 text-[8px]">{t('budget.categories.Budget', 'Budget')}</span>
+                    <span className="text-xl font-black text-white">€{stats.totalBudget.toFixed(0)}</span>
                 </div>
             </div>
         );
     };
 
     return (
-        <div className="container section">
-            <h2 className="text-center" style={{ marginBottom: '2rem', fontWeight: '800', fontSize: '2rem', background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {t('budget.title', 'Analisi Budget')}
-            </h2>
+        <div className="container py-12 space-y-12">
+            <div className="space-y-4">
+                <span className="subtle-heading">{t('budget.analytics', 'Analytics')}</span>
+                <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                    {t('budget.title', 'Analisi Budget')}
+                </h2>
+            </div>
 
             {/* Top Cards: Spent vs Remaining */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <div className="glass-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', borderBottom: '4px solid var(--accent-digital-blue)', background: 'var(--bg-card)' }}>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '700' }}>{t('budget.totalSpent', 'Speso Totale')}</div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--accent-digital-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
-                    <div style={{ fontSize: '0.85rem', opacity: 0.6 }}>{t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}</div>
-                </div>
-                <div className="glass-card" style={{
-                    padding: '1.5rem',
-                    textAlign: 'center',
-                    borderBottom: stats.isOverBudget ? '4px solid #ef4444' : '4px solid #10b981',
-                    background: 'var(--bg-card)'
-                }}>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>
-                        {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30">
+                    <span className="subtle-heading !mb-0">{t('budget.totalSpent', 'Speso Totale')}</span>
+                    <div className="text-5xl font-black text-white">€{stats.currentSpent.toFixed(2)}</div>
+                    <div className="text-gray-500 text-xs font-medium uppercase tracking-widest">
+                        {t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}
                     </div>
-                    <div style={{
-                        fontSize: '2rem',
-                        fontWeight: '900',
-                        color: stats.isOverBudget ? '#ef4444' : '#10b981'
-                    }}>
+                </div>
+
+                <div className={cn(
+                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2",
+                    stats.isOverBudget ? "border-red-500/30" : "border-green-500/30"
+                )}>
+                    <span className="subtle-heading !mb-0">
+                        {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
+                    </span>
+                    <div className={cn(
+                        "text-5xl font-black",
+                        stats.isOverBudget ? "text-red-500" : "text-green-500"
+                    )}>
                         €{Math.abs(stats.remaining).toFixed(2)}
                     </div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                    <div className="text-gray-500 text-xs font-medium uppercase tracking-widest">
                         {stats.isOverBudget ? t('budget.spentOver', 'Sei andato oltre il budget') : t('budget.spentStill', 'Ancora spendibili')}
                     </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'start' }}>
-
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Left Column: Chart & Categories */}
-                <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-card)' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t('budget.categoriesTitle', 'Suddivisione Spese')}</h3>
+                <div className="lg:col-span-5 premium-card space-y-8">
+                    <div className="space-y-2">
+                        <span className="subtle-heading !mb-0 text-[8px] opacity-50">{t('budget.distribution', 'Distribuzione')}</span>
+                        <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                            {t('budget.categoriesTitle', 'Suddivisione Spese')}
+                        </h3>
+                    </div>
 
                     {stats.categories.length > 0 ? (
-                        <>
+                        <div className="space-y-10">
                             <DonutChart data={stats.categories} />
-                            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                            <div className="space-y-4">
                                 {stats.categories.map(cat => (
-                                    <div key={cat.id} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        fontSize: '0.9rem',
-                                        opacity: cat.isRemaining ? 0.8 : 1
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{
-                                                width: '12px',
-                                                height: '12px',
-                                                borderRadius: '4px',
-                                                background: cat.color,
-                                                border: cat.isRemaining ? '1px dashed #cbd5e1' : 'none'
-                                            }} />
-                                            <span style={{ fontWeight: cat.isRemaining ? '500' : '600', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
+                                    <div key={cat.id} className="flex items-center justify-between group">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-2.5 h-2.5 rounded-sm"
+                                                style={{
+                                                    background: cat.color,
+                                                    border: cat.isRemaining ? '1px dashed rgba(255,255,255,0.2)' : 'none'
+                                                }}
+                                            />
+                                            <span className={cn(
+                                                "text-xs font-bold uppercase tracking-wider transition-colors",
+                                                cat.isRemaining ? "text-gray-600" : "text-gray-400 group-hover:text-white"
+                                            )}>
                                                 {cat.label}
                                             </span>
-                                            {cat.isSimulation && (
-                                                <button
-                                                    onClick={cat.onRemove}
-                                                    style={{
-                                                        border: 'none',
-                                                        background: '#fee2e2',
-                                                        color: '#ef4444',
-                                                        borderRadius: '50%',
-                                                        width: '20px',
-                                                        height: '20px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '10px',
-                                                        cursor: 'pointer',
-                                                        marginLeft: '8px',
-                                                        fontWeight: 'bold'
-                                                    }}
-                                                    title="Rimuovi proiezione"
-                                                >
-                                                    ✕
-                                                </button>
-                                            )}
                                         </div>
-                                        <div style={{ fontWeight: '700', color: cat.isRemaining ? '#64748b' : 'inherit' }}>
-                                            €{cat.amount.toFixed(2)}
-                                            <span style={{ fontSize: '0.75rem', color: '#999', marginLeft: '6px' }}>
-                                                ({(stats.totalBudget > 0 ? (cat.amount / stats.totalBudget) * 100 : 0).toFixed(0)}%)
+                                        <div className="flex items-center gap-3">
+                                            <span className={cn(
+                                                "text-sm font-black transition-colors",
+                                                cat.isRemaining ? "text-gray-600" : "text-white"
+                                            )}>
+                                                €{cat.amount.toFixed(2)}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-gray-700 w-8 text-right">
+                                                {(stats.totalBudget > 0 ? (cat.amount / stats.totalBudget) * 100 : 0).toFixed(0)}%
                                             </span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </>
+                        </div>
                     ) : (
-                        <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
-                            <div style={{ fontSize: '3rem' }}>🤔</div>
-                            <p>{t('budget.noExpenses', 'Ancora nessuna spesa registrata per mostrare il grafico.')}</p>
+                        <div className="text-center py-20 space-y-4 opacity-30">
+                            <div className="text-4xl">🤔</div>
+                            <p className="text-xs uppercase tracking-widest font-bold">
+                                {t('budget.noExpenses', 'Nessuna spesa registrata.')}
+                            </p>
                         </div>
                     )}
                 </div>
 
                 {/* Right Column: AI Projections & Tips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-
-                    {/* Progress Bar (Integrated) */}
-                    <div className="glass-card" style={{ padding: '2rem', background: 'var(--bg-card)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ fontWeight: '700', fontSize: '1rem', marginRight: '8px' }}>{t('budget.usage', 'Utilizzo Budget')} </span>
-                            <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>{stats.percentUsed.toFixed(0)}%</span>
+                <div className="lg:col-span-7 space-y-8">
+                    {/* Progress Bar */}
+                    <div className="premium-card !p-8 space-y-6">
+                        <div className="flex justify-between items-end">
+                            <div className="space-y-1">
+                                <span className="subtle-heading !mb-0">{t('budget.usage', 'Utilizzo Budget')}</span>
+                                <h4 className="text-white text-lg font-semibold uppercase tracking-tight">Status</h4>
+                            </div>
+                            <span className="text-3xl font-black text-primary-blue">{stats.percentUsed.toFixed(0)}%</span>
                         </div>
-                        <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>
-                            <div style={{
-                                background: 'linear-gradient(90deg, var(--accent-digital-blue), var(--accent-digital-blue-light))',
-                                height: '100%',
-                                width: `${stats.percentUsed}%`,
-                                transition: 'width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67)'
-                            }} />
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                            <div
+                                className="h-full bg-primary-blue transition-all duration-1000 ease-out"
+                                style={{ width: `${stats.percentUsed}%` }}
+                            />
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem', fontStyle: 'italic' }}>
-                            {stats.percentUsed > 80 ? t('budget.usageHigh', 'Attenzione! Hai quasi esaurito il budget prefissato.') :
+                        <p className="text-gray-500 text-xs font-medium leading-relaxed italic">
+                            {stats.percentUsed > 80 ? t('budget.usageHigh', 'Attenzione! Hai quasi esaurito il budget.') :
                                 stats.percentUsed > 50 ? t('budget.usageMid', 'Sei a metà del budget. Gestisci bene le prossime spese!') :
-                                    t('budget.usageLow', 'Ottimo lavoro, il budget è ancora ampiamente sotto controllo.')}
+                                    t('budget.usageLow', 'Ottimo lavoro, il budget è ancora sotto controllo.')}
                         </p>
                     </div>
 
-                    {/* Currency Info Section */}
-                    {stats.localCurrency && stats.localCurrency !== 'EUR' && (
-                        <div className="glass-card" style={{
-                            padding: '2rem',
-                            background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
-                            border: '1px solid #dbeafe'
-                        }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {t('budget.currencyFocus', { currency: stats.localCurrency })}
-                            </h3>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t('budget.avgRate', 'Tasso medio applicato')}</div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e40af' }}>
-                                    1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}
-                                </div>
+                    {/* AI Estimation Section */}
+                    <div className="premium-card !p-8 space-y-6 border border-primary-blue/20 bg-primary-blue/5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold rounded-sm">
+                                <Sparkles className="w-5 h-5" />
                             </div>
-                            <div style={{ padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.2rem' }}>
-                                    {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')} in valuta locale
-                                </div>
-                                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: stats.isOverBudget ? '#ef4444' : '#10b981' }}>
-                                    {(Math.abs(stats.remaining) * stats.localRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} {stats.localCurrency}
-                                </div>
+                            <div className="space-y-1">
+                                <span className="subtle-heading !mb-0 !text-primary-blue/60">{t('budget.aiSimulation', 'Simulazione AI')}</span>
+                                <h4 className="text-white text-lg font-semibold uppercase tracking-tight">SplitPlan Forecast</h4>
                             </div>
                         </div>
-                    )}
 
-                    {/* AI Estimation Section */}
-                    <div className="glass-card" style={{ padding: '2rem', border: '1px dashed var(--primary-blue)', background: 'var(--bg-card)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {t('budget.aiSimulation', 'Simulazione AI')}
-                        </h3>
                         {!estimation ? (
-                            <>
-                                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1.5rem' }}>
+                            <div className="space-y-6">
+                                <p className="text-gray-400 text-sm leading-relaxed">
                                     {t('budget.aiSimulationDesc', { destination: trip.destination })}
                                 </p>
                                 <button
                                     onClick={handleEstimate}
                                     disabled={isEstimating}
-                                    className="btn btn-secondary"
-                                    style={{ width: '100%', padding: '0.8rem' }}
+                                    className="w-full h-14 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
                                 >
-                                    {isEstimating ? t('budget.calculatingBtn', 'Analizzando...') : t('budget.calculateBtn', 'Calcola Proiezione')}
+                                    {isEstimating ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                            {t('budget.calculatingBtn', 'Analizzando...')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-4 h-4" />
+                                            {t('budget.calculateBtn', 'Calcola Proiezione')}
+                                        </>
+                                    )}
                                 </button>
-                            </>
+                            </div>
                         ) : (
-                            <div className="animate-in">
-                                <div style={{ background: 'var(--bg-soft-gray)', padding: '1rem', borderRadius: '16px', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <span style={{ fontSize: '0.8rem' }}>{t('budget.localEst', 'Stima locale / pers:')}</span>
-                                        <span style={{ fontWeight: '800', color: 'var(--primary-blue)' }}>€{estimation.total_estimated_per_person}</span>
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="p-6 bg-black/40 border border-white/10 rounded-sm space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">{t('budget.localEst', 'Stima locale / pers:')}</span>
+                                        <span className="text-xl font-black text-primary-blue">€{estimation.total_estimated_per_person}</span>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
+                                    <p className="text-gray-400 text-xs leading-relaxed italic border-t border-white/5 pt-4">
                                         "{estimation.advice}"
-                                    </div>
+                                    </p>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button onClick={handleApplyAsExpense} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>{t('budget.applyBtn', 'Applica')}</button>
-                                    <button onClick={() => { setEstimation(null); setShowSimulation(false); }} className="btn btn-secondary" style={{ flex: 0.5, fontSize: '0.8rem' }}>{t('budget.closeBtn', 'Chiudi')}</button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleApplyAsExpense}
+                                        className="flex-1 h-12 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-colors"
+                                    >
+                                        {t('budget.applyBtn', 'Applica')}
+                                    </button>
+                                    <button
+                                        onClick={() => { setEstimation(null); setShowSimulation(false); }}
+                                        className="px-6 h-12 bg-white/5 border border-white/10 text-white font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-colors"
+                                    >
+                                        {t('budget.closeBtn', 'Chiudi')}
+                                    </button>
                                 </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Currency Info Section */}
+                    {stats.localCurrency && stats.localCurrency !== 'EUR' && (
+                        <div className="premium-card !p-8 animate-fade-in space-y-6">
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                    <span className="subtle-heading !mb-0">{t('budget.currencyFocus', { currency: stats.localCurrency })}</span>
+                                    <h4 className="text-white text-lg font-semibold uppercase tracking-tight">Forex Info</h4>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('budget.avgRate', 'Tasso medio')}</div>
+                                    <div className="text-lg font-black text-white">1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}</div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white/5 border border-white/10 rounded-sm flex justify-between items-center">
+                                <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">
+                                    {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
+                                </span>
+                                <div className={cn(
+                                    "text-2xl font-black",
+                                    stats.isOverBudget ? "text-red-500" : "text-green-500"
+                                )}>
+                                    {(Math.abs(stats.remaining) * stats.localRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} {stats.localCurrency}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-            <style>{`
-                .glass-card {
-                    background: var(--bg-card);
-                    border-radius: 24px;
-                    border: 1px solid #f1f5f9;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-                }
-                .animate-in {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

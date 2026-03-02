@@ -51,8 +51,11 @@
 }
 
 html {
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+}
+
+html.has-snap {
+  scroll-snap-type: y mandatory;
 }
 
 

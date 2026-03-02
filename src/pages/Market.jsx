@@ -119,7 +119,7 @@ const Market = () => {
                             <button
                                 onClick={() => handleCheckout('credit_3')}
                                 disabled={loading}
-                                className="w-full py-4 bg-primary-blue text-white hover:bg-violet-600 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-violet-500/20"
+                                className="w-full py-4 bg-primary-blue text-white hover:bg-blue-600 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-blue-500/20"
                             >
                                 Acquista
                             </button>
@@ -128,7 +128,7 @@ const Market = () => {
 
                     {/* Abbonamento Mensile */}
                     <div className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/5 rounded-[2.5rem] p-8 flex flex-col items-center text-center hover:scale-[1.02] transition-all duration-500">
-                        <div className="w-20 h-20 bg-purple-500/10 rounded-3xl flex items-center justify-center text-4xl mb-6 shadow-inner">💎</div>
+                        <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center text-4xl mb-6 shadow-inner">💎</div>
                         <h3 className="text-xl font-black text-text-main dark:text-white mb-2">SplitPlan Pro</h3>
                         <p className="text-sm text-gray-500 mb-6 font-medium">Accesso illimitato <br /> per un intero mese</p>
                         <div className="mt-auto w-full">
@@ -161,7 +161,7 @@ const Market = () => {
                                     <button
                                         onClick={() => handleCheckout('sub_monthly')}
                                         disabled={loading || user.subscription_plan === 'ANNUAL'}
-                                        className="w-full py-4 bg-purple-600 text-white hover:bg-purple-700 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20"
+                                        className="w-full py-4 bg-blue-600 text-white hover:bg-blue-700 rounded-2xl font-black transition-all duration-300 disabled:opacity-50 uppercase text-xs tracking-widest shadow-lg shadow-blue-500/20"
                                     >
                                         {user.subscription_plan === 'ANNUAL' ? 'Piano Annuale Attivo' : 'Abbonati'}
                                     </button>

@@ -34,7 +34,7 @@ const Toast = () => {
                     key={toast.id}
                     className="animate-in slide-in-from-right-full duration-300 pointer-events-auto shadow-2xl rounded-2xl overflow-hidden"
                 >
-                    <Alert variant={getVariant(toast.type)} className="border border-violet-500/20 bg-[#0d0d18]/95 backdrop-blur-md shadow-lg shadow-violet-500/10 relative pr-12 text-white">
+                    <Alert variant={getVariant(toast.type)} className="border border-white/10 bg-black/95 backdrop-blur-md shadow-lg shadow-white/5 relative pr-12 text-white">
                         {getIcon(toast.type)}
                         <AlertTitle className="capitalize text-sm font-extrabold pr-4 text-white">
                             {toast.type === 'error' ? 'Attenzione' : toast.type === 'success' ? 'Ottimo!' : 'Info'}

@@ -282,7 +282,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportPlaceholder', "es. MXP, FCO") : t('survey.departureCityPlaceholder', "es. Milano, Roma")}
                                     required
-                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-blue-600 focus:ring-blue-600"
                                 />
                             </div>
                         </div>
@@ -369,7 +369,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="number"
                                     placeholder={t('survey.budgetPlaceholder', 'es. 1500')}
                                     required
-                                    className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-blue-600 focus:ring-blue-600"
                                 />
                             </div>
                         )}
@@ -418,7 +418,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-violet-500/30 text-white hover:bg-white/10 hover:text-white",
+                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white",
                                                 !formData.end_date && "text-gray-400"
                                             )}
                                         >

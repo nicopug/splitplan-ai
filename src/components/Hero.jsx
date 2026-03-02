@@ -45,20 +45,20 @@ const Hero = () => {
     };
 
     return (
-        <header className="section bg-black">
-            <div className="container h-full">
-                <div className="viewport-split items-center">
+        <header className="section bg-black overflow-hidden relative">
+            <div className="container h-full min-h-[100vh] flex items-center py-20 relative z-10">
+                <div className="flex flex-col lg:flex-row w-full items-center gap-12 lg:gap-20">
 
                     {/* Left: Content */}
-                    <div className="space-y-8 py-12 lg:pr-12">
+                    <div className="w-full lg:w-1/2 space-y-8 py-12 lg:pr-12 text-left">
                         {/* Minimalist Badge */}
                         <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">
                             {t('hero.badge')}
                         </div>
 
                         {/* Heading */}
-                        <h1 className="text-white">
-                            {t('hero.titlePrefix')}{' '}
+                        <h1 className="text-white text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight leading-[0.95]">
+                            {t('hero.titlePrefix')}<br />
                             <span className="text-gray-500">{t('hero.titleHighlight')}</span>
                         </h1>
 
@@ -89,15 +89,15 @@ const Hero = () => {
                     </div>
 
                     {/* Right: Technical Visual (App Mockup) */}
-                    <div className="relative flex items-center justify-center lg:justify-end py-12 h-full">
+                    <div className="w-full lg:w-1/2 relative flex items-center justify-center lg:justify-end">
                         {/* Void Background Effect - very subtle */}
-                        <div className="absolute inset-x-0 inset-y-0 bg-radial-gradient from-white/5 to-transparent opacity-30 pointer-events-none" />
+                        <div className="absolute inset-0 bg-radial-gradient from-blue-500/10 to-transparent opacity-40 pointer-events-none blur-3xl" />
 
-                        <div className="relative w-full max-w-[540px] shadow-[0_0_100px_rgba(255,255,255,0.05)] border border-white/5 rounded-lg overflow-hidden bg-[#050505] z-10">
+                        <div className="relative w-full max-w-[620px] shadow-[0_0_120px_rgba(0,102,255,0.1)] border border-white/5 rounded-lg overflow-hidden bg-[#050505] z-10 transform lg:translate-x-12 hover:scale-[1.02] transition-transform duration-700">
                             <img
                                 src="/dashboard-preview.png"
                                 alt="SplitPlan Dashboard"
-                                className="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity"
+                                className="w-full h-auto block opacity-95 hover:opacity-100 transition-opacity"
                                 loading="lazy"
                             />
 

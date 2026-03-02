@@ -127,21 +127,28 @@ const ShareTrip = ({ isJoinMode = false }) => {
             <div style={{ paddingTop: 'calc(var(--header-height, 60px) + 3rem)' }}>
                 {banner}
 
-                <div className="glass-card" style={{ borderBottom: '1px solid var(--border-subtle)', padding: '3rem 0', textAlign: 'center', background: 'rgba(13, 13, 24, 0.8)' }}>
+                <div className="border-b border-white/5 py-12 text-center bg-black/40 backdrop-blur-md">
                     <div className="container">
-                        <span style={{ opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>Viaggio di {organizerName}</span>
-                        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400" style={{ marginBottom: '1.5rem', fontWeight: '900' }}>{trip?.name || 'Viaggio'}</h1>
-
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-400 mb-2 inline-block">Viaggio di {organizerName}</span>
+                        <h1 className="text-white text-3xl md:text-5xl font-black uppercase tracking-tight mb-8">
+                            {trip?.name || 'Viaggio'}
+                        </h1>
+                        <div className="flex justify-center gap-3">
                             <button
                                 onClick={() => setView('TRIP')}
-                                style={{ background: view === 'TRIP' ? 'var(--accent-violet)' : 'transparent', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '20px', border: '1px solid var(--accent-violet)', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.3s' }}
+                                className={`px-8 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${view === 'TRIP'
+                                    ? 'bg-white text-black border-white'
+                                    : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+                                    }`}
                             >
                                 Itinerario
                             </button>
                             <button
                                 onClick={() => setView('PHOTOS')}
-                                style={{ background: view === 'PHOTOS' ? 'var(--accent-violet)' : 'transparent', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '20px', border: '1px solid var(--accent-violet)', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.3s' }}
+                                className={`px-8 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${view === 'PHOTOS'
+                                    ? 'bg-white text-black border-white'
+                                    : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+                                    }`}
                             >
                                 Foto
                             </button>
@@ -197,9 +204,9 @@ const ShareTrip = ({ isJoinMode = false }) => {
                     <div className="section text-center py-12" style={{ background: 'var(--bg-elevated)', marginTop: '4rem', borderTop: '1px solid var(--border-subtle)', borderRadius: '32px 32px 0 0' }}>
                         <h3 className="text-white">Vuoi organizzare il tuo prossimo viaggio così?</h3>
                         <p className="mb-6 text-muted">Crea itinerari AI, dividi le spese e condividi i ricordi con SplitPlan.</p>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                            <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem', background: 'var(--accent-violet)', border: 'none' }}>Registrati Gratis</Link>
-                            <Link to="/auth" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', border: '1px solid var(--accent-violet)' }}>Accedi</Link>
+                        <div className="flex justify-center gap-4">
+                            <Link to="/auth" className="bg-white text-black px-8 py-3 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-gray-200 transition-all">Registrati Gratis</Link>
+                            <Link to="/auth" className="border border-white/10 text-white px-8 py-3 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-white/5 transition-all">Accedi</Link>
                         </div>
                     </div>
                 )}

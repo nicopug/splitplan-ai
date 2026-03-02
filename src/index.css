@@ -38,7 +38,7 @@
 
   /* Layout */
   --container-width: 1200px;
-  --header-height: 64px;
+  --header-height: 56px;
   /* Slimmer header */
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -159,7 +159,7 @@ html.has-snap {
     text-transform: uppercase;
     color: #71717a;
     /* zinc-500 */
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
     display: inline-block;
   }
 
@@ -168,7 +168,8 @@ html.has-snap {
     scroll-snap-align: start;
     scroll-snap-stop: always;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
     position: relative;
     overflow: hidden;
   }
@@ -176,7 +177,6 @@ html.has-snap {
   .viewport-split {
     display: grid;
     grid-template-cols: 1fr;
-    height: 100%;
     width: 100%;
     align-items: center;
   }
@@ -184,6 +184,7 @@ html.has-snap {
   @media (min-width: 1024px) {
     .viewport-split {
       grid-template-cols: 1fr 1fr;
+      text-align: left;
     }
   }
 

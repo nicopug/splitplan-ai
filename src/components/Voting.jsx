@@ -262,7 +262,7 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                         key={prop.id}
                                         className="premium-card !p-0 group flex flex-col h-full overflow-hidden border-white/10"
                                     >
-                                        <div className="relative aspect-[4/5] overflow-hidden">
+                                        <div className="relative aspect-video overflow-hidden">
                                             <img
                                                 src={prop.image_url}
                                                 alt={prop.destination}

@@ -2,10 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
-import { Button } from './ui/button';
-import { ArrowLeft, Wallet, Coins, Plus, Trash2, CheckCircle2, Sparkles } from 'lucide-react';
-import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
+import Skeleton from './ui/Skeleton';
+import Drawer from './ui/Drawer';
 
 const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipants = [] }) => {
     const { t } = useTranslation();
@@ -17,6 +16,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const [participants, setParticipants] = useState((readOnly && sharedParticipants) ? sharedParticipants : []);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(!readOnly);
+
+    const currentUser = useMemo(() => {
+        try {
+            return JSON.parse(localStorage.getItem('user'));
+        } catch (e) {
+            return null;
+        }
+    }, []);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -177,191 +184,221 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const stats = useMemo(() => {
         const total = expenses.reduce((acc, exp) => acc + exp.amount, 0);
         const perPerson = participants.length > 0 ? total / participants.length : 0;
-        return { total, perPerson };
-    }, [expenses, participants]);
+
+        let userBalance = 0;
+        if (currentUser && participants.some(p => p.id === currentUser.id)) {
+            const myPaid = expenses
+                .filter(e => e.payer_id === currentUser.id)
+                .reduce((acc, e) => acc + e.amount, 0);
+            userBalance = myPaid - perPerson;
+        }
+
+        return { total, perPerson, userBalance };
+    }, [expenses, participants, currentUser]);
 
     return (
-        <div className="container section py-8 md:py-16 animate-fade-in">
-            <div className="text-center mb-12">
-                <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-                    {t('finance.title', 'CFO & Spese')}
-                </h2>
-                <div className="h-1 w-20 bg-[#0070f3] mx-auto rounded-full" />
-            </div>
+        <div className="container section">
+            <h2 className="text-center" style={{ marginBottom: '3rem', fontWeight: '900', fontSize: '2.5rem', background: 'linear-gradient(135deg, var(--accent-digital-blue) 0%, var(--accent-digital-blue-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                {t('finance.title', 'Gestione Spese')}
+            </h2>
 
-            {/* High-Contrast Stats Dashboard */}
-            <div className="grid grid-cols-2 gap-4 md:gap-8 mb-12">
-                <div className="bg-[#0d0d18] border border-white/5 p-8 rounded-[32px] text-center shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-[#0070f3]/20" />
-                    <div className="text-[10px] md:text-xs font-black text-white/40 uppercase tracking-[0.2em] mb-3">{t('finance.totalSpent', 'Totale Speso')}</div>
-                    <div className="text-3xl md:text-5xl font-black text-white tracking-tighter">
-                        <span className="text-[#0070f3] mr-1">€</span>{stats.total.toFixed(2)}
+            {/* Global Stats Dashboard */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '3rem',
+                background: 'var(--bg-card)',
+                padding: '2.5rem',
+                borderRadius: '32px',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'var(--shadow-lg)'
+            }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '800' }}>{t('finance.totalSpent', 'Totale Speso')}</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '0.5rem' }}>
+                        €{stats.total.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
-                <div className="bg-[#0d0d18] border border-white/5 p-8 rounded-[32px] text-center shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500/20" />
-                    <div className="text-[10px] md:text-xs font-black text-white/40 uppercase tracking-[0.2em] mb-3">{t('finance.perPerson', 'A persona')}</div>
-                    <div className="text-3xl md:text-5xl font-black text-white tracking-tighter">
-                        <span className="text-emerald-500 mr-1">€</span>{stats.perPerson.toFixed(2)}
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '800' }}>{t('finance.yourBalance', 'Tuo Bilancio')}</div>
+                    <div style={{
+                        fontSize: '2.5rem',
+                        fontWeight: '900',
+                        color: stats.userBalance >= 0 ? 'var(--accent-green)' : '#f87171',
+                        marginTop: '0.5rem',
+                        textShadow: stats.userBalance >= 0 ? '0 0 20px rgba(16, 185, 129, 0.2)' : '0 0 20px rgba(248, 113, 113, 0.2)'
+                    }}>
+                        {stats.userBalance > 0 ? '+' : ''}€{stats.userBalance.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
             </div>
 
             {loading ? (
-                <div className="text-center py-12">
-                    <div className="spinner-large" style={{ margin: '0 auto 1.5rem' }}></div>
-                    <p className="text-muted">{t('finance.loading', 'Analisi finanziaria in corso...')}</p>
+                <div className="space-y-6">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <Skeleton height="80px" borderRadius="24px" />
+                        <Skeleton height="80px" borderRadius="24px" />
+                    </div>
+                    <div className="space-y-4">
+                        <Skeleton height="20px" width="150px" />
+                        <Skeleton height="60px" borderRadius="20px" />
+                        <Skeleton height="60px" borderRadius="20px" />
+                        <Skeleton height="60px" borderRadius="20px" />
+                    </div>
                 </div>
             ) : (
                 <>
-                    <div className="flex justify-center mb-12">
-                        <div className="bg-white/5 backdrop-blur-xl p-1 rounded-2xl border border-white/10 flex gap-1">
-                            <button
-                                onClick={() => setTab('summary')}
-                                className={cn(
-                                    "px-6 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300",
-                                    tab === 'summary' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
-                                )}
-                            >
-                                {t('finance.tabs.balances', 'Bilanci')}
-                            </button>
-                            <button
-                                onClick={() => setTab('list')}
-                                className={cn(
-                                    "px-6 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300",
-                                    tab === 'list' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
-                                )}
-                            >
-                                {t('finance.tabs.list', 'Lista')}
-                            </button>
-                        </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', gap: '0.5rem', background: 'var(--bg-elevated)', padding: '0.4rem', borderRadius: '14px', width: 'fit-content', margin: '0 auto 2rem', border: '1px solid var(--border-subtle)' }}>
+                        <button
+                            onClick={() => setTab('summary')}
+                            className="nav-tab-minimal"
+                            style={{
+                                background: tab === 'summary' ? 'var(--accent-digital-blue)' : 'transparent',
+                                boxShadow: tab === 'summary' ? 'var(--glow-blue-sm)' : 'none',
+                                color: tab === 'summary' ? 'white' : 'var(--text-muted)'
+                            }}
+                        >
+                            {t('finance.tabs.balances', 'Bilanci ⚖️')}
+                        </button>
+                        <button
+                            onClick={() => setTab('list')}
+                            className="nav-tab-minimal"
+                            style={{
+                                background: tab === 'list' ? 'var(--accent-digital-blue)' : 'transparent',
+                                boxShadow: tab === 'list' ? 'var(--glow-blue-sm)' : 'none',
+                                color: tab === 'list' ? 'white' : 'var(--text-muted)'
+                            }}
+                        >
+                            {t('finance.tabs.list', 'Lista 🧾')}
+                        </button>
                     </div>
 
                     {!readOnly && (
-                        <div className="flex justify-center mb-12">
-                            <Button
-                                onClick={() => setShowForm(true)}
-                                className="btn-primary h-14 px-8 rounded-2xl flex items-center gap-3 group"
-                            >
-                                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                                <span className="font-black text-lg">{t('finance.addExpense', 'Nuova Spesa')}</span>
-                            </Button>
+                        <div className="text-center" style={{ marginBottom: '2rem' }}>
+                            <button onClick={() => setShowForm(!showForm)} className="btn-modern-primary">
+                                {showForm ? t('finance.cancel', 'Annulla') : t('finance.addExpense', '+ Nuova Spesa')}
+                            </button>
                         </div>
                     )}
 
-                    {showForm && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setShowForm(false)} />
-                            <div className="bg-[#080810] border border-white/10 w-full max-w-lg rounded-[40px] p-8 md:p-12 shadow-2xl relative animate-scale-in">
-                                <h3 className="text-3xl font-black text-white mb-8 tracking-tighter">{t('finance.addExpense', 'Aggiungi Spesa')}</h3>
-                                <form onSubmit={handleAddExpense} className="space-y-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">{t('finance.form.title', 'Cosa?')}</label>
-                                        <input
-                                            value={title} onChange={e => setTitle(e.target.value)} required
-                                            placeholder={t('finance.form.titlePlaceholder', "es. Cena Sushi")}
-                                            className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl px-6 text-white focus:border-[#0070f3] transition-all outline-none"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">{t('finance.form.amount', 'Importo')}</label>
-                                            <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl px-6 text-white focus:border-[#0070f3] outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">{t('finance.form.currency', 'Valuta')}</label>
-                                            <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl px-6 text-white appearance-none outline-none focus:border-[#0070f3]">
-                                                {currencies.map(c => (
-                                                    <option key={c.code} value={c.code} className="bg-[#080810]">{c.symbol} {c.code}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">{t('finance.form.category', 'Categoria')}</label>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {categories.map(cat => (
-                                                <button
-                                                    key={cat.id} type="button"
-                                                    onClick={() => setCategory(cat.id)}
-                                                    className={cn(
-                                                        "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300",
-                                                        category === cat.id ? "bg-[#0070f3]/20 border-[#0070f3] text-white" : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
-                                                    )}
-                                                >
-                                                    <span className="text-xl mb-1">{cat.icon}</span>
-                                                    <span className="text-[10px] font-bold">{cat.label.split(' ')[0]}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">{t('finance.form.payer', 'Chi ha pagato?')}</label>
-                                        <select value={payerId} onChange={e => setPayerId(e.target.value)} className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl px-6 text-white appearance-none outline-none focus:border-[#0070f3]">
-                                            {participants.map(p => (
-                                                <option key={p.id} value={p.id} className="bg-[#080810]">{p.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex gap-4 pt-4">
-                                        <Button variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 text-white/60" onClick={() => setShowForm(false)}>
-                                            {t('common.cancel', 'Annulla')}
-                                        </Button>
-                                        <Button type="submit" className="btn-primary flex-[2] h-14 rounded-2xl font-black text-lg">
-                                            {t('finance.form.submit', 'Aggiungi Spesa')}
-                                        </Button>
-                                    </div>
-                                </form>
+                    <Drawer
+                        isOpen={showForm}
+                        onClose={() => setShowForm(false)}
+                        title={t('finance.addExpense', '+ Nuova Spesa')}
+                    >
+                        <form onSubmit={handleAddExpense} className="space-y-6">
+                            <div>
+                                <label className="form-label-modern">{t('finance.form.title', 'Cosa?')}</label>
+                                <input value={title} onChange={e => setTitle(e.target.value)} required placeholder={t('finance.form.titlePlaceholder', "es. Cena Sushi")} className="form-input-modern" />
                             </div>
-                        </div>
-                    )}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label className="form-label-modern">{t('finance.form.amount', 'Importo')}</label>
+                                    <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" className="form-input-modern" />
+                                </div>
+                                <div>
+                                    <label className="form-label-modern">{t('finance.form.currency', 'Valuta')}</label>
+                                    <select value={currency} onChange={e => setCurrency(e.target.value)} className="form-input-modern">
+                                        {currencies.map(c => (
+                                            <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="form-label-modern">{t('finance.form.category', 'Categoria')}</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                                    {categories.map(cat => (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => setCategory(cat.id)}
+                                            style={{
+                                                padding: '0.8rem',
+                                                border: '1px solid',
+                                                borderColor: category === cat.id ? 'var(--accent-digital-blue)' : 'var(--border-subtle)',
+                                                background: category === cat.id ? 'var(--accent-digital-blue-dim)' : 'var(--bg-card)',
+                                                borderRadius: '16px',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                textAlign: 'center',
+                                                transition: 'all 0.2s',
+                                                color: category === cat.id ? 'var(--accent-digital-blue-light)' : 'var(--text-muted)',
+                                                fontWeight: category === cat.id ? '800' : '500'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '1.2rem', display: 'block' }}>{cat.icon}</span>
+                                            {cat.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="form-label-modern">{t('finance.form.payer', 'Chi ha pagato?')}</label>
+                                <select value={payerId} onChange={e => setPayerId(e.target.value)} className="form-input-modern">
+                                    {participants.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button type="submit" className="btn-modern-primary" style={{ width: '100%', marginTop: 'auto' }}>
+                                {t('finance.form.submit', 'Aggiungi Spesa 💸')}
+                            </button>
+                        </form>
+                    </Drawer>
 
                     {tab === 'list' && (
                         <div className="animate-in">
                             {expenses.length === 0 ? (
-                                <div className="text-center py-16 bg-[#0d0d18] border border-white/5 rounded-[32px] animate-scale-in">
-                                    <div className="text-4xl mb-4 opacity-50">🧾</div>
-                                    <p className="text-white/40 font-bold uppercase tracking-widest text-xs">{t('finance.emptyState', 'Ancora nessuna spesa.')}</p>
+                                <div className="text-center py-8">
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧾</div>
+                                    <p className="text-muted">{t('finance.emptyState', 'Ancora nessuna spesa registrata.')}</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {[...expenses].reverse().map(exp => (
-                                        <div key={exp.id} className="bg-[#0d0d18] border border-white/5 p-6 rounded-[32px] shadow-xl animate-scale-in hover:border-white/10 transition-all group">
-                                            <div className="flex items-center gap-6">
-                                                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-2xl shadow-inner border border-white/5">
-                                                    {getCategoryIcon(exp.category)}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="text-white font-black text-lg tracking-tight mb-1">{exp.title || exp.description}</div>
-                                                    <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                                                        {t('finance.paidBy', 'Pagato da')} <span className="text-[#0070f3]">{getUserName(exp.payer_id)}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right flex items-center gap-6">
-                                                    <div className="flex flex-col items-end">
-                                                        <div className="text-2xl font-black text-white tracking-tighter tabular-nums">
-                                                            <span className="text-[#0070f3] mr-1">€</span>{exp.amount.toFixed(2)}
-                                                        </div>
-                                                        {exp.currency && exp.currency !== 'EUR' && (
-                                                            <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">
-                                                                {exp.original_amount?.toLocaleString()} {exp.currency}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {!readOnly && (
-                                                        <button
-                                                            onClick={() => handleDelete(exp.id)}
-                                                            className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                                                            title={t('common.delete', 'Elimina')}
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    )}
+                                [...expenses].reverse().map(exp => (
+                                    <div key={exp.id} className="expense-card-premium">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{
+                                                width: '56px',
+                                                height: '56px',
+                                                background: 'var(--bg-elevated)',
+                                                borderRadius: '16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.5rem',
+                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                                            }}>
+                                                {getCategoryIcon(exp.category)}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '800', fontSize: '1.1rem', color: 'var(--text-primary)' }}>{exp.title}</div>
+                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                                                    {t('finance.paidBy', 'Pagato da')} <span style={{ color: 'var(--accent-digital-blue-light)', fontWeight: '700' }}>{getUserName(exp.payer_id)}</span>
                                                 </div>
                                             </div>
+                                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                    <div style={{ fontWeight: '900', fontSize: '1.25rem', color: 'var(--accent-digital-blue-light)' }}>€{exp.amount.toFixed(2)}</div>
+                                                    {exp.currency && exp.currency !== 'EUR' && (
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                                                            {exp.original_amount?.toLocaleString()} {exp.currency}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {!readOnly && (
+                                                    <button
+                                                        onClick={() => handleDelete(exp.id)}
+                                                        style={{ background: 'none', border: 'none', color: '#ef4444', padding: '5px', cursor: 'pointer', opacity: 0.6 }}
+                                                        title="Elimina"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     )}
@@ -387,45 +424,139 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     <p className="text-muted dark:text-gray-400" style={{ fontSize: '0.9rem' }}>{t('finance.balancedDesc', 'Nessuno deve soldi a nessuno.')}</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {balances.map((b, idx) => (
-                                        <div key={idx} className="bg-[#0d0d18] border border-white/5 p-6 rounded-[32px] shadow-xl animate-scale-in">
-                                            <div className="flex items-center gap-6">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0070f3] to-blue-600 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-[#0070f3]/10">
-                                                    {getUserName(b.debtor_id).charAt(0).toUpperCase()}
+                                balances.map((b, idx) => (
+                                    <div key={idx} className="balance-card-premium">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div className="user-avatar-mini" style={{ background: 'var(--accent-digital-blue)' }}>
+                                                {getUserName(b.debtor_id).substring(0, 1).toUpperCase()}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                                    <strong style={{ fontWeight: '800' }}>{getUserName(b.debtor_id)}</strong>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <div className="text-xs font-black text-white/40 uppercase tracking-widest mb-1">{getUserName(b.debtor_id)}</div>
-                                                    <div className="text-white font-medium">
-                                                        {t('finance.owesTo', 'deve dare a')} <span className="font-black text-[#0070f3]">{getUserName(b.creditor_id)}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-3xl font-black text-white tracking-tighter tabular-nums">
-                                                    <span className="text-emerald-500 mr-1">€</span>{b.amount.toFixed(2)}
+                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                    {t('finance.owesTo', 'deve dare a')} <strong style={{ fontWeight: '700', color: 'var(--accent-digital-blue-light)' }}>{getUserName(b.creditor_id)}</strong>
                                                 </div>
                                             </div>
+                                            <div style={{ fontSize: '1.5rem', fontWeight: '950', color: '#f87171' }}>
+                                                €{b.amount.toFixed(2)}
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))
                             )}
 
                             {!readOnly && (
-                                <div className="mt-8 p-6 bg-[#0070f3]/5 rounded-[32px] border border-[#0070f3]/20 relative overflow-hidden">
-                                    <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-[#0070f3]/10 blur-3xl rounded-full" />
-                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#0070f3] mb-3 flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4" />
-                                        {t('finance.tipTitle', 'Tip di SplitPlan AI')}
-                                    </h4>
-                                    <p className="text-xs md:text-sm text-[#7b7b9a] leading-relaxed font-medium">
+                                <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#eff6ff', borderRadius: '16px', border: '1px dashed #3b82f6' }}>
+                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1d4ed8', fontWeight: '700' }}>{t('finance.tipTitle', 'Tip di SplitPlan AI')}</h4>
+                                    <p style={{ fontSize: '0.85rem', color: '#1e40af', lineHeight: '1.4' }}>
                                         {t('finance.tipDesc', 'I bilanci vengono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.')}
                                     </p>
                                 </div>
                             )}
                         </div>
                     )}
-
                 </>
             )}
+
+            <style>{`
+                .nav-tab-minimal {
+                    padding: 0.5rem 1.5rem;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-modern-primary {
+                    background: #2563eb;
+                    color: white;
+                    padding: 0.8rem 2rem;
+                    border: none;
+                    border-radius: 16px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+                }
+                .btn-modern-primary:hover {
+                    background: #1d4ed8;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+                }
+                .glass-card {
+                    background: rgba(255, 255, 255, 0.8);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 24px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+                }
+                .form-label-modern {
+                    display: block;
+                    font-weight: 700;
+                    margin-bottom: 0.6rem;
+                    font-size: 0.9rem;
+                    color: #475569;
+                }
+                .form-input-modern {
+                    width: 100%;
+                    padding: 0.9rem 1.2rem;
+                    border-radius: 14px;
+                    border: 1px solid #e2e8f0;
+                    background: white;
+                    font-size: 1rem;
+                    transition: all 0.2s;
+                }
+                .form-input-modern:focus {
+                    border-color: #3b82f6;
+                    outline: none;
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                }
+                .expense-card-premium {
+                    background: var(--bg-card);
+                    padding: 1.5rem;
+                    border-radius: 24px;
+                    margin-bottom: 1.25rem;
+                    border: 1px solid var(--border-subtle);
+                    box-shadow: var(--shadow-sm);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .expense-card-premium:hover {
+                    transform: translateX(8px);
+                    border-color: var(--accent-digital-blue);
+                    box-shadow: var(--shadow-md);
+                }
+                .balance-card-premium {
+                    background: var(--bg-card);
+                    padding: 1.5rem;
+                    border-radius: 24px;
+                    margin-bottom: 1rem;
+                    border-left: 6px solid #ef4444;
+                    border-top: 1px solid var(--border-subtle);
+                    border-right: 1px solid var(--border-subtle);
+                    border-bottom: 1px solid var(--border-subtle);
+                    box-shadow: var(--shadow-sm);
+                }
+                .user-avatar-mini {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 12px;
+                    display: flex;
+                    alignItems: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                }
+                .animate-in {
+                    animation: slideUp 0.4s ease-out;
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(10px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

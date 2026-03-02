@@ -4,27 +4,42 @@ import { useTranslation } from 'react-i18next';
 const PainPoints = () => {
     const { t } = useTranslation();
     return (
-        <section className="section" style={{ background: 'var(--bg-base)' }}>
-            <div className="container">
-                <div className="text-center" style={{ marginBottom: '4rem' }}>
-                    <h2 style={{ fontSize: '2rem' }}>{t('painPoints.title', 'Basta con il Caos Organizzativo')}</h2>
-                    <p>{t('painPoints.subtitle', 'Organizzare un viaggio non dovrebbe essere un secondo lavoro.')}</p>
-                </div>
-                <div className="grid-3">
-                    <div style={{ padding: '2rem', background: 'var(--bg-soft-gray)', borderRadius: 'var(--radius-md)' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
-                        <h3>{t('painPoints.chaosTitle', 'Caos Decisionale')}</h3>
-                        <p>{t('painPoints.chaosDesc', 'Chat WhatsApp infinite, link persi, e nessuno che prende una decisione. Il 70% dei viaggi di gruppo muore qui.')}</p>
+        <section className="section bg-black">
+            <div className="container h-full">
+                <div className="viewport-split items-center">
+
+                    {/* Left: Strong Statement */}
+                    <div className="space-y-6">
+                        <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500">
+                            THE PROBLEM
+                        </div>
+                        <h2 className="text-white text-4xl lg:text-5xl font-semibold leading-tight max-w-sm">
+                            {t('painPoints.title', 'Basta con il Caos Organizzativo')}
+                        </h2>
+                        <p className="text-gray-600 text-lg max-w-sm">
+                            {t('painPoints.subtitle', 'Organizzare un viaggio non dovrebbe essere un secondo lavoro.')}
+                        </p>
                     </div>
-                    <div style={{ padding: '2rem', background: 'var(--bg-soft-gray)', borderRadius: 'var(--radius-md)' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
-                        <h3>{t('painPoints.fragmentationTitle', 'Frammentazione')}</h3>
-                        <p>{t('painPoints.fragmentationDesc', '5 app diverse aperte: Booking, Maps, Notes, Splitwise... Un incubo logistico da gestire.')}</p>
-                    </div>
-                    <div style={{ padding: '2rem', background: 'var(--bg-soft-gray)', borderRadius: 'var(--radius-md)' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}></div>
-                        <h3>{t('painPoints.financeTitle', 'Imbarazzo Finanziario')}</h3>
-                        <p>{t('painPoints.financeDesc', '"Chi deve quanto a chi?". Rincorrere gli amici per i soldi è la parte peggiore del viaggio.')}</p>
+
+                    {/* Right: Pain Points List */}
+                    <div className="space-y-10 py-12">
+                        {[
+                            { title: t('painPoints.chaosTitle'), desc: t('painPoints.chaosDesc'), emoji: '💬' },
+                            { title: t('painPoints.fragmentationTitle'), desc: t('painPoints.fragmentationDesc'), emoji: '🧩' },
+                            { title: t('painPoints.financeTitle'), desc: t('painPoints.financeDesc'), emoji: '💸' }
+                        ].map((item, i) => (
+                            <div key={i} className="flex gap-6 group">
+                                <div className="text-2xl opacity-40 group-hover:opacity-100 transition-opacity pt-1">
+                                    {item.emoji}
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="text-white text-lg font-semibold">{item.title}</h4>
+                                    <p className="text-gray-500 text-sm leading-relaxed max-w-md">
+                                        {item.desc}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

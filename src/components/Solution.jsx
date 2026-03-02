@@ -9,105 +9,84 @@ const Solution = () => {
             emoji: "🤖",
             title: t('solution.steps.s1.title', "Decisione & Consenso"),
             desc: t('solution.steps.s1.desc', "L'AI raccoglie i gusti di tutti e propone 3 opzioni perfette. Risolve i conflitti prima che nascano."),
-            accent: '#8b5cf6'
+            accent: 'var(--accent-digital-blue)'
         },
         {
             num: "02",
             emoji: "✈️",
             title: t('solution.steps.s2.title', "Logistica Proattiva"),
             desc: t('solution.steps.s2.desc', "Voli e hotel prenotati in sync con il budget approvato. Niente sorprese."),
-            accent: '#22d3ee'
+            accent: 'var(--accent-digital-blue-light)'
         },
         {
             num: "03",
             emoji: "🗺️",
             title: t('solution.steps.s3.title', "Itinerario Dinamico"),
             desc: t('solution.steps.s3.desc', "Pianificazione intelligente, ottimizzata geograficamente per massimizzare il tempo. Modifica l'itinerario in un click grazie all'Assistente AI."),
-            accent: '#8b5cf6'
+            accent: 'var(--accent-digital-blue)'
         },
         {
             num: "04",
             emoji: "💸",
             title: t('solution.steps.s4.title', "CFO del Viaggio"),
             desc: t('solution.steps.s4.desc', "Tiene traccia delle spese in tempo reale e calcola i conguagli. Tu goditi il viaggio."),
-            accent: '#22d3ee'
+            accent: 'var(--accent-digital-blue-light)'
         }
     ];
 
     return (
-        <section id="how-it-works" className="section" style={{ background: '#050508', position: 'relative', overflow: 'hidden' }}>
+        <section id="how-it-works" className="section bg-black">
+            <div className="container h-full">
+                <div className="viewport-split items-center">
 
-            {/* Background grid */}
-            <div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none',
-                backgroundImage: 'linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px)',
-                backgroundSize: '60px 60px'
-            }} />
-
-            <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                    <span style={{
-                        display: 'inline-block', padding: '4px 14px', borderRadius: '999px',
-                        background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)',
-                        fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.08em',
-                        textTransform: 'uppercase', color: '#a78bfa', marginBottom: '1rem'
-                    }}>
-                        {t('solution.badge', 'Il Nostro Metodo')}
-                    </span>
-                    <h2 style={{ color: '#f0f0ff' }}>{t('solution.title', '4 Fasi per il Viaggio Perfetto')}</h2>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-                    {steps.map((step, idx) => (
-                        <div key={idx} style={{
-                            position: 'relative',
-                            padding: '2rem',
-                            border: `1px solid rgba(${step.accent === '#8b5cf6' ? '139,92,246' : '34,211,238'}, 0.15)`,
-                            borderRadius: '20px',
-                            background: '#0d0d18',
-                            transition: 'all 0.3s ease',
-                            cursor: 'default'
-                        }}
-                            onMouseOver={e => {
-                                e.currentTarget.style.borderColor = step.accent + '55';
-                                e.currentTarget.style.boxShadow = `0 0 24px ${step.accent}20`;
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                            }}
-                            onMouseOut={e => {
-                                e.currentTarget.style.borderColor = `rgba(${step.accent === '#8b5cf6' ? '139,92,246' : '34,211,238'}, 0.15)`;
-                                e.currentTarget.style.boxShadow = 'none';
-                                e.currentTarget.style.transform = 'none';
-                            }}
-                        >
-                            {/* Step number watermark */}
-                            <div style={{
-                                fontSize: '4rem', fontWeight: '900',
-                                color: `rgba(${step.accent === '#8b5cf6' ? '139,92,246' : '34,211,238'}, 0.08)`,
-                                position: 'absolute', top: '10px', right: '16px', lineHeight: 1,
-                                userSelect: 'none'
-                            }}>
-                                {step.num}
+                    {/* Left: Steps */}
+                    <div className="space-y-12 py-12">
+                        <div className="space-y-4">
+                            <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">
+                                {t('solution.badge', 'IL METODO')}
                             </div>
-
-                            {/* Icon */}
-                            <div style={{
-                                width: '48px', height: '48px', borderRadius: '14px',
-                                background: `rgba(${step.accent === '#8b5cf6' ? '139,92,246' : '34,211,238'}, 0.12)`,
-                                border: `1px solid rgba(${step.accent === '#8b5cf6' ? '139,92,246' : '34,211,238'}, 0.25)`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '1.4rem', marginBottom: '1.25rem'
-                            }}>
-                                {step.emoji}
-                            </div>
-
-                            <h3 style={{ color: step.accent, fontSize: '1.15rem', fontWeight: '700', marginBottom: '0.75rem' }}>
-                                {step.title}
-                            </h3>
-                            <p style={{ fontSize: '0.95rem', color: '#7b7b9a', lineHeight: '1.65', margin: 0 }}>
-                                {step.desc}
-                            </p>
+                            <h2 className="text-white text-4xl font-semibold">{t('solution.title', '4 Fasi per il Viaggio Perfetto')}</h2>
                         </div>
-                    ))}
+
+                        <div className="space-y-8">
+                            {steps.map((step, idx) => (
+                                <div key={idx} className="group flex gap-6">
+                                    <div className="text-gray-700 text-lg font-bold font-mono pt-1 transition-colors group-hover:text-white">
+                                        {step.num}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="text-white text-lg font-semibold">{step.title}</h4>
+                                        <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+                                            {step.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Right: Abstract Visual / Floating Mockup */}
+                    <div className="relative flex items-center justify-center py-12">
+                        <div className="relative w-full max-w-[440px] aspect-[4/5] border border-white/5 rounded-lg bg-[#050505] flex items-center justify-center overflow-hidden">
+                            {/* Abstract connection lines or a minimal UI element */}
+                            <div className="absolute inset-0 opacity-20">
+                                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white to-transparent" />
+                                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
+                            </div>
+
+                            <div className="z-10 text-center space-y-6">
+                                <div className="w-20 h-20 mx-auto rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
+                                    ✈️
+                                </div>
+                                <div className="px-6 py-2 rounded-sm border border-white/10 bg-black text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                                    PLATFORM ECOSYSTEM
+                                </div>
+                            </div>
+
+                            {/* Subtle scanline effect */}
+                            <div className="absolute inset-0 bg-scanline opacity-5 pointer-events-none" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

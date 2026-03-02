@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { MapPin, Clock } from 'lucide-react';
 
 const Timeline = ({ items }) => {
     const { t, i18n } = useTranslation();
@@ -36,96 +37,65 @@ const Timeline = ({ items }) => {
     const sortedDates = Object.keys(grouped).sort();
 
     return (
-        <div style={{ maxWidth: '850px', margin: '0 auto', position: 'relative', padding: '1rem' }}>
-
-            <div style={{ position: 'relative' }}>
-                {/* Vertical Line with Gradient */}
-                <div style={{
-                    position: 'absolute',
-                    left: '25px',
-                    top: '20px',
-                    bottom: '20px',
-                    width: '4px',
-                    background: 'linear-gradient(to bottom, var(--primary-blue), var(--primary-blue-light))',
-                    borderRadius: '4px',
-                    opacity: 0.3
-                }}></div>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="relative">
+                {/* Vertical Progress Line */}
+                <div className="absolute left-[24px] top-6 bottom-6 w-px bg-white/10"></div>
 
                 {sortedDates.map((date, idx) => (
-                    <div key={date} style={{ marginBottom: '3rem', position: 'relative' }} className="animate-fade-in">
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{
-                                width: '54px',
-                                height: '54px',
-                                background: 'var(--bg-card)',
-                                borderRadius: '18px',
-                                border: '2px solid var(--primary-blue)',
-                                zIndex: 2,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'var(--primary-blue)',
-                                fontWeight: '800',
-                                fontSize: '1.2rem',
-                                boxShadow: '0 8px 20px rgba(0,0,0,0.06)',
-                                fontFamily: "'Outfit', sans-serif"
-                            }}>
+                    <div key={date} className="mb-16 relative">
+                        {/* Day Header */}
+                        <div className="flex items-center gap-6 mb-8 sticky top-[calc(var(--header-height)+80px)] z-20 bg-black/50 backdrop-blur-md py-4">
+                            <div className="w-12 h-12 flex items-center justify-center bg-white text-black text-sm font-black rounded-sm shrink-0 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                                 {idx + 1}
                             </div>
-                            <h3 style={{
-                                marginLeft: '1.5rem',
-                                margin: 0,
-                                background: 'var(--glass-bg)',
-                                backdropFilter: 'blur(10px)',
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '16px',
-                                border: '1px solid rgba(255,255,255,0.4)',
-                                boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
-                                fontFamily: "'Outfit', sans-serif",
-                                fontWeight: '700'
-                            }}>
-                                {t('timeline.day', { index: idx + 1 })} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', marginLeft: '8px' }}>• {new Date(date).toLocaleDateString(i18n.language === 'it' ? 'it-IT' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                            </h3>
+                            <div className="flex flex-col">
+                                <span className="subtle-heading !mb-0">{t('timeline.day', { index: idx + 1 })}</span>
+                                <h3 className="text-white text-lg font-semibold uppercase tracking-tight">
+                                    {new Date(date).toLocaleDateString(i18n.language === 'it' ? 'it-IT' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                </h3>
+                            </div>
                         </div>
 
-                        <div style={{ marginLeft: '65px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Activities List */}
+                        <div className="ml-16 space-y-4">
                             {grouped[date].map((item, i) => (
-                                <div key={item.id || i} className="hover-lift hover-scale" style={{
-                                    background: 'var(--bg-card)',
-                                    padding: '1.2rem',
-                                    borderRadius: '20px',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-                                    border: '1px solid #f1f5f9',
-                                    borderLeft: `6px solid ${item.type === 'CHECKIN' ? '#f59e0b' : item.type === 'FOOD' ? '#ef4444' : '#10b981'}`,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.2rem' }}>
-
-                                                <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', fontFamily: "'Outfit', sans-serif" }}>{item.title}</strong>
+                                <div
+                                    key={item.id || i}
+                                    className="premium-card group hover:!border-white/20 transition-all duration-300 p-6"
+                                >
+                                    <div className="flex justify-between items-start gap-6">
+                                        <div className="space-y-3 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${item.type === 'CHECKIN' ? 'bg-amber-500' :
+                                                        item.type === 'FOOD' ? 'bg-rose-500' : 'bg-emerald-500'
+                                                    }`}></div>
+                                                <h4 className="text-white text-xl font-semibold tracking-tight uppercase">
+                                                    {item.title}
+                                                </h4>
                                             </div>
-                                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5' }}>{item.description}</p>
-                                        </div>
-                                        <div style={{
-                                            fontSize: '0.75rem',
-                                            background: '#f8fafc',
-                                            color: '#64748b',
-                                            padding: '4px 10px',
-                                            borderRadius: '8px',
-                                            fontWeight: '700',
-                                            border: '1px solid #e2e8f0',
-                                            whiteSpace: 'nowrap',
-                                            marginLeft: '1rem'
-                                        }}>
-                                            {(() => {
-                                                try {
-                                                    if (!item.start_time) return "N/A";
-                                                    const d = new Date(item.start_time);
-                                                    return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString(i18n.language === 'it' ? 'it-IT' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                                                } catch { return "N/A"; }
-                                            })()}
+                                            <p className="text-gray-500 text-sm leading-relaxed max-w-2xl">
+                                                {item.description}
+                                            </p>
+
+                                            <div className="flex items-center gap-4 pt-2">
+                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+                                                    <Clock className="w-3 h-3" />
+                                                    {(() => {
+                                                        try {
+                                                            if (!item.start_time) return "N/A";
+                                                            const d = new Date(item.start_time);
+                                                            return isNaN(d.getTime()) ? "N/A" : d.toLocaleTimeString(i18n.language === 'it' ? 'it-IT' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                                                        } catch { return "N/A"; }
+                                                    })()}
+                                                </div>
+                                                {item.location && (
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {item.location}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

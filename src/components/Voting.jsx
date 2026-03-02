@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { voteProposal, getParticipants, generateShareLink, getProposals } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Button } from './ui/button';
+import { Share2, CheckCircle2, Users, Loader2 } from 'lucide-react';
 
 const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer }) => {
     const { t } = useTranslation();
@@ -162,104 +164,86 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                 {/* GUEST WAITING SCREEN AFTER VOTING */}
                 {!isOrganizer && hasVoted && !isSolo ? (
-                    <div className="animate-fade-in" style={{
-                        marginTop: '2rem',
-                        display: 'flex',
-                        justifyContent: 'center'
-                    }}>
-                        <div style={{
-                            background: 'var(--bg-card)',
-                            padding: '3rem',
-                            borderRadius: '32px',
-                            textAlign: 'center',
-                            border: '1px solid var(--primary-blue)',
-                            maxWidth: '600px',
-                            boxShadow: 'var(--shadow-lg)'
-                        }}>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-blue)', marginBottom: '1.5rem', letterSpacing: '2px' }}>{t('voting.votedTitle', 'VOTED')}</div>
-                            <h2 style={{ color: 'var(--primary-blue)', marginBottom: '1rem', fontWeight: '800' }}>
-                                {t('voting.votedSubtitle', 'Voto Registrato!')}
-                            </h2>
-                            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem' }}>
-                                <span dangerouslySetInnerHTML={{ __html: t('voting.votedDesc') }} />
-                            </p>
-                            <div style={{
-                                display: 'inline-block',
-                                padding: '0.8rem 1.5rem',
-                                background: 'var(--bg-soft-gray)',
-                                borderRadius: '16px',
-                                color: 'var(--text-main)',
-                                fontWeight: '700',
-                                fontSize: '0.9rem'
-                            }}>
-                                {t('voting.closePage', 'Puoi chiudere questa pagina.')}
+                    <div className="animate-fade-in flex justify-center py-20">
+                        <div className="premium-card p-16 text-center max-w-2xl space-y-8 border-white/20">
+                            <div className="flex justify-center">
+                                <div className="w-20 h-20 bg-white text-black flex items-center justify-center rounded-sm">
+                                    <CheckCircle2 className="w-10 h-10" />
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <span className="subtle-heading">{t('voting.votedStatus', 'Voto registrato')}</span>
+                                <h2 className="text-white text-4xl font-semibold tracking-tight uppercase">
+                                    {t('voting.votedSubtitle', 'Pronto per il viaggio.')}
+                                </h2>
+                                <p className="text-gray-500 text-lg leading-relaxed">
+                                    <span dangerouslySetInnerHTML={{ __html: t('voting.votedDesc') }} />
+                                </p>
+                            </div>
+                            <div className="pt-8">
+                                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest border border-white/10 px-6 py-3 rounded-sm">
+                                    {t('voting.closePage', 'Puoi chiudere questa pagina')}
+                                </span>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="text-center mb-8 md:mb-12">
-                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                                {isSolo ? t('voting.titleSolo', 'Scegli la tua Meta') : t('voting.titleGroup', 'Vota la destinazione')}
-                            </h2>
+                        <div className="max-w-4xl mx-auto space-y-12 mb-16">
+                            <div className="text-left space-y-4">
+                                <span className="subtle-heading">{t('voting.section', 'Consenso & Destinazioni')}</span>
+                                <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                                    {isSolo ? t('voting.titleSolo', 'Scegli la tua Meta') : t('voting.titleGroup', 'Vota la destinazione')}
+                                </h2>
 
-                            {!isSolo && (
-                                <div className="space-y-6">
-                                    <p className="text-text-muted text-base md:text-lg">
+                                {!isSolo && (
+                                    <p className="text-gray-500 text-lg leading-relaxed">
                                         {t('voting.groupConsensus', { count: stats.count, total: stats.total })}
                                     </p>
+                                )}
+                            </div>
 
-                                    <div className="flex flex-col items-center gap-4">
-                                        {isOrganizer && !currentUserParticipant && (
-                                            <div style={{ maxWidth: '500px', marginBottom: '1rem' }} className="animate-fade-in">
-                                                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '16px', border: '1px solid #dbeafe' }}>
-                                                    <p style={{ fontSize: '0.85rem', color: '#1e40af', margin: 0 }}>
-                                                        <span dangerouslySetInnerHTML={{ __html: t('voting.organizerTip') }} />
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {currentUserParticipant ? (
-                                            <div className="bg-green-50 border border-green-200 px-6 py-3 rounded-2xl animate-fade-in">
+                            {!isSolo && (
+                                <div className="flex flex-col sm:flex-row items-center gap-6">
+                                    {currentUserParticipant ? (
+                                        <div className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/20 rounded-sm text-white">
+                                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                                            <span className="text-sm font-semibold uppercase tracking-tight">
                                                 {t('voting.greeting', { name: currentUserParticipant.name })}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-2 rounded-sm pr-4">
+                                            <div className="bg-white/10 px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                {t('voting.voteFor', 'Vota come:')}
                                             </div>
-                                        ) : (
-                                            <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-blue-50 px-4 md:px-6 py-3 md:py-4 rounded-xl">
-                                                <label className="font-bold text-sm md:text-base text-text-main">
-                                                    {t('voting.voteFor', 'Vota per:')}
-                                                </label>
-                                                <select
-                                                    value={selectedUser || ''}
-                                                    onChange={(e) => {
-                                                        setSelectedUser(parseInt(e.target.value));
-                                                        setVotedId(null);
-                                                    }}
-                                                    className="px-4 py-2 rounded-lg border border-violet-500/20 bg-[#131325] text-white
-                                                     focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20
-                                                     transition-all outline-none min-w-[150px] text-sm md:text-base"
-                                                >
-                                                    {participants.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        {isOrganizer && (
-                                            <button
-                                                onClick={handleShareVotingLink}
-                                                disabled={isSharing}
-                                                className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-primary-blue text-primary-blue rounded-xl font-bold hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-all shadow-md group"
+                                            <select
+                                                value={selectedUser || ''}
+                                                onChange={(e) => {
+                                                    setSelectedUser(parseInt(e.target.value));
+                                                    setVotedId(null);
+                                                }}
+                                                className="bg-transparent text-white text-sm font-semibold outline-none cursor-pointer uppercase tracking-tight"
                                             >
-                                                <span>{isSharing ? t('voting.shareBtnGenerating', 'Generando...') : t('voting.shareBtn', '🔗 Condividi per il voto')}</span>
-                                                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9.158a3 3 0 100-2.684 3 3 0 000 2.684z" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
+                                                {participants.map(p => (
+                                                    <option key={p.id} value={p.id} className="bg-black text-white">{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {isOrganizer && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleShareVotingLink}
+                                            disabled={isSharing}
+                                            className="border-white/20 text-white hover:bg-white hover:text-black"
+                                        >
+                                            <Share2 className="w-4 h-4 mr-2" />
+                                            {isSharing ? t('voting.shareBtnGenerating', 'Generando...') : t('voting.shareBtn', 'Condividi Link')}
+                                        </Button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -267,61 +251,57 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
 
                         {/* Proposals Grid */}
                         {loadingProposals ? (
-                            <div className="text-center py-12">
-                                <div className="spinner-large" style={{ margin: '0 auto' }}></div>
-                                <p className="mt-4 text-text-muted">{t('voting.loading', 'Caricamento mete in corso...')}</p>
+                            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                <Loader2 className="w-10 h-10 text-white animate-spin" />
+                                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">{t('voting.loading', 'Curatela opzioni in corso...')}</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
                                 {proposals.map(prop => (
                                     <div
                                         key={prop.id}
-                                        className="bg-[#0d0d18] rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(139,92,246,0.1)] hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-between border border-violet-500/20"
+                                        className="premium-card !p-0 group flex flex-col h-full overflow-hidden border-white/10"
                                     >
-                                        <div className="relative overflow-hidden h-48 md:h-56">
+                                        <div className="relative aspect-[4/5] overflow-hidden">
                                             <img
                                                 src={prop.image_url}
                                                 alt={prop.destination}
-                                                className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
+                                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
                                                 onError={(e) => {
                                                     e.target.onerror = null;
                                                     e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
                                                 }}
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                                            <h3 className="absolute bottom-4 left-4 text-white text-xl md:text-2xl font-bold drop-shadow-lg">
-                                                {prop.destination}
-                                            </h3>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
+                                            <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                                                <h3 className="text-white text-3xl font-bold uppercase tracking-tight">{prop.destination}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="bg-white text-black text-[10px] font-black px-2 py-0.5 rounded-sm">AI CHOICE</div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="p-5 md:p-6 flex-1 flex flex-col">
-                                            <p className="text-text-muted text-sm md:text-base mb-4 flex-1" style={{ minHeight: '4.5rem' }}>
+                                        <div className="p-8 space-y-6 flex flex-col flex-1">
+                                            <p className="text-gray-500 text-sm leading-relaxed flex-1">
                                                 {prop.description}
                                             </p>
 
-                                            <button
+                                            <Button
                                                 onClick={() => handleVote(prop.id)}
                                                 disabled={loadingProposalId !== null}
-                                                className={`w-full py-3 md:py-4 rounded-xl font-bold text-sm md:text-base
-                                                  transition-all duration-200 transform active:scale-95
-                                                  flex items-center justify-center gap-2
-                                                  ${votedId === prop.id
-                                                        ? 'bg-green-100 text-green-700 border-2 border-green-500'
-                                                        : 'bg-primary-blue text-white hover:bg-opacity-90 hover:shadow-lg'
-                                                    }
-                                                  disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                variant={votedId === prop.id ? "secondary" : "default"}
+                                                fullWidth
+                                                size="lg"
+                                                className={votedId === prop.id ? "bg-white text-black" : ""}
                                             >
                                                 {loadingProposalId === prop.id ? (
-                                                    <>
-                                                        <span className="spinner border-current"></span>
-                                                        {isSolo ? t('voting.confirming', 'Conferma...') : t('voting.sending', 'Invio...')}
-                                                    </>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
                                                 ) : (
                                                     isSolo
-                                                        ? t('voting.chooseAndProceed', "Scegli e Procedi")
-                                                        : (votedId === prop.id ? t('voting.voted', 'Votato') : t('voting.voteThis', 'Vota Questa'))
+                                                        ? t('voting.chooseAndProceed', "Scegli Destinazione")
+                                                        : (votedId === prop.id ? t('voting.voted', 'Destinazione scelta') : t('voting.voteThis', 'Vota questa meta'))
                                                 )}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 ))}

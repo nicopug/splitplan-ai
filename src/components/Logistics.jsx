@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { searchStation, generateTrainlineURL } from '../utils/trainline';
+import { Button } from './ui/button';
+import { Plane, Train, Car, Home } from 'lucide-react';
 
 const Logistics = ({ trip }) => {
     const { t } = useTranslation();
@@ -79,79 +81,87 @@ const Logistics = ({ trip }) => {
     }
 
     return (
-        <div className="section container">
-            <div className="text-center" style={{ marginBottom: '2rem' }}>
-                <h2>{t('logistics.title', 'Logistica & Prenotazioni')}</h2>
-                <p>{t('logistics.subtitle', 'I link pronti per prenotare subito, senza impazzire.')}</p>
-            </div>
-
-            <div className="grid-2" style={{ gap: '2rem' }}>
-                {/* TRANSPORT (Flight, Train, or Car) */}
-                <div className="card" style={{
-                    padding: '2rem',
-                    textAlign: 'center',
-                    borderTop: `4px solid ${trip.transport_mode === 'TRAIN' ? '#ff6400' : trip.transport_mode === 'CAR' ? '#003580' : '#00a698'}`
-                }}>
-                    {trip.transport_mode === 'TRAIN' ? (
-                        <>
-                            <h3 style={{ color: '#ff6400' }}>{t('logistics.trainsTitle', 'Treni (Trainline)')}</h3>
-                            <p style={{ margin: '1rem 0', color: '#666' }}>
-                                {t('logistics.trainsDesc', { origin: trip.departure_city || origin, destination: destName, defaultValue: 'Prenota il tuo biglietto del treno da {{origin}} a {{destination}}.' })}
-                            </p>
-                            <a
-                                href={trainUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn"
-                                style={{ background: '#ff6400', color: 'white', display: 'inline-block', textDecoration: 'none' }}
-                            >
-                                {t('logistics.searchTrains', 'Cerca Treni')}
-                            </a>
-                        </>
-                    ) : trip.transport_mode === 'CAR' ? (
-                        <>
-                            <h3 style={{ color: '#003580' }}>{t('logistics.carTitle', 'Viaggio in Auto')}</h3>
-                            <p style={{ margin: '1rem 0', color: '#666' }}>
-                                {t('logistics.carDesc', { destination: destName, defaultValue: 'Pensiamo che userai la tua auto per questo viaggio verso {{destination}}.' })}
-                            </p>
-                            <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '12px', fontSize: '0.9rem', color: '#475569' }}>
-                                {t('logistics.carBudget', 'Abbiamo incluso una stima di carburante e pedaggi nel tuo Budget.')}
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <h3 style={{ color: '#00a698' }}>{t('logistics.flightsTitle', 'Voli (Skyscanner)')}</h3>
-                            <p style={{ margin: '1rem 0', color: '#666' }}>
-                                {t('logistics.flightsDesc', { origin: trip.departure_city || origin, destination: destName, count: numPeople, defaultValue: 'Cerca voli diretti da {{origin}} a {{destination}} per {{count}} persone.' })}
-                            </p>
-                            <a
-                                href={flightLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn"
-                                style={{ background: '#00a698', color: 'white', display: 'inline-block', textDecoration: 'none' }}
-                            >
-                                {t('logistics.searchFlights', 'Cerca Voli')}
-                            </a>
-                        </>
-                    )}
+        <div className="container py-12">
+            <div className="max-w-4xl mx-auto space-y-16">
+                <div className="text-left space-y-4">
+                    <span className="subtle-heading">{t('logistics.title', 'Logistica & Prenotazioni')}</span>
+                    <h2 className="text-white text-3xl font-semibold tracking-tight uppercase">
+                        {t('logistics.subtitle', 'I link pronti per prenotare subito, senza impazzire.')}
+                    </h2>
                 </div>
 
-                {/* HOTELS */}
-                <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #003580' }}>
-                    <h3 style={{ color: '#003580' }}>{t('logistics.hotelsTitle', 'Hotel (Booking.com)')}</h3>
-                    <p style={{ margin: '1rem 0', color: '#666' }}>
-                        {t('logistics.hotelsDesc', { destination: destName, defaultValue: 'Le migliori offerte a {{destination}}.' })}
-                    </p>
-                    <a
-                        href={hotelLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn"
-                        style={{ background: '#003580', color: 'white', display: 'inline-block', textDecoration: 'none' }}
-                    >
-                        {t('logistics.searchHotels', 'Cerca Hotel')}
-                    </a>
+                <div className="grid md:grid-cols-2 gap-8">
+                    {/* TRANSPORT (Flight, Train, or Car) */}
+                    <div className="premium-card p-10 flex flex-col items-center text-center space-y-6 group">
+                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-2 group-hover:bg-white group-hover:text-black transition-all">
+                            {trip.transport_mode === 'TRAIN' ? <Train className="w-8 h-8" /> :
+                                trip.transport_mode === 'CAR' ? <Car className="w-8 h-8" /> : <Plane className="w-8 h-8" />}
+                        </div>
+
+                        {trip.transport_mode === 'TRAIN' ? (
+                            <>
+                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                    {t('logistics.trainsTitle', 'Treni (Trainline)')}
+                                </h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    {t('logistics.trainsDesc', { origin: trip.departure_city || origin, destination: destName, defaultValue: 'Prenota il tuo biglietto del treno da {{origin}} a {{destination}}.' })}
+                                </p>
+                                <Button
+                                    onClick={() => window.open(trainUrl, '_blank')}
+                                    fullWidth
+                                >
+                                    {t('logistics.searchTrains', 'Cerca Treni')}
+                                </Button>
+                            </>
+                        ) : trip.transport_mode === 'CAR' ? (
+                            <>
+                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                    {t('logistics.carTitle', 'Viaggio in Auto')}
+                                </h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    {t('logistics.carDesc', { destination: destName, defaultValue: 'Pensiamo che userai la tua auto per questo viaggio verso {{destination}}.' })}
+                                </p>
+                                <div className="w-full p-4 bg-white/5 border border-white/5 rounded-sm text-[10px] font-bold text-gray-500 tracking-widest uppercase">
+                                    {t('logistics.carBudget', 'Abbiamo incluso una stima di carburante e pedaggi nel tuo Budget.')}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                    {t('logistics.flightsTitle', 'Voli (Skyscanner)')}
+                                </h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    {t('logistics.flightsDesc', { origin: trip.departure_city || origin, destination: destName, count: numPeople, defaultValue: 'Cerca voli diretti da {{origin}} a {{destination}} per {{count}} persone.' })}
+                                </p>
+                                <Button
+                                    onClick={() => window.open(flightLink, '_blank')}
+                                    fullWidth
+                                >
+                                    {t('logistics.searchFlights', 'Cerca Voli')}
+                                </Button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* HOTELS */}
+                    <div className="premium-card p-10 flex flex-col items-center text-center space-y-6 group">
+                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-2 group-hover:bg-white group-hover:text-black transition-all">
+                            <Home className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                            {t('logistics.hotelsTitle', 'Hotel (Booking.com)')}
+                        </h3>
+                        <p className="text-gray-500 text-sm leading-relaxed">
+                            {t('logistics.hotelsDesc', { destination: destName, defaultValue: 'Le migliori offerte a {{destination}}.' })}
+                        </p>
+                        <Button
+                            variant="outline"
+                            onClick={() => window.open(hotelLink, '_blank')}
+                            fullWidth
+                        >
+                            {t('logistics.searchHotels', 'Cerca Hotel')}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

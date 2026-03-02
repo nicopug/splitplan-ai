@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { register, login, verifyEmail, toggleSubscription, forgotPassword } from '../api';
-
-import './Auth.css';
+import { Button } from '../components/ui/button';
 
 const Auth = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -147,53 +146,67 @@ const Auth = ({ onLogin }) => {
 
     if (showPlanSelection) {
         return (
-            <div className="auth-container">
-                <div className="auth-glass-card plan-selection" style={{ maxWidth: '1000px' }}>
-                    <h2 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>Scegli il tuo Piano</h2>
-                    <p style={{ marginBottom: '2.5rem', opacity: 0.8 }}>Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
+            <div className="min-h-screen bg-black pt-24 pb-12">
+                <div className="container max-w-5xl">
+                    <div className="text-center mb-16">
+                        <span className="subtle-heading">MEMBERSHIP</span>
+                        <h2 className="text-white text-4xl lg:text-5xl font-semibold mb-4">Scegli il tuo Piano</h2>
+                        <p className="text-gray-500 text-lg max-w-2xl mx-auto">Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
+                    </div>
 
-                    <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', width: '100%' }}>
-                        <div className="plan-card glass-card" style={{ padding: '2rem', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Viaggiatore</h3>
-                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>Gratis</div>
-                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: '#666' }}>Tutto l'essenziale per organizzare.</p>
-                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ 20 Chiamate AI / giorno</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Itinerari Smart</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Chat di Gruppo</li>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Free Plan */}
+                        <div className="premium-card flex flex-col">
+                            <div className="flex-1">
+                                <span className="subtle-heading">BASIC</span>
+                                <h3 className="text-2xl font-semibold text-white mb-2">Viaggiatore</h3>
+                                <div className="text-4xl font-bold text-white mb-6">Gratis</div>
+                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Tutto l'essenziale per organizzare in gruppo.</p>
+                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> 20 Chiamate AI / giorno</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Itinerari Smart</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Chat di Gruppo</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice(null)} className="btn btn-secondary btn-full">Inizia Gratis</button>
+                            <Button onClick={() => handlePlanChoice(null)} variant="outline" className="w-full">
+                                INIZIA GRATIS
+                            </Button>
                         </div>
 
-                        <div className="plan-card" style={{ padding: '2rem', background: '#f8faff', borderRadius: '24px', border: '2px solid var(--primary-blue)', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>Pro Mensile</h3>
-                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--primary-blue)' }}>€4.99<span style={{ fontSize: '1rem', color: '#666' }}>/mese</span></div>
-                                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: '#666' }}>Per chi vuole il controllo totale.</p>
-                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ AI Illimitata</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ PDF Automation</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Assistenza Prioritaria</li>
+                        {/* Pro Monthly */}
+                        <div className="premium-card flex flex-col border-white/20 bg-white/5">
+                            <div className="flex-1">
+                                <span className="subtle-heading text-blue-400">MOST POPULAR</span>
+                                <h3 className="text-2xl font-semibold text-white mb-2">Pro Mensile</h3>
+                                <div className="text-4xl font-bold text-white mb-6">€4.99<span className="text-sm text-gray-500 font-normal ml-1">/mese</span></div>
+                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Per chi vuole il controllo totale e IA illimitata.</p>
+                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> AI Illimitata</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> PDF Automation</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Assistenza Prioritaria</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice('MONTHLY')} className="btn btn-primary btn-full">Scegli Mensile</button>
+                            <Button onClick={() => handlePlanChoice('MONTHLY')} className="w-full">
+                                SCEGLI MENSILE
+                            </Button>
                         </div>
 
-                        <div className="plan-card premium" style={{ padding: '2rem', background: 'var(--dark-navy)', borderRadius: '24px', position: 'relative', color: 'white', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-orange)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>RISPARMIA 50%</div>
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ fontSize: '1.5rem', color: 'white' }}>Pro Annuale</h3>
-                                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '1rem 0', color: 'var(--secondary-blue)' }}>€29.99<span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)' }}>/anno</span></div>
-                                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>Il miglior valore per veri esploratori.</p>
-                                <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', marginBottom: '2rem', fontSize: '0.85rem' }}>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Tutto di Pro Mensile</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Badge Esclusivo</li>
-                                    <li style={{ marginBottom: '0.8rem' }}>✓ Blocco Prezzo</li>
+                        {/* Pro Annual */}
+                        <div className="premium-card flex flex-col border-white/10">
+                            <div className="flex-1">
+                                <span className="subtle-heading text-emerald-500">SAVE 50%</span>
+                                <h3 className="text-2xl font-semibold text-white mb-2">Pro Annuale</h3>
+                                <div className="text-4xl font-bold text-white mb-6">€29.99<span className="text-sm text-gray-500 font-normal ml-1">/anno</span></div>
+                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Il miglior valore per veri esploratori.</p>
+                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Tutto di Pro Mensile</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Badge Esclusivo</li>
+                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Blocco Prezzo</li>
                                 </ul>
                             </div>
-                            <button onClick={() => handlePlanChoice('ANNUAL')} className="btn btn-accent btn-full">Scegli Annuale</button>
+                            <Button onClick={() => handlePlanChoice('ANNUAL')} variant="secondary" className="w-full">
+                                SCEGLI ANNUALE
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -239,46 +252,52 @@ const Auth = ({ onLogin }) => {
     }
 
     return (
-        <div className="auth-container">
-            <div className="auth-glass-card">
-                <h2>{isLogin ? 'Bentornato su SplitPlan' : 'Crea il tuo Account'}</h2>
-                <p className="auth-subtitle">
-                    {isLogin ? 'Accedi per gestire i tuoi viaggi' : 'Inizia a pianificare con i tuoi amici'}
-                </p>
+        <div className="min-h-screen bg-black flex flex-col justify-center items-center px-4 pt-24 pb-12">
+            <div className="premium-card w-full max-w-sm border-white/5 bg-zinc-950/50 backdrop-blur-md">
+                <div className="text-center mb-8">
+                    <h2 className="text-white text-2xl font-semibold mb-2">
+                        {isLogin ? 'Bentornato su SplitPlan' : 'Crea il tuo Account'}
+                    </h2>
+                    <p className="text-gray-500 text-xs tracking-wide">
+                        {isLogin ? 'ACCEDI PER GESTIRE I TUOI VIAGGI' : 'INIZIA A PIANIFICARE CON I TUOI AMICI'}
+                    </p>
+                </div>
 
-                {error && <div className="auth-error">{error}</div>}
-                {message && <div className="auth-success">{message}</div>}
+                {error && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-sm mb-6 text-center">{error}</div>}
+                {message && <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-sm mb-6 text-center">{message}</div>}
 
-                <form onSubmit={handleSubmit} className="auth-form">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {!isLogin && (
-                        <div className="auth-row">
-                            <div className="auth-field">
-                                <label>Nome</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Nome</label>
                                 <input
                                     type="text"
                                     name="name"
-                                    placeholder="Es. Mario"
+                                    placeholder="Mario"
                                     value={formData.name}
                                     onChange={handleChange}
                                     required
+                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                                 />
                             </div>
-                            <div className="auth-field">
-                                <label>Cognome</label>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Cognome</label>
                                 <input
                                     type="text"
                                     name="surname"
-                                    placeholder="Es. Rossi"
+                                    placeholder="Rossi"
                                     value={formData.surname}
                                     onChange={handleChange}
                                     required
+                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <div className="auth-field">
-                        <label>Email</label>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Email</label>
                         <input
                             type="email"
                             name="email"
@@ -286,12 +305,27 @@ const Auth = ({ onLogin }) => {
                             value={formData.email}
                             onChange={handleChange}
                             required
+                            className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                         />
                     </div>
 
-                    <div className="auth-field">
-                        <label>Password</label>
-                        <div className="password-input-wrapper">
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Password</label>
+                            {isLogin && (
+                                <span
+                                    onClick={() => {
+                                        setShowForgot(true);
+                                        setError('');
+                                        setMessage('');
+                                    }}
+                                    className="text-[10px] font-bold text-gray-600 hover:text-white cursor-pointer transition-colors tracking-widest uppercase"
+                                >
+                                    DIMENTICATA?
+                                </span>
+                            )}
+                        </div>
+                        <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
                                 name="password"
@@ -299,30 +333,35 @@ const Auth = ({ onLogin }) => {
                                 onChange={handleChange}
                                 required
                                 placeholder="••••••••"
+                                className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors pr-10"
                             />
                             <button
                                 type="button"
-                                className="toggle-password"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? '👁️' : '👁️‍🗨️'}
                             </button>
                         </div>
                         {formData.password && !isLogin && (
-                            <div className="strength-meter">
-                                <div
-                                    className="strength-bar"
-                                    style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
-                                ></div>
-                                <span style={{ color: strength.color }}>{strength.label}</span>
+                            <div className="pt-1">
+                                <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full transition-all duration-500"
+                                        style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
+                                    ></div>
+                                </div>
+                                <div className="flex justify-between items-center mt-1">
+                                    <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: strength.color }}>{strength.label}</span>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {!isLogin && (
-                        <div className="auth-field">
-                            <label>Conferma Password</label>
-                            <div className="password-input-wrapper">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Conferma Password</label>
+                            <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="confirmPassword"
@@ -330,44 +369,27 @@ const Auth = ({ onLogin }) => {
                                     onChange={handleChange}
                                     required
                                     placeholder="••••••••"
+                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                                 />
-                                <button
-                                    type="button"
-                                    className="toggle-password"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? '👁️' : '👁️‍🗨️'}
-                                </button>
                             </div>
                         </div>
                     )}
 
-                    <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                        {loading ? 'Caricamento...' : (isLogin ? 'Accedi' : 'Registrati')}
-                    </button>
-
-                    {isLogin && (
-                        <div className="auth-forgot-link" style={{ textAlign: 'right', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                            <span
-                                onClick={() => {
-                                    setShowForgot(true);
-                                    setError('');
-                                    setMessage('');
-                                }}
-                                style={{ color: 'var(--primary-blue)', cursor: 'pointer', opacity: 0.8 }}
-                            >
-                                Password dimenticata?
-                            </span>
-                        </div>
-                    )}
+                    <div className="pt-4">
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'CARICAMENTO...' : (isLogin ? 'ACCEDI' : 'REGISTRATI')}
+                        </Button>
+                    </div>
                 </form>
 
-                <div className="auth-switch">
-                    {isLogin ? (
-                        <>Non hai un account? <span onClick={() => setIsLogin(false)}>Registrati</span></>
-                    ) : (
-                        <>Hai già un account? <span onClick={() => setIsLogin(true)}>Accedi</span></>
-                    )}
+                <div className="mt-8 text-center">
+                    <p className="text-[10px] font-bold text-gray-600 tracking-widest uppercase">
+                        {isLogin ? (
+                            <>NON HAI UN ACCOUNT? <span onClick={() => setIsLogin(false)} className="text-white cursor-pointer hover:underline underline-offset-4 ml-1">REGISTRATI</span></>
+                        ) : (
+                            <>HAI GIÀ UN ACCOUNT? <span onClick={() => setIsLogin(true)} className="text-white cursor-pointer hover:underline underline-offset-4 ml-1">ACCEDI</span></>
+                        )}
+                    </p>
                 </div>
             </div>
         </div>

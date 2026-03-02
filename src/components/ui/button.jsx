@@ -4,22 +4,22 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-blue disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
     {
         variants: {
             variant: {
-                default: "bg-primary-blue text-white shadow-lg shadow-violet-500/20 hover:bg-violet-600",
-                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                outline: "border-2 border-primary-blue bg-transparent text-primary-blue hover:bg-white/10 hover:border-violet-400 hover:text-white",
-                secondary: "bg-secondary-blue text-primary-blue hover:bg-violet-500/20 hover:text-white",
-                ghost: "hover:bg-accent hover:text-accent-foreground",
-                link: "text-primary-blue underline-offset-4 hover:underline",
-                accent: "bg-accent-orange text-white shadow-lg shadow-orange-100 hover:opacity-90",
+                default: "bg-white text-black hover:bg-gray-200",
+                destructive: "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white",
+                outline: "border border-white/10 bg-transparent text-white hover:bg-white/5 hover:border-white/20",
+                secondary: "bg-white/5 text-white border border-white/5 hover:bg-white/10",
+                ghost: "hover:bg-white/5 text-gray-400 hover:text-white",
+                link: "text-white underline-offset-4 hover:underline",
+                accent: "bg-blue-600 text-white hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)]",
             },
             size: {
-                default: "h-11 px-8 py-2",
-                sm: "h-9 rounded-md px-3",
-                lg: "h-14 rounded-full px-10 text-lg",
+                default: "h-10 px-6 py-2",
+                sm: "h-8 px-3 text-xs",
+                lg: "h-12 px-10 text-base tracking-wide",
                 icon: "h-10 w-10",
             },
         },

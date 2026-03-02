@@ -129,16 +129,16 @@ const Budget = ({ trip, onUpdate }) => {
         // --- Category Mapping Helper ---
         const getCategoryInfo = (id) => {
             const map = {
-                'Food': { label: t('budget.categories.Food', 'Cibo'), color: '#3b82f6' },
+                'Food': { label: t('budget.categories.Food', 'Cibo'), color: 'var(--accent-digital-blue-light)' },
                 'Transport': { label: t('budget.categories.Transport', 'Trasporti locali'), color: '#f59e0b' },
                 'Travel_Road': { label: t('budget.categories.Travel_Road', 'Carburante/Pedaggi'), color: '#ff6400' },
-                'Lodging': { label: t('budget.categories.Lodging', 'Alloggio (Hotel)'), color: '#10b981' },
-                'Activity': { label: t('budget.categories.Activity', 'Attività'), color: '#8b5cf6' },
+                'Lodging': { label: t('budget.categories.Lodging', 'Alloggio (Hotel)'), color: 'var(--accent-green)' },
+                'Activity': { label: t('budget.categories.Activity', 'Attività'), color: 'var(--accent-digital-blue)' },
                 'Shopping': { label: t('budget.categories.Shopping', 'Shopping'), color: '#ec4899' },
-                'Flight': { label: t('budget.categories.Flight', 'Volo'), color: '#0ea5e9' },
-                'Train': { label: t('budget.categories.Train', 'Treno'), color: '#0ea5e9' },
-                'Road': { label: t('budget.categories.Road', 'Viaggio'), color: '#0ea5e9' },
-                'Other': { label: t('budget.categories.Other', 'Altro'), color: '#94a3b8' }
+                'Flight': { label: t('budget.categories.Flight', 'Volo'), color: 'var(--accent-digital-blue)' },
+                'Train': { label: t('budget.categories.Train', 'Treno'), color: 'var(--accent-digital-blue)' },
+                'Road': { label: t('budget.categories.Road', 'Viaggio'), color: 'var(--accent-digital-blue)' },
+                'Other': { label: t('budget.categories.Other', 'Altro'), color: 'var(--text-muted)' }
             };
 
             // Fix label for 'Flight' based on transport_mode
@@ -244,8 +244,8 @@ const Budget = ({ trip, onUpdate }) => {
                     transform: 'translate(-50%, -50%)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Budget</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary-blue)' }}>€{stats.totalBudget.toFixed(0)}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>Budget</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--accent-digital-blue-light)' }}>€{stats.totalBudget.toFixed(0)}</div>
                 </div>
             </div>
         );
@@ -259,10 +259,10 @@ const Budget = ({ trip, onUpdate }) => {
 
             {/* Top Cards: Spent vs Remaining */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--primary-blue)', background: 'var(--bg-card)' }}>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>{t('budget.totalSpent', 'Speso Totale')}</div>
-                    <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}</div>
+                <div className="glass-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', borderBottom: '4px solid var(--accent-digital-blue)', background: 'var(--bg-card)' }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '700' }}>{t('budget.totalSpent', 'Speso Totale')}</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--accent-digital-blue)' }}>€{stats.currentSpent.toFixed(2)}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.6 }}>{t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}</div>
                 </div>
                 <div className="glass-card" style={{
                     padding: '1.5rem',
@@ -368,7 +368,7 @@ const Budget = ({ trip, onUpdate }) => {
                         </div>
                         <div style={{ background: '#f1f5f9', height: '28px', borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1px solid #e2e8f0' }}>
                             <div style={{
-                                background: 'linear-gradient(90deg, #2563eb, #3b82f6)',
+                                background: 'linear-gradient(90deg, var(--accent-digital-blue), var(--accent-digital-blue-light))',
                                 height: '100%',
                                 width: `${stats.percentUsed}%`,
                                 transition: 'width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67)'

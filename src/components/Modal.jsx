@@ -18,19 +18,17 @@ const Modal = () => {
             animation: 'fadeIn 0.2s ease-out'
         }}>
             <div style={{
-                background: '#0d0d18',
-                border: '1px solid rgba(139,92,246,0.3)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--accent-digital-blue)',
                 borderRadius: '24px',
                 padding: '2.5rem',
                 maxWidth: '440px',
                 width: '100%',
-                boxShadow: '0 0 60px rgba(139,92,246,0.2), 0 24px 64px rgba(0,0,0,0.7)',
+                boxShadow: 'var(--glow-blue), 0 24px 64px rgba(0,0,0,0.5)',
                 animation: 'slideUp 0.25s ease-out'
             }}>
                 <h3 style={{
-                    background: 'linear-gradient(135deg, #a78bfa, #22d3ee)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    color: 'var(--accent-digital-blue-light)',
                     fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.75rem'
                 }}>
                     {modal.title}
@@ -57,11 +55,11 @@ const Modal = () => {
                             transition: 'all 0.2s'
                         }}
                         onFocus={e => {
-                            e.target.style.borderColor = 'rgba(139,92,246,0.6)';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.12)';
+                            e.target.style.borderColor = 'var(--accent-digital-blue)';
+                            e.target.style.boxShadow = '0 0 0 3px var(--accent-digital-blue-dim)';
                         }}
                         onBlur={e => {
-                            e.target.style.borderColor = 'rgba(139,92,246,0.25)';
+                            e.target.style.borderColor = 'var(--border-subtle)';
                             e.target.style.boxShadow = 'none';
                         }}
                         onKeyDown={(e) => {
@@ -95,15 +93,15 @@ const Modal = () => {
                             }
                         }}
                         style={{
-                            padding: '0.6rem 1.75rem', borderRadius: '999px',
-                            fontWeight: '700', color: '#fff',
-                            background: 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
+                            padding: '0.6rem 2rem', borderRadius: '999px',
+                            fontWeight: '800', color: '#fff',
+                            background: 'var(--accent-digital-blue)',
                             border: 'none', cursor: 'pointer',
-                            boxShadow: '0 0 16px rgba(139,92,246,0.4)',
+                            boxShadow: 'var(--glow-blue-sm)',
                             transition: 'all 0.2s', fontSize: '0.95rem'
                         }}
-                        onMouseOver={e => { e.currentTarget.style.boxShadow = '0 0 28px rgba(139,92,246,0.6)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseOut={e => { e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.4)'; e.currentTarget.style.transform = 'none'; }}
+                        onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = 'var(--glow-blue)'; }}
+                        onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--glow-blue-sm)'; }}
                     >
                         {modal.type === 'prompt' ? 'Invia' : 'Conferma'}
                     </button>

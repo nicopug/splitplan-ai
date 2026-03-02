@@ -45,146 +45,67 @@ const Hero = () => {
     };
 
     return (
-        <header className="section pt-8 pb-16 md:pt-16 md:pb-32 relative overflow-hidden" style={{ background: '#000' }}>
+        <header className="section bg-black">
+            <div className="container h-full">
+                <div className="viewport-split items-center">
 
-            {/* Clean grid overlay */}
-            <div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none',
-                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
-                backgroundSize: '40px 40px'
-            }} />
-
-            <div className="container relative z-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-
-                    {/* Content */}
-                    <div className="space-y-6 md:space-y-8 text-center lg:text-left order-2 lg:order-1">
-
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 animate-fade-in">
-                            <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                padding: '6px 14px', borderRadius: '999px',
-                                border: '1px solid rgba(139,92,246,0.4)',
-                                background: 'rgba(139,92,246,0.1)',
-                                fontSize: '0.75rem', fontWeight: '700',
-                                letterSpacing: '0.08em', textTransform: 'uppercase',
-                                color: '#a78bfa',
-                                backdropFilter: 'blur(8px)'
-                            }}>
-                                <span style={{
-                                    width: '6px', height: '6px', borderRadius: '50%',
-                                    background: '#a78bfa', boxShadow: '0 0 8px #a78bfa',
-                                    animation: 'glow-pulse 2s ease-in-out infinite'
-                                }} />
-                                {t('hero.badge')}
-                            </span>
+                    {/* Left: Content */}
+                    <div className="space-y-8 py-12 lg:pr-12">
+                        {/* Minimalist Badge */}
+                        <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">
+                            {t('hero.badge')}
                         </div>
 
                         {/* Heading */}
-                        <h1 className="animate-slide-up delay-100" style={{
-                            fontSize: 'clamp(3rem, 6vw, 5.5rem)',
-                            fontWeight: '900', lineHeight: '0.95',
-                            color: '#fff', letterSpacing: '-0.04em'
-                        }}>
+                        <h1 className="text-white">
                             {t('hero.titlePrefix')}{' '}
-                            <span style={{ color: '#0070f3' }}>{t('hero.titleHighlight')}</span>
+                            <span className="text-gray-500">{t('hero.titleHighlight')}</span>
                         </h1>
 
                         {/* Description */}
-                        <p className="animate-slide-up delay-200" style={{
-                            fontSize: '1.1rem', color: '#7b7b9a',
-                            maxWidth: '480px', margin: '0 auto 0 0', lineHeight: '1.7'
-                        }}>
+                        <p className="text-gray-500 text-lg max-w-md leading-relaxed">
                             {t('hero.description')}
                         </p>
 
-                        {/* CTA */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up delay-300">
+                        {/* CTA Cluster */}
+                        <div className="flex items-center gap-6 pt-4">
                             <button
-                                className="btn btn-primary"
+                                className="px-8 py-3 bg-white text-black font-semibold rounded-sm hover:bg-gray-200 transition-colors"
                                 onClick={handleIniziaOra}
                                 disabled={loading}
-                                style={{ position: 'relative', zIndex: 1, minWidth: '200px' }}
                             >
-                                {loading ? (
-                                    <><span className="spinner" />{t('common.loading')}</>
-                                ) : t('hero.cta')}
+                                {loading ? t('common.loading') : t('hero.cta')}
                             </button>
                             <button
-                                className="btn btn-secondary"
+                                className="text-white font-medium hover:text-gray-300 transition-colors flex items-center gap-2 group"
                                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                             >
                                 {t('hero.learnMore', 'Scopri di più')}
+                                <svg className="w-4 h-4 transform group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
                             </button>
-                        </div>
-
-                        {/* Social proof mini */}
-                        <div className="flex items-center gap-3 justify-center lg:justify-start animate-fade-in delay-400" style={{ paddingTop: '0.5rem' }}>
-                            <div style={{ display: 'flex', gap: '-4px' }}>
-                            </div>
                         </div>
                     </div>
 
-                    {/* Product Perspective Visual */}
-                    <div className="relative order-1 lg:order-2 animate-slide-left delay-200" style={{ perspective: '1200px' }}>
-                        <div style={{
-                            transform: 'rotateY(-15deg) rotateX(8deg) scale(1.1)',
-                            transformStyle: 'preserve-3d',
-                            transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5), 0 30px 60px -30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)',
-                            background: '#0d0d18',
-                            overflow: 'hidden'
-                        }}
-                            className="hover:scale-105 transition-all duration-700"
-                        >
+                    {/* Right: Technical Visual (App Mockup) */}
+                    <div className="relative flex items-center justify-center lg:justify-end py-12 h-full">
+                        {/* Void Background Effect - very subtle */}
+                        <div className="absolute inset-x-0 inset-y-0 bg-radial-gradient from-white/5 to-transparent opacity-30 pointer-events-none" />
+
+                        <div className="relative w-full max-w-[540px] shadow-[0_0_100px_rgba(255,255,255,0.05)] border border-white/5 rounded-lg overflow-hidden bg-[#050505] z-10">
                             <img
                                 src="/dashboard-preview.png"
-                                alt="SplitPlan Dashboard Pro"
-                                style={{ width: '100%', display: 'block', opacity: 0.9 }}
-                                loading="priority"
+                                alt="SplitPlan Dashboard"
+                                className="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity"
+                                loading="lazy"
                             />
-                            {/* Overlay glow */}
-                            <div style={{
-                                position: 'absolute', inset: 0,
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%)',
-                                pointerEvents: 'none'
-                            }} />
-                        </div>
 
-                        {/* Floating Micro-UI elements */}
-                        <div style={{
-                            position: 'absolute', top: '10%', right: '-30px', transform: 'translateZ(40px)',
-                            background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px',
-                            boxShadow: 'var(--shadow-lg)'
-                        }} className="animate-float">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-[#0070f3]/20 flex items-center justify-center">
-                                    <span style={{ fontSize: '1rem' }}>✨</span>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '0.65rem', color: '#7b7b9a' }}>AI Optimization</div>
-                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>99.8% Efficiency</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            position: 'absolute', bottom: '15%', left: '-40px', transform: 'translateZ(60px)',
-                            background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px',
-                            boxShadow: 'var(--shadow-lg)'
-                        }} className="animate-float-delayed">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                    <span style={{ fontSize: '1rem' }}>✅</span>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '0.65rem', color: '#7b7b9a' }}>Consensus</div>
-                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>Fully Resolved</div>
+                            {/* Discrete UI Overlays */}
+                            <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                    <span style={{ fontSize: '10px', color: '#fff', fontWeight: '600', letterSpacing: '0.05em' }}>AI ENGINE ACTIVE</span>
                                 </div>
                             </div>
                         </div>
@@ -192,88 +113,38 @@ const Hero = () => {
                 </div>
             </div>
 
-            {/* Trip Type Selection Modal */}
+
+            {/* Trip Type Selection Modal - Minimalist */}
             {showTypeSelection && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
-                    backdropFilter: 'blur(12px)', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem'
-                }}>
-                    <div style={{
-                        background: '#0d0d18', borderRadius: '24px', padding: '2.5rem',
-                        width: '100%', maxWidth: '480px',
-                        border: '1px solid rgba(139,92,246,0.3)',
-                        boxShadow: '0 0 60px rgba(139,92,246,0.2)',
-                        animation: 'slideUp 0.3s ease-out'
-                    }}>
-                        <h2 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '1.8rem', color: '#f0f0ff' }}>
-                            {t('hero.selectionTitle')}
-                        </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            {/* Group */}
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-[#050505] w-full max-w-md border border-white/10 rounded-lg p-10 shadow-2xl animate-in zoom-in-95 duration-300">
+                        <h2 className="text-2xl font-semibold text-center mb-8 text-white">{t('hero.selectionTitle')}</h2>
+                        <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => handleCreateTrip('GROUP')}
-                                style={{
-                                    padding: '2rem 1.5rem', borderRadius: '16px', border: '1px solid rgba(139,92,246,0.3)',
-                                    background: 'rgba(139,92,246,0.05)', cursor: 'pointer', transition: 'all 0.3s',
-                                    textAlign: 'center', color: '#f0f0ff',
-                                    display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'
-                                }}
-                                onMouseOver={e => {
-                                    e.currentTarget.style.background = 'rgba(139,92,246,0.15)';
-                                    e.currentTarget.style.borderColor = 'rgba(139,92,246,0.7)';
-                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(139,92,246,0.3)';
-                                }}
-                                onMouseOut={e => {
-                                    e.currentTarget.style.background = 'rgba(139,92,246,0.05)';
-                                    e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
+                                className="flex flex-col items-center gap-4 p-8 border border-white/5 bg-white/2 hover:bg-white/5 hover:border-white/20 transition-all rounded-sm"
                             >
-                                <span style={{ fontSize: '2.5rem' }}>👥</span>
-                                <span style={{ fontWeight: '700', fontSize: '1.1rem', color: '#a78bfa' }}>{t('hero.groupTitle')}</span>
-                                <span style={{ fontSize: '0.8rem', color: '#7b7b9a' }}>{t('hero.groupDesc')}</span>
+                                <span className="text-3xl opacity-80">👥</span>
+                                <span className="font-semibold text-sm">{t('hero.groupTitle')}</span>
                             </button>
-                            {/* Solo */}
                             <button
                                 onClick={() => handleCreateTrip('SOLO')}
-                                style={{
-                                    padding: '2rem 1.5rem', borderRadius: '16px', border: '1px solid rgba(34,211,238,0.3)',
-                                    background: 'rgba(34,211,238,0.05)', cursor: 'pointer', transition: 'all 0.3s',
-                                    textAlign: 'center', color: '#f0f0ff',
-                                    display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'
-                                }}
-                                onMouseOver={e => {
-                                    e.currentTarget.style.background = 'rgba(34,211,238,0.12)';
-                                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.7)';
-                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(34,211,238,0.25)';
-                                }}
-                                onMouseOut={e => {
-                                    e.currentTarget.style.background = 'rgba(34,211,238,0.05)';
-                                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.3)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
+                                className="flex flex-col items-center gap-4 p-8 border border-white/5 bg-white/2 hover:bg-white/5 hover:border-white/20 transition-all rounded-sm"
                             >
-                                <span style={{ fontSize: '2.5rem' }}>✈️</span>
-                                <span style={{ fontWeight: '700', fontSize: '1.1rem', color: '#22d3ee' }}>{t('hero.soloTitle')}</span>
-                                <span style={{ fontSize: '0.8rem', color: '#7b7b9a' }}>{t('hero.soloDesc')}</span>
+                                <span className="text-3xl opacity-80">✈️</span>
+                                <span className="font-semibold text-sm">{t('hero.soloTitle')}</span>
                             </button>
                         </div>
                         <button
                             onClick={() => setShowTypeSelection(false)}
-                            style={{
-                                width: '100%', marginTop: '1.5rem', padding: '0.75rem',
-                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                color: '#7b7b9a', fontSize: '0.9rem', transition: 'color 0.2s'
-                            }}
-                            onMouseOver={e => e.currentTarget.style.color = '#f0f0ff'}
-                            onMouseOut={e => e.currentTarget.style.color = '#7b7b9a'}
+                            className="w-full mt-8 text-gray-500 hover:text-white transition-colors text-xs font-semibold tracking-wider"
                         >
-                            {t('common.cancel')}
+                            {t('common.cancel').toUpperCase()}
                         </button>
                     </div>
                 </div>
-            )}
+            ) || null}
+
         </header>
     );
 };

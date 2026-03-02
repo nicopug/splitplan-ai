@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { chatWithAI } from '../api';
+import Skeleton from './ui/Skeleton';
 
 const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) => {
     const { t } = useTranslation();
@@ -64,8 +65,8 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
             }}>
                 <div style={{
                     padding: '1.5rem',
-                    borderBottom: '1px solid rgba(0,0,0,0.05)',
-                    background: 'var(--primary-blue)',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    background: 'var(--accent-digital-blue)',
                     color: 'white',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -112,21 +113,24 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     {messages.map((msg, idx) => (
                         <div key={idx} style={{
                             alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                            maxWidth: '80%',
-                            padding: '1rem',
-                            borderRadius: '16px',
-                            background: msg.role === 'user' ? 'var(--primary-blue)' : 'var(--bg-elevated)',
-                            color: msg.role === 'user' ? 'white' : 'var(--text-main)',
-                            boxShadow: 'var(--shadow-sm)',
-                            border: msg.role === 'ai' ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                            zIndex: 2
+                            maxWidth: '85%',
+                            padding: '1.1rem 1.4rem',
+                            borderRadius: '20px',
+                            background: msg.role === 'user' ? 'var(--accent-digital-blue)' : 'var(--bg-elevated)',
+                            color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
+                            boxShadow: 'var(--shadow-md)',
+                            border: '1px solid var(--border-subtle)',
+                            zIndex: 2,
+                            lineHeight: '1.6',
+                            fontSize: '0.95rem'
                         }}>
                             {msg.text}
                         </div>
                     ))}
                     {loading && (
-                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderRadius: '16px', fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.7 }}>
-                            {t('chatbot.loading', "L'AI sta modificando l'itinerario...")}
+                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <Skeleton width="180px" height="14px" />
+                            <Skeleton width="120px" height="14px" />
                         </div>
                     )}
 
@@ -171,7 +175,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             color: 'var(--text-main)'
                         }}
                     />
-                    <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '0.75rem 1.5rem' }}>
+                    <button type="submit" className="btn btn-digital-blue" disabled={loading} style={{ padding: '0.75rem 1.75rem', borderRadius: '12px' }}>
                         {t('chatbot.send', 'Invia')}
                     </button>
                 </form>

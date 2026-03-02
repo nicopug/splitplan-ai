@@ -27,8 +27,6 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     const isGroup = trip.trip_type === 'GROUP';
 
     const [step, setStep] = useState(0);
-    const totalSteps = 3;
-    const progress = ((step + 1) / totalSteps) * 100;
     const [formData, setFormData] = useState({
         destination: '',
         departure_airport: '',
@@ -112,54 +110,54 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
     if (step === 0) {
         return (
-            <div className="section py-8 md:py-20 animate-fade-in relative">
-                {/* Progress bar */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
-                    <div className="h-full bg-[#0070f3] transition-all duration-500" style={{ width: `${progress}%` }} />
-                </div>
-
-                <div className="container max-w-4xl">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
+                <div className="container max-w-4xl text-left space-y-12">
+                    <div className="space-y-4">
+                        <span className="subtle-heading">{t('survey.step0Step', 'Passaggi: 1/3')}</span>
+                        <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
                             {t('survey.step0Title', 'Qual è lo scopo del viaggio?')}
                         </h2>
-                        <p className="text-lg text-text-muted">
+                        <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
                             {t('survey.step0Desc', "Questo ci aiuterà a personalizzare l'itinerario perfetto per te.")}
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Button
-                            variant="outline"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-[1.02]",
-                                "bg-[#0d0d18] border-white/10 text-gray-400 hover:border-[#0070f3]/50 hover:bg-[#0070f3]/5",
-                                formData.trip_intent === 'LEISURE' && "bg-[#0070f3]/10 border-[#0070f3] text-white shadow-[0_0_40px_rgba(0,112,243,0.1)]"
+                                "premium-card p-10 cursor-pointer group transition-all duration-500",
+                                formData.trip_intent === 'LEISURE' ? "ring-1 ring-white" : "hover:border-white/20"
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
                         >
-                            <TreePalm className={cn("w-12 h-12", formData.trip_intent === 'LEISURE' ? "text-[#0070f3]" : "text-gray-500")} />
-                            <div className="text-center">
-                                <p className="text-xl font-black tracking-tight">{t('survey.leisureTitle', 'Vacanza')}</p>
-                                <p className="text-xs font-medium opacity-60 mt-1">{t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}</p>
+                            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-8 group-hover:bg-white group-hover:text-black transition-all">
+                                <TreePalm className="w-8 h-8" />
                             </div>
-                        </Button>
+                            <h3 className="text-white text-2xl font-semibold uppercase tracking-tight mb-2">
+                                {t('survey.leisureTitle', 'Vacanza')}
+                            </h3>
+                            <p className="text-gray-500 text-sm leading-relaxed">
+                                {t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}
+                            </p>
+                        </div>
 
-                        <Button
-                            variant="outline"
+                        <div
                             className={cn(
-                                "flex flex-col items-center justify-center h-48 rounded-3xl gap-4 transition-all duration-300 hover:scale-[1.02]",
-                                "bg-[#0d0d18] border-white/10 text-gray-400 hover:border-[#0070f3]/50 hover:bg-[#0070f3]/5",
-                                formData.trip_intent === 'BUSINESS' && "bg-[#0070f3]/10 border-[#0070f3] text-white shadow-[0_0_40px_rgba(0,112,243,0.1)]"
+                                "premium-card p-10 cursor-pointer group transition-all duration-500",
+                                formData.trip_intent === 'BUSINESS' ? "ring-1 ring-white" : "hover:border-white/20"
                             )}
                             onClick={() => handleIntentSelect('BUSINESS')}
                         >
-                            <Briefcase className={cn("w-12 h-12", formData.trip_intent === 'BUSINESS' ? "text-[#0070f3]" : "text-gray-500")} />
-                            <div className="text-center">
-                                <p className="text-xl font-black tracking-tight">{t('survey.businessTitle', 'Lavoro')}</p>
-                                <p className="text-xs font-medium opacity-60 mt-1">{t('survey.businessDesc', 'Efficienza e produttività.')}</p>
+                            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-8 group-hover:bg-white group-hover:text-black transition-all">
+                                <Briefcase className="w-8 h-8" />
                             </div>
-                        </Button>
+                            <h3 className="text-white text-2xl font-semibold uppercase tracking-tight mb-2">
+                                {t('survey.businessTitle', 'Lavoro')}
+                            </h3>
+                            <p className="text-gray-500 text-sm leading-relaxed">
+                                {t('survey.businessDesc', 'Efficienza e produttività.')}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -168,101 +166,86 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
     if (step === 1) {
         return (
-            <div className="section py-8 md:py-12 animate-fade-in">
-                <div className="container max-w-4xl">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
+                <div className="container max-w-4xl text-left space-y-12">
+                    <div className="space-y-4">
+                        <span className="subtle-heading">{t('survey.step1Step', 'Passaggi: 2/3')}</span>
+                        <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
                             {t('survey.step1Title', 'Qual è il tuo mezzo di trasporto?')}
                         </h2>
-                        <p className="text-lg text-text-muted">
+                        <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
                             {t('survey.step1Desc', 'Scegli come vuoi raggiungere la tua destinazione.')}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
-                                formData.transport_mode === 'CAR' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
-                            )}
-                            onClick={() => handleTransportSelect('CAR')}
-                        >
-                            <Car className={cn("w-10 h-10", formData.transport_mode === 'CAR' ? "text-primary-blue" : "text-gray-500")} />
-                            <div className="text-center">
-                                <p className="text-lg font-bold">{t('survey.carTitle', 'Macchina')}</p>
-                                <p className="text-[10px] font-normal opacity-70">{t('survey.carDesc', 'Pedaggi e carburante inclusi.')}</p>
+                        {[
+                            { id: 'CAR', icon: Car, title: t('survey.carTitle', 'Macchina'), desc: t('survey.carDesc') },
+                            { id: 'TRAIN', icon: Train, title: t('survey.trainTitle', 'Treno'), desc: t('survey.trainDesc') },
+                            { id: 'FLIGHT', icon: Plane, title: t('survey.flightTitle', 'Volo'), desc: t('survey.flightDesc') }
+                        ].map(mode => (
+                            <div
+                                key={mode.id}
+                                className={cn(
+                                    "premium-card p-8 cursor-pointer group transition-all duration-500 flex flex-col items-center text-center",
+                                    formData.transport_mode === mode.id ? "ring-1 ring-white" : "hover:border-white/20"
+                                )}
+                                onClick={() => handleTransportSelect(mode.id)}
+                            >
+                                <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-4 group-hover:bg-white group-hover:text-black transition-all">
+                                    <mode.icon className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-white text-lg font-semibold uppercase tracking-tight mb-2">
+                                    {mode.title}
+                                </h3>
+                                <p className="text-gray-500 text-xs leading-relaxed">
+                                    {mode.desc}
+                                </p>
                             </div>
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
-                                formData.transport_mode === 'TRAIN' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
-                            )}
-                            onClick={() => handleTransportSelect('TRAIN')}
-                        >
-                            <Train className={cn("w-10 h-10", formData.transport_mode === 'TRAIN' ? "text-primary-blue" : "text-gray-500")} />
-                            <div className="text-center">
-                                <p className="text-lg font-bold">{t('survey.trainTitle', 'Treno')}</p>
-                                <p className="text-[10px] font-normal opacity-70">{t('survey.trainDesc', 'Link diretti Trainline.')}</p>
-                            </div>
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                "flex flex-col items-center justify-center h-40 rounded-3xl gap-3 transition-all duration-300 hover:scale-105",
-                                "bg-[#131325] border-violet-500/20 text-gray-400 hover:bg-violet-600 hover:text-white hover:border-violet-500/50",
-                                formData.transport_mode === 'FLIGHT' && "border-primary-blue ring-2 ring-primary-blue/50 text-white shadow-xl shadow-blue-900/20"
-                            )}
-                            onClick={() => handleTransportSelect('FLIGHT')}
-                        >
-                            <Plane className={cn("w-10 h-10", formData.transport_mode === 'FLIGHT' ? "text-primary-blue" : "text-gray-500")} />
-                            <div className="text-center">
-                                <p className="text-lg font-bold">{t('survey.flightTitle', 'Volo')}</p>
-                                <p className="text-[10px] font-normal opacity-70">{t('survey.flightDesc', 'Migliori offerte Skyscanner.')}</p>
-                            </div>
-                        </Button>
+                        ))}
                     </div>
+
+                    <Button variant="ghost" className="text-gray-500 hover:text-white" onClick={() => setStep(0)}>
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        {t('common.back', 'Indietro')}
+                    </Button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="section py-8 md:py-12 animate-fade-in">
-            <div className="container max-w-4xl">
+        <div className="section py-16 animate-fade-in">
+            <div className="container max-w-4xl space-y-12">
 
                 {/* Header */}
-                <div className="text-center mb-8 md:mb-12">
-                    <div className="flex justify-center gap-2 mb-4">
+                <div className="text-left space-y-4">
+                    <div className="flex flex-wrap gap-2 mb-8">
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(0)}
-                            className="h-9 text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl px-4"
+                            className="bg-white/5 border border-white/10 text-gray-400 hover:bg-white hover:text-black rounded-sm px-4"
                         >
-                            <ArrowLeft className="w-3 h-3 mr-2" />
-                            {formData.trip_intent === 'BUSINESS' ? t('survey.businessTitle', 'Lavoro') : t('survey.leisureTitle', 'Vacanza')}
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            {formData.trip_intent === 'BUSINESS' ? t('survey.businessTitle', 'Business') : t('survey.leisureTitle', 'Leisure')}
                         </Button>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(1)}
-                            className="h-9 text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl px-4"
+                            className="bg-white/5 border border-white/10 text-gray-400 hover:bg-white hover:text-black rounded-sm px-4"
                         >
-                            <ArrowLeft className="w-3 h-3 mr-2" />
+                            <ArrowLeft className="w-4 h-4 mr-2" />
                             {formData.transport_mode === 'CAR' ? t('survey.carTitle', 'Auto') : formData.transport_mode === 'TRAIN' ? t('survey.trainTitle', 'Treno') : t('survey.flightTitle', 'Volo')}
                         </Button>
                     </div>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+
+                    <span className="subtle-heading">{t('survey.step2Step', 'Passaggi: 3/3')}</span>
+                    <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
                         {t('survey.step2Title', 'Definiamo i dettagli')}
                     </h2>
-                    <p className="text-base md:text-lg text-text-muted">
+                    <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
                         {t('survey.subtitle', {
                             target: isGroup ? t('survey.targetGroup', 'il gruppo') : t('survey.targetSolo', 'te'),
                             defaultValue: 'Aiutaci a costruire il viaggio perfetto per {{target}}.'
@@ -271,8 +254,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 </div>
 
                 {/* Form Container */}
-                <div className="bg-[#0d0d18] border border-violet-500/20 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-[0_0_40px_rgba(139,92,246,0.1)]">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="premium-card p-10">
+                    <form onSubmit={handleSubmit} className="space-y-12">
 
                         {/* Destination & Airport */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -285,7 +268,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.destinationPlaceholder', 'es. Europa, Giappone...')}
                                     required
-                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-[#0070f3] focus:ring-[#0070f3] rounded-xl"
+                                    className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -306,10 +289,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Group Details */}
                         {isGroup && (
-                            <div className="bg-[#131325] border border-violet-500/10 p-4 md:p-6 rounded-xl space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-8 py-8 border-y border-white/10">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     <div className="space-y-2">
-                                        <Label htmlFor="group-budget">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
+                                        <Label htmlFor="group-budget" className="text-xs uppercase tracking-widest text-gray-500">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
                                         <Input
                                             id="group-budget"
                                             name="budget"
@@ -318,11 +301,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="number"
                                             placeholder={t('survey.budgetPlaceholder', 'es. 3000')}
                                             required
-                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                            className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="num_people">{t('survey.numPeopleLabel', 'Numero Persone')}</Label>
+                                        <Label htmlFor="num_people" className="text-xs uppercase tracking-widest text-gray-500">{t('survey.numPeopleLabel', 'Numero Persone')}</Label>
                                         <Input
                                             id="num_people"
                                             name="num_people"
@@ -332,19 +315,19 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                            className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Dynamic Names Inputs */}
                                 {formData.participant_names.length > 0 && (
-                                    <div className="animate-fade-in">
-                                        <label className="block text-sm font-bold mb-3 text-primary-blue flex items-center gap-2">
+                                    <div className="animate-fade-in space-y-6">
+                                        <label className="text-xs uppercase tracking-widest text-white font-semibold flex items-center gap-4">
                                             {t('survey.participantNamesLabel', 'Chi viene con te?')}
-                                            <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
+                                            <div className="h-px flex-1 bg-white/10"></div>
                                         </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {formData.participant_names.map((name, idx) => (
                                                 <Input
                                                     key={idx}
@@ -352,27 +335,21 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={t('survey.participantNamePlaceholder', { index: idx + 2, defaultValue: `Nome Amico ${idx + 2}` })}
                                                     required
-                                                    className="h-10 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                                    className="h-12 bg-white/5 border-white/10 text-white rounded-sm"
                                                 />
                                             ))}
                                         </div>
 
                                         {/* AVVISO NOMI */}
-                                        <div style={{
-                                            padding: '1rem',
-                                            background: 'rgba(239, 68, 68, 0.1)',
-                                            borderRadius: '12px',
-                                            border: '1px solid rgba(239, 68, 68, 0.25)',
-                                            display: 'flex',
-                                            gap: '12px',
-                                            alignItems: 'flex-start'
-                                        }}>
-                                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f87171' }}>!</span>
-                                            <div>
-                                                <strong style={{ fontSize: '0.85rem', color: '#fca5a5', display: 'block', marginBottom: '2px' }}>{t('survey.namesWarningTitle', 'ATTENZIONE AI NOMI')}</strong>
-                                                <p style={{ fontSize: '0.8rem', color: '#fecaca', lineHeight: '1.4', margin: 0 }}>
-                                                    {t('survey.namesWarningDesc', 'Inserisci i NOMI con cui i tuoi amici si sono registrati (o si registreranno) su SplitPlan. Questo permetterà loro di votare la destinazione dal loro account!')}
-                                                </p>
+                                        <div className="p-6 bg-white/5 border border-white/10 rounded-sm">
+                                            <div className="flex gap-4">
+                                                <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold rounded-sm shrink-0">!</div>
+                                                <div>
+                                                    <h4 className="text-white text-sm font-semibold uppercase tracking-tight mb-1">{t('survey.namesWarningTitle', 'I nomi contano')}</h4>
+                                                    <p className="text-gray-500 text-xs leading-relaxed">
+                                                        {t('survey.namesWarningDesc', 'Inserisci i nomi reali dei tuoi amici. Potranno votare e gestire il budget solo se i nomi corrispondono ai loro account SplitPlan.')}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -406,8 +383,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-violet-500/30 text-white hover:bg-white/10 hover:text-white",
-                                                !formData.start_date && "text-gray-400"
+                                                "w-full justify-start text-left font-normal h-14 rounded-sm bg-white/5 border-white/10 text-white hover:bg-white hover:text-black",
+                                                !formData.start_date && "text-gray-500"
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -473,15 +450,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Work Hours & Days (Business Only) */}
                         {formData.trip_intent === 'BUSINESS' && (
-                            <div className="bg-[#131325] p-6 rounded-xl space-y-6 animate-fade-in border border-violet-500/20">
-                                <label className="block text-sm font-bold text-violet-400 flex items-center gap-2">
-                                    {t('survey.workHoursLabel', 'Orario e Giorni di Lavoro')}
-                                    <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px' }}>INFO</span>
-                                </label>
+                            <div className="premium-card p-10 space-y-10 animate-fade-in border-white/20">
+                                <div className="space-y-2">
+                                    <span className="subtle-heading">{t('survey.workConfig', 'Configurazione Lavoro')}</span>
+                                    <h4 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                        {t('survey.workAiNoteTitle', 'Programma intelligente')}
+                                    </h4>
+                                    <p className="text-gray-500 text-sm">{t('survey.workAiNote', "L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.")}</p>
+                                </div>
 
-                                <div className="space-y-3">
-                                    <p className="text-xs text-blue-600 font-medium">{t('survey.workDaysQuestion', 'In quali giorni lavorerai?')}</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <div className="space-y-6">
+                                    <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">{t('survey.workDaysQuestion', 'Giorni di attività lavorativa')}</label>
+                                    <div className="flex flex-wrap gap-3">
                                         {[
                                             { id: 'Monday', label: t('survey.days.Monday', 'Lun') },
                                             { id: 'Tuesday', label: t('survey.days.Tuesday', 'Mar') },
@@ -507,8 +487,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
                                                 className={cn(
-                                                    "rounded-full h-8 px-4",
-                                                    (formData.work_days || '').includes(day.id) && "shadow-md bg-primary-blue"
+                                                    "rounded-sm h-10 px-6",
+                                                    (formData.work_days || '').includes(day.id) ? "bg-white text-black border-white" : "border-white/10 text-gray-500 hover:border-white/30"
                                                 )}
                                             >
                                                 {day.label}
@@ -517,29 +497,28 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-xs uppercase text-gray-500">{t('survey.workStartLabel', 'Inizio Lavoro')}</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase tracking-widest text-gray-500">{t('survey.workStartLabel', 'Orario Inizio')}</Label>
                                         <Input
                                             name="work_start_time"
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                            className="h-14 bg-white/5 border-white/10 text-white focus:ring-0 rounded-sm"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs uppercase text-gray-500">{t('survey.workEndLabel', 'Fine Lavoro')}</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase tracking-widest text-gray-500">{t('survey.workEndLabel', 'Orario Fine')}</Label>
                                         <Input
                                             name="work_end_time"
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-12 bg-white/5 border-violet-500/30 text-white focus:border-violet-500 focus:ring-violet-500"
+                                            className="h-14 bg-white/5 border-white/10 text-white focus:ring-0 rounded-sm"
                                         />
                                     </div>
                                 </div>
-                                <p className="text-xs text-blue-500 italic">{t('survey.workAiNote', "L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.")}</p>
                             </div>
                         )}
 
@@ -553,8 +532,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.mustHavePlaceholder', 'es. Musei, Spiagge, Shopping...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-xl border border-violet-500/30 
-                                             focus:border-violet-500 focus:ring-2 focus:ring-violet-500 focus:ring-opacity-20
+                                    className="w-full px-4 py-3 rounded-sm border border-white/10 
+                                             focus:border-white focus:ring-0
                                              transition-all outline-none resize-none bg-white/5 text-white text-sm"
                                 />
                             </div>
@@ -566,32 +545,34 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.mustAvoidPlaceholder', 'es. Club, Trekking faticosi...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-xl border border-violet-500/30 
-                                             focus:border-violet-500 focus:ring-2 focus:ring-violet-500 focus:ring-opacity-20
+                                    className="w-full px-4 py-3 rounded-sm border border-white/10 
+                                             focus:border-white focus:ring-0
                                              transition-all outline-none resize-none bg-white/5 text-white text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Submit Button */}
-                        <Button
-                            type="submit"
-                            size="lg"
-                            className="btn-primary w-full h-14 text-lg font-black rounded-2xl mt-4"
-                            disabled={isGenerating}
-                        >
-                            {isGenerating ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="spinner w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                    {t('survey.submitGenerating', 'Generazione in corso...')}
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5" />
-                                    {isGroup ? t('survey.submitCreateGroup', 'Crea il Piano e Invita') : t('survey.submitGenerateSolo', 'Genera Opzioni')}
-                                </span>
-                            )}
-                        </Button>
+                        <div className="pt-12">
+                            <Button
+                                type="submit"
+                                size="xl"
+                                fullWidth
+                                disabled={isGenerating}
+                            >
+                                {isGenerating ? (
+                                    <span className="flex items-center justify-center gap-4">
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                        {t('survey.submitGenerating', 'Analisi dei dati in corso...')}
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-3">
+                                        <Sparkles className="w-5 h-5" />
+                                        {isGroup ? t('survey.submitCreateGroup', 'Crea Progetto di Gruppo') : t('survey.submitGenerateSolo', 'Genera Proposte AI')}
+                                    </span>
+                                )}
+                            </Button>
+                        </div>
                     </form>
                 </div>
             </div>

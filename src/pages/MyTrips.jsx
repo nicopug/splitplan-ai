@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUserTrips, hideTrip, getUserStats } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Button } from '../components/ui/button';
 
 const MyTrips = () => {
     const [trips, setTrips] = useState([]);
@@ -57,91 +58,83 @@ const MyTrips = () => {
     const currentTrips = activeTab === 'active' ? activeTrips : archivedTrips;
 
     return (
-        <div style={{ paddingTop: 'var(--header-height)' }}>
-            <div className="mesh-gradient" style={{
-                color: 'white',
-                padding: '4rem 0',
-                textAlign: 'center',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-            }}>
-                <div className="container animate-fade-in">
-                    <h1 style={{
-                        color: 'white',
-                        marginBottom: '0.5rem',
-                        fontFamily: "'Outfit', sans-serif",
-                        fontWeight: '800',
-                        fontSize: '3.5rem',
-                        textShadow: '0 4px 12px rgba(0, 58, 133, 0.1)'
-                    }}>I miei Viaggi</h1>
-                    <p style={{ opacity: 1, fontSize: '1.1rem', color: 'white' }}>La tua cronologia avventure su SplitPlan</p>
+        <div className="pt-[var(--header-height)] min-h-screen bg-black">
+            {/* Header Section */}
+            <div className="relative py-24 overflow-hidden border-b border-white/5 bg-zinc-950/20">
+                {/* Decorative background glow */}
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-20">
+                    <div className="w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]"></div>
+                </div>
+
+                <div className="container relative text-center">
+                    <span className="subtle-heading">YOUR JOURNEY</span>
+                    <h1 className="text-white text-5xl md:text-6xl font-semibold tracking-tight mb-4 uppercase">I miei Viaggi</h1>
+                    <p className="text-gray-500 text-lg max-w-xl mx-auto leading-relaxed">La tua cronologia avventure su SplitPlan</p>
                 </div>
             </div>
 
-            <div className="container py-12">
+            <div className="container py-16">
                 {/* Stats Dashboard */}
                 {stats && stats.total_trips > 0 && (
-                    <div className="stats-dashboard animate-slide-up" style={{ marginBottom: '3rem' }}>
-                        <div className="stats-grid">
-                            <div className="stat-card">
-                                <div className="stat-icon">🌍</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats.total_trips}</span>
-                                    <span className="stat-label">Viaggi Totali</span>
-                                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+                        <div className="premium-card !p-6 flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/5 flex items-center justify-center text-xl">🌍</div>
+                            <div>
+                                <div className="text-2xl font-bold text-white">{stats.total_trips}</div>
+                                <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Viaggi Totali</div>
                             </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">💰</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">€{stats.total_spent.toLocaleString()}</span>
-                                    <span className="stat-label">Spesa Totale (EUR)</span>
-                                </div>
+                        </div>
+                        <div className="premium-card !p-6 flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/5 flex items-center justify-center text-xl">💰</div>
+                            <div>
+                                <div className="text-2xl font-bold text-white">€{stats.total_spent.toLocaleString()}</div>
+                                <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Spesa Totale</div>
                             </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">📅</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats.total_days}</span>
-                                    <span className="stat-label">Giorni On the Road</span>
-                                </div>
+                        </div>
+                        <div className="premium-card !p-6 flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/5 flex items-center justify-center text-xl">📅</div>
+                            <div>
+                                <div className="text-2xl font-bold text-white">{stats.total_days}</div>
+                                <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Giorni On the Road</div>
                             </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">🏛️</div>
-                                <div className="stat-info">
-                                    <span className="stat-value">{stats.unique_cities}</span>
-                                    <span className="stat-label">Città Esplorate</span>
-                                </div>
+                        </div>
+                        <div className="premium-card !p-6 flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/5 flex items-center justify-center text-xl">🏛️</div>
+                            <div>
+                                <div className="text-2xl font-bold text-white">{stats.unique_cities}</div>
+                                <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Città Esplorate</div>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {loading ? (
-                    <div className="text-center py-20">
-                        <div className="spinner-large" style={{ margin: '0 auto 1.5rem' }}></div>
-                        <p className="text-muted">Recuperando i tuoi ricordi...</p>
+                    <div className="text-center py-24">
+                        <div className="w-10 h-10 border-2 border-white/10 border-t-white rounded-full animate-spin mx-auto mb-6"></div>
+                        <p className="text-gray-500 tracking-widest uppercase text-xs">Recuperando i tuoi ricordi...</p>
                     </div>
                 ) : trips.length === 0 ? (
-                    <div className="glass-card text-center" style={{ padding: '4rem', maxWidth: '600px', margin: '0 auto' }}>
-                        <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🌍</div>
-                        <h2 style={{ marginBottom: '1rem', color: 'var(--primary-blue)' }}>Ancora nessun viaggio?</h2>
-                        <p style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>
+                    <div className="premium-card text-center max-w-lg mx-auto py-16">
+                        <div className="text-5xl mb-6">🌍</div>
+                        <h2 className="text-white text-2xl font-semibold mb-3">Ancora nessun viaggio?</h2>
+                        <p className="text-gray-500 mb-8">
                             Il mondo ti aspetta. Inizia a pianificare la tua prossima avventura ora!
                         </p>
-                        <button onClick={() => navigate('/')} className="btn-modern-primary">Inizia Ora</button>
+                        <Button onClick={() => navigate('/')} size="lg">Inizia Ora</Button>
                     </div>
                 ) : (
-                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                    <div className="max-w-4xl mx-auto">
                         {/* Tabs */}
-                        <div className="tabs-container">
+                        <div className="flex bg-white/5 p-1 rounded-sm mb-12 border border-white/5 max-w-md mx-auto">
                             <button
                                 onClick={() => setActiveTab('active')}
-                                className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`}
+                                className={`flex-1 py-2 text-[10px] font-bold tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-white text-black' : 'text-gray-500 hover:text-white'}`}
                             >
                                 Viaggi Attivi ({activeTrips.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('archived')}
-                                className={`tab-btn ${activeTab === 'archived' ? 'active' : ''}`}
+                                className={`flex-1 py-2 text-[10px] font-bold tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-white text-black' : 'text-gray-500 hover:text-white'}`}
                             >
                                 Archivio ({archivedTrips.length})
                             </button>
@@ -149,7 +142,7 @@ const MyTrips = () => {
 
                         <div className="space-y-4">
                             {currentTrips.length === 0 ? (
-                                <div className="text-center py-12 text-muted">
+                                <div className="text-center py-24 text-gray-600 text-[10px] font-bold tracking-widest uppercase">
                                     {activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
                                 </div>
                             ) : (
@@ -157,73 +150,38 @@ const MyTrips = () => {
                                     <div
                                         key={trip.id}
                                         onClick={() => navigate(`/trip/${trip.id}`)}
-                                        className="trip-row-card"
+                                        className="premium-card !p-6 cursor-pointer group hover:translate-x-1 border-white/5"
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                                            <div style={{
-                                                width: '60px',
-                                                height: '60px',
-                                                background: trip.status === 'COMPLETED'
-                                                    ? 'rgba(139,92,246,0.15)'
-                                                    : 'linear-gradient(135deg, #8b5cf6, #22d3ee)',
-                                                borderRadius: '18px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '1.8rem',
-                                                boxShadow: trip.status === 'COMPLETED' ? 'none' : '0 0 20px rgba(139,92,246,0.4)'
-                                            }}>
+                                        <div className="flex items-center gap-6">
+                                            <div className={`w-14 h-14 rounded-sm flex items-center justify-center text-2xl transition-all ${trip.status === 'COMPLETED' ? 'bg-white/5 text-gray-500 grayscale' : 'bg-blue-600 text-white'}`}>
                                                 {trip.transport_mode === 'CAR' ? '🚗' : trip.transport_mode === 'TRAIN' ? '🚄' : '✈️'}
                                             </div>
-                                            <div style={{ flex: 1 }}>
-                                                <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                                            <div className="flex-1">
+                                                <h4 className="text-white text-xl font-semibold mb-1 group-hover:text-blue-400 transition-colors">
                                                     {trip.destination || trip.name}
                                                 </h4>
-                                                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-                                                    <span>📅 {new Date(trip.start_date).toLocaleDateString()}</span>
-                                                    <span>👥 {trip.num_people} {trip.num_people === 1 ? 'persona' : 'persone'}</span>
-                                                    <span style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.3rem',
-                                                        color: trip.trip_intent === 'BUSINESS' ? '#6366f1' : '#f59e0b',
-                                                        fontWeight: '700'
-                                                    }}>
+                                                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                                                    <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase flex items-center gap-1.5">
+                                                        <span className="opacity-50">📅</span> {new Date(trip.start_date).toLocaleDateString()}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase flex items-center gap-1.5">
+                                                        <span className="opacity-50">👥</span> {trip.num_people} {trip.num_people === 1 ? 'persona' : 'persone'}
+                                                    </span>
+                                                    <span className={`text-[10px] font-bold tracking-widest uppercase flex items-center gap-1.5 ${trip.trip_intent === 'BUSINESS' ? 'text-blue-500' : 'text-amber-500'}`}>
                                                         {trip.trip_intent === 'BUSINESS' ? '💼 Lavoro' : '🏖️ Vacanza'}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                <div style={{
-                                                    padding: '0.35rem 0.75rem',
-                                                    borderRadius: '8px',
-                                                    fontSize: '0.65rem',
-                                                    fontWeight: '800',
-                                                    letterSpacing: '0.5px',
-                                                    textTransform: 'uppercase',
-                                                    background: trip.status === 'BOOKED'
-                                                        ? 'rgba(16,185,129,0.15)'
-                                                        : trip.status === 'COMPLETED'
-                                                            ? 'rgba(139,92,246,0.12)'
-                                                            : 'rgba(245,158,11,0.15)',
-                                                    color: trip.status === 'BOOKED'
-                                                        ? '#34d399'
-                                                        : trip.status === 'COMPLETED'
-                                                            ? '#a78bfa'
-                                                            : '#fbbf24',
-                                                    border: `1px solid ${trip.status === 'BOOKED'
-                                                            ? 'rgba(16,185,129,0.3)'
-                                                            : trip.status === 'COMPLETED'
-                                                                ? 'rgba(139,92,246,0.25)'
-                                                                : 'rgba(245,158,11,0.3)'
-                                                        }`
-                                                }}>
-                                                    {trip.status === 'BOOKED' ? 'Confermato' :
-                                                        trip.status === 'COMPLETED' ? 'Archiviato' : trip.status}
+                                            <div className="flex items-center gap-4">
+                                                <div className={`px-2.5 py-1 rounded-sm text-[9px] font-black tracking-widest uppercase border transition-colors ${trip.status === 'BOOKED' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                    trip.status === 'COMPLETED' ? 'bg-white/5 text-gray-500 border-white/5' :
+                                                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                    }`}>
+                                                    {trip.status === 'BOOKED' ? 'Confermato' : trip.status === 'COMPLETED' ? 'Archiviato' : trip.status}
                                                 </div>
                                                 <button
                                                     onClick={(e) => handleHideTrip(e, trip.id)}
-                                                    className="hide-btn"
+                                                    className="w-8 h-8 rounded-sm bg-white/5 border border-white/5 flex items-center justify-center text-gray-500 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-500 transition-all"
                                                     title="Nascondi dalla cronologia"
                                                 >
                                                     ✕
@@ -237,163 +195,6 @@ const MyTrips = () => {
                     </div>
                 )}
             </div>
-
-            <style>{`
-                .stats-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 1.5rem;
-                    max-width: 1000px;
-                    margin: 0 auto;
-                }
-                .stat-card {
-                    background: #0d0d18;
-                    padding: 1.5rem;
-                    border-radius: 20px;
-                    border: 1px solid rgba(139,92,246,0.15);
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    transition: all 0.3s ease;
-                }
-                .stat-card:hover {
-                    transform: translateY(-4px);
-                    border-color: rgba(139,92,246,0.4);
-                    box-shadow: 0 0 20px rgba(139,92,246,0.1);
-                }
-                .stat-icon {
-                    font-size: 1.8rem;
-                    background: rgba(139,92,246,0.1);
-                    border: 1px solid rgba(139,92,246,0.2);
-                    width: 50px;
-                    height: 50px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 14px;
-                }
-                .stat-info {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .stat-value {
-                    font-size: 1.4rem;
-                    font-weight: 800;
-                    background: linear-gradient(135deg, #a78bfa, #22d3ee);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-                .stat-label {
-                    font-size: 0.7rem;
-                    color: #7b7b9a;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    margin-top: 2px;
-                }
-
-                .tabs-container {
-                    display: flex;
-                    background: rgba(255,255,255,0.04);
-                    border: 1px solid rgba(139,92,246,0.12);
-                    padding: 0.35rem;
-                    border-radius: 14px;
-                    margin-bottom: 2rem;
-                    gap: 0.35rem;
-                }
-                .tab-btn {
-                    flex: 1;
-                    padding: 0.75rem;
-                    border: none;
-                    background: transparent;
-                    border-radius: 10px;
-                    font-weight: 700;
-                    color: #7b7b9a;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-family: inherit;
-                    font-size: 0.9rem;
-                }
-                .tab-btn.active {
-                    background: rgba(139,92,246,0.18);
-                    color: #a78bfa;
-                    box-shadow: 0 0 12px rgba(139,92,246,0.15);
-                }
-
-                .trip-row-card {
-                    background: #0d0d18;
-                    padding: 1.2rem 1.5rem;
-                    border-radius: 20px;
-                    border: 1px solid rgba(139,92,246,0.12);
-                    cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    position: relative;
-                    overflow: hidden;
-                }
-                .trip-row-card:hover {
-                    transform: translateX(6px);
-                    border-color: rgba(139,92,246,0.4);
-                    box-shadow: 0 0 20px rgba(139,92,246,0.1);
-                }
-                .trip-row-card::before {
-                    content: '';
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    bottom: 0;
-                    width: 0;
-                    background: linear-gradient(180deg, #8b5cf6, #22d3ee);
-                    transition: width 0.3s ease;
-                    border-radius: 0 2px 2px 0;
-                }
-                .trip-row-card:hover::before {
-                    width: 3px;
-                }
-                .hide-btn {
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #4a4a6e;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 0.8rem;
-                    font-weight: bold;
-                }
-                .hide-btn:hover {
-                    background: rgba(239,68,68,0.15);
-                    border-color: rgba(239,68,68,0.3);
-                    color: #f87171;
-                    transform: rotate(90deg);
-                }
-                .btn-modern-primary {
-                    background: linear-gradient(135deg, #8b5cf6, #22d3ee);
-                    color: white;
-                    padding: 0.8rem 2rem;
-                    border: none;
-                    border-radius: 16px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    box-shadow: 0 0 20px rgba(139,92,246,0.3);
-                }
-                .btn-modern-primary:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 0 35px rgba(139,92,246,0.5);
-                }
-                .glass-card {
-                    background: rgba(13,13,24,0.85);
-                    backdrop-filter: blur(20px);
-                    border: 1px solid rgba(139,92,246,0.2);
-                    border-radius: 24px;
-                    box-shadow: 0 0 40px rgba(139,92,246,0.08);
-                }
-            `}</style>
         </div>
     );
 };

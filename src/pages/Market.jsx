@@ -32,7 +32,7 @@ const Market = () => {
         if (user?.is_subscribed && user.subscription_plan === plan) return;
         setLoading(true);
         try {
-            const res = await toggleSubscription(user.email, plan);
+            const res = await toggleSubscription(plan);
             showToast("Benvenuto in SplitPlan Pro! 💎", "success");
             // Aggiorna local user
             const updatedUser = {
@@ -54,7 +54,7 @@ const Market = () => {
     const handleCancelRenew = async () => {
         setLoading(true);
         try {
-            const res = await cancelSubscription(user.email);
+            const res = await cancelSubscription();
             showToast(res.message, "success");
             const updatedUser = {
                 ...user,

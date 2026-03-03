@@ -74,7 +74,7 @@ const Auth = ({ onLogin }) => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             if (planType) {
-                const res = await toggleSubscription(user.email, planType);
+                const res = await toggleSubscription(planType);
                 user.is_subscribed = res.is_subscribed;
                 user.subscription_plan = res.subscription_plan;
                 localStorage.setItem('user', JSON.stringify(user));

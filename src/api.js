@@ -450,20 +450,19 @@ export const verifyEmail = async (token) => {
     return handleResponse(response);
 };
 
-export const toggleSubscription = async (email, plan = null) => {
+export const toggleSubscription = async (plan = null) => {
     const response = await fetch(`${API_URL}/users/toggle-subscription`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ email, plan }),
+        body: JSON.stringify({ plan }),
     });
     return handleResponse(response);
 };
 
-export const cancelSubscription = async (email) => {
+export const cancelSubscription = async () => {
     const response = await fetch(`${API_URL}/users/cancel-subscription`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ email }),
     });
     return handleResponse(response);
 };

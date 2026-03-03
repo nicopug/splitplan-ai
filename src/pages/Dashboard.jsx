@@ -13,8 +13,9 @@ import Budget from '../components/Budget';
 import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, MessageSquare, Share2, X } from 'lucide-react';
+import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, MessageSquare, Share2, X, CalendarDays } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import Events from '../components/Events';
 import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
@@ -418,7 +419,8 @@ const Dashboard = () => {
                             { id: 'CHAT', label: t('dashboard.tabs.chat', 'Chat AI'), icon: <Sparkles className="w-3.5 h-3.5" />, condition: trip.status === 'BOOKED' },
                             { id: 'BUDGET', label: t('dashboard.tabs.budget', 'Budget'), icon: <Wallet className="w-3.5 h-3.5" />, condition: trip.status === 'BOOKED' },
                             { id: 'FINANCE', label: t('dashboard.tabs.finance', 'Spese'), icon: <Coins className="w-3.5 h-3.5" />, condition: user && trip.trip_type !== 'SOLO' },
-                            { id: 'PHOTOS', label: t('dashboard.tabs.photos', 'Foto'), icon: <Camera className="w-3.5 h-3.5" /> }
+                            { id: 'PHOTOS', label: t('dashboard.tabs.photos', 'Foto'), icon: <Camera className="w-3.5 h-3.5" /> },
+                            { id: 'EVENTS', label: t('dashboard.tabs.events', 'Eventi'), icon: <CalendarDays className="w-3.5 h-3.5" />, condition: trip.status === 'BOOKED' }
                         ].map(btn => (
                             (!btn.hasOwnProperty('condition') || btn.condition) && (
                                 <button
@@ -651,6 +653,10 @@ const Dashboard = () => {
 
             {view === 'PHOTOS' && (
                 <Photos trip={trip} />
+            )}
+
+            {view === 'EVENTS' && (
+                <Events trip={trip} />
             )}
 
             {isGeneratingItinerary && <GeneratingOverlay progress={itineraryProgress} />}

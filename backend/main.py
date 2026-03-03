@@ -36,14 +36,15 @@ async def lifespan(app: FastAPI):
     logger.info("Spegnimento applicazione.")
 
 
-app = FastAPI(root_path="/api", lifespan=lifespan)
+ROOT_PATH = "/api" if os.getenv("VERCEL") else ""
+app = FastAPI(root_path=ROOT_PATH, lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
 # CORS
 # ---------------------------------------------------------------------------
 origins = [
-    "http:://localhost:3000",
-    "http:://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5173",
     "https://splitplan-ai.vercel.app"
 ]
 

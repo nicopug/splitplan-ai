@@ -6,7 +6,7 @@ from sqlmodel import Session, select, SQLModel
 
 from auth import get_current_user
 from database import get_session
-from models import Account, ItineraryItem, Partecipant
+from models import Account, ItineraryItem, Participant
 
 logger = logging.getLogger(__name__)
 

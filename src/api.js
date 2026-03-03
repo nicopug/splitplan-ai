@@ -520,3 +520,10 @@ export const updateLanguage = async (language) => {
     }
     return data;
 };
+
+export const getEvents = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/events`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};

@@ -6,11 +6,12 @@ from fpdf import FPDF
 
 from sqlmodel import Session, select, func, delete
 from typing import List, Dict, Optional
+
+import logging
 import os
 import json
 from datetime import datetime
 import httpx
-# SDK Ufficiale Google
 from google import genai
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -24,14 +25,13 @@ from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from admin_auth import verify_admin_token
 
-# Caricamento variabili ambiente
 load_dotenv()
 
-# --- CONFIGURAZIONE GOOGLE GEMINI ---
+logger = logging.getLogger(__name__)
+
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
-# Modello stabile di Google
 AI_MODEL = "gemini-2.5-flash" 
 
 if GOOGLE_API_KEY:
@@ -42,7 +42,6 @@ else:
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
-# --- MODELLI DI INPUT ---
 
 class PreferencesRequest(SQLModel):
     destination: str
@@ -77,18 +76,16 @@ def check_rate_limit(account: Account, session: Session):
     Pro: Illimitato (per ora).
     """
     if account.is_subscribed:
-        return # Gli utenti abbonati non hanno limiti (o molto alti)
+        return
 
     today = datetime.now().strftime("%Y-%m-%d")
     
-    # Reset giornaliero
     if account.last_usage_reset != today:
         account.daily_ai_usage = 0
         account.last_usage_reset = today
         session.add(account)
         session.commit()
-    
-    # Controllo soglia (es. 20 chiamate)
+
     FREE_LIMIT = 20
     if account.daily_ai_usage >= FREE_LIMIT:
         raise HTTPException(
@@ -96,7 +93,6 @@ def check_rate_limit(account: Account, session: Session):
             detail=f"Hai raggiunto il limite giornaliero di {FREE_LIMIT} chiamate AI per utenti Free. Passa a Pro per navigare senza limiti!"
         )
     
-    # Incremento
     account.daily_ai_usage += 1
     session.add(account)
     session.commit()
@@ -121,10 +117,8 @@ async def extract_receipt(
         raise HTTPException(status_code=500, detail="AI Client non inizializzato.")
 
     try:
-        # Leggi il contenuto del file
         contents = await file.read()
         
-        # Prompt specifico in base al tipo
         if type == 'hotel':
             prompt = """
             Analizza questa ricevuta o conferma di prenotazione HOTEL / AIRBNB.
@@ -152,8 +146,6 @@ async def extract_receipt(
             LINGUA: {current_user.language.upper()}.
             """
 
-        # Invio a Gemini con l'immagine/file
-        # Usiamo i tipi ufficiali dell'SDK per massima compatibilità
         response = await ai_client.aio.models.generate_content(
             model=AI_MODEL,
             contents=[
@@ -168,7 +160,6 @@ async def extract_receipt(
         raw_text = response.text.strip()
         print(f"[DEBUG] Receipt AI Response: {raw_text}")
 
-        # Pulizia JSON
         import re
         json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
         if json_match:
@@ -178,12 +169,10 @@ async def extract_receipt(
             except Exception as je:
                 print(f"[JSON Error] {je}")
         
-        # Soft failure: file read but no data found
         return {"success": False, "data": {}, "message": "L'IA non è riuscita a estrarre i dati. Compila pure a mano."}
 
     except Exception as e:
         print(f"[Receipt Error] {e}")
-        # Hard failure: API or client error
         return {"success": False, "data": {}, "message": f"Errore tecnico: {str(e)}"}
 
 class ChatRequest(SQLModel):
@@ -193,8 +182,6 @@ class ChatRequest(SQLModel):
 class JoinRequest(SQLModel):
     share_token: str
     participant_name: str
-
-# --- HELPER FUNZIONI: OPENSTREETMAP (OSM) & GEODATA ---
 
 async def get_coordinates(address: str):
     """Trasforma un indirizzo in coordinate Lat/Lon usando Nominatim (OSM)"""
@@ -234,7 +221,7 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
             response = await client.post(overpass_url, data={'data': query}, timeout=15.0)
             if response.status_code == 200:
                 elements = response.json().get('elements', [])
-                places_map = {} # Usa una mappa per gestire duplicati e preferire nodi
+                places_map = {} 
                 
                 for e in elements:
                     tags = e.get('tags', {})
@@ -243,12 +230,10 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
                         lat_val = e.get('lat') or e.get('center', {}).get('lat')
                         lon_val = e.get('lon') or e.get('center', {}).get('lon')
                         if lat_val and lon_val:
-                            # Se abbiamo già questo nome e l'elemento corrente è un nodo (più preciso), sovrascrivi
-                            # Gli elementi Overpass hanno 'type': 'node', 'way', 'relation'
                             if name not in places_map or e.get('type') == 'node':
                                 places_map[name] = {"name": name, "lat": lat_val, "lon": lon_val}
                 
-                return list(places_map.values()) # Lista di dict unici
+                return list(places_map.values())
     except Exception as e:
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
@@ -295,13 +280,11 @@ async def migrate_transport_cost(session: Session = Depends(get_session)):
     """Rinomina flight_cost in transport_cost nella tabella trip"""
     from sqlalchemy import text
     try:
-        # Tenta di rinominare la colonna (PostgreSQL syntax)
         session.execute(text("ALTER TABLE trip RENAME COLUMN flight_cost TO transport_cost;"))
         session.commit()
         return {"status": "success", "message": "Colonna flight_cost rinominata in transport_cost."}
     except Exception as e:
         session.rollback()
-        # Se fallisce perché già rinomata o altro, proviamo a crearla se non esiste (safety measure)
         try:
              session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_cost FLOAT DEFAULT 0.0;"))
              session.commit()
@@ -346,7 +329,6 @@ async def optimize_itinerary(trip_id: int, session: Session = Depends(get_sessio
         if len(items) < 3:
             return {"status": "skipped", "message": "Troppi pochi elementi per ottimizzare."}
 
-        # Raggruppa per giorno
         by_day = {}
         for item in items:
             day = item.start_time.split('T')[0]
@@ -355,13 +337,10 @@ async def optimize_itinerary(trip_id: int, session: Session = Depends(get_sessio
 
         total_updated = 0
         for day, day_items in by_day.items():
-            # Separa checkin/checkout (fissi)
             fixed = [i for i in day_items if i.type in ['CHECKIN', 'CHECKOUT']]
             to_optimize = [i for i in day_items if i.type not in ['CHECKIN', 'CHECKOUT'] and i.latitude and i.longitude]
             
             if not to_optimize: continue
-
-            # Algoritmo Nearest Neighbor partendo dall'hotel (se disponibile) o dal primo elemento
             start_lat, start_lon = None, None
             if trip.accommodation_location:
                  start_lat, start_lon = await get_coordinates(trip.accommodation_location)
@@ -386,7 +365,6 @@ async def optimize_itinerary(trip_id: int, session: Session = Depends(get_sessio
                 ordered.append(next_item)
                 curr_lat, curr_lon = next_item.latitude, next_item.longitude
 
-            # Aggiorna gli orari (mantenendo lo slot originale ma in ordine nuovo)
             times = sorted([i.start_time for i in to_optimize])
             for i, item in enumerate(ordered):
                 item.start_time = times[i]
@@ -411,13 +389,12 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         if not ai_client:
             return {"suggestion": "AI non disponibile", "breakdown": {}}
 
-        # Calcolo durata viaggio (conversione stringhe in date)
         try:
             d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
             d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
             days = abs((d2 - d1).days) + 1
         except:
-            days = 7 # Fallback
+            days = 7
             
         car_prompt = ""
         if trip.transport_mode == "CAR":
@@ -458,15 +435,12 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
         data = json.loads(response.text.replace("```json", "").replace("```", "").strip())
         
-        # Aggiungiamo il numero di giorni calcolato per aiutare il frontend nel breakdown
         data["days_count"] = days
         
         return data
     except Exception as e:
         print(f"[AI Error] Stima budget fallita: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# --- ENDPOINTS CORE ---
 
 @router.post("/", response_model=Dict)
 async def create_trip(trip_data: TripBase, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -480,7 +454,6 @@ async def create_trip(trip_data: TripBase, session: Session = Depends(get_sessio
         session.commit()
         session.refresh(db_trip)
         
-        # Creazione automatica del partecipante ORGANIZZATORE
         organizer = Participant(
             name=current_account.name, 
             is_organizer=True, 
@@ -500,7 +473,6 @@ async def create_trip(trip_data: TripBase, session: Session = Depends(get_sessio
 async def get_my_trips(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Ritorna tutti i viaggi a cui partecipa l'utente corrente e che non sono stati nascosti"""
     try:
-        # Trova tutti i record Participant collegati all'account e attivi
         participants = session.exec(
             select(Participant).where(
                 Participant.account_id == current_account.id,
@@ -512,7 +484,6 @@ async def get_my_trips(session: Session = Depends(get_session), current_account:
         if not trip_ids:
             return []
             
-        # Trova i viaggi corrispondenti
         trips = session.exec(
             select(Trip).where(Trip.id.in_(trip_ids))
         ).all()
@@ -526,7 +497,6 @@ async def get_my_trips(session: Session = Depends(get_session), current_account:
 async def get_user_stats(session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Calcola statistiche aggregate per l'utente corrente"""
     try:
-        # Trova tutti i viaggi a cui partecipa l'utente
         participants = session.exec(
             select(Participant).where(
                 Participant.account_id == current_account.id,
@@ -551,7 +521,6 @@ async def get_user_stats(session: Session = Depends(get_session), current_accoun
         
         completed_trips = [t for t in trips if t.status == "COMPLETED"]
         
-        # Calcolo spesa totale (somma di tutte le spese caricate dall'utente in questi viaggi)
         total_spent = session.exec(
             select(func.sum(Expense.amount)).where(
                 Expense.trip_id.in_(trip_ids),
@@ -559,21 +528,15 @@ async def get_user_stats(session: Session = Depends(get_session), current_accoun
             )
         ).one() or 0.0
 
-        # Aggiungiamo la quota parte di hotel e trasporti per ogni viaggio (anche se non pagati direttamente dall'utente nell'app)
         for t in trips:
-            # Calcoliamo la quota per persona (il campo transport_cost e hotel_cost sono il totale del viaggio)
-            # Questi costi vengono sommati alla spesa totale dell'utente come "quota fissa" del viaggio
             num = (t.num_people or 1)
             total_spent += (t.transport_cost or 0) / num
             total_spent += (t.hotel_cost or 0) / num
-
-        # Calcolo giorni totali e città uniche per i viaggi completati
         total_days = 0
         unique_cities = set()
         for t in completed_trips:
             unique_cities.add(t.destination or t.real_destination)
             try:
-                # Gestiamo il formato ISO della data
                 d1 = datetime.fromisoformat(t.start_date.replace('Z', ''))
                 d2 = datetime.fromisoformat(t.end_date.replace('Z', ''))
                 total_days += abs((d2 - d1).days) + 1
@@ -600,7 +563,6 @@ async def complete_trip(trip_id: int, session: Session = Depends(get_session), c
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
             
-        # Solo l'organizzatore può chiudere il viaggio
         participant = session.exec(
             select(Participant).where(
                 Participant.trip_id == trip_id,
@@ -664,6 +626,18 @@ async def migrate_participants_active(session: Session = Depends(get_session)):
         print(f"[Migration Error] {e}")
         return {"status": "error", "message": str(e)}
 
+@router.get("/migrate-events-cache", dependencies=[Depends(verify_admin_token)])
+async def migrate_events_cache(session: Session = Depends(get_session)):
+    from sqlalchemy import text
+    try:
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS events_cache TEXT;"))
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS events_cache_date VARCHAR;"))
+        session.commit()
+        return {"status": "success"}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "detail": str(e)}
+
 @router.get("/{trip_id}", response_model=Trip)
 async def read_trip(trip_id: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Recupera i dettagli del viaggio verificando l'appartenenza dell'account"""
@@ -713,13 +687,11 @@ async def get_shared_trip(token: str, session: Session = Depends(get_session)):
     if not trip:
         raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
         
-    # Recuperiamo anche i dati correlati necessari per la visualizzazione
     itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip.id).order_by(ItineraryItem.start_time)).all()
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip.id)).all()
     photos = session.exec(select(Photo).where(Photo.trip_id == trip.id)).all()
     participants = session.exec(select(Participant).where(Participant.trip_id == trip.id)).all()
     
-    # Prepariamo un oggetto di risposta che includa tutto il necessario
     return {
         "trip": trip.model_dump(exclude={"participants", "proposals", "itinerary_items", "expenses", "photos"}),
         "itinerary": [i.model_dump() for i in itinerary],
@@ -740,25 +712,18 @@ async def join_trip(token: str, session: Session = Depends(get_session), current
        Tenta di far corrispondere l'account corrente con un partecipante 'ospite' creato dall'organizzatore.
     """
     try:
-        # 1. Cerca il viaggio tramite token
         trip = session.exec(select(Trip).where(Trip.share_token == token)).first()
         if not trip:
             raise HTTPException(status_code=404, detail="Link di condivisione non valido o scaduto")
-
-        # 2. Verifica se è già dentro
         existing = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.account_id == current_account.id)).first()
         if existing:
             return {"status": "success", "message": "Fai già parte di questo viaggio", "trip_id": trip.id}
 
-        # 3. Matching Intelligente del nome
-        # L'organizzatore potrebbe aver inserito solo il nome, o nome e cognome.
-        # Proviamo diverse combinazioni.
         search_names = [
             current_account.name.strip().lower(),
             f"{current_account.name} {current_account.surname}".strip().lower()
         ]
         
-        # Cerchiamo un partecipante senza account_id il cui nome (lower) combacia o è contenuto nei nomi dell'account
         guest_participant = None
         all_guests = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.account_id == None)).all()
         
@@ -770,13 +735,11 @@ async def join_trip(token: str, session: Session = Depends(get_session), current
         
         if guest_participant:
             guest_participant.account_id = current_account.id
-            # Sincronizziamo il nome con quello dell'account per coerenza
             guest_participant.name = f"{current_account.name} {current_account.surname}"
             session.add(guest_participant)
             session.commit()
             return {"status": "success", "message": f"Benvenuto a bordo, {current_account.name}!", "trip_id": trip.id}
         
-        # 4. Fallback: Se non troviamo un match, restituiamo un errore chiaro
         raise HTTPException(
             status_code=403, 
             detail=f"Non è stato trovato un partecipante che corrisponda al tuo nome ({current_account.name}) in questo viaggio. Assicurati che l'organizzatore ti abbia aggiunto con il nome corretto."
@@ -797,7 +760,6 @@ async def update_trip(trip_id: int, updates: Dict, session: Session = Depends(ge
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
         
-        # Verifica autorizzazione (solo partecipanti)
         check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
         if not check: 
             raise HTTPException(status_code=403, detail="Non autorizzato")
@@ -818,7 +780,6 @@ async def update_trip(trip_id: int, updates: Dict, session: Session = Depends(ge
 async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Genera 3 proposte e salva tutti i partecipanti nel Database"""
     try:
-        # Verifica autorizzazione
         check = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
         if not check: 
             raise HTTPException(status_code=403, detail="Non autorizzato")
@@ -827,11 +788,9 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-        # RATE LIMIT & PREMIUM GATE
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
             
-        # Aggiornamento dati viaggio
         trip.budget_per_person = prefs.budget / prefs.num_people
         trip.num_people = prefs.num_people
         trip.start_date = prefs.start_date
@@ -845,13 +804,11 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         trip.work_end_time = prefs.work_end_time
         trip.work_days = prefs.work_days
         
-        # SALVA IL MEZZO DI TRASPORTO SCELTO MANUALMENTE SE PRESENTE
         if prefs.transport_mode:
             trip.transport_mode = prefs.transport_mode
             
         session.add(trip)
         
-        # SALVATAGGIO PARTECIPANTI EXTRA
         if prefs.participant_names:
             for name in prefs.participant_names:
                 exists = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.name == name)).first()
@@ -859,7 +816,6 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                     session.add(Participant(name=name, trip_id=trip.id, is_organizer=False))
         session.commit()
 
-        # --- GENERAZIONE AI GOOGLE ---
         if ai_client:
             try:
                 prompt = f"""
@@ -910,34 +866,27 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 if data.get("departure_city_normalized"):
                     trip.departure_city = data["departure_city_normalized"]
                 
-                # Applica il suggerimento AI solo se non contrasta con una scelta manuale forte del tipo 'CAR' o 'TRAIN'
-                # Se l'utente ha lasciato 'FLIGHT' (default) ma l'AI vede che è vicino, seguiamo l'AI.
                 ai_suggested = data.get("suggested_transport_mode")
                 if ai_suggested and (trip.transport_mode == "FLIGHT" or not trip.transport_mode):
                     trip.transport_mode = ai_suggested
                 
                 session.add(trip)
 
-                # Elimina proposte esistenti
                 existing = session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
                 for e in existing: 
                     session.delete(e)
                 
-                # Crea nuove proposte
                 import random
                 import urllib.parse
                 for p in data.get("proposals", []):
                     search = p.get("image_search_term") or ""
                     dest_en = p.get("destination_english") or ""
-                    # Prepariamo tag pulite in INGLESE per LoremFlickr
                     curated_tags = f"{dest_en},{search},travel".lower().replace(" ", ",")
-                    # Pulizia virgole doppie o vuote
                     tag_list = [t.strip() for t in curated_tags.split(",") if t.strip()]
-                    final_tags = ",".join(tag_list[:3]) # Limitiamo a 3 tag per massima compatibilità
+                    final_tags = ",".join(tag_list[:3])
                     
                     seed = random.randint(1, 10000)
                     encoded_tags = urllib.parse.quote(final_tags, safe=',')
-                    # Usiamo /all per forzare la precisione dei tag
                     img_url = f"https://loremflickr.com/1080/720/{encoded_tags}/all?lock={seed}"
                     
                     session.add(Proposal(
@@ -957,13 +906,10 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
             except Exception as e:
                 print(f"[AI Error] Generazione fallita: {e}")
 
-        # --- FALLBACK MANUALE (MOCK) ---
         print("AI fallita. Uso Mock Data con 3 opzioni.")
         iata_map = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
         trip.departure_airport = iata_map.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
         
-        # Semplice euristica per il fallback se l'AI fallisce (quota finita)
-        # Lo facciamo SOLO se il mezzo è proprio assente (Legacy)
         if not trip.transport_mode:
             short_distance_cities = ['roma', 'milano', 'firenze', 'napoli', 'venezia', 'torino', 'bologna']
             is_short = prefs.destination.lower() in short_distance_cities or prefs.departure_airport.lower() in short_distance_cities
@@ -1001,7 +947,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         return
 
     try:
-        # 1. Calcolo Durata e Logistica
         try:
             d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
             d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
@@ -1010,14 +955,12 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             print(f"[Warning] Date parsing failed: {e}")
             num_days = 5 # Fallback
         
-        # 2. Recupero nomi reali (OSM)
         hotel_lat = trip.hotel_latitude
         hotel_lon = trip.hotel_longitude
         locali_reali = await get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
         
         places_prompt = ""
         if locali_reali:
-            # Formatta la lista per l'AI
             places_list_str = "\n".join([f"- {p['name']} (Lat: {p['lat']}, Lon: {p['lon']})" for p in locali_reali[:15]])
             places_prompt = f"""
             Ecco alcuni luoghi reali verificati vicino all'alloggio (ristoranti, bar, lidi/bagni):
@@ -1033,10 +976,8 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         
 
         
-        # 2.5 BUSINES CALENDAR INTEGRATION
         calendar_prompt = ""
         organization_name = ""
-        # Cerchiamo l'organizzatore per accedere al suo calendario e preferenze lingua
         organizer_part = next((p for p in trip.participants if p.is_organizer), None)
         organizer_account = None
         if organizer_part and organizer_part.account_id:
@@ -1052,7 +993,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                      creds = Credentials.from_authorized_user_info(json.loads(organizer_account.google_calendar_token), ['https://www.googleapis.com/auth/calendar.events.readonly'])
                      service = build('calendar', 'v3', credentials=creds)
                      
-                     # Time range del viaggio
                      t_min = datetime.fromisoformat(trip.start_date.replace('Z', '')).isoformat() + 'Z'
                      t_max = datetime.fromisoformat(trip.end_date.replace('Z', '')).isoformat() + 'Z'
                      
@@ -1082,7 +1022,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                  except Exception as exc:
                      print(f"[Warning] Failed to fetch calendar events: {exc}")
 
-        # 3. Prompt Avanzato (Merge dei due stili)
         prompt = f"""
         Sei un esperto Travel Agent. Genera un itinerario di {num_days} giorni per il viaggio "{trip.name}" a {trip.destination}.
         TEMA: {proposal.destination}. DESCRIZIONE: {proposal.description}.
@@ -1138,16 +1077,12 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         text = response.text.replace("```json", "").replace("```", "").strip()
         data = json.loads(text)
         
-        # 4. Salvataggio Itinerario
-        # Elimina vecchio itinerario
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
         session.commit()
         
         import asyncio
         async def process_item(item):
             try:
-                # Se l'AI non ha dato coordinate o sono 0, fallback su geocoding parallelizzato
-                # Forza conversione in float e pulizia
                 try:
                     i_lat = float(item.get("lat", 0))
                     i_lon = float(item.get("lon", 0))
@@ -1158,9 +1093,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                     title_clean = item['title'].lower()
                     query = f"{item['title']}, {trip.destination}"
                     
-                    # Ottimizzazione aggressiva per spiagge/mare: evita il centro città (es. stazione)
-                    # Se il titolo contiene già "Bagno" o "Lido", cerchiamo quello direttamente per precisione.
-                    # Se è generico, aggiungiamo "Lungomare" che è una strada, quindi a terra.
                     if any(word in title_clean for word in ['bagno', 'lido', 'mare']):
                         if 'bagno' in title_clean or 'lido' in title_clean:
                            query = f"{item['title']}, {trip.destination}"
@@ -1169,7 +1101,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                     
                     i_lat, i_lon = await get_coordinates(query)
                     
-                    # Se ancora fallisce e siamo al mare, usa coordinate hotel come fallback vicino
                     if (not i_lat or i_lat == 0) and trip.hotel_latitude:
                        i_lat, i_lon = trip.hotel_latitude, trip.hotel_longitude
                 
@@ -1187,7 +1118,6 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                 print(f"[ERROR] Skip item {item.get('title')}: {ei}")
                 return None
 
-        # Task paralleli per coordinate se necessario
         tasks = [process_item(item) for item in data.get("itinerary", [])]
         results = await asyncio.gather(*tasks)
         
@@ -1195,12 +1125,10 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             if db_item:
                 session.add(db_item)
         
-        # 5. Salvataggio Stime Spese (CAR)
         costs = data.get("estimated_road_costs", {})
         if trip.transport_mode == "CAR":
             total_road = float(costs.get("fuel", 0.0)) + float(costs.get("tolls", 0.0))
             if total_road > 0:
-                # Elimina vecchie stime
                 session.exec(delete(Expense).where(Expense.trip_id == trip.id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
                 
                 organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
@@ -1231,7 +1159,6 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
             
-        # RATE LIMIT & PREMIUM GATE
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
         
@@ -1242,11 +1169,9 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         trip.arrival_time = hotel_data.arrival_time
         trip.return_time = hotel_data.return_time
         
-        # Salviamo anche il mezzo se cambiato nell'ultimo step
         if hotel_data.transport_mode and hotel_data.transport_mode != "None":
             trip.transport_mode = hotel_data.transport_mode
 
-        # Otteniamo coordinate dell'hotel
         lat, lon = await get_coordinates(f"{hotel_data.hotel_name}, {hotel_data.hotel_address}")
         trip.hotel_latitude = lat
         trip.hotel_longitude = lon
@@ -1273,7 +1198,6 @@ async def reset_hotel(trip_id: int, session: Session = Depends(get_session), cur
         if not trip: 
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
         
-        # Autorizzazione: verifica che l'utente sia l'organizzatore
         participant = session.exec(
             select(Participant).where(
                 Participant.trip_id == trip_id, 
@@ -1291,7 +1215,6 @@ async def reset_hotel(trip_id: int, session: Session = Depends(get_session), cur
         trip.hotel_cost = 0.0
         trip.transport_cost = 0.0
         
-        # Elimina anche l'itinerario e le stime spese collegate
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip_id))
         session.exec(delete(Expense).where(Expense.trip_id == trip_id, Expense.category == "Travel_Road", Expense.description.like("Stima%")))
         
@@ -1319,7 +1242,6 @@ async def vote_proposal(
         if not proposal: 
             raise HTTPException(status_code=404, detail="Proposta non trovata")
         
-        # Determina il partecipante
         participant = None
         if user_id and user_id > 0:
             participant = session.get(Participant, user_id)
@@ -1334,7 +1256,6 @@ async def vote_proposal(
         if not participant: 
             raise HTTPException(status_code=403, detail="Partecipante non trovato")
 
-        # Registra o aggiorna voto
         existing = session.exec(
             select(Vote).where(
                 Vote.proposal_id == proposal_id, 
@@ -1350,12 +1271,10 @@ async def vote_proposal(
         
         session.commit()
         
-        # Ottieni il viaggio
         trip = session.get(Trip, proposal.trip_id)
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
         
-        # Conta i votanti unici
         total_voters_query = select(func.count(func.distinct(Vote.user_id))).join(
             Proposal
         ).where(Proposal.trip_id == trip.id)
@@ -1364,11 +1283,9 @@ async def vote_proposal(
         
         print(f"[DEBUG] Voti: {total_voters}/{trip.num_people}")
         
-        # Verifica consenso raggiunto
         if total_voters >= trip.num_people:
             all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
             
-            # Calcola punteggi
             best_p = None
             best_score = -1
             
@@ -1383,14 +1300,13 @@ async def vote_proposal(
             if best_p:
                 trip.winning_proposal_id = best_p.id
                 trip.destination = best_p.destination
-                trip.real_destination = best_p.real_destination # Copiamo il nome reale
+                trip.real_destination = best_p.real_destination
                 trip.destination_iata = best_p.destination_iata
                 trip.status = "BOOKED"
                 session.add(trip)
                 session.commit()
                 print(f"[SUCCESS] Consenso raggiunto! Vincitore: {best_p.destination}")
 
-                # --- INVIO EMAIL DI CONFERMA ALL'ORGANIZZATORE ---
                 try:
                     organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
                     organizer_account = session.get(Account, organizer.account_id) if organizer and organizer.account_id else None
@@ -1446,16 +1362,13 @@ async def simulate_votes(trip_id: int, session: Session = Depends(get_session), 
         if not proposals: return {"error": "Nessuna proposta"}
         
         for p in participants:
-            # Se è il creatore, vota la prima proposta se non ha già votato
             voted = session.exec(select(Vote).where(Vote.user_id == p.id)).first()
             if not voted:
                 await vote_proposal(proposals[0].id, 1, session=session, current_account=current_account, user_id=p.id)
                 
         return {"status": "votes_simulated", "voters": len(participants)}
     except Exception as e:
-        # Loggare l'errore reale internamente
         print(f"[ERROR] simulate_votes: {e}")
-        # Restituire errore generico al client
         return {"status": "error", "message": "Errore durante la simulazione dei voti."}
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
@@ -1488,13 +1401,11 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
             
-        # RATE LIMIT & PREMIUM GATE
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
             
         itinerary = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id)).all()
         
-        # Preparazione Cronologia (ultimi 5 messaggi per contesto)
         history_text = ""
         if req.history:
             history_text = "\n".join([f"{m.get('role', 'user').upper()}: {m.get('text', '')}" for m in req.history[-5:]])
@@ -1537,7 +1448,6 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         
         print(f"[DEBUG] Raw AI Response: {raw_text}")
         
-        # Estrazione JSON tramite Regex (più robusta)
         json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
         if not json_match:
             return {"reply": "Scusa, non sono riuscito a elaborare la modifica. Prova a chiedermelo in modo diverso.", "itinerary": [i.model_dump() for i in itinerary]}
@@ -1547,11 +1457,9 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         except:
             return {"reply": "C'è stato un errore nel formato della risposta AI. Riprova tra un istante.", "itinerary": [i.model_dump() for i in itinerary]}
 
-        # Esecuzione Comandi
         for cmd in data.get("commands", []):
             try:
                 if cmd["action"] == "ADD":
-                    # Pulizia dei dati per evitare errori di argomenti multipli (es. trip_id)
                     item_data = cmd["item"].copy()
                     item_data.pop("id", None)
                     item_data.pop("trip_id", None)
@@ -1569,7 +1477,6 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         
         session.commit()
         
-        # Recupero e SERIAZIONE ESPLICITA per evitare errori Vercel/FastAPI
         updated = session.exec(select(ItineraryItem).where(ItineraryItem.trip_id == trip_id).order_by(ItineraryItem.start_time)).all()
         return {
             "reply": data.get("reply", "Itinerario aggiornato!"), 
@@ -1633,7 +1540,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
     
-    # Controllo Premium (Export PDF è una feature premium)
     require_premium(current_account, trip)
 
     def format_pdf_datetime(dt_str):
@@ -1654,7 +1560,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         except:
             return d_str
 
-    # Dizionario Traduzioni PDF
     pdf_labels = {
         "it": {
             "header": "SPLITPLAN",
@@ -1695,17 +1600,14 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     }
     L = pdf_labels.get(current_account.language, pdf_labels["it"])
 
-    # Fetch data
     itinerary = sorted(trip.itinerary_items, key=lambda x: (x.start_time))
     expenses = trip.expenses
     
-    # Creazione PDF
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
-    # Header Design
-    pdf.set_fill_color(25, 42, 86) # Dark Navy
+    pdf.set_fill_color(25, 42, 86) 
     pdf.rect(0, 0, 210, 40, 'F')
     
     pdf.set_font("Helvetica", "B", 24)
@@ -1717,7 +1619,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     pdf.cell(0, 10, f"{L['your_trip']} {trip.real_destination or trip.destination}", ln=True, align="C")
     pdf.ln(10)
     
-    # Trip Info Section
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Helvetica", "B", 18)
     pdf.cell(0, 10, f"{trip.name}", ln=True)
@@ -1729,7 +1630,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(10)
 
-    # 1. Alloggio (Moved to top)
     if trip.accommodation:
         pdf.set_font("Helvetica", "B", 16)
         pdf.set_fill_color(240, 244, 255)
@@ -1746,7 +1646,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
             pdf.multi_cell(0, 8, f"{L['address']}: {trip.accommodation_location}")
         pdf.ln(10)
 
-    # 2. Itinerario (Grouped by Day)
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_fill_color(240, 244, 255)
     pdf.set_text_color(25, 42, 86)
@@ -1767,7 +1666,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
             
             date_str = dt.strftime("%Y-%m-%d")
             
-            # Nuovo Giorno
             if date_str != current_date_str:
                 current_date_str = date_str
                 day_count += 1
@@ -1776,15 +1674,13 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
                 
                 pdf.ln(4)
                 pdf.set_font("Helvetica", "B", 14)
-                pdf.set_text_color(0, 122, 255) # SplitPlan Blue
+                pdf.set_text_color(0, 122, 255) 
                 pdf.cell(0, 10, f"{L['day']} {day_count} - {dt.strftime('%d/%m/%Y')}", ln=True)
                 pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 50, pdf.get_y())
                 pdf.ln(2)
             
-            # Attività
             pdf.set_font("Helvetica", "B", 11)
             pdf.set_text_color(50, 50, 50)
-            # Solo ORARIO
             time_display = dt.strftime("%H:%M")
             pdf.cell(20, 8, f"{time_display}", ln=False)
             
@@ -1795,14 +1691,13 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
             if item.description:
                 pdf.set_font("Helvetica", "", 9)
                 pdf.set_text_color(100, 100, 100)
-                pdf.set_x(30) # Indent description
+                pdf.set_x(30) 
                 pdf.multi_cell(0, 5, f"{item.description}")
             
             pdf.ln(2)
 
     pdf.ln(10)
     
-    # 3. Spese
     if expenses:
         if pdf.get_y() > 180: pdf.add_page()
         pdf.set_font("Helvetica", "B", 16)
@@ -1813,7 +1708,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         
         total_eur = sum(e.amount for e in expenses)
         
-        # Tabella intestazione
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(255, 255, 255)
         pdf.set_fill_color(25, 42, 86)
@@ -1838,7 +1732,6 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
         pdf.set_text_color(0, 122, 255)
         pdf.cell(0, 10, f"{L['total_spent']}: {total_eur:.2f} EUR", ln=True, align="R")
 
-    # Genera i bytes del PDF
     pdf_bytes = pdf.output()
     
     if isinstance(pdf_bytes, bytearray):
@@ -1851,3 +1744,97 @@ async def export_trip_pdf(trip_id: int, session: Session = Depends(get_session),
             "Content-Disposition": f"attachment; filename=SplitPlan_{trip_id}.pdf"
         }
     )
+
+
+@router.get("/{trip_id}/events")
+async def get_trip_events(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    check = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_account.id
+        )
+    ).first()
+    if not check:
+        raise HTTPException(status_code=403, detail="Non sei un partecipante di questo viaggio.")
+
+    # --- CACHE CHECK (3 giorni) ---
+    today = datetime.now().strftime("%Y-%m-%d")
+    if trip.events_cache and trip.events_cache_date:
+        cache_date = datetime.strptime(trip.events_cache_date, "%Y-%m-%d")
+        diff = (datetime.now() - cache_date).days
+        if diff < 3:
+            logger.info(f"Cache eventi usata per viaggio {trip_id} (età: {diff} giorni)")
+            return json.loads(trip.events_cache)
+
+    if not ai_client:
+        raise HTTPException(status_code=503, detail="AI non disponibile.")
+
+    check_rate_limit(current_account, session)
+
+    destination = trip.real_destination or trip.destination
+    lang = current_account.language.upper()
+
+    prompt = f"""
+    Sei un esperto di viaggi e cultura locale. 
+    Il viaggio è a: {destination}
+    Periodo: dal {trip.start_date} al {trip.end_date}
+    
+    Elenca gli eventi REALI e RILEVANTI che potrebbero impattare questo viaggio:
+    - Festività nazionali o locali (musei chiusi, strade affollate)
+    - Grandi eventi sportivi (partite importanti, maratone)
+    - Festival, concerti, fiere famose
+    - Eventi politici o istituzionali (visite di stato, manifestazioni)
+    - Periodi di alta stagione turistica con zone molto affollate
+    - Lavori stradali o chiusure di attrazioni note
+    
+    Per ogni evento indica l'impatto pratico sul viaggiatore.
+    Se non sei sicuro di un evento specifico per quelle date, non inventarlo.
+    
+    RESTITUISCI SOLO JSON puro senza markdown:
+    {{
+        "events": [
+            {{
+                "title": "Nome evento",
+                "type": "festival|concert|sport|political|religious|market|exhibition|disruption|holiday|other",
+                "dates": "es. 15-17 agosto",
+                "impact": "high|medium|low",
+                "description": "Descrizione e impatto pratico",
+                "affected_places": ["luogo1", "luogo2"],
+                "travel_tip": "Consiglio pratico"
+            }}
+        ]
+    }}
+    Massimo 8 eventi. LINGUA: {lang}.
+    """
+
+    try:
+        response = await ai_client.aio.models.generate_content(
+            model=AI_MODEL,
+            contents=prompt
+        )
+        raw = response.text.strip().replace("```json", "").replace("```", "")
+        data = json.loads(raw)
+
+        # --- SALVA CACHE ---
+        trip.events_cache = json.dumps(data)
+        trip.events_cache_date = today
+        session.add(trip)
+        session.commit()
+
+        logger.info(f"Eventi generati e cachati per viaggio {trip_id}")
+        return data
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Errore parsing JSON eventi viaggio {trip_id}: {e}")
+        return {"events": []}
+    except Exception as e:
+        logger.error(f"Errore generazione eventi viaggio {trip_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -62,6 +62,9 @@ class TripBase(SQLModel):
     transport_mode: str = "FLIGHT"
     is_premium: bool = Field(default=False)
 
+    events_cache: Optional[str] = Field(default=None)        # JSON stringa
+events_cache_date: Optional[str] = Field(default=None)   # ISO date es. "2026-03-03"
+
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     participants: List["Participant"] = Relationship(back_populates="trip")

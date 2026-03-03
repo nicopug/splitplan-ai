@@ -22,6 +22,7 @@ from models import Trip, TripBase, Participant, Proposal, Vote, ItineraryItem, S
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
+from admin_auth import verify_admin_token
 
 # Caricamento variabili ambiente
 load_dotenv()
@@ -252,7 +253,7 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
         print(f"[OSM Error] Overpass fallito: {e}")
     return []
 
-@router.get("/migrate-db-coords")
+@router.get("/migrate-db-coords", dependencies=[Depends(verify_admin_token)])
 async def migrate_db_coords(session: Session = Depends(get_session)):
     """Aggiunge lat/lon alla tabella itineraryitem"""
     from sqlalchemy import text
@@ -265,7 +266,7 @@ async def migrate_db_coords(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
-@router.get("/migrate-share-token")
+@router.get("/migrate-share-token", dependencies=[Depends(verify_admin_token)])
 async def migrate_share_token(session: Session = Depends(get_session)):
     """Aggiunge share_token alla tabella trip"""
     from sqlalchemy import text
@@ -277,7 +278,7 @@ async def migrate_share_token(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
-@router.get("/migrate-transport-mode")
+@router.get("/migrate-transport-mode", dependencies=[Depends(verify_admin_token)])
 async def migrate_transport_mode(session: Session = Depends(get_session)):
     """Aggiunge transport_mode alla tabella trip"""
     from sqlalchemy import text
@@ -289,7 +290,7 @@ async def migrate_transport_mode(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
-@router.get("/migrate-transport-cost")
+@router.get("/migrate-transport-cost", dependencies=[Depends(verify_admin_token)])
 async def migrate_transport_cost(session: Session = Depends(get_session)):
     """Rinomina flight_cost in transport_cost nella tabella trip"""
     from sqlalchemy import text
@@ -309,7 +310,7 @@ async def migrate_transport_cost(session: Session = Depends(get_session)):
              return {"status": "error", "message": str(e2)}
 
 
-@router.get("/migrate-trip-intent")
+@router.get("/migrate-trip-intent", dependencies=[Depends(verify_admin_token)])
 async def migrate_trip_intent(session: Session = Depends(get_session)):
     """Aggiunge trip_intent alla tabella trip"""
     from sqlalchemy import text
@@ -321,7 +322,7 @@ async def migrate_trip_intent(session: Session = Depends(get_session)):
         session.rollback()
         return {"status": "error", "message": str(e)}
 
-@router.get("/migrate-trip-work-hours")
+@router.get("/migrate-trip-work-hours", dependencies=[Depends(verify_admin_token)])
 async def migrate_trip_work_hours(session: Session = Depends(get_session)):
     """Aggiunge work_start_time e work_end_time alla tabella trip"""
     from sqlalchemy import text

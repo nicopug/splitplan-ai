@@ -7,6 +7,7 @@ import math
 from database import get_session
 from models import Trip, Participant, Expense, SQLModel
 from utils.currency import convert_to_euro, get_exchange_rates
+from admin_auth import verify_admin_token
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -137,7 +138,7 @@ async def delete_expense(expense_id: int, session: Session = Depends(get_session
     session.commit()
     return {"status": "ok"}
 
-@router.post("/migrate-schema")
+@router.post("/migrate-schema", dependencies=[Depends(verify_admin_token)])
 async def migrate_schema(session: Session = Depends(get_session)):
     """Endpoint temporaneo per aggiungere colonne mancanti"""
     try:

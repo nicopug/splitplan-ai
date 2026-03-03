@@ -32,9 +32,9 @@ def get_supabase() -> Client:
 def _check_partecipant(trip_id: int, account: Account, session: Session):
     """Verifica che l'utente sia un partecipante del viaggio."""
     member = session.exec(
-        select(Partecipant).where(
-            Partecipant.trip_id == trip_id,
-            Partecipant.account_id == account.id
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == account.id
         )
     ).first()
     if not member:

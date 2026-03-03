@@ -13,6 +13,7 @@ import json
 from datetime import datetime
 import httpx
 from google import genai
+from google.genai import types
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
@@ -1818,10 +1819,19 @@ async def get_trip_events(
     try:
         response = await ai_client.aio.models.generate_content(
             model=AI_MODEL,
-            contents=prompt
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                tools=[types.Tool(google_search=types.GoogleSearch())]
+            ),
         )
         raw = response.text.strip().replace("```json", "").replace("```", "")
-        data = json.loads(raw)
+        import re
+        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group())
+        else:
+            logger.warning(f"Nessun JSON trovato nella risposta eventi: {raw[:200]}")
+            data = {"events": []}
 
         # --- SALVA CACHE ---
         trip.events_cache = json.dumps(data)

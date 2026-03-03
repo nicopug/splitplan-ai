@@ -1,33 +1,64 @@
 import sys
 import os
-from pathlib import Path
+import logging
+from contextlib import asynccontextmanager
 
-# Add the backend directory to sys.path to handle Vercel deployment imports
+from fastapi import FastAPI, Depends, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlmodel import text
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
-from database import create_db_and_tables
-from routers import trips, photos, users, expenses, itinerary, payments
+from database import create_db_and_tables, get_session, engine
+from routers import trips, photos, users, expenses, itinerary, payments, calendar
 
-# --- CONFIGURAZIONE APP ---
-# root_path="/api" è fondamentale per il deployment su Vercel
+# ---------------------------------------------------------------------------
+# LOGGING
+# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# ADMIN AUTH DEPENDENCY
+# ---------------------------------------------------------------------------
+def verify_admin_token(x_admin_token: str = Header(...)):
+    """
+    Protegge gli endpoint admin tramite header X-Admin-Token.
+    Imposta ADMIN_TOKEN nelle variabili d'ambiente Vercel.
+    """
+    admin_token = os.getenv("ADMIN_TOKEN")
+    if not admin_token:
+        raise HTTPException(status_code=503, detail="ADMIN_TOKEN non configurato sul server.")
+    if x_admin_token != admin_token:
+        raise HTTPException(status_code=403, detail="Token admin non valido.")
+
+
+# ---------------------------------------------------------------------------
+# APP LIFECYCLE
+# ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Tenta di creare le tabelle all'avvio
+    logger.info("Avvio applicazione: creazione tabelle DB...")
     create_db_and_tables()
+    logger.info("Tabelle DB pronte.")
     yield
+    logger.info("Spegnimento applicazione.")
 
-# root_path="/api" è fondamentale per il deployment su Vercel
+
 app = FastAPI(root_path="/api", lifespan=lifespan)
 
-# --- CONFIGURAZIONE CORS ---
-# Permette al frontend di parlare con il backend
+# ---------------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------------
 origins = [
-    "http://localhost:3000",
-    "http://localhost:5173", # Vite default
-    "https://splitplan-ai.vercel.app",
+    "http:://localhost:3000",
+    "http:://localhost:5173",
+    "https://splitplan-ai.vercel.app"
 ]
 
 app.add_middleware(
@@ -38,60 +69,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- INCLUSIONE ROUTER ---
+# ---------------------------------------------------------------------------
+# ROUTER
+# ---------------------------------------------------------------------------
 app.include_router(trips.router)
 app.include_router(photos.router)
 app.include_router(users.router)
 app.include_router(expenses.router)
 app.include_router(itinerary.router)
 app.include_router(payments.router)
-from routers import calendar
 app.include_router(calendar.router)
 
-# --- ENDPOINT MANUALE PER FORZARE LA CREAZIONE TABELLE ---
-# Usa questo se Supabase rimane vuoto dopo il deploy
-@app.get("/init-db")
+
+# ---------------------------------------------------------------------------
+# ADMIN ENDOPOINTS
+# Tutti protetti da X-Admin-Token nell'header.
+# Esempio curl: curl -H "X-Admin-Token: il_tuo_token_qui" http://localhost:8000/api/admin/init-db
+# ---------------------------------------------------------------------------
+
+@app.get("/admin/init-db", dependencies=[Depends(verify_admin_token)], tags=["admin"])
 def init_db():
+    """Forza la creazione delle tabelle. Richiede header X-Admin-Token."""
     create_db_and_tables()
-    return {"message": "Database tables created successfully! Check Supabase now."}
+    logger.info("[ADMIN] init-db eseguito.")
+    return {"message": "Tabelle DB create con successo."}
 
-from sqlmodel import text
-from database import get_session
 
-@app.get("/migrate-db-calendar")
+@app.get("/admin/migrate-calendar", dependencies=[Depends(verify_admin_token)], tags=["admin"])
 def migrate_db_calendar():
-    # Helper temporaneo per aggiungere le colonne mancanti su Supabase
+    """Aggiunge le colonne Google Calendar. Richiede header X-Admin-Token."""
     try:
-        from database import engine
         with engine.connect() as conn:
             conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"))
             conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"))
             conn.commit()
-        return {"status": "success", "message": "Columns added to 'account' table."}
+        logger.info("[ADMIN] migrate-calendar eseguita.")
+        return {"status": "success", "message": "Colonne calendar aggiunte."}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        logger.error(f"[ADMIN] migrate-calendar fallita: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import logging
-import traceback
 
-# Configurazione Logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+# ---------------------------------------------------------------------------
+# GLOBAL EXCEPTION HANDLER
+# ---------------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    # Logghiamo l'errore completo internamente
-    logger.error(f"Unhandled error: {exc}")
-    logger.error(traceback.format_exc())
-    
-    # Restituiamo un messaggio pulito all'utente
+    logger.error(f"Errore non gestito su {request.method} {request.url}: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Si è verificato un errore interno al server. Riprova più tardi."},
+        content={"detail": "Si è verificato un'errore interno del server. Riprova più tardi."}
     )
 
-@app.get("/")
+
+@app.get("/", tags=["root"])
 def root():
     return {"message": "Backend is running correctly!"}

@@ -1,0 +1,34 @@
++---backend
+|   |   auth.py
+|   |   client_secret.json
+|   |   database.py
+|   |   email_templates.py
+|   |   main.py
+|   |   models.py
+|   |   requirements.txt
+|   |   __init__.py
+|   |   
+|   |               
+|   +---routers
+|   |   |   calendar.py
+|   |   |   expenses.py
+|   |   |   itinerary.py
+|   |   |   payments.py
+|   |   |   photos.py
+|   |   |   trips.py
+|   |   |   users.py
+|   |   |   _migration_snippet.py
+|   |   |   __init__.py
+|   |   |
+|   |   |        
+|   +---tests
+|   |   |   conftest.py
+|   |   |   test_auth.py
+|   |   |   test_expenses.py
+|   |   |   test_trips.py
+|   |   |
+|   |   |        
+|   +---utils
+|   |   |   currency.py
+|   |   |   email_utils.py
+|   |   |   

@@ -140,3 +140,8 @@ class Photo(SQLModel, table=True):
     caption: Optional[str] = None
     
     trip: Optional[Trip] = Relationship(back_populates="photos")
+
+class ProcessedStripeEvent(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    stripe_event_id: str = Field(unique=True, index=True)
+    processed_at: datetime = Field(default_factory=datetime.utcnow)

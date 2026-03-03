@@ -1,3 +1,6 @@
+from fastapi import Header, HTTPException
+import os
+
 def verify_admin_token(x_admin_token: str = Header(...)):
     """
     Protegge gli endpoint admin tramite header X-Admin-Token.

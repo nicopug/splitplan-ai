@@ -1,7 +1,9 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useModal } from '../context/ModalContext';
 
 const Modal = () => {
+    const { t } = useTranslation();
     const { modal, closeModal } = useModal();
     const inputRef = useRef(null);
 

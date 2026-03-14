@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../context/ToastContext';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { X, CheckCircle2, AlertCircle, Info, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Toast = () => {
+    const { t } = useTranslation();
     const { toasts, removeToast } = useToast();
 
     if (toasts.length === 0) return null;

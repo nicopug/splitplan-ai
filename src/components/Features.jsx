@@ -32,33 +32,26 @@ const Features = () => {
     return (
         <>
             {features.map((feature, idx) => (
-                <section key={feature.id} id={idx === 0 ? "features" : `feature-${feature.id}`} className="section bg-base transition-colors duration-500">
-                    <div className="container h-full">
-                        <div className={`viewport-split items-center ${idx % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}>
-                            {/* Left/Right: Content */}
-                            <div className="space-y-6 py-12">
+                <section key={feature.id} id={idx === 0 ? "features" : `feature-${feature.id}`} className="section bg-base transition-colors duration-500 py-32">
+                    <div className="container h-full flex flex-col items-center justify-center text-center">
+                        <div className="space-y-8 max-w-3xl animate-fade-in">
+                            {/* Icon or Label */}
+                            <div className="flex flex-col items-center gap-4">
+                                <span className="text-5xl">{feature.icon}</span>
                                 <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
-                                    0{idx + 1} // {feature.title.split(' ')[0]}
+                                    Feature 0{idx + 1}
                                 </div>
-                                <h2 className="text-primary text-4xl lg:text-5xl font-semibold leading-tight">
-                                    {feature.title}
-                                </h2>
-                                <p className="text-muted text-lg max-w-md leading-relaxed">
-                                    {feature.desc}
-                                </p>
                             </div>
 
-                            {/* Right/Left: Visual */}
-                            <div className="relative flex items-center justify-center py-12">
-                                <div className="relative w-full max-w-[500px] shadow-md border border-border-medium rounded-lg overflow-hidden bg-card transition-all hover:shadow-xl">
-                                    <img
-                                        src={feature.image}
-                                        alt={feature.title}
-                                        className="w-full h-auto block opacity-80 hover:opacity-100 transition-opacity"
-                                        loading="lazy"
-                                    />
-                                </div>
-                            </div>
+                            {/* Title */}
+                            <h2 className="text-primary text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.85] mb-6">
+                                {feature.title}
+                            </h2>
+
+                            {/* Description */}
+                            <p className="text-muted text-lg md:text-xl lg:text-2xl font-medium leading-relaxed max-w-2xl mx-auto">
+                                {feature.desc}
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -68,7 +61,7 @@ const Features = () => {
             <section className="section bg-base transition-colors duration-500">
                 <div className="container h-full flex flex-col justify-center">
                     <div className="max-w-4xl mx-auto w-full">
-                        <h3 className="text-3xl font-semibold text-primary mb-16 text-center">{t('features.comparison_title')}</h3>
+                        <h3 className="text-4xl md:text-5xl font-black text-primary mb-24 text-center uppercase tracking-tighter">{t('features.comparison_title')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
                             {[
                                 { name: 'Booking.com', val: t('features.hotels_only') },

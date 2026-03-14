@@ -93,7 +93,7 @@ const Hero = () => {
                         {/* Void Background Effect - refined for both themes */}
                         <div className="absolute inset-0 bg-radial-gradient from-[var(--accent-digital-blue)]/10 to-transparent opacity-40 pointer-events-none blur-3xl" />
 
-                        <div className="relative w-full max-w-[620px] shadow-[var(--shadow-lg)] border border-[var(--glass-border)] rounded-lg overflow-hidden bg-[var(--bg-card)] z-10 transform lg:translate-x-12 hover:scale-[1.02] transition-transform duration-700">
+                        <div className="relative w-full max-w-[620px] shadow-[var(--shadow-lg)] border-[6px] border-black/10 rounded-lg overflow-hidden bg-[var(--bg-card)] z-10 transform lg:translate-x-4 hover:scale-[1.02] transition-transform duration-700">
                             <img
                                 src="/dashboard-preview.png"
                                 alt="SplitPlan Dashboard"

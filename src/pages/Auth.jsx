@@ -147,68 +147,79 @@ const Auth = ({ onLogin }) => {
 
     if (showPlanSelection) {
         return (
-            <div className="min-h-screen bg-black pt-24 pb-12">
+            <div className="min-h-screen bg-[var(--bg-base)] pt-32 pb-20 transition-colors duration-500">
                 <div className="container max-w-5xl">
-                    <div className="text-center mb-16">
-                        <span className="subtle-heading">MEMBERSHIP</span>
-                        <h2 className="text-white text-4xl lg:text-5xl font-semibold mb-4">Scegli il tuo Piano</h2>
-                        <p className="text-gray-500 text-lg max-w-2xl mx-auto">Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
+                    <div className="text-center mb-20 animate-fade-in">
+                        <div className="inline-block px-3 py-1 rounded-sm border border-black/10 bg-white text-[10px] font-black tracking-[0.2em] uppercase text-black/40 mb-4">
+                            MEMBERSHIP
+                        </div>
+                        <h2 className="text-black text-5xl lg:text-7xl font-black uppercase tracking-tighter mb-4">Scegli il tuo Piano</h2>
+                        <p className="text-black/50 text-xl max-w-2xl mx-auto font-medium leading-relaxed">Accedi a funzionalità esclusive per pianificare il viaggio perfetto.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Free Plan */}
-                        <div className="premium-card flex flex-col">
+                        <div className="premium-card flex flex-col bg-[#050505] border-white/5 hover:border-white/20 p-10 transition-all duration-500 shadow-2xl group">
                             <div className="flex-1">
-                                <span className="subtle-heading">BASIC</span>
-                                <h3 className="text-2xl font-semibold text-white mb-2">Viaggiatore</h3>
-                                <div className="text-4xl font-bold text-white mb-6">Gratis</div>
-                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Tutto l'essenziale per organizzare in gruppo.</p>
-                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> 20 Chiamate AI / giorno</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Itinerari Smart</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Chat di Gruppo</li>
+                                <span className="subtle-heading text-white/30 group-hover:text-white/50 transition-colors">BASIC</span>
+                                <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Viaggiatore</h3>
+                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">Gratis</div>
+                                <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Tutto l'essenziale per organizzare i tuoi primi viaggi in gruppo.</p>
+                                <ul className="space-y-4 mb-10">
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> 20 Chiamate AI / giorno</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Itinerari Smart</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Chat di Gruppo</li>
                                 </ul>
                             </div>
-                            <Button onClick={() => handlePlanChoice(null)} variant="outline" className="w-full">
+                            <Button onClick={() => handlePlanChoice(null)} variant="outline" className="w-full border-white/10 text-white hover:bg-white hover:text-black hover:border-white h-14 font-black tracking-widest uppercase">
                                 INIZIA GRATIS
                             </Button>
                         </div>
 
                         {/* Pro Monthly */}
-                        <div className="premium-card flex flex-col border-white/20 bg-white/5">
+                        <div className="premium-card flex flex-col bg-black border-[var(--accent-digital-blue)]/50 shadow-[0_0_50px_rgba(0,102,255,0.2)] p-10 z-10 scale-105 transition-all duration-500 shadow-2xl">
                             <div className="flex-1">
-                                <span className="subtle-heading text-blue-400">MOST POPULAR</span>
-                                <h3 className="text-2xl font-semibold text-white mb-2">Pro Mensile</h3>
-                                <div className="text-4xl font-bold text-white mb-6">€4.99<span className="text-sm text-gray-500 font-normal ml-1">/mese</span></div>
-                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Per chi vuole il controllo totale e IA illimitata.</p>
-                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> AI Illimitata</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> PDF Automation</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Assistenza Prioritaria</li>
+                                <span className="subtle-heading text-[var(--accent-digital-blue)]">MOST POPULAR</span>
+                                <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro Mensile</h3>
+                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€4.99<span className="text-sm text-white/30 font-bold ml-1">/mese</span></div>
+                                <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Per chi vuole il controllo totale e potenza IA senza alcun limite.</p>
+                                <ul className="space-y-4 mb-10">
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> AI Illimitata</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> PDF Automation</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Assistenza Prioritaria</li>
                                 </ul>
                             </div>
-                            <Button onClick={() => handlePlanChoice('MONTHLY')} className="w-full">
+                            <Button onClick={() => handlePlanChoice('MONTHLY')} className="w-full h-14 font-black tracking-widest uppercase shadow-xl shadow-blue-600/20">
                                 SCEGLI MENSILE
                             </Button>
                         </div>
 
                         {/* Pro Annual */}
-                        <div className="premium-card flex flex-col border-white/10">
+                        <div className="premium-card flex flex-col bg-[#050505] border-white/5 hover:border-white/20 p-10 transition-all duration-500 shadow-2xl group">
                             <div className="flex-1">
-                                <span className="subtle-heading text-emerald-500">SAVE 50%</span>
-                                <h3 className="text-2xl font-semibold text-white mb-2">Pro Annuale</h3>
-                                <div className="text-4xl font-bold text-white mb-6">€29.99<span className="text-sm text-gray-500 font-normal ml-1">/anno</span></div>
-                                <p className="text-sm text-gray-500 mb-8 leading-relaxed">Il miglior valore per veri esploratori.</p>
-                                <ul className="space-y-4 mb-8 text-xs font-medium text-gray-400">
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Tutto di Pro Mensile</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Badge Esclusivo</li>
-                                    <li className="flex items-center gap-2"><span className="text-blue-500">✓</span> Blocco Prezzo</li>
+                                <span className="subtle-heading text-emerald-500 group-hover:text-emerald-400 transition-colors">SAVE 50%</span>
+                                <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro Annuale</h3>
+                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€29.99<span className="text-sm text-white/30 font-bold ml-1">/anno</span></div>
+                                <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Il miglior valore per veri esploratori che viaggiano spesso.</p>
+                                <ul className="space-y-4 mb-10">
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Tutto di Pro Mensile</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Badge Esclusivo</li>
+                                    <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Blocco Prezzo</li>
                                 </ul>
                             </div>
-                            <Button onClick={() => handlePlanChoice('ANNUAL')} variant="secondary" className="w-full">
+                            <Button onClick={() => handlePlanChoice('ANNUAL')} variant="secondary" className="w-full h-14 font-black tracking-widest uppercase border-white/10 bg-white/5 text-white hover:bg-white hover:text-black">
                                 SCEGLI ANNUALE
                             </Button>
                         </div>
+                    </div>
+                    
+                    <div className="mt-16 text-center">
+                        <button 
+                            onClick={() => handlePlanChoice(null)}
+                            className="text-[10px] font-black tracking-[0.2em] uppercase text-black/30 hover:text-black transition-colors"
+                        >
+                            Oppure prosegui con la versione limitata
+                        </button>
                     </div>
                 </div>
             </div>

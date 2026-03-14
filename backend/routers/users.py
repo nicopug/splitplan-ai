@@ -165,11 +165,8 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
         logger.warning("[AUTH] SMTP non configurato correttamente.")
 
     if not is_email_sent:
-        logger.warning(f"[AUTH] Auto-verifica per l'utente {req.email} perché le email non sono attive/fallite.")
-        new_account.is_verified = True
-        session.add(new_account)
-        session.commit()
-        return {"message": "Registrazione completata. Il tuo account è stato verificato automaticamente e ora puoi accedere."}
+        logger.error(f"[AUTH] Registrazione completata per {req.email} ma l'email di verifica non è partita.")
+        return {"message": "Registrazione completata, ma non siamo riusciti a inviare l'email di verifica. Contatta l'assistenza o riprova più tardi."}
 
     return {"message": "Registrazione completata. Controlla la tua email per la verifica."}
 

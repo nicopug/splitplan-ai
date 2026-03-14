@@ -19,7 +19,7 @@ const Budget = ({ trip, onUpdate }) => {
     const [loadingExpenses, setLoadingExpenses] = useState(true);
 
     // AI Forecast inclusion
-    const [appliedAIExpense, setAppliedAIExpense] = useState(0);
+    const [appliedEstimation, setAppliedEstimation] = useState(null);
 
     // Fetch real expenses from CFO tab
     useEffect(() => {
@@ -39,12 +39,13 @@ const Budget = ({ trip, onUpdate }) => {
 
     const handleApplyAsExpense = async () => {
         if (!estimation) return;
+        const totalAmount = Number(estimation.total_estimated_per_person) * (trip.num_people || 1);
         const confirmed = await showConfirm(
             t('budget.confirmApply', "Conferma Spesa Prevista"),
-            t('budget.confirmApplyDesc', { amount: (Number(estimation.total_estimated_per_person) * (trip.num_people || 1)).toFixed(2) })
+            t('budget.confirmApplyDesc', { amount: totalAmount.toFixed(2) })
         );
         if (confirmed) {
-            setAppliedAIExpense(Number(estimation.total_estimated_per_person) * (trip.num_people || 1));
+            setAppliedEstimation(estimation);
             setEstimation(null);
             setShowSimulation(false);
             showToast(t('budget.toast.applied', "Proiezione aggiornata!"), "success");
@@ -52,7 +53,7 @@ const Budget = ({ trip, onUpdate }) => {
     };
 
     const handleRemoveAI = useCallback(() => {
-        setAppliedAIExpense(0);
+        setAppliedEstimation(null);
         setEstimation(null);
         setShowSimulation(false);
         showToast(t('budget.toast.removed', "Proiezione rimossa"), "info");
@@ -85,10 +86,14 @@ const Budget = ({ trip, onUpdate }) => {
 
         const realTotal = realExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-        // Find local currency info
-        const foreignExpense = realExpenses.find(e => e.currency && e.currency !== 'EUR');
-        const localCurrency = foreignExpense ? foreignExpense.currency : null;
-        const localRate = foreignExpense ? foreignExpense.exchange_rate : null;
+        // Calculate days for AI mapping
+        let tripDays = 1;
+        if (trip.start_date && trip.end_date) {
+            const start = new Date(trip.start_date);
+            const end = new Date(trip.end_date);
+            const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            tripDays = Math.max(diff, 1);
+        }
 
         // Group by category for chart
         const categoryMap = realExpenses.reduce((acc, exp) => {
@@ -101,32 +106,37 @@ const Budget = ({ trip, onUpdate }) => {
         if (flightCost > 0) categoryMap['Flight'] = (categoryMap['Flight'] || 0) + flightCost;
         if (hotelCost > 0) categoryMap['Lodging'] = (categoryMap['Lodging'] || 0) + hotelCost;
 
-        const currentSpent = flightCost + hotelCost + appliedAIExpense + realTotal;
+        const appliedTotal = appliedEstimation ? (Number(appliedEstimation.total_estimated_per_person) * numPeople) : 0;
+        const currentSpent = flightCost + hotelCost + appliedTotal + realTotal;
+        
         const estPerPerson = (estimation && estimation.total_estimated_per_person) ? Number(estimation.total_estimated_per_person) : 0;
         const simulatedCosts = (showSimulation && estimation) ? (estPerPerson * numPeople) : 0;
+        
         const totalSpentWithSim = currentSpent + simulatedCosts;
 
         const remaining = totalBudget - (showSimulation ? totalSpentWithSim : currentSpent);
         const percentUsed = totalBudget > 0 ? Math.min(((showSimulation ? totalSpentWithSim : currentSpent) / totalBudget) * 100, 100) : 0;
 
-        // Add Road Cost (real or simulated) to categoryMap
-        const roadCosts_Raw = (estimation && estimation.road_costs_total_per_person) ? Number(estimation.road_costs_total_per_person) : 0;
-        if (showSimulation && roadCosts_Raw > 0) {
-            categoryMap['Travel_Road'] = (categoryMap['Travel_Road'] || 0) + (roadCosts_Raw * numPeople);
-        }
-
-        // Add other AI estimated costs to categories
-        if (showSimulation && estimation) {
-            const days = (estimation.days_count) ? estimation.days_count : 7; // Backend should ideally return this
+        // --- Add AI costs to categoryMap (Applied or Simulation) ---
+        // Prioritize Simulation if active, otherwise use Applied
+        const activeEst = showSimulation ? estimation : appliedEstimation;
+        if (activeEst) {
+            const days = activeEst.days_count || tripDays;
 
             // Map meals
-            if (estimation.daily_meal_mid > 0) {
-                categoryMap['Food'] = (categoryMap['Food'] || 0) + (estimation.daily_meal_mid * days * numPeople);
+            if (activeEst.daily_meal_mid > 0) {
+                categoryMap['Food'] = (categoryMap['Food'] || 0) + (activeEst.daily_meal_mid * days * numPeople);
             }
 
-            // Map local transport (if not road costs)
-            if (estimation.daily_transport > 0) {
-                categoryMap['Transport'] = (categoryMap['Transport'] || 0) + (estimation.daily_transport * days * numPeople);
+            // Map local transport
+            if (activeEst.daily_transport > 0) {
+                categoryMap['Transport'] = (categoryMap['Transport'] || 0) + (activeEst.daily_transport * days * numPeople);
+            }
+
+            // Map road costs
+            const roadCosts = Number(activeEst.road_costs_total_per_person) || 0;
+            if (roadCosts > 0) {
+                categoryMap['Travel_Road'] = (categoryMap['Travel_Road'] || 0) + (roadCosts * numPeople);
             }
         }
 
@@ -145,7 +155,6 @@ const Budget = ({ trip, onUpdate }) => {
                 'Other': { label: t('budget.categories.Other', 'Altro'), color: 'var(--text-muted)' }
             };
 
-            // Fix label for 'Flight' based on transport_mode
             if (id === 'Flight') {
                 if (trip.transport_mode === 'TRAIN') map[id].label = t('budget.categories.Train', 'Treno');
                 else if (trip.transport_mode === 'CAR') map[id].label = t('budget.categories.Road', 'Viaggio');
@@ -154,7 +163,6 @@ const Budget = ({ trip, onUpdate }) => {
             return map[id] || map['Other'];
         };
 
-        // Separate and calculate final categories
         const finalCategories = Object.entries(categoryMap).map(([id, amount]) => {
             const info = getCategoryInfo(id);
             return {
@@ -165,7 +173,6 @@ const Budget = ({ trip, onUpdate }) => {
             };
         });
 
-        // Add Remaining as a category if it's positive
         if (remaining > 0 && totalBudget > 0) {
             finalCategories.push({
                 id: 'Remaining',
@@ -176,11 +183,10 @@ const Budget = ({ trip, onUpdate }) => {
             });
         }
 
-        // Add AI simulation as a separate visual item if specifically requested and not in categoryMap already
-        const aiCost = appliedAIExpense + simulatedCosts;
-        // In reality, appliedAIExpense is already in total if it was saved, 
-        // but here it's treated as a local simulation toggle.
-        // For simplicity, we trust categoryMap.
+        // Find local currency info
+        const foreignExpense = realExpenses.find(e => e.currency && e.currency !== 'EUR');
+        const localCurrency = foreignExpense ? foreignExpense.currency : null;
+        const localRate = foreignExpense ? foreignExpense.exchange_rate : null;
 
         return {
             totalBudget,
@@ -194,10 +200,12 @@ const Budget = ({ trip, onUpdate }) => {
             categories: finalCategories.sort((a, b) => b.amount - a.amount),
             isOverBudget: remaining < 0,
             simulatedCosts,
+            appliedEstimation,
             localCurrency,
             localRate
         };
-    }, [trip, realExpenses, appliedAIExpense, showSimulation, estimation, handleRemoveAI]);
+    }, [trip, realExpenses, appliedEstimation, showSimulation, estimation, t]);
+
 
     // Custom Donut Chart Component
     const DonutChart = ({ data }) => {

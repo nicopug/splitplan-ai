@@ -102,7 +102,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                     />
                     <Button 
                         type="submit" 
-                        variant="accent"
+                        variant="default"
                         disabled={loading}
                         className="h-auto px-10 py-4 font-black uppercase text-[10px] tracking-widest"
                     >

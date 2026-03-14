@@ -271,7 +271,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     <div className="md:col-span-2 mt-8">
                         <Button
                             type="submit"
-                            variant="accent"
+                            variant="default"
                             disabled={loading}
                             className="w-full h-16 text-xs tracking-[0.2em] uppercase font-black"
                         >

@@ -87,7 +87,7 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                 {!readOnly && (
                     <Button
                         onClick={handleUploadClick}
-                        variant="accent"
+                        variant="default"
                         className="h-12 px-8 font-black uppercase text-[10px] tracking-widest"
                         disabled={loading}
                     >

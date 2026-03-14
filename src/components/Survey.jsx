@@ -556,7 +556,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <div className="pt-12">
                             <Button
                                 type="submit"
-                                variant="accent"
+                                variant="default"
                                 size="xl"
                                 fullWidth
                                 disabled={isGenerating}

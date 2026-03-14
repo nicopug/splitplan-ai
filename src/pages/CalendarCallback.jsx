@@ -65,7 +65,7 @@ const CalendarCallback = () => {
                 </p>
 
                 <div className="mt-8 flex items-center justify-center gap-2 grayscale opacity-50">
-                    <img src="/file.svg" alt="SplitPlan" className="h-6" />
+                    <img src="/file.svg" alt="SplitPlan" className="h-8" />
                     <span className="text-gray-400">×</span>
                     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" alt="Google Calendar" className="h-6" />
                 </div>

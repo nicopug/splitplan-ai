@@ -258,7 +258,7 @@ const Auth = ({ onLogin }) => {
                     <img 
                         src="/file.svg" 
                         alt="SplitPlan Logo" 
-                        className="w-12 h-12 invert"
+                        className="w-16 h-16 invert"
                     />
                 </div>
                 <div className="text-center mb-8">

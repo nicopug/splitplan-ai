@@ -12,7 +12,7 @@ const Footer = () => {
                             <img 
                                 src="/file.svg" 
                                 alt="SplitPlan Logo" 
-                                className="w-8 h-8 transition-all duration-500 group-hover:rotate-12 invert"
+                                className="w-10 h-10 transition-all duration-500 group-hover:rotate-12 invert"
                             />
                             <div className="text-xl font-semibold text-white tracking-tight uppercase">SplitPlan</div>
                         </div>

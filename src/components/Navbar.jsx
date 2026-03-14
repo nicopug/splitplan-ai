@@ -76,10 +76,10 @@ const Navbar = ({ user: propUser }) => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
-                        <img 
-                            src="/file.svg" 
-                            alt="SplitPlan Logo" 
-                            className="w-10 h-10 transition-all duration-500 group-hover:rotate-12 invert"
+                        <img
+                            src="/file.svg"
+                            alt="SplitPlan Logo"
+                            className="w-14 h-14 transition-all duration-500 group-hover:rotate-12 invert"
                         />
                         <span className="text-white text-lg font-semibold tracking-tight uppercase group-hover:text-gray-300 transition-colors">
                             SplitPlan

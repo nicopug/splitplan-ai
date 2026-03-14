@@ -8,43 +8,66 @@
    Palette: Black + Violet (#8b5cf6) + Cyan (#22d3ee)
 ═══════════════════════════════════════════════════════════ */
 :root {
-  /* Core palette - Neutrals & Deep Black */
+  /* Layout Constants */
+  --container-width: 1200px;
+  --header-height: 56px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] {
+  --bg-base: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-elevated: #ffffff;
+
+  --accent-primary: #000000;
+  --accent-muted: #f1f5f9;
+  --accent-digital-blue: #2563eb;
+  --accent-digital-blue-light: #3b82f6;
+
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-medium: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] {
   --bg-base: #000000;
   --bg-surface: #050505;
   --bg-card: #0a0a0a;
   --bg-card-hover: #0f0f0f;
   --bg-elevated: #151515;
 
-  /* Accent - Pure White / Subtle Gray */
   --accent-primary: #ffffff;
   --accent-muted: #1a1a1a;
   --accent-digital-blue: #0066ff;
-  /* Keep for functional UI highlights */
   --accent-digital-blue-light: #3385ff;
 
-  /* Text */
   --text-primary: #f0f0f0;
   --text-muted: #666666;
   --text-subtle: #444444;
 
-  /* Borders - Minimalist */
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-medium: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.2);
 
-  /* Glass - Super subtle */
   --glass-bg: rgba(0, 0, 0, 0.8);
   --glass-border: rgba(255, 255, 255, 0.05);
 
-  /* Layout */
-  --container-width: 1200px;
-  --header-height: 56px;
-  /* Slimmer header */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-
-  /* Shadows - Tight */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8);
@@ -63,8 +86,27 @@ html {
   --color-background: hsl(var(--background, 240 10% 3.9%));
   --color-foreground: hsl(var(--foreground, 0 0% 98%));
 
-  --color-primary-blue: #0066ff;
-  --color-primary-blue-light: #3385ff;
+  /* Custom Theme Tokens */
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-card: var(--bg-card);
+  --color-elevated: var(--bg-elevated);
+  
+  --color-primary: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+
+  --color-primary-blue: var(--accent-digital-blue);
+  --color-primary-blue-light: var(--accent-digital-blue-light);
+  --color-accent-primary: var(--accent-primary);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-medium: var(--border-medium);
+  --color-border-strong: var(--border-strong);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 
   --font-sans: "Inter", system-ui, sans-serif;
 }
@@ -127,25 +169,23 @@ html {
   }
 
   .premium-card {
-    background-color: #09090b;
-    /* zinc-950 */
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
     border-radius: 4px;
     padding: 2rem;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .premium-card:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    background-color: rgba(24, 24, 27, 0.5);
-    /* zinc-900/50 */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-color: var(--border-medium);
+    background-color: var(--bg-card-hover);
+    box-shadow: var(--shadow-lg);
   }
 
   .glass-panel {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: var(--glass-bg);
     backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
     border-radius: 4px;
   }
 
@@ -154,8 +194,7 @@ html {
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #71717a;
-    /* zinc-500 */
+    color: var(--text-muted);
     margin-bottom: 0.25rem;
     display: inline-block;
   }

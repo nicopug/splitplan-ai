@@ -298,12 +298,12 @@ const Dashboard = () => {
     if (!trip) return <div className="section text-center">{t('dashboard.tripNotFound', 'Viaggio non trovato')}</div>;
 
     return (
-        <div className="pt-[var(--header-height)] min-h-screen bg-black">
+        <div className="pt-[var(--header-height)] min-h-screen bg-[var(--bg-base)] transition-colors duration-500">
             {/* Guest Read-Only Banner */}
             {!user && (
-                <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 fixed top-[var(--header-height)] left-0 right-0 z-[100]">
+                <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 fixed top-[var(--header-height)] left-0 right-0 z-[100] backdrop-blur-md">
                     <div className="container text-center">
-                        <p className="text-[10px] font-bold text-amber-500 tracking-widest uppercase">
+                        <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-widest uppercase">
                             {t('dashboard.readOnly', 'Sei in modalità Sola Lettura.')}
                         </p>
                     </div>
@@ -313,16 +313,16 @@ const Dashboard = () => {
             {/* Premium Soft Paywall Banner */}
             {user && !user.is_subscribed && trip && !trip.is_premium && (
                 <div className="container mt-8">
-                    <div className="premium-card !bg-white/[0.02] border-white/10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative">
+                    <div className="premium-card bg-[var(--bg-card)] border-[var(--border-medium)] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative shadow-[var(--shadow-lg)]">
                         <div className="relative flex items-center gap-6">
-                            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center shrink-0">
-                                <Sparkles className="w-6 h-6 text-blue-500" />
+                            <div className="w-14 h-14 bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm flex items-center justify-center shrink-0">
+                                <Sparkles className="w-6 h-6 text-[var(--accent-primary)]" />
                             </div>
                             <div className="text-left">
-                                <h3 className="text-white text-xl font-semibold mb-2 uppercase tracking-tight">
+                                <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-2 uppercase tracking-tight">
                                     {t('dashboard.unlockTitle', "Premium Features")}
                                 </h3>
-                                <p className="text-gray-500 text-sm max-w-lg leading-relaxed">
+                                <p className="text-[var(--text-muted)] text-sm max-w-lg leading-relaxed">
                                     {t('dashboard.unlockDesc', "Sblocca l'itinerario ottimizzato, la logistica automatica e l'assistente AI senza limiti.")}
                                 </p>
                             </div>
@@ -341,7 +341,7 @@ const Dashboard = () => {
                                     showToast(e.message, "error");
                                 }
                             }}
-                            className="px-8 py-4 bg-white text-black text-[10px] font-black tracking-widest uppercase rounded-sm hover:bg-gray-200 transition-all shrink-0"
+                            className="px-8 py-4 bg-[var(--text-primary)] text-[var(--bg-base)] text-[10px] font-black tracking-widest uppercase rounded-sm hover:opacity-90 transition-all shrink-0 shadow-[var(--shadow-md)]"
                         >
                             {t('dashboard.unlockBtn', 'Sblocca ora (1 🪙)')}
                         </button>
@@ -350,24 +350,26 @@ const Dashboard = () => {
             )}
 
             {/* Main Header Area */}
-            <div className={`relative border-b border-white/5 bg-black/80 backdrop-blur-xl sticky top-[var(--header-height)] z-30 ${!user ? 'mt-6' : ''}`}>
+            <div className={`relative border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/80 backdrop-blur-xl sticky top-[var(--header-height)] z-30 transition-colors duration-500 ${!user ? 'mt-6' : ''}`}>
                 <div className="container pt-4 text-left">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                         <div className="relative">
-                            <span className="subtle-heading">{t('dashboard.title', 'Dashboard Viaggio')}</span>
-                            <h1 className="text-white text-2xl md:text-4xl font-semibold tracking-tight uppercase mb-2">
+                            <span className="subtle-heading text-[var(--text-subtle)] font-bold tracking-[0.2em] uppercase text-[9px] mb-1 block">{t('dashboard.title', 'Dashboard Viaggio')}</span>
+                            <h1 className="text-[var(--text-primary)] text-2xl md:text-4xl font-semibold tracking-tight uppercase mb-2">
                                 {trip.name}
                             </h1>
 
                             <div className="flex flex-wrap items-center gap-3">
                                 {user && (
-                                    <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/5 text-gray-500 border-white/5'
+                                    <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed 
+                                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]' 
+                                        : 'bg-[var(--bg-surface)] text-[var(--text-subtle)] border-[var(--border-subtle)]'
                                         }`}>
                                         {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM') : t('dashboard.freeUser', 'FREE')}
                                     </span>
                                 )}
                                 {trip.status !== 'PLANNING' && (
-                                    <span className="px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border bg-white/5 text-gray-400 border-white/5">
+                                    <span className="px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)]">
                                         {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
                                             trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
                                     </span>
@@ -380,7 +382,7 @@ const Dashboard = () => {
                                 <button
                                     onClick={handleShare}
                                     title={t('dashboard.shareBtn', 'Condividi Viaggio')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-sm bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black transition-all"
+                                    className="w-10 h-10 flex items-center justify-center rounded-sm bg-[var(--bg-surface)] border border-[var(--border-medium)] text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-base)] transition-all"
                                 >
                                     <Share2 className="w-3.5 h-3.5" />
                                 </button>
@@ -403,7 +405,7 @@ const Dashboard = () => {
                                             }
                                         }}
                                         title={t('dashboard.completeTrip', 'Concludi Viaggio')}
-                                        className="w-10 h-10 flex items-center justify-center rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all"
+                                        className="w-10 h-10 flex items-center justify-center rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                                     >
                                         <CheckCircle2 className="w-3.5 h-3.5" />
                                     </button>
@@ -426,13 +428,13 @@ const Dashboard = () => {
                                 <button
                                     key={btn.id}
                                     onClick={() => setView(btn.id)}
-                                    className={`flex items-center gap-2 pb-2 text-[9px] font-bold tracking-[0.25em] uppercase transition-all relative whitespace-nowrap ${view === btn.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+                                    className={`flex items-center gap-2 pb-2 text-[9px] font-bold tracking-[0.25em] uppercase transition-all relative whitespace-nowrap ${view === btn.id ? 'text-[var(--text-primary)]' : 'text-[var(--text-subtle)] hover:text-[var(--text-primary)]'
                                         }`}
                                 >
                                     {btn.icon}
                                     <span>{btn.label}</span>
                                     {view === btn.id && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-white"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--accent-primary)] rounded-full"></div>
                                     )}
                                 </button>
                             )
@@ -445,15 +447,15 @@ const Dashboard = () => {
                 // GUEST WAITING SCREEN (Plan B override)
                 !isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
                     <div className="container py-12">
-                        <div className="premium-card text-center max-w-2xl mx-auto py-16">
+                        <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
                             <div className="text-5xl mb-8">🗳️</div>
-                            <h2 className="text-white text-2xl font-semibold mb-4 uppercase tracking-tight">
+                            <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
                                 {t('dashboard.votoRegistrato', 'Voto Registrato!') || 'Voto Registrato!'}
                             </h2>
-                            <p className="text-gray-500 text-lg leading-relaxed mb-10">
+                            <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10">
                                 {t('dashboard.votoRegistratoDesc', 'Grazie per aver espresso la tua preferenza. L\'organizzatore sta pianificando il viaggio. Una volta completato, chiedi il link di sola lettura per l\'itinerario finale.')}
                             </p>
-                            <div className="inline-block px-4 py-2 bg-white/5 border border-white/5 rounded-sm text-[10px] font-bold text-gray-500 tracking-widest uppercase">
+                            <div className="inline-block px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase">
                                 {t('dashboard.closePage', 'Puoi chiudere questa pagina.')}
                             </div>
                         </div>
@@ -478,11 +480,11 @@ const Dashboard = () => {
                                 {/* Guest CTA Section */}
                                 {!user && (
                                     <div className="container py-12">
-                                        <div className="premium-card text-center max-w-2xl mx-auto py-12 border-blue-500/20 bg-blue-600/5">
-                                            <h3 className="text-white text-xl font-semibold mb-4 uppercase tracking-tight">
+                                        <div className="premium-card text-center max-w-2xl mx-auto py-12 border-[var(--accent-digital-blue-dim)] bg-[var(--accent-digital-blue-dim)]/20 shadow-[var(--shadow-lg)]">
+                                            <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-4 uppercase tracking-tight">
                                                 {t('dashboard.guestCta.title', 'Pianifica il tuo prossimo viaggio')}
                                             </h3>
-                                            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                                            <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
                                                 {t('dashboard.guestCta.desc', 'Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.')}
                                             </p>
                                             <div className="flex justify-center gap-4">
@@ -509,18 +511,18 @@ const Dashboard = () => {
                                         />
                                     ) : (
                                         <div className="container py-12">
-                                            <div className="premium-card text-center max-w-2xl mx-auto py-16 border-white/5">
+                                            <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
                                                 <div className="text-4xl mb-8">✨</div>
-                                                <h2 className="text-white text-2xl font-semibold mb-4 uppercase tracking-tight">
+                                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
                                                     {t('dashboard.consensusReached', 'Consenso Raggiunto!')}
                                                 </h2>
-                                                <p className="text-gray-500 text-lg leading-relaxed mb-10 mx-auto">
+                                                <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10 mx-auto">
                                                     {t('dashboard.consensusDesc', {
                                                         defaultValue: "Ottime notizie! Il gruppo ha scelto {{destination}} come meta ufficiale. L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.",
                                                         destination: trip.destination
                                                     })}
                                                 </p>
-                                                <div className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-[10px] font-bold text-emerald-500 tracking-widest uppercase">
+                                                <div className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase">
                                                     {t('dashboard.waitingConfirmation', 'In attesa della conferma finale...')}
                                                 </div>
                                             </div>
@@ -532,7 +534,7 @@ const Dashboard = () => {
                                 {trip.accommodation && itinerary && itinerary.length > 0 && (
                                     <div className="container py-12">
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                                            <h2 className="text-white text-3xl font-semibold tracking-tight uppercase">
+                                            <h2 className="text-[var(--text-primary)] text-3xl font-semibold tracking-tight uppercase">
                                                 {t('dashboard.itineraryTitle', 'Il tuo Itinerario')}
                                             </h2>
                                             <div className="flex items-center gap-3">
@@ -571,16 +573,16 @@ const Dashboard = () => {
                 <div className="flex justify-center w-full">
                     {!user ? (
                         <div className="container mt-8">
-                            <div className="premium-card p-12 text-center border-white/5 bg-white/2">
+                            <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-lg)]">
                                 <div className="text-5xl mb-6">🤖</div>
-                                <h2 className="text-white text-2xl font-semibold mb-3 uppercase tracking-tight">Chatbot AI Personale</h2>
-                                <p className="text-gray-500 text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Chatbot AI Personale</h2>
+                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
                                     Vuoi modificare il tuo itinerario semplicemente parlando? Accedi o Registrati per usare l'AI per personalizzare il tuo viaggio istantaneamente.
                                 </p>
                                 <div className="flex justify-center gap-4">
                                     <Button onClick={() => navigate('/auth')}>Registrati Gratis</Button>
                                     <Button variant="outline" onClick={() => navigate('/auth')}>Accedi</Button>
-                                </div>
+                                    </div>
                             </div>
                         </div>
                     ) : user?.is_subscribed ? (
@@ -593,10 +595,10 @@ const Dashboard = () => {
                         />
                     ) : (
                         <div className="container mt-8">
-                            <div className="premium-card p-12 text-center border-white/10 bg-white/5 border-dashed">
+                            <div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]">
                                 <div className="text-5xl mb-6">✨</div>
-                                <h2 className="text-white text-2xl font-semibold mb-3 uppercase tracking-tight">Chatbot AI Personale</h2>
-                                <p className="text-gray-500 text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Chatbot AI Personale</h2>
+                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
                                     I nostri utenti <b>Premium</b> possono usare l'AI per aggiungere, spostare o rimuovere attività semplicemente parlando.
                                 </p>
                                 <Button
@@ -614,10 +616,10 @@ const Dashboard = () => {
                 <div className="flex justify-center w-full">
                     {!user ? (
                         <div className="container mt-8">
-                            <div className="premium-card p-12 text-center border-white/5 bg-white/2">
+                            <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-lg)]">
                                 <div className="text-5xl mb-6">💰</div>
-                                <h2 className="text-white text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
-                                <p className="text-gray-500 text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
+                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
                                     Tieni traccia del tuo budget di viaggio in tempo reale. Accedi o Registrati per gestire le tue spese in modo professionale.
                                 </p>
                                 <div className="flex justify-center gap-4">
@@ -630,10 +632,10 @@ const Dashboard = () => {
                         <Budget trip={trip} onUpdate={fetchTrip} />
                     ) : (
                         <div className="container mt-8">
-                            <div className="premium-card p-12 text-center border-white/10 bg-white/5 border-dashed">
+                            <div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]">
                                 <div className="text-5xl mb-6">✨</div>
-                                <h2 className="text-white text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
-                                <p className="text-gray-500 text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
+                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
                                     Gli utenti <b>Premium</b> possono vedere quanto hanno speso per volo e hotel, e monitorare quanto rimane per attività e pasti.
                                 </p>
                                 <Button
@@ -676,31 +678,31 @@ const GeneratingOverlay = ({ progress }) => {
     const msgIndex = Math.min(Math.floor(progress / 20), messages.length - 1);
 
     return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
+        <div className="fixed inset-0 bg-[var(--bg-base)]/95 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
             <div className="max-w-md w-11/12 text-center space-y-12">
                 <div className="space-y-4">
-                    <span className="subtle-heading">AI GENERATION</span>
-                    <h2 className="text-white text-3xl md:text-4xl font-semibold tracking-tight uppercase">
+                    <span className="text-[var(--text-subtle)] text-[10px] font-bold tracking-[0.2em] uppercase">AI GENERATION</span>
+                    <h2 className="text-[var(--text-primary)] text-3xl md:text-4xl font-semibold tracking-tight uppercase">
                         {t('dashboard.generatingTitle', 'Progettando il tuo viaggio...')}
                     </h2>
-                    <p className="text-gray-500 text-sm font-bold tracking-widest uppercase animate-pulse h-6">
+                    <p className="text-[var(--accent-primary)] text-sm font-bold tracking-widest uppercase animate-pulse h-6">
                         {messages[msgIndex]}
                     </p>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div className="space-y-6">
+                    <div className="w-full h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
                         <div
-                            className="bg-white h-full transition-all duration-300 shadow-[0_0_20px_white]"
+                            className="bg-[var(--accent-primary)] h-full transition-all duration-300 shadow-[var(--shadow-md)] shadow-[var(--accent-digital-blue-dim)]"
                             style={{ width: `${progress}%` }}
                         ></div>
                     </div>
-                    <div className="text-white text-2xl font-black tracking-widest font-mono">
+                    <div className="text-[var(--text-primary)] text-2xl font-black tracking-widest font-mono">
                         {progress}%
                     </div>
                 </div>
 
-                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em] max-w-xs mx-auto">
+                <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] max-w-xs mx-auto">
                     {t('dashboard.generatingDesc', "L'intelligenza artificiale sta ottimizzando ritmi e tappe per il tuo gruppo.")}
                 </p>
             </div>

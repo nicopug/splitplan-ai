@@ -113,11 +113,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
                 <div className="container max-w-4xl text-left space-y-12">
                     <div className="space-y-4">
-                        <span className="subtle-heading">{t('survey.step0Step', 'Passaggi: 1/3')}</span>
-                        <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                        <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">{t('survey.step0Step', 'Passaggi: 1/3')}</span>
+                        <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase">
                             {t('survey.step0Title', 'Qual è lo scopo del viaggio?')}
                         </h2>
-                        <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
+                        <p className="text-muted text-lg leading-relaxed max-w-2xl transition-all duration-500">
                             {t('survey.step0Desc', "Questo ci aiuterà a personalizzare l'itinerario perfetto per te.")}
                         </p>
                     </div>
@@ -125,36 +125,36 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div
                             className={cn(
-                                "premium-card p-10 cursor-pointer group transition-all duration-500",
-                                formData.trip_intent === 'LEISURE' ? "ring-1 ring-white" : "hover:border-white/20"
+                                "premium-card bg-card border p-12 cursor-pointer group transition-all duration-500 shadow-md",
+                                formData.trip_intent === 'LEISURE' ? "border-primary shadow-xl scale-[1.02]" : "border-border-medium hover:border-primary/50"
                             )}
                             onClick={() => handleIntentSelect('LEISURE')}
                         >
-                            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-8 group-hover:bg-white group-hover:text-black transition-all">
-                                <TreePalm className="w-8 h-8" />
+                            <div className="w-20 h-20 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-10 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500 shadow-inner-white">
+                                <TreePalm className="w-10 h-10" />
                             </div>
-                            <h3 className="text-white text-2xl font-semibold uppercase tracking-tight mb-2">
+                            <h3 className="text-primary text-2xl font-black uppercase tracking-tight mb-3">
                                 {t('survey.leisureTitle', 'Vacanza')}
                             </h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">
+                            <p className="text-muted text-base leading-relaxed">
                                 {t('survey.leisureDesc', 'Relax, divertimento e scoperta.')}
                             </p>
                         </div>
 
                         <div
                             className={cn(
-                                "premium-card p-10 cursor-pointer group transition-all duration-500",
-                                formData.trip_intent === 'BUSINESS' ? "ring-1 ring-white" : "hover:border-white/20"
+                                "premium-card bg-card border p-12 cursor-pointer group transition-all duration-500 shadow-md",
+                                formData.trip_intent === 'BUSINESS' ? "border-primary shadow-xl scale-[1.02]" : "border-border-medium hover:border-primary/50"
                             )}
                             onClick={() => handleIntentSelect('BUSINESS')}
                         >
-                            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-8 group-hover:bg-white group-hover:text-black transition-all">
-                                <Briefcase className="w-8 h-8" />
+                            <div className="w-20 h-20 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-10 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500 shadow-inner-white">
+                                <Briefcase className="w-10 h-10" />
                             </div>
-                            <h3 className="text-white text-2xl font-semibold uppercase tracking-tight mb-2">
+                            <h3 className="text-primary text-2xl font-black uppercase tracking-tight mb-3">
                                 {t('survey.businessTitle', 'Lavoro')}
                             </h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">
+                            <p className="text-muted text-base leading-relaxed">
                                 {t('survey.businessDesc', 'Efficienza e produttività.')}
                             </p>
                         </div>
@@ -169,11 +169,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
                 <div className="container max-w-4xl text-left space-y-12">
                     <div className="space-y-4">
-                        <span className="subtle-heading">{t('survey.step1Step', 'Passaggi: 2/3')}</span>
-                        <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                        <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">{t('survey.step1Step', 'Passaggi: 2/3')}</span>
+                        <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase">
                             {t('survey.step1Title', 'Qual è il tuo mezzo di trasporto?')}
                         </h2>
-                        <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
+                        <p className="text-muted text-lg leading-relaxed max-w-2xl">
                             {t('survey.step1Desc', 'Scegli come vuoi raggiungere la tua destinazione.')}
                         </p>
                     </div>
@@ -187,25 +187,25 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             <div
                                 key={mode.id}
                                 className={cn(
-                                    "premium-card p-8 cursor-pointer group transition-all duration-500 flex flex-col items-center text-center",
-                                    formData.transport_mode === mode.id ? "ring-1 ring-white" : "hover:border-white/20"
+                                    "premium-card bg-card border p-8 cursor-pointer group transition-all duration-500 flex flex-col items-center text-center shadow-md",
+                                    formData.transport_mode === mode.id ? "border-primary shadow-xl scale-105" : "border-border-medium hover:border-primary/50"
                                 )}
                                 onClick={() => handleTransportSelect(mode.id)}
                             >
-                                <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-4 group-hover:bg-white group-hover:text-black transition-all">
-                                    <mode.icon className="w-6 h-6" />
+                                <div className="w-16 h-16 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500 shadow-inner-white">
+                                    <mode.icon className="w-7 h-7" />
                                 </div>
-                                <h3 className="text-white text-lg font-semibold uppercase tracking-tight mb-2">
+                                <h3 className="text-primary text-lg font-black uppercase tracking-tight mb-2">
                                     {mode.title}
                                 </h3>
-                                <p className="text-gray-500 text-xs leading-relaxed">
+                                <p className="text-muted text-xs leading-relaxed">
                                     {mode.desc}
                                 </p>
                             </div>
                         ))}
                     </div>
 
-                    <Button variant="ghost" className="text-gray-500 hover:text-white" onClick={() => setStep(0)}>
+                    <Button variant="ghost" className="text-muted hover:text-primary self-start font-black uppercase text-[10px] tracking-widest" onClick={() => setStep(0)}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         {t('common.back', 'Indietro')}
                     </Button>
@@ -220,32 +220,32 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                 {/* Header */}
                 <div className="text-left space-y-4">
-                    <div className="flex flex-wrap gap-2 mb-8">
+                    <div className="flex flex-wrap gap-4 mb-12">
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(0)}
-                            className="bg-white/5 border border-white/10 text-gray-400 hover:bg-white hover:text-black rounded-sm px-4"
+                            className="bg-surface border border-border-subtle text-muted hover:bg-primary hover:text-base rounded-sm px-6 font-black uppercase text-[10px] tracking-widest transition-all"
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            <ArrowLeft className="w-3 h-3 mr-2" />
                             {formData.trip_intent === 'BUSINESS' ? t('survey.businessTitle', 'Business') : t('survey.leisureTitle', 'Leisure')}
                         </Button>
                         <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setStep(1)}
-                            className="bg-white/5 border border-white/10 text-gray-400 hover:bg-white hover:text-black rounded-sm px-4"
+                            className="bg-surface border border-border-subtle text-muted hover:bg-primary hover:text-base rounded-sm px-6 font-black uppercase text-[10px] tracking-widest transition-all"
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            <ArrowLeft className="w-3 h-3 mr-2" />
                             {formData.transport_mode === 'CAR' ? t('survey.carTitle', 'Auto') : formData.transport_mode === 'TRAIN' ? t('survey.trainTitle', 'Treno') : t('survey.flightTitle', 'Volo')}
                         </Button>
                     </div>
 
-                    <span className="subtle-heading">{t('survey.step2Step', 'Passaggi: 3/3')}</span>
-                    <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                    <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">{t('survey.step2Step', 'Passaggi: 3/3')}</span>
+                    <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase">
                         {t('survey.step2Title', 'Definiamo i dettagli')}
                     </h2>
-                    <p className="text-gray-500 text-lg leading-relaxed max-w-2xl">
+                    <p className="text-muted text-lg leading-relaxed max-w-2xl">
                         {t('survey.subtitle', {
                             target: isGroup ? t('survey.targetGroup', 'il gruppo') : t('survey.targetSolo', 'te'),
                             defaultValue: 'Aiutaci a costruire il viaggio perfetto per {{target}}.'
@@ -254,13 +254,13 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 </div>
 
                 {/* Form Container */}
-                <div className="premium-card p-10">
+                <div className="premium-card bg-card border border-border-medium p-12 shadow-2xl">
                     <form onSubmit={handleSubmit} className="space-y-12">
 
                         {/* Destination & Airport */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="destination">{t('survey.destinationLabel', 'Destinazione')}</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <Label htmlFor="destination" className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.destinationLabel', 'Destinazione')}</Label>
                                 <Input
                                     id="destination"
                                     name="destination"
@@ -268,11 +268,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={t('survey.destinationPlaceholder', 'es. Europa, Giappone...')}
                                     required
-                                    className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
+                                    className="h-16 bg-surface border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm shadow-sm transition-all"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="departure_airport">
+                            <div className="space-y-3">
+                                <Label htmlFor="departure_airport" className="text-primary font-black uppercase text-[10px] tracking-widest">
                                     {formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportLabel', 'Aeroporto Partenza') : t('survey.departureCityLabel', 'Città di Partenza')}
                                 </Label>
                                 <Input
@@ -282,17 +282,17 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     onChange={handleChange}
                                     placeholder={formData.transport_mode === 'FLIGHT' ? t('survey.departureAirportPlaceholder', "es. MXP, FCO") : t('survey.departureCityPlaceholder', "es. Milano, Roma")}
                                     required
-                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-blue-600 focus:ring-blue-600"
+                                    className="h-16 bg-surface border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm shadow-sm transition-all"
                                 />
                             </div>
                         </div>
 
                         {/* Group Details */}
                         {isGroup && (
-                            <div className="space-y-8 py-8 border-y border-white/10">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="group-budget" className="text-xs uppercase tracking-widest text-gray-500">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
+                            <div className="space-y-10 py-10 border-y border-border-subtle">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="group-budget" className="text-[10px] uppercase tracking-widest text-muted font-black">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
                                         <Input
                                             id="group-budget"
                                             name="budget"
@@ -301,11 +301,11 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             type="number"
                                             placeholder={t('survey.budgetPlaceholder', 'es. 3000')}
                                             required
-                                            className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
+                                            className="h-16 bg-surface border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm transition-all"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="num_people" className="text-xs uppercase tracking-widest text-gray-500">{t('survey.numPeopleLabel', 'Numero Persone')}</Label>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="num_people" className="text-[10px] uppercase tracking-widest text-muted font-black">{t('survey.numPeopleLabel', 'Numero Persone')}</Label>
                                         <Input
                                             id="num_people"
                                             name="num_people"
@@ -315,7 +315,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                             min="2"
                                             max="10"
                                             required
-                                            className="h-14 bg-white/5 border-white/10 text-white focus:border-white focus:ring-0 rounded-sm"
+                                            className="h-16 bg-surface border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm transition-all"
                                         />
                                     </div>
                                 </div>
@@ -323,9 +323,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                 {/* Dynamic Names Inputs */}
                                 {formData.participant_names.length > 0 && (
                                     <div className="animate-fade-in space-y-6">
-                                        <label className="text-xs uppercase tracking-widest text-white font-semibold flex items-center gap-4">
+                                        <label className="text-xs uppercase tracking-widest text-[var(--text-primary)] font-semibold flex items-center gap-4">
                                             {t('survey.participantNamesLabel', 'Chi viene con te?')}
-                                            <div className="h-px flex-1 bg-white/10"></div>
+                                            <div className="h-px flex-1 bg-[var(--border-subtle)]"></div>
                                         </label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {formData.participant_names.map((name, idx) => (
@@ -335,18 +335,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     onChange={(e) => handleNameChange(idx, e.target.value)}
                                                     placeholder={t('survey.participantNamePlaceholder', { index: idx + 2, defaultValue: `Nome Amico ${idx + 2}` })}
                                                     required
-                                                    className="h-12 bg-white/5 border-white/10 text-white rounded-sm"
+                                                    className="h-14 bg-[var(--bg-surface)] border-[var(--border-medium)] text-[var(--text-primary)] rounded-sm transition-all"
                                                 />
                                             ))}
                                         </div>
 
                                         {/* AVVISO NOMI */}
-                                        <div className="p-6 bg-white/5 border border-white/10 rounded-sm">
-                                            <div className="flex gap-4">
-                                                <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold rounded-sm shrink-0">!</div>
+                                        <div className="p-8 bg-surface border border-border-subtle rounded-sm">
+                                            <div className="flex gap-6">
+                                                <div className="w-12 h-12 bg-primary text-base flex items-center justify-center font-black rounded-sm shrink-0 shadow-md">!</div>
                                                 <div>
-                                                    <h4 className="text-white text-sm font-semibold uppercase tracking-tight mb-1">{t('survey.namesWarningTitle', 'I nomi contano')}</h4>
-                                                    <p className="text-gray-500 text-xs leading-relaxed">
+                                                    <h4 className="text-primary text-base font-black uppercase tracking-tight mb-2">{t('survey.namesWarningTitle', 'I nomi contano')}</h4>
+                                                    <p className="text-muted text-sm leading-relaxed">
                                                         {t('survey.namesWarningDesc', 'Inserisci i nomi reali dei tuoi amici. Potranno votare e gestire il budget solo se i nomi corrispondono ai loro account SplitPlan.')}
                                                     </p>
                                                 </div>
@@ -359,8 +359,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Solo Details */}
                         {!isGroup && (
-                            <div className="space-y-2">
-                                <Label htmlFor="solo-budget">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
+                            <div className="space-y-3">
+                                <Label htmlFor="solo-budget" className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.budgetLabel', 'Budget Totale (€)')}</Label>
                                 <Input
                                     id="solo-budget"
                                     name="budget"
@@ -369,33 +369,33 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     type="number"
                                     placeholder={t('survey.budgetPlaceholder', 'es. 1500')}
                                     required
-                                    className="h-12 bg-white/5 border-white/10 text-white focus:border-blue-600 focus:ring-blue-600"
+                                    className="h-16 bg-surface border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm shadow-sm transition-all"
                                 />
                             </div>
                         )}
 
                         {/* Dates */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                            <div className="space-y-2">
-                                <Label>{t('survey.startDateLabel', 'Data Partenza')}</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <Label className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.startDateLabel', 'Data Partenza')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-14 rounded-sm bg-white/5 border-white/10 text-white hover:bg-white hover:text-black",
-                                                !formData.start_date && "text-gray-500"
+                                                "w-full justify-start text-left font-normal h-16 rounded-sm bg-surface border-border-medium text-primary hover:bg-primary hover:text-base transition-all shadow-sm",
+                                                !formData.start_date && "text-muted"
                                             )}
                                         >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            <CalendarIcon className="mr-3 h-5 w-5 text-subtle" />
                                             {formData.start_date ? (
-                                                format(new Date(formData.start_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })
+                                                <span className="font-bold">{format(new Date(formData.start_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })}</span>
                                             ) : (
                                                 <span>{t('survey.selectDate', 'Seleziona data')}</span>
                                             )}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <PopoverContent className="w-auto p-0 bg-card border-border-medium shadow-2xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={formData.start_date ? new Date(formData.start_date) : undefined}
@@ -411,26 +411,26 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     </PopoverContent>
                                 </Popover>
                             </div>
-                            <div className="space-y-2">
-                                <Label>{t('survey.endDateLabel', 'Data Ritorno')}</Label>
+                            <div className="space-y-3">
+                                <Label className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.endDateLabel', 'Data Ritorno')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant={"outline"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white",
-                                                !formData.end_date && "text-gray-400"
+                                                "w-full justify-start text-left font-normal h-16 rounded-sm bg-surface border-border-medium text-primary hover:bg-primary hover:text-base transition-all shadow-sm",
+                                                !formData.end_date && "text-muted"
                                             )}
                                         >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            <CalendarIcon className="mr-3 h-5 w-5 text-subtle" />
                                             {formData.end_date ? (
-                                                format(new Date(formData.end_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })
+                                                <span className="font-bold">{format(new Date(formData.end_date), "PPP", { locale: i18n.language === 'en' ? undefined : it })}</span>
                                             ) : (
                                                 <span>{t('survey.selectDate', 'Seleziona data')}</span>
                                             )}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <PopoverContent className="w-auto p-0 bg-card border-border-medium shadow-2xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={formData.end_date ? new Date(formData.end_date) : undefined}
@@ -450,18 +450,18 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
                         {/* Work Hours & Days (Business Only) */}
                         {formData.trip_intent === 'BUSINESS' && (
-                            <div className="premium-card p-10 space-y-10 animate-fade-in border-white/20">
-                                <div className="space-y-2">
-                                    <span className="subtle-heading">{t('survey.workConfig', 'Configurazione Lavoro')}</span>
-                                    <h4 className="text-white text-xl font-semibold uppercase tracking-tight">
+                            <div className="premium-card bg-surface p-12 space-y-12 animate-fade-in border border-border-medium shadow-md rounded-sm">
+                                <div className="space-y-3">
+                                    <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">{t('survey.workConfig', 'Configurazione Lavoro')}</span>
+                                    <h4 className="text-primary text-2xl font-black uppercase tracking-tight">
                                         {t('survey.workAiNoteTitle', 'Programma intelligente')}
                                     </h4>
-                                    <p className="text-gray-500 text-sm">{t('survey.workAiNote', "L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.")}</p>
+                                    <p className="text-muted text-base">{t('survey.workAiNote', "L'AI organizzerà le attività extra solo nei giorni non lavorativi o fuori dagli orari indicati.")}</p>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">{t('survey.workDaysQuestion', 'Giorni di attività lavorativa')}</label>
-                                    <div className="flex flex-wrap gap-3">
+                                    <label className="text-[10px] uppercase tracking-widest text-muted font-black">{t('survey.workDaysQuestion', 'Giorni di attività lavorativa')}</label>
+                                    <div className="flex flex-wrap gap-4">
                                         {[
                                             { id: 'Monday', label: t('survey.days.Monday', 'Lun') },
                                             { id: 'Tuesday', label: t('survey.days.Tuesday', 'Mar') },
@@ -487,8 +487,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                                     setFormData({ ...formData, work_days: newDays.join(',') });
                                                 }}
                                                 className={cn(
-                                                    "rounded-sm h-10 px-6",
-                                                    (formData.work_days || '').includes(day.id) ? "bg-white text-black border-white" : "border-white/10 text-gray-500 hover:border-white/30"
+                                                    "rounded-sm h-12 px-8 transition-all font-black uppercase text-[10px] tracking-widest",
+                                                    (formData.work_days || '').includes(day.id) ? "bg-primary text-base border-primary shadow-lg" : "border-border-medium text-muted hover:border-primary"
                                                 )}
                                             >
                                                 {day.label}
@@ -497,25 +497,25 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-widest text-gray-500">{t('survey.workStartLabel', 'Orario Inizio')}</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] uppercase tracking-widest text-muted font-black">{t('survey.workStartLabel', 'Orario Inizio')}</Label>
                                         <Input
                                             name="work_start_time"
                                             value={formData.work_start_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-14 bg-white/5 border-white/10 text-white focus:ring-0 rounded-sm"
+                                            className="h-16 bg-card border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm shadow-sm transition-all font-bold"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-widest text-gray-500">{t('survey.workEndLabel', 'Orario Fine')}</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] uppercase tracking-widest text-muted font-black">{t('survey.workEndLabel', 'Orario Fine')}</Label>
                                         <Input
                                             name="work_end_time"
                                             value={formData.work_end_time}
                                             onChange={handleChange}
                                             type="time"
-                                            className="h-14 bg-white/5 border-white/10 text-white focus:ring-0 rounded-sm"
+                                            className="h-16 bg-card border-border-medium text-primary focus:border-primary focus:ring-0 rounded-sm shadow-sm transition-all font-bold"
                                         />
                                     </div>
                                 </div>
@@ -523,31 +523,31 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         )}
 
                         {/* Preferences */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div className="space-y-2">
-                                <Label>{t('survey.mustHaveLabel', 'Cosa non può mancare?')}</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <Label className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.mustHaveLabel', 'Cosa non può mancare?')}</Label>
                                 <textarea
                                     name="must_have"
                                     value={formData.must_have}
                                     onChange={handleChange}
                                     placeholder={t('survey.mustHavePlaceholder', 'es. Musei, Spiagge, Shopping...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-sm border border-white/10 
-                                             focus:border-white focus:ring-0
-                                             transition-all outline-none resize-none bg-white/5 text-white text-sm"
+                                    className="w-full px-6 py-4 rounded-sm border border-border-medium 
+                                             focus:border-primary focus:ring-0
+                                             transition-all outline-none resize-none bg-surface text-primary text-base shadow-sm font-medium"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>{t('survey.mustAvoidLabel', 'Cosa vorresti evitare?')}</Label>
+                            <div className="space-y-3">
+                                <Label className="text-primary font-black uppercase text-[10px] tracking-widest">{t('survey.mustAvoidLabel', 'Cosa vorresti evitare?')}</Label>
                                 <textarea
                                     name="must_avoid"
                                     value={formData.must_avoid}
                                     onChange={handleChange}
                                     placeholder={t('survey.mustAvoidPlaceholder', 'es. Club, Trekking faticosi...')}
                                     rows="4"
-                                    className="w-full px-4 py-3 rounded-sm border border-white/10 
-                                             focus:border-white focus:ring-0
-                                             transition-all outline-none resize-none bg-white/5 text-white text-sm"
+                                    className="w-full px-6 py-4 rounded-sm border border-border-medium 
+                                             focus:border-primary focus:ring-0
+                                             transition-all outline-none resize-none bg-surface text-primary text-base shadow-sm font-medium"
                                 />
                             </div>
                         </div>
@@ -562,12 +562,12 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             >
                                 {isGenerating ? (
                                     <span className="flex items-center justify-center gap-4">
-                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                        <div className="w-6 h-6 border-2 border-base/30 border-t-base rounded-full animate-spin"></div>
                                         {t('survey.submitGenerating', 'Analisi dei dati in corso...')}
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-3">
-                                        <Sparkles className="w-5 h-5" />
+                                    <span className="flex items-center gap-4">
+                                        <Sparkles className="w-6 h-6" />
                                         {isGroup ? t('survey.submitCreateGroup', 'Crea Progetto di Gruppo') : t('survey.submitGenerateSolo', 'Genera Proposte AI')}
                                     </span>
                                 )}

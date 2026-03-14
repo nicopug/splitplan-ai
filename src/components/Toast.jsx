@@ -32,20 +32,22 @@ const Toast = () => {
             {toasts.map((toast) => (
                 <div
                     key={toast.id}
-                    className="animate-in slide-in-from-right-full duration-300 pointer-events-auto shadow-2xl rounded-2xl overflow-hidden"
+                    className="animate-in slide-in-from-right-full duration-300 pointer-events-auto shadow-[var(--shadow-xl)] rounded-xl overflow-hidden"
                 >
-                    <Alert variant={getVariant(toast.type)} className="border border-white/10 bg-black/95 backdrop-blur-md shadow-lg shadow-white/5 relative pr-12 text-white">
-                        {getIcon(toast.type)}
-                        <AlertTitle className="capitalize text-sm font-extrabold pr-4 text-white">
-                            {toast.type === 'error' ? 'Attenzione' : toast.type === 'success' ? 'Ottimo!' : 'Info'}
+                    <Alert variant={getVariant(toast.type)} className="border border-[var(--border-medium)] bg-[var(--bg-card)] backdrop-blur-md relative pr-12 text-[var(--text-primary)] transition-colors duration-500">
+                        <div className="text-[var(--accent-primary)]">
+                            {getIcon(toast.type)}
+                        </div>
+                        <AlertTitle className="capitalize text-sm font-bold pr-4 text-[var(--text-primary)]">
+                            {toast.type === 'error' ? (t('common.attention', 'Attenzione')) : toast.type === 'success' ? (t('common.great', 'Ottimo!')) : 'Info'}
                         </AlertTitle>
-                        <AlertDescription className="text-gray-300 font-medium pr-4">
+                        <AlertDescription className="text-[var(--text-muted)] font-medium pr-4">
                             {toast.message}
                         </AlertDescription>
 
                         <button
                             onClick={() => removeToast(toast.id)}
-                            className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white outline-none"
+                            className="absolute top-4 right-4 p-1 hover:bg-[var(--bg-surface)] rounded-lg transition-colors text-[var(--text-subtle)] hover:text-[var(--text-primary)] outline-none"
                         >
                             <X className="w-4 h-4" />
                         </button>

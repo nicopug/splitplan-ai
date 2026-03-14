@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { register, login, verifyEmail, toggleSubscription, forgotPassword } from '../api';
 import { Button } from '../components/ui/button';
+import { useTheme } from '../context/ThemeContext';
 
 const Auth = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -215,58 +216,73 @@ const Auth = ({ onLogin }) => {
     }
 
     if (showForgot) {
-
+        const { theme } = useTheme();
         return (
-            <div className="auth-container">
-                <div className="auth-glass-card">
-                    <h2>Recupero Password</h2>
-                    <p className="auth-subtitle">Inserisci la tua email per ricevere il link di reset</p>
+            <div className="min-h-screen bg-[var(--bg-base)] flex flex-col justify-center items-center px-4 pt-24 pb-12 transition-colors duration-500">
+                <div className="premium-card w-full max-w-sm border-[var(--border-medium)] bg-[var(--bg-card)] backdrop-blur-md shadow-[var(--shadow-lg)]">
+                    <div className="flex justify-center mb-6">
+                        <img 
+                            src="/file.svg" 
+                            alt="SplitPlan Logo" 
+                            className={`w-16 h-16 ${theme === 'dark' ? 'invert' : ''} transition-all duration-500`}
+                        />
+                    </div>
+                    <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-2 text-center">Recupero Password</h2>
+                    <p className="text-[var(--text-muted)] text-sm text-center mb-8">Inserisci la tua email per ricevere il link di reset</p>
 
-                    {error && <div className="auth-error">{error}</div>}
-                    {message && <div className="auth-success">{message}</div>}
+                    {error && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-sm mb-6 text-center">{error}</div>}
+                    {message && <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-sm mb-6 text-center">{message}</div>}
 
                     {!message && (
-                        <form onSubmit={handleForgotSubmit} className="auth-form">
-                            <div className="auth-field">
-                                <label>Email</label>
+                        <form onSubmit={handleForgotSubmit} className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Email</label>
                                 <input
                                     type="email"
                                     value={forgotEmail}
                                     onChange={e => setForgotEmail(e.target.value)}
                                     required
                                     placeholder="mario@esempio.it"
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                                 />
                             </div>
-                            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                            <Button type="submit" className="w-full" disabled={loading}>
                                 {loading ? 'Invio...' : 'Invia Link di Reset'}
-                            </button>
+                            </Button>
                         </form>
                     )}
 
-                    <div className="auth-switch" style={{ marginTop: '1.5rem' }}>
-                        <span onClick={() => setShowForgot(false)}>Torna al Login</span>
+                    <div className="mt-8 text-center">
+                        <span 
+                            onClick={() => setShowForgot(false)}
+                            className="text-[10px] font-bold text-[var(--text-subtle)] hover:text-[var(--text-primary)] cursor-pointer transition-colors tracking-widest uppercase"
+                        >
+                            Torna al Login
+                        </span>
                     </div>
                 </div>
             </div>
         );
     }
 
+    const { theme } = useTheme();
+
     return (
-        <div className="min-h-screen bg-black flex flex-col justify-center items-center px-4 pt-24 pb-12">
-            <div className="premium-card w-full max-w-sm border-white/5 bg-zinc-950/50 backdrop-blur-md">
+        <div className="min-h-screen bg-[var(--bg-base)] flex flex-col justify-center items-center px-4 pt-24 pb-12 transition-colors duration-500">
+            <div className="premium-card w-full max-w-sm border-[var(--border-medium)] bg-[var(--bg-card)] backdrop-blur-md shadow-[var(--shadow-lg)]">
                 <div className="flex justify-center mb-6">
                     <img 
                         src="/file.svg" 
                         alt="SplitPlan Logo" 
-                        className="w-16 h-16 invert"
+                        className={`w-16 h-16 ${theme === 'dark' ? 'invert' : ''} transition-all duration-500`}
                     />
                 </div>
                 <div className="text-center mb-8">
-                    <h2 className="text-white text-2xl font-semibold mb-2">
+                    <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-2">
                         {isLogin ? 'Bentornato su SplitPlan' : 'Crea il tuo Account'}
                     </h2>
-                    <p className="text-gray-500 text-xs tracking-wide">
-                        {isLogin ? 'ACCEDI PER GESTIRE I TUOI VIAGGI' : 'INIZIA A PIANIFICARE CON I TUOI AMICI'}
+                    <p className="text-[var(--text-muted)] text-sm">
+                        {isLogin ? 'Accedi per gestire i tuoi viaggi' : 'Inizia a pianificare oggi stesso'}
                     </p>
                 </div>
 
@@ -277,7 +293,7 @@ const Auth = ({ onLogin }) => {
                     {!isLogin && (
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Nome</label>
+                                <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Nome</label>
                                 <input
                                     type="text"
                                     name="name"
@@ -285,11 +301,11 @@ const Auth = ({ onLogin }) => {
                                     value={formData.name}
                                     onChange={handleChange}
                                     required
-                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Cognome</label>
+                                <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Cognome</label>
                                 <input
                                     type="text"
                                     name="surname"
@@ -297,14 +313,14 @@ const Auth = ({ onLogin }) => {
                                     value={formData.surname}
                                     onChange={handleChange}
                                     required
-                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                                 />
                             </div>
                         </div>
                     )}
 
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Email</label>
+                        <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Email</label>
                         <input
                             type="email"
                             name="email"
@@ -312,13 +328,13 @@ const Auth = ({ onLogin }) => {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                         />
                     </div>
 
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
-                            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Password</label>
+                            <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Password</label>
                             {isLogin && (
                                 <span
                                     onClick={() => {
@@ -326,7 +342,7 @@ const Auth = ({ onLogin }) => {
                                         setError('');
                                         setMessage('');
                                     }}
-                                    className="text-[10px] font-bold text-gray-600 hover:text-white cursor-pointer transition-colors tracking-widest uppercase"
+                                    className="text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer transition-colors tracking-widest uppercase"
                                 >
                                     DIMENTICATA?
                                 </span>
@@ -340,19 +356,19 @@ const Auth = ({ onLogin }) => {
                                 onChange={handleChange}
                                 required
                                 placeholder="••••••••"
-                                className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors pr-10"
+                                className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors pr-10"
                             />
                             <button
                                 type="button"
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
-                                {showPassword ? '👁️' : '👁️‍🗨️'}
+                                {showPassword ? '👁️' : '👁‍🗨️'}
                             </button>
                         </div>
                         {formData.password && !isLogin && (
                             <div className="pt-1">
-                                <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-0.5 bg-[var(--border-subtle)] rounded-full overflow-hidden">
                                     <div
                                         className="h-full transition-all duration-500"
                                         style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
@@ -367,7 +383,7 @@ const Auth = ({ onLogin }) => {
 
                     {!isLogin && (
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase ml-1">Conferma Password</label>
+                            <label className="text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase ml-1">Conferma Password</label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -376,7 +392,7 @@ const Auth = ({ onLogin }) => {
                                     onChange={handleChange}
                                     required
                                     placeholder="••••••••"
-                                    className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                                 />
                             </div>
                         </div>
@@ -389,12 +405,12 @@ const Auth = ({ onLogin }) => {
                     </div>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <p className="text-[10px] font-bold text-gray-600 tracking-widest uppercase">
+                <div className="mt-8 text-center text-[var(--text-muted)]">
+                    <p className="text-[10px] font-bold tracking-widest uppercase">
                         {isLogin ? (
-                            <>NON HAI UN ACCOUNT? <span onClick={() => setIsLogin(false)} className="text-white cursor-pointer hover:underline underline-offset-4 ml-1">REGISTRATI</span></>
+                            <>NON HAI UN ACCOUNT? <span onClick={() => setIsLogin(false)} className="text-[var(--text-primary)] cursor-pointer hover:underline underline-offset-4 ml-1">REGISTRATI</span></>
                         ) : (
-                            <>HAI GIÀ UN ACCOUNT? <span onClick={() => setIsLogin(true)} className="text-white cursor-pointer hover:underline underline-offset-4 ml-1">ACCEDI</span></>
+                            <>HAI GIÀ UN ACCOUNT? <span onClick={() => setIsLogin(true)} className="text-[var(--text-primary)] cursor-pointer hover:underline underline-offset-4 ml-1">ACCEDI</span></>
                         )}
                     </p>
                 </div>

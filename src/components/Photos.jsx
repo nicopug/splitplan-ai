@@ -70,17 +70,23 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
 
 
     return (
-        <div className="container section">
-            <div className="text-center" style={{ marginBottom: '3rem' }}>
-                <h2>{t('photos.title', 'Foto del viaggio')}</h2>
-                <p>{t('photos.subtitle', 'Cattura e condividi i momenti migliori con il tuo gruppo.')}</p>
+        <div className="container py-12 space-y-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-4 text-center md:text-left">
+                    <span className="subtle-heading">{t('photos.gallery', 'Gallery')}</span>
+                    <h2 className="text-primary text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                        {t('photos.title', 'Foto del viaggio')}
+                    </h2>
+                    <p className="text-muted text-sm max-w-xl">
+                        {t('photos.subtitle', 'Cattura e condividi i momenti migliori con il tuo gruppo.')}
+                    </p>
+                </div>
 
                 {!readOnly && (
                     <button
                         onClick={handleUploadClick}
-                        className="btn btn-primary"
+                        className="h-12 px-8 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20"
                         disabled={loading}
-                        style={{ background: 'var(--accent-orange)', marginTop: '1rem' }}
                     >
                         {loading ? t('photos.loading', 'Caricamento...') : t('photos.addPhoto', '+ Aggiungi Foto')}
                     </button>
@@ -89,75 +95,45 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    style={{ display: 'none' }}
+                    className="hidden"
                     accept="image/*"
                 />
             </div>
 
             {photos.length === 0 ? (
-                <div className="text-center glass-card" style={{ padding: '4rem', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--glow-violet-sm)' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#cbd5e1', marginBottom: '1rem' }}>{t('photos.emptyTitle', 'No Photos')}</div>
-                    <p className="text-muted">{t('photos.emptyDesc', 'Non ci sono ancora foto. Sii il primo a caricarne una!')}</p>
+                <div className="premium-card !p-20 text-center flex flex-col items-center gap-4 bg-card border-border-subtle">
+                    <div className="text-5xl opacity-40">📸</div>
+                    <div className="space-y-1">
+                        <p className="text-primary font-bold uppercase tracking-widest">{t('photos.emptyTitle', 'No Photos')}</p>
+                        <p className="text-muted text-xs">{t('photos.emptyDesc', 'Non ci sono ancora foto. Sii il primo a caricarne una!')}</p>
+                    </div>
                 </div>
             ) : (
-                <div className="grid-3" style={{ gap: '1.5rem' }}>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {photos.map((photo) => (
                         <div
                             key={photo.id}
-                            style={{
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                background: 'var(--bg-elevated)',
-                                boxShadow: 'var(--shadow-md)',
-                                aspectRatio: '1/1',
-                                position: 'relative',
-                                cursor: 'pointer', // Cursore a manina
-                                transition: 'transform 0.2s'
-                            }}
-                            onClick={() => setSelectedPhoto(photo)} // Apre la foto al click
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            className="group relative aspect-square rounded-sm overflow-hidden bg-surface border border-border-subtle cursor-pointer hover:shadow-xl transition-all"
+                            onClick={() => setSelectedPhoto(photo)}
                         >
                             <img
                                 src={photo.url}
                                 alt={photo.caption || t('photos.alt.tripPhoto', "Foto del viaggio")}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover' // Mantiene la griglia ordinata
-                                }}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />
                             {!readOnly && (
                                 <button
                                     onClick={(e) => {
-                                        e.stopPropagation(); // Evita di aprire la foto quando cancelli
+                                        e.stopPropagation();
                                         handleDelete(photo.id);
                                     }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '8px',
-                                        right: '8px',
-                                        background: 'rgba(0,0,0,0.5)',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '50%',
-                                        width: '32px',
-                                        height: '32px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        cursor: 'pointer',
-                                        fontSize: '1.2rem',
-                                        transition: 'background 0.2s',
-                                        zIndex: 10
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)'}
-                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+                                    className="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all z-20"
                                     title={t('photos.deletePhoto', "Elimina foto")}
                                 >
                                     ×
                                 </button>
                             )}
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                         </div>
                     ))}
                 </div>
@@ -166,53 +142,19 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
             {/* --- LIGHTBOX (MODALE PER VEDERE LA FOTO INTERA) --- */}
             {selectedPhoto && (
                 <div
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                        zIndex: 1000,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px',
-                        cursor: 'zoom-out'
-                    }}
-                    onClick={() => setSelectedPhoto(null)} // Chiudi cliccando sullo sfondo
+                    className="fixed inset-0 bg-black/95 z-[1000] flex items-center justify-center p-5 cursor-zoom-out animate-fade-in"
+                    onClick={() => setSelectedPhoto(null)}
                 >
                     <img
                         src={selectedPhoto.url}
                         alt={t('photos.alt.fullSize', "Foto intera")}
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '90vh',
-                            objectFit: 'contain', // Qui si vede INTERA senza tagli
-                            borderRadius: '8px',
-                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                        }}
+                        className="max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl transition-transform duration-300"
                     />
                     <button
                         onClick={() => setSelectedPhoto(null)}
-                        style={{
-                            position: 'absolute',
-                            top: '20px',
-                            right: '20px',
-                            background: 'var(--bg-elevated)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
+                        className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-2xl transition-all"
                     >
-                        ×
+                        &times;
                     </button>
                 </div>
             )}

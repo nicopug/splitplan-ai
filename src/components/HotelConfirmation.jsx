@@ -104,10 +104,10 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
     return (
         <div className="container py-12 animate-fade-in">
-            <div className="premium-card max-w-4xl mx-auto">
-                <div className="text-center mb-12">
+            <div className="premium-card max-w-4xl mx-auto bg-card border-border-subtle shadow-xl">
+                <div className="text-center mb-12 space-y-4">
                     <span className="subtle-heading">Step 2: {t('hotelConfirm.title', 'Conferma Logistica')}</span>
-                    <p className="text-gray-500 text-sm mt-2">
+                    <p className="text-muted text-sm mt-2">
                         <span dangerouslySetInnerHTML={{
                             __html: t('hotelConfirm.subtitle', {
                                 mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : trip.transport_mode === 'CAR' ? t('hotelConfirm.modeCar') : t('hotelConfirm.modeFlight')
@@ -118,19 +118,19 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
                 {extractionError && (
                     <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-300">
-                        <Alert variant="info" className="bg-blue-600/5 border-blue-500/20 text-blue-400 rounded-sm relative pr-12">
+                        <Alert variant="info" className="bg-primary-blue/5 border-primary-blue/20 text-primary-blue rounded-sm relative pr-12">
                             <Info className="h-5 w-5 mt-0.5 shrink-0" />
                             <div className="flex-1">
-                                <AlertTitle className="text-white font-bold mb-1 uppercase tracking-wider text-[10px]">
+                                <AlertTitle className="text-primary font-bold mb-1 uppercase tracking-wider text-[10px]">
                                     {t('hotelConfirm.aiNote', "Nota dall'AI SplitPlan")}
                                 </AlertTitle>
-                                <AlertDescription className="text-gray-400 text-xs">
+                                <AlertDescription className="text-muted text-xs">
                                     {extractionError}
                                 </AlertDescription>
                             </div>
                             <button
                                 onClick={() => setExtractionError(null)}
-                                className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-sm transition-colors text-gray-500 hover:text-white outline-none"
+                                className="absolute top-4 right-4 p-1 hover:bg-muted/10 rounded-sm transition-colors text-subtle hover:text-primary outline-none"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -152,10 +152,10 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             type="button"
                             onClick={() => hotelInputRef.current.click()}
                             disabled={extracting === 'hotel'}
-                            className="h-14 px-8 rounded-sm border border-white/10 bg-white/2 hover:bg-white/5 hover:border-white/20 transition-all flex items-center gap-3 group disabled:opacity-50"
+                            className="h-14 px-8 rounded-sm border border-border-subtle bg-surface hover:bg-elevated hover:border-border-medium transition-all flex items-center gap-3 group disabled:opacity-50"
                         >
-                            {extracting === 'hotel' ? <Loader2 className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />}
-                            <span className="text-xs font-bold tracking-widest uppercase text-gray-400 group-hover:text-white transition-colors">
+                            {extracting === 'hotel' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-muted group-hover:text-primary-blue transition-colors" />}
+                            <span className="text-[10px] font-black tracking-widest uppercase text-muted group-hover:text-primary transition-colors">
                                 {t('hotelConfirm.uploadHotel', "Carica prenotazione Hotel")}
                             </span>
                         </button>
@@ -174,10 +174,10 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                 type="button"
                                 onClick={() => transportInputRef.current.click()}
                                 disabled={extracting === 'transport'}
-                                className="h-14 px-8 rounded-sm border border-white/10 bg-white/2 hover:bg-white/5 hover:border-white/20 transition-all flex items-center gap-3 group disabled:opacity-50"
+                                className="h-14 px-8 rounded-sm border border-border-subtle bg-surface hover:bg-elevated hover:border-border-medium transition-all flex items-center gap-3 group disabled:opacity-50"
                             >
-                                {extracting === 'transport' ? <Loader2 className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />}
-                                <span className="text-xs font-bold tracking-widest uppercase text-gray-400 group-hover:text-white transition-colors">
+                                {extracting === 'transport' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-muted group-hover:text-primary-blue transition-colors" />}
+                                <span className="text-[10px] font-black tracking-widest uppercase text-muted group-hover:text-primary transition-colors">
                                     {t('hotelConfirm.uploadTransport', { mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : t('hotelConfirm.modeFlight') })}
                                 </span>
                             </button>
@@ -194,7 +194,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             onChange={(e) => setHotelName(e.target.value)}
                             placeholder={t('hotelConfirm.hotelPlaceholder', "Es. Hotel Colosseo")}
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                            className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -206,7 +206,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             onChange={(e) => setHotelAddress(e.target.value)}
                             placeholder={t('hotelConfirm.addressPlaceholder', "Es. Via dei Fori Imperiali, Roma")}
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                            className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -221,7 +221,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                 onChange={(e) => setFlightCost(e.target.value)}
                                 placeholder="Es. 250"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                                className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                             />
                         </div>
                     )}
@@ -234,7 +234,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             onChange={(e) => setHotelCost(e.target.value)}
                             placeholder="Es. 500"
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                            className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -248,7 +248,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             value={arrivalTime}
                             onChange={(e) => setArrivalTime(e.target.value)}
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                            className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -262,7 +262,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             value={returnTime}
                             onChange={(e) => setReturnTime(e.target.value)}
                             required
-                            className="w-full bg-white/5 border border-white/10 rounded-sm p-4 text-white placeholder:text-gray-600 focus:border-white/30 outline-none transition-all text-sm"
+                            className="w-full bg-surface border border-border-subtle rounded-sm p-4 text-primary placeholder:text-subtle focus:border-primary-blue outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -270,7 +270,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-16 bg-white text-black font-black text-xs tracking-[0.2em] uppercase rounded-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                            className="w-full h-16 bg-primary-blue text-white font-black text-xs tracking-[0.2em] uppercase rounded-sm hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20 flex items-center justify-center gap-3 disabled:opacity-50"
                         >
                             {loading ? (
                                 <>

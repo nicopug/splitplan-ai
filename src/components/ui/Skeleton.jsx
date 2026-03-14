@@ -1,15 +1,14 @@
 import React from 'react';
+import { cn } from '../../lib/utils';
 
-const Skeleton = ({ width = '100%', height = '20px', borderRadius = '4px', className = '' }) => {
+const Skeleton = ({ width = '100%', height = '20px', borderRadius = '2px', className = '' }) => {
     return (
         <div
-            className={`shimmer ${className}`}
+            className={cn("shimmer bg-muted/10 animate-pulse transition-all duration-500", className)}
             style={{
                 width,
                 height,
                 borderRadius,
-                background: 'linear-gradient(90deg, rgba(24, 24, 46, 1) 25%, rgba(46, 46, 80, 1) 50%, rgba(24, 24, 46, 1) 75%)',
-                backgroundSize: '200% 100%'
             }}
         />
     );

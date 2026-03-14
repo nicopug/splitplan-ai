@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { chatWithAI } from '../api';
 import Skeleton from './ui/Skeleton';
+import { cn } from '../lib/utils';
 
 const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) => {
     const { t } = useTranslation();
@@ -41,141 +42,67 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
     };
 
     return (
-        <div className="container" style={{
-            marginTop: '2rem',
-            display: 'flex',
-            justifyContent: 'center',
-            paddingBottom: '4rem',
-            width: '100%',
-            position: 'relative'
-        }}>
-            <div className="chat-container auth-glass-card" style={{
-                height: '650px',
-                width: '100%',
-                maxWidth: '800px',
-                display: 'flex',
-                flexDirection: 'column',
-                padding: '0',
-                overflow: 'hidden',
-                background: 'var(--glass-bg)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: 'var(--shadow-xl)',
-                position: 'relative',
-                zIndex: 2
-            }}>
-                <div style={{
-                    padding: '1.5rem',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    background: 'var(--accent-digital-blue)',
-                    color: 'white',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
+        <div className="container py-12 flex justify-center pb-24 w-full relative">
+            <div className="chat-container premium-card !p-0 w-full max-w-[850px] flex flex-col overflow-hidden bg-card border-border-medium shadow-2xl relative z-10 transition-all duration-500">
+                <div className="p-8 border-b border-border-subtle bg-primary-blue text-white flex justify-between items-center shadow-lg">
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white' }}>{t('chatbot.aiAssistant', 'Assistente AI')}</h3>
-                        <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>{t('chatbot.premiumOnly', 'Esclusivo per utenti Premium')}</p>
+                        <h3 className="m-0 text-2xl font-black text-white uppercase tracking-tight">{t('chatbot.aiAssistant', 'Assistente AI')}</h3>
+                        <p className="m-0 text-[10px] uppercase font-black tracking-widest opacity-80">{t('chatbot.premiumOnly', 'Esclusivo per utenti Premium')}</p>
                     </div>
                     {onClose && (
                         <button
                             onClick={onClose}
-                            style={{
-                                background: 'rgba(255,255,255,0.2)',
-                                border: 'none',
-                                color: 'white',
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '1.2rem',
-                                transition: 'background 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                            className="bg-white/10 border border-white/20 text-white w-10 h-10 rounded-sm cursor-pointer flex items-center justify-center text-xl hover:bg-white/20 transition-all shadow-md font-black"
                         >
                             &times;
                         </button>
                     )}
                 </div>
 
-                <div className="chat-messages" style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: '1.5rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                    position: 'relative'
-                }}>
+                <div className="chat-messages flex-1 overflow-y-auto p-8 flex flex-col gap-6 relative min-h-[450px] max-h-[650px] bg-surface/30 backdrop-blur-sm">
                     {messages.map((msg, idx) => (
-                        <div key={idx} style={{
-                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                            maxWidth: '85%',
-                            padding: '1.1rem 1.4rem',
-                            borderRadius: '20px',
-                            background: msg.role === 'user' ? 'var(--accent-digital-blue)' : 'var(--bg-elevated)',
-                            color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
-                            boxShadow: 'var(--shadow-md)',
-                            border: '1px solid var(--border-subtle)',
-                            zIndex: 2,
-                            lineHeight: '1.6',
-                            fontSize: '0.95rem'
-                        }}>
+                        <div key={idx} className={cn(
+                            "max-w-[80%] p-5 rounded-sm shadow-md border z-10 leading-relaxed text-[15px] transition-all animate-fade-in font-medium",
+                            msg.role === 'user' 
+                                ? "self-end bg-primary-blue text-white border-primary-blue/20 shadow-primary-blue/10" 
+                                : "self-start bg-card text-primary border-border-subtle shadow-sm"
+                        )}>
                             {msg.text}
                         </div>
                     ))}
                     {loading && (
-                        <div style={{ alignSelf: 'flex-start', padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <Skeleton width="180px" height="14px" />
-                            <Skeleton width="120px" height="14px" />
+                        <div className="self-start p-5 bg-card border border-border-subtle rounded-sm flex flex-col gap-3 shadow-md w-[200px]">
+                            <Skeleton className="w-full h-3 bg-muted/20" />
+                            <Skeleton className="w-2/3 h-3 bg-muted/20" />
                         </div>
                     )}
 
-                    {/* HINT TEXT: Only show if there's only one message (the AI welcome) */}
+                    {/* HINT TEXT */}
                     {messages.length <= 1 && (
-                        <div style={{
-                            textAlign: 'center',
-                            marginTop: '2rem',
-                            opacity: 0.6,
-                            fontSize: '0.9rem',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
-                            <span style={{ fontSize: '1.5rem' }}></span>
-                            <p style={{ margin: 0 }}>{t('chatbot.hint', "Puoi chiedere di aggiungere, modificare o eliminare attività nell'itinerario.")}</p>
+                        <div className="text-center mt-12 opacity-60 flex flex-col items-center gap-3">
+                            <div className="h-px w-24 bg-border-subtle mb-4"></div>
+                            <p className="m-0 text-muted italic font-medium max-w-sm">
+                                {t('chatbot.hint', "Puoi chiedere di aggiungere, modificare o eliminare attività nell'itinerario.")}
+                            </p>
                         </div>
                     )}
 
                     <div ref={messagesEndRef} />
                 </div>
 
-                <form onSubmit={handleSend} style={{
-                    padding: '1.5rem',
-                    borderTop: '1px solid rgba(0,0,0,0.05)',
-                    display: 'flex',
-                    gap: '0.5rem'
-                }}>
+                <form onSubmit={handleSend} className="p-8 border-t border-border-subtle bg-surface flex gap-4 shadow-inner-white">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={t('chatbot.placeholder', "Es: 'Aggiungi una cena stasera alle 20'")}
-                        style={{
-                            flex: 1,
-                            padding: '0.75rem 1rem',
-                            borderRadius: '12px',
-                            border: '1px solid #ddd',
-                            outline: 'none',
-                            background: 'var(--bg-elevated)',
-                            color: 'var(--text-main)'
-                        }}
+                        className="flex-1 px-6 py-4 bg-card border border-border-medium rounded-sm outline-none text-primary placeholder:text-muted/50 focus:border-primary-blue shadow-sm transition-all font-medium"
                     />
-                    <button type="submit" className="btn btn-digital-blue" disabled={loading} style={{ padding: '0.75rem 1.75rem', borderRadius: '12px' }}>
+                    <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="px-10 py-4 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest rounded-sm hover:bg-primary-blue-light transition-all shadow-xl shadow-primary-blue/20 disabled:opacity-50"
+                    >
                         {t('chatbot.send', 'Invia')}
                     </button>
                 </form>

@@ -70,18 +70,17 @@ const Navbar = ({ user: propUser }) => {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-md border-b border-white/5 h-[var(--header-height)]">
+        <nav className="fixed top-0 left-0 right-0 z-[100] bg-[var(--glass-bg)] backdrop-blur-md border-b border-[var(--glass-border)] h-[var(--header-height)] transition-colors duration-300">
             <div className="container h-full">
                 <div className="flex items-center justify-between h-full relative">
-
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
-                        <img
-                            src="/file.svg"
-                            alt="SplitPlan Logo"
-                            className="w-14 h-14 transition-all duration-500 group-hover:rotate-12 invert"
+                        <img 
+                            src="/file.svg" 
+                            alt="SplitPlan Logo" 
+                            className={`w-14 h-14 transition-all duration-500 group-hover:rotate-12 ${theme === 'dark' ? 'invert' : ''}`}
                         />
-                        <span className="text-white text-lg font-semibold tracking-tight uppercase group-hover:text-gray-300 transition-colors">
+                        <span className="text-[var(--text-primary)] text-lg font-semibold tracking-tight uppercase group-hover:opacity-70 transition-all">
                             SplitPlan
                         </span>
                     </Link>
@@ -94,14 +93,14 @@ const Navbar = ({ user: propUser }) => {
                                     <a
                                         key={id}
                                         href={`#${id}`}
-                                        className="text-[13px] font-medium text-gray-400 hover:text-white uppercase tracking-widest transition-colors duration-300"
+                                        className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors duration-300"
                                     >
                                         {t(`nav.${id.replace(/-/g, '')}`, id.replace(/-/g, ' ').toUpperCase())}
                                     </a>
                                 ))}
                             </>
                         ) : (
-                            <Link to="/" className="text-[13px] font-medium text-gray-400 hover:text-white uppercase tracking-widest transition-colors">
+                            <Link to="/" className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors">
                                 {t('nav.home', 'HOME')}
                             </Link>
                         )}
@@ -110,13 +109,26 @@ const Navbar = ({ user: propUser }) => {
 
                     {/* Right Side: User & CTA */}
                     <div className="hidden md:flex items-center gap-6">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-full hover:bg-[var(--accent-muted)] transition-colors text-[var(--text-primary)]"
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'light' ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                            )}
+                        </button>
+
                         {user ? (
                             <div className="flex items-center gap-4 user-menu-container relative">
                                 <button
                                     onClick={() => setShowUserMenu(!showUserMenu)}
-                                    className="flex items-center gap-3 px-3 py-1.5 rounded-sm hover:bg-white/5 transition-all text-white border border-transparent hover:border-white/10"
+                                    className="flex items-center gap-3 px-3 py-1.5 rounded-sm hover:bg-[var(--accent-muted)] transition-all text-[var(--text-primary)] border border-transparent hover:border-[var(--border-medium)]"
                                 >
-                                    <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-bold text-white">
+                                    <div className="w-6 h-6 rounded-full bg-[var(--accent-muted)] border border-[var(--border-medium)] flex items-center justify-center text-[10px] font-bold">
                                         {user?.name?.charAt(0).toUpperCase() || '?'}
                                     </div>
                                     <span className="text-[13px] font-medium tracking-tight">
@@ -125,17 +137,17 @@ const Navbar = ({ user: propUser }) => {
                                 </button>
 
                                 {showUserMenu && (
-                                    <div className="absolute top-full right-0 mt-2 w-56 bg-black border border-white/10 rounded-sm shadow-2xl overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <div className="p-1.5 border-b border-white/5">
+                                    <div className="absolute top-full right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-sm shadow-2xl overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="p-1.5 border-b border-[var(--border-subtle)]">
                                             <Link
                                                 to="/my-trips"
-                                                className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-sm transition-colors uppercase tracking-widest"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] rounded-sm transition-colors uppercase tracking-widest"
                                             >
                                                 {t('nav.myTrips')}
                                             </Link>
                                             <Link
                                                 to="/market"
-                                                className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-sm transition-colors uppercase tracking-widest"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] rounded-sm transition-colors uppercase tracking-widest"
                                             >
                                                 {t('nav.market')}
                                             </Link>
@@ -153,12 +165,12 @@ const Navbar = ({ user: propUser }) => {
                             </div>
                         ) : (
                             <div className="flex items-center gap-6">
-                                <Link to="/auth" className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors uppercase tracking-widest">
+                                <Link to="/auth" className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors uppercase tracking-widest">
                                     {t('nav.login')}
                                 </Link>
                                 <Link
                                     to="/auth"
-                                    className="bg-white text-black text-[13px] font-bold px-6 py-2 rounded-sm hover:bg-gray-200 transition-all uppercase tracking-widest"
+                                    className="bg-[var(--accent-primary)] text-[var(--bg-base)] text-[13px] font-bold px-6 py-2 rounded-sm hover:opacity-90 transition-all uppercase tracking-widest"
                                 >
                                     {t('nav.getStarted', 'Get Started')}
                                 </Link>
@@ -167,19 +179,31 @@ const Navbar = ({ user: propUser }) => {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="md:hidden p-2 text-white hover:bg-white/5 rounded-sm transition-colors"
-                        aria-label="Toggle menu"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {mobileMenuOpen ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                    <div className="md:hidden flex items-center gap-4">
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 text-[var(--text-primary)]"
+                        >
+                            {theme === 'light' ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                             ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                             )}
-                        </svg>
-                    </button>
+                        </button>
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="p-2 text-[var(--text-primary)] hover:bg-[var(--accent-muted)] rounded-sm transition-colors"
+                            aria-label="Toggle menu"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {mobileMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                                ) || null}
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Menu Dropdown */}

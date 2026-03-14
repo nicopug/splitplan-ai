@@ -238,7 +238,7 @@ const Budget = ({ trip, onUpdate }) => {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <span className="subtle-heading !mb-0 text-[8px]">{t('budget.categories.Budget', 'Budget')}</span>
-                    <span className="text-xl font-black text-white">€{stats.totalBudget.toFixed(0)}</span>
+                    <span className="text-xl font-black text-primary">€{stats.totalBudget.toFixed(0)}</span>
                 </div>
             </div>
         );
@@ -248,23 +248,23 @@ const Budget = ({ trip, onUpdate }) => {
         <div className="container py-12 space-y-12">
             <div className="space-y-4">
                 <span className="subtle-heading">{t('budget.analytics', 'Analytics')}</span>
-                <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                <h2 className="text-primary text-4xl md:text-5xl font-semibold tracking-tight uppercase">
                     {t('budget.title', 'Analisi Budget')}
                 </h2>
             </div>
 
             {/* Top Cards: Spent vs Remaining */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30">
+                <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30 bg-surface">
                     <span className="subtle-heading !mb-0">{t('budget.totalSpent', 'Speso Totale')}</span>
-                    <div className="text-5xl font-black text-white">€{stats.currentSpent.toFixed(2)}</div>
-                    <div className="text-gray-500 text-xs font-medium uppercase tracking-widest">
+                    <div className="text-5xl font-black text-primary">€{stats.currentSpent.toFixed(2)}</div>
+                    <div className="text-muted text-xs font-medium uppercase tracking-widest">
                         {t('budget.initialBudget', { total: stats.totalBudget.toFixed(0) })}
                     </div>
                 </div>
 
                 <div className={cn(
-                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2",
+                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 bg-surface",
                     stats.isOverBudget ? "border-red-500/30" : "border-green-500/30"
                 )}>
                     <span className="subtle-heading !mb-0">
@@ -276,7 +276,7 @@ const Budget = ({ trip, onUpdate }) => {
                     )}>
                         €{Math.abs(stats.remaining).toFixed(2)}
                     </div>
-                    <div className="text-gray-500 text-xs font-medium uppercase tracking-widest">
+                    <div className="text-muted text-xs font-medium uppercase tracking-widest">
                         {stats.isOverBudget ? t('budget.spentOver', 'Sei andato oltre il budget') : t('budget.spentStill', 'Ancora spendibili')}
                     </div>
                 </div>
@@ -284,10 +284,10 @@ const Budget = ({ trip, onUpdate }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Left Column: Chart & Categories */}
-                <div className="lg:col-span-5 premium-card space-y-8">
+                <div className="lg:col-span-5 premium-card space-y-8 bg-card">
                     <div className="space-y-2">
                         <span className="subtle-heading !mb-0 text-[8px] opacity-50">{t('budget.distribution', 'Distribuzione')}</span>
-                        <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                        <h3 className="text-primary text-xl font-semibold uppercase tracking-tight">
                             {t('budget.categoriesTitle', 'Suddivisione Spese')}
                         </h3>
                     </div>
@@ -316,11 +316,11 @@ const Budget = ({ trip, onUpdate }) => {
                                         <div className="flex items-center gap-3">
                                             <span className={cn(
                                                 "text-sm font-black transition-colors",
-                                                cat.isRemaining ? "text-gray-600" : "text-white"
+                                                cat.isRemaining ? "text-muted" : "text-primary"
                                             )}>
                                                 €{cat.amount.toFixed(2)}
                                             </span>
-                                            <span className="text-[10px] font-bold text-gray-700 w-8 text-right">
+                                            <span className="text-[10px] font-bold text-subtle w-8 text-right">
                                                 {(stats.totalBudget > 0 ? (cat.amount / stats.totalBudget) * 100 : 0).toFixed(0)}%
                                             </span>
                                         </div>
@@ -341,21 +341,21 @@ const Budget = ({ trip, onUpdate }) => {
                 {/* Right Column: AI Projections & Tips */}
                 <div className="lg:col-span-7 space-y-8">
                     {/* Progress Bar */}
-                    <div className="premium-card !p-8 space-y-6">
+                    <div className="premium-card !p-8 space-y-6 bg-card">
                         <div className="flex justify-between items-end">
                             <div className="space-y-1">
                                 <span className="subtle-heading !mb-0">{t('budget.usage', 'Utilizzo Budget')}</span>
-                                <h4 className="text-white text-lg font-semibold uppercase tracking-tight">Status</h4>
+                                <h4 className="text-primary text-lg font-semibold uppercase tracking-tight">Status</h4>
                             </div>
                             <span className="text-3xl font-black text-primary-blue">{stats.percentUsed.toFixed(0)}%</span>
                         </div>
-                        <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden border border-border-subtle">
                             <div
                                 className="h-full bg-primary-blue transition-all duration-1000 ease-out"
                                 style={{ width: `${stats.percentUsed}%` }}
                             />
                         </div>
-                        <p className="text-gray-500 text-xs font-medium leading-relaxed italic">
+                        <p className="text-muted text-xs font-medium leading-relaxed italic">
                             {stats.percentUsed > 80 ? t('budget.usageHigh', 'Attenzione! Hai quasi esaurito il budget.') :
                                 stats.percentUsed > 50 ? t('budget.usageMid', 'Sei a metà del budget. Gestisci bene le prossime spese!') :
                                     t('budget.usageLow', 'Ottimo lavoro, il budget è ancora sotto controllo.')}
@@ -365,12 +365,12 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* AI Estimation Section */}
                     <div className="premium-card !p-8 space-y-6 border border-primary-blue/20 bg-primary-blue/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold rounded-sm">
+                            <div className="w-10 h-10 bg-accent-primary text-background flex items-center justify-center font-bold rounded-sm">
                                 <Sparkles className="w-5 h-5" />
                             </div>
                             <div className="space-y-1">
                                 <span className="subtle-heading !mb-0 !text-primary-blue/60">{t('budget.aiSimulation', 'Simulazione AI')}</span>
-                                <h4 className="text-white text-lg font-semibold uppercase tracking-tight">SplitPlan Forecast</h4>
+                                <h4 className="text-primary text-lg font-semibold uppercase tracking-tight">SplitPlan Forecast</h4>
                             </div>
                         </div>
 
@@ -399,12 +399,12 @@ const Budget = ({ trip, onUpdate }) => {
                             </div>
                         ) : (
                             <div className="space-y-6 animate-fade-in">
-                                <div className="p-6 bg-black/40 border border-white/10 rounded-sm space-y-4">
+                                <div className="p-6 bg-muted/30 border border-border-subtle rounded-sm space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">{t('budget.localEst', 'Stima locale / pers:')}</span>
+                                        <span className="text-xs uppercase tracking-widest text-muted font-bold">{t('budget.localEst', 'Stima locale / pers:')}</span>
                                         <span className="text-xl font-black text-primary-blue">€{estimation.total_estimated_per_person}</span>
                                     </div>
-                                    <p className="text-gray-400 text-xs leading-relaxed italic border-t border-white/5 pt-4">
+                                    <p className="text-muted text-xs leading-relaxed italic border-t border-border-subtle pt-4">
                                         "{estimation.advice}"
                                     </p>
                                 </div>
@@ -428,20 +428,20 @@ const Budget = ({ trip, onUpdate }) => {
 
                     {/* Currency Info Section */}
                     {stats.localCurrency && stats.localCurrency !== 'EUR' && (
-                        <div className="premium-card !p-8 animate-fade-in space-y-6">
+                        <div className="premium-card !p-8 animate-fade-in space-y-6 bg-card">
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
                                     <span className="subtle-heading !mb-0">{t('budget.currencyFocus', { currency: stats.localCurrency })}</span>
-                                    <h4 className="text-white text-lg font-semibold uppercase tracking-tight">Forex Info</h4>
+                                    <h4 className="text-primary text-lg font-semibold uppercase tracking-tight">Forex Info</h4>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('budget.avgRate', 'Tasso medio')}</div>
-                                    <div className="text-lg font-black text-white">1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}</div>
+                                    <div className="text-[10px] font-bold text-muted uppercase tracking-widest">{t('budget.avgRate', 'Tasso medio')}</div>
+                                    <div className="text-lg font-black text-primary">1 EUR = {stats.localRate?.toFixed(2)} {stats.localCurrency}</div>
                                 </div>
                             </div>
 
-                            <div className="p-6 bg-white/5 border border-white/10 rounded-sm flex justify-between items-center">
-                                <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">
+                            <div className="p-6 bg-surface border border-border-subtle rounded-sm flex justify-between items-center">
+                                <span className="text-xs uppercase tracking-widest text-muted font-bold">
                                     {stats.isOverBudget ? t('budget.overBudget', 'Sforamento') : t('budget.remaining', 'Disponibilità')}
                                 </span>
                                 <div className={cn(

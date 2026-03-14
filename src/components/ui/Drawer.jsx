@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { cn } from '../../lib/utils';
+import { X } from 'lucide-react';
 
 const Drawer = ({ isOpen, onClose, title, children }) => {
     // Disable scrolling when the drawer is open
@@ -16,50 +18,33 @@ const Drawer = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-            animation: 'fadeIn 0.3s ease-out'
-        }} onClick={onClose}>
+        <div 
+            className="fixed inset-0 z-[100] flex items-end sm:items-stretch justify-end bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={onClose}
+        >
             <div
-                style={{
-                    background: 'var(--bg-card)',
-                    width: '100%', maxWidth: '500px',
-                    height: '100%', maxHeight: '100vh',
-                    borderLeft: '1px solid var(--glass-border)',
-                    padding: '2rem', display: 'flex', flexDirection: 'column',
-                    animation: 'slideInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                    boxShadow: '-10px 0 40px rgba(0,0,0,0.5)',
-                    position: 'relative'
-                }}
+                className={cn(
+                    "bg-card w-full sm:max-w-md h-[90vh] sm:h-full border-l border-border-subtle p-8 flex flex-col",
+                    "animate-slide-in-right shadow-2xl relative transition-all duration-500"
+                )}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>{title}</h3>
+                <div className="flex justify-between items-center mb-10 transition-all duration-500">
+                    <h3 className="m-0 text-2xl font-black text-primary uppercase tracking-tight">{title}</h3>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white',
-                            width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.5rem', transition: 'background 0.2s'
-                        }}
+                        className="bg-surface border border-border-subtle text-primary w-10 h-10 rounded-sm cursor-pointer flex items-center justify-center hover:bg-elevated transition-all shadow-sm"
                     >
-                        &times;
+                        <X className="w-5 h-5 text-primary" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     {children}
                 </div>
             </div>
-
-            {/* Mobile Animation adjustment would normally be here with media queries,
-                but for simplicity in this artifact, we'll keep the slideInRight.
-                In a real CSS file, we'd use slideInBottom for max-width 640px. */}
         </div>
     );
 };

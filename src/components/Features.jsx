@@ -32,26 +32,25 @@ const Features = () => {
     return (
         <>
             {features.map((feature, idx) => (
-                <section key={feature.id} id={idx === 0 ? "features" : `feature-${feature.id}`} className="section bg-black">
+                <section key={feature.id} id={idx === 0 ? "features" : `feature-${feature.id}`} className="section bg-base transition-colors duration-500">
                     <div className="container h-full">
                         <div className={`viewport-split items-center ${idx % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}>
-
                             {/* Left/Right: Content */}
                             <div className="space-y-6 py-12">
-                                <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">
+                                <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
                                     0{idx + 1} // {feature.title.split(' ')[0]}
                                 </div>
-                                <h2 className="text-white text-4xl lg:text-5xl font-semibold leading-tight">
+                                <h2 className="text-primary text-4xl lg:text-5xl font-semibold leading-tight">
                                     {feature.title}
                                 </h2>
-                                <p className="text-gray-500 text-lg max-w-md leading-relaxed">
+                                <p className="text-muted text-lg max-w-md leading-relaxed">
                                     {feature.desc}
                                 </p>
                             </div>
 
                             {/* Right/Left: Visual */}
                             <div className="relative flex items-center justify-center py-12">
-                                <div className="relative w-full max-w-[500px] shadow-[0_0_100px_rgba(255,255,255,0.03)] border border-white/5 rounded-lg overflow-hidden bg-[#0a0a0a]">
+                                <div className="relative w-full max-w-[500px] shadow-md border border-border-medium rounded-lg overflow-hidden bg-card transition-all hover:shadow-xl">
                                     <img
                                         src={feature.image}
                                         alt={feature.title}
@@ -66,10 +65,10 @@ const Features = () => {
             ))}
 
             {/* Comparison Section - Minimalist */}
-            <section className="section bg-black">
+            <section className="section bg-base transition-colors duration-500">
                 <div className="container h-full flex flex-col justify-center">
                     <div className="max-w-4xl mx-auto w-full">
-                        <h3 className="text-3xl font-semibold text-white mb-16 text-center">{t('features.comparison_title')}</h3>
+                        <h3 className="text-3xl font-semibold text-primary mb-16 text-center">{t('features.comparison_title')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
                             {[
                                 { name: 'Booking.com', val: t('features.hotels_only') },
@@ -78,8 +77,8 @@ const Features = () => {
                                 { name: 'SplitPlan', val: t('features.all_inclusive'), highlight: true }
                             ].map((item, i) => (
                                 <div key={i} className="space-y-4 text-center">
-                                    <div className="text-[10px] font-bold tracking-widest text-gray-600 uppercase">{item.name}</div>
-                                    <div className={`text-sm ${item.highlight ? 'text-white font-bold' : 'text-gray-500'}`}>{item.val}</div>
+                                    <div className="text-[10px] font-black tracking-widest text-subtle uppercase">{item.name}</div>
+                                    <div className={`text-sm ${item.highlight ? 'text-primary font-black uppercase tracking-tight' : 'text-muted'}`}>{item.val}</div>
                                 </div>
                             ))}
                         </div>

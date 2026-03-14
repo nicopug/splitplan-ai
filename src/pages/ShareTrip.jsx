@@ -70,50 +70,38 @@ const ShareTrip = ({ isJoinMode = false }) => {
     }, [token, isJoinMode, navigate]);
 
     const banner = (
-        <div style={{
-            background: 'var(--accent-orange)',
-            color: 'white',
-            padding: '0.7rem',
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: '0.9rem',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            position: 'fixed',
-            top: 'var(--header-height, 0)',
-            left: 0,
-            right: 0,
-            zIndex: 100
-        }}>
+        <div className="bg-accent-orange text-white py-3 text-center font-black text-[11px] tracking-[0.2em] uppercase shadow-lg shadow-accent-orange/20 fixed top-[var(--header-height,0)] left-0 right-0 z-[100] animate-fade-in">
             Sei in modalità Sola Lettura.
         </div>
     );
 
     if (loading) return (
-        <div style={{ paddingTop: 'var(--header-height, 60px)' }}>
+        <div className="pt-[var(--header-height,60px)] min-h-screen bg-base flex flex-col items-center justify-center gap-6">
             {banner}
-            <div className="section text-center" style={{ paddingTop: '8rem' }}>
-                <div className="spinner-large" style={{ margin: '0 auto' }}></div>
-                <p className="mt-4">Caricamento viaggio...</p>
-            </div>
+            <div className="w-12 h-12 border-4 border-muted/20 border-t-accent-primary rounded-full animate-spin"></div>
+            <p className="text-muted tracking-widest uppercase text-[10px] font-black">Caricamento viaggio...</p>
         </div>
     );
 
     if (error || !data) return (
-        <div style={{ paddingTop: 'var(--header-height, 60px)' }}>
+        <div className="pt-[var(--header-height,60px)] min-h-screen bg-base content-center">
             {banner}
-            <div className="section text-center" style={{ paddingTop: '8rem' }}>
-                <h2 className="text-error">Oops! Qualcosa è andato storto</h2>
-                <p className="text-muted">{error || "Il link potrebbe essere scaduto o non valido."}</p>
+            <div className="container max-w-lg mx-auto text-center space-y-8 animate-fade-in">
+                <div className="space-y-4">
+                    <h2 className="text-red-500 text-3xl font-black uppercase tracking-tight">Oops! Qualcosa è andato storto</h2>
+                    <p className="text-muted text-lg">{error || "Il link potrebbe essere scaduto o non valido."}</p>
+                </div>
 
                 {error && (
-                    <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}>
-                        <strong>Dettaglio Tecnico:</strong> {error}
+                    <div className="p-6 bg-surface border border-border-subtle rounded-sm text-[11px] font-mono text-left overflow-x-auto whitespace-pre">
+                        <strong className="text-primary block mb-2 uppercase tracking-widest">Dettaglio Tecnico:</strong>
+                        <span className="text-muted">{error}</span>
                     </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
-                    <button onClick={() => window.location.reload()} className="btn btn-secondary">Riprova</button>
-                    <Link to="/" className="btn btn-primary">Torna alla Home</Link>
+                <div className="flex justify-center gap-4">
+                    <button onClick={() => window.location.reload()} className="h-14 px-10 bg-surface border border-border-subtle text-primary font-black text-[10px] tracking-widest uppercase rounded-sm hover:bg-elevated transition-all">Riprova</button>
+                    <Link to="/" className="h-14 px-10 bg-primary-blue text-white font-black text-[10px] tracking-widest uppercase rounded-sm hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20">Home</Link>
                 </div>
             </div>
         </div>
@@ -124,30 +112,35 @@ const ShareTrip = ({ isJoinMode = false }) => {
         const organizerName = (participants && participants.length > 0) ? participants[0].name : 'un utente';
 
         return (
-            <div style={{ paddingTop: 'calc(var(--header-height, 60px) + 3rem)' }}>
+            <div className="bg-base min-h-screen pb-20 pt-[calc(var(--header-height,60px)+3rem)]">
                 {banner}
 
-                <div className="border-b border-white/5 py-12 text-center bg-black/40 backdrop-blur-md">
-                    <div className="container">
-                        <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-400 mb-2 inline-block">Viaggio di {organizerName}</span>
-                        <h1 className="text-white text-3xl md:text-5xl font-black uppercase tracking-tight mb-8">
+                <div className="border-b border-border-subtle py-16 text-center bg-surface relative overflow-hidden">
+                     {/* Decorative background glow */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-30">
+                        <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--accent-primary-20)_0%,transparent_70%)]"></div>
+                    </div>
+
+                    <div className="container relative space-y-6">
+                        <span className="subtle-heading">Viaggio di {organizerName}</span>
+                        <h1 className="text-primary text-4xl md:text-6xl font-black uppercase tracking-tight mb-8">
                             {trip?.name || 'Viaggio'}
                         </h1>
-                        <div className="flex justify-center gap-3">
+                        <div className="flex justify-center gap-4">
                             <button
                                 onClick={() => setView('TRIP')}
-                                className={`px-8 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${view === 'TRIP'
-                                    ? 'bg-white text-black border-white'
-                                    : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+                                className={`px-10 py-3 rounded-sm text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${view === 'TRIP'
+                                    ? 'bg-primary-blue text-white border-primary-blue shadow-xl shadow-primary-blue/20'
+                                    : 'bg-transparent text-muted border-border-subtle hover:border-border-medium hover:text-primary'
                                     }`}
                             >
                                 Itinerario
                             </button>
                             <button
                                 onClick={() => setView('PHOTOS')}
-                                className={`px-8 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${view === 'PHOTOS'
-                                    ? 'bg-white text-black border-white'
-                                    : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+                                className={`px-10 py-3 rounded-sm text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${view === 'PHOTOS'
+                                    ? 'bg-primary-blue text-white border-primary-blue shadow-xl shadow-primary-blue/20'
+                                    : 'bg-transparent text-muted border-border-subtle hover:border-border-medium hover:text-primary'
                                     }`}
                             >
                                 Foto
@@ -156,57 +149,70 @@ const ShareTrip = ({ isJoinMode = false }) => {
                     </div>
                 </div>
 
-                <div className="container py-8">
+                <div className="container py-8 min-h-[400px]">
                     {view === 'TRIP' && (
-                        <>
-                            <div style={{ marginBottom: '2rem' }}>
-                                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-subtle)', marginBottom: '2rem' }}>
-                                    <h3 style={{ color: 'var(--accent-cyan)' }}>Informazioni</h3>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Destinazione</label>
-                                            <strong style={{ color: 'var(--text-primary)' }}>{trip?.destination || 'N/A'}</strong>
-                                        </div>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Periodo</label>
-                                            <strong style={{ color: 'var(--text-primary)' }}>
-                                                {trip?.start_date ? new Date(trip.start_date).toLocaleDateString() : 'N/A'} -
-                                                {trip?.end_date ? new Date(trip.end_date).toLocaleDateString() : 'N/A'}
-                                            </strong>
-                                        </div>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Partecipanti</label>
-                                            <strong style={{ color: 'var(--text-primary)' }}>{trip?.num_people || '1'}</strong>
+                        <div className="space-y-12 animate-fade-in">
+                            <div className="premium-card bg-card border-border-subtle p-8 md:p-12 shadow-xl">
+                                <span className="subtle-heading block mb-8">Informazioni</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-subtle">Destinazione</label>
+                                        <div className="text-xl font-bold text-primary">{trip?.destination || 'N/A'}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-subtle">Periodo</label>
+                                        <div className="text-xl font-bold text-primary">
+                                            {trip?.start_date ? new Date(trip.start_date).toLocaleDateString() : 'N/A'} - {trip?.end_date ? new Date(trip.end_date).toLocaleDateString() : 'N/A'}
                                         </div>
                                     </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-subtle">Partecipanti</label>
+                                        <div className="text-xl font-bold text-primary">{trip?.num_people || '1'} {trip?.num_people === 1 ? 'persona' : 'persone'}</div>
+                                    </div>
                                 </div>
-
-                                {trip?.trip_intent !== 'BUSINESS' && (
-                                    <Map
-                                        items={itinerary}
-                                        hotelLat={trip?.hotel_latitude}
-                                        hotelLon={trip?.hotel_longitude}
-                                        startDate={trip?.start_date}
-                                        isPremium={user?.is_subscribed}
-                                    />
-                                )}
                             </div>
-                            <Timeline items={itinerary} />
-                        </>
+
+                            <div className="space-y-12">
+                                {trip?.trip_intent !== 'BUSINESS' && (
+                                    <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                                        <Map
+                                            items={itinerary}
+                                            hotelLat={trip?.hotel_latitude}
+                                            hotelLon={trip?.hotel_longitude}
+                                            startDate={trip?.start_date}
+                                            isPremium={user?.is_subscribed}
+                                        />
+                                    </div>
+                                )}
+                                <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                                    <Timeline items={itinerary} />
+                                </div>
+                            </div>
+                        </div>
                     )}
 
                     {view === 'PHOTOS' && (
-                        <Photos trip={trip} readOnly={true} sharedPhotos={photos} />
+                        <div className="animate-fade-in">
+                            <Photos trip={trip} readOnly={true} sharedPhotos={photos} />
+                        </div>
                     )}
                 </div>
 
                 {!user && (
-                    <div className="section text-center py-12" style={{ background: 'var(--bg-elevated)', marginTop: '4rem', borderTop: '1px solid var(--border-subtle)', borderRadius: '32px 32px 0 0' }}>
-                        <h3 className="text-white">Vuoi organizzare il tuo prossimo viaggio così?</h3>
-                        <p className="mb-6 text-muted">Crea itinerari AI, dividi le spese e condividi i ricordi con SplitPlan.</p>
-                        <div className="flex justify-center gap-4">
-                            <Link to="/auth" className="bg-white text-black px-8 py-3 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-gray-200 transition-all">Registrati Gratis</Link>
-                            <Link to="/auth" className="border border-white/10 text-white px-8 py-3 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-white/5 transition-all">Accedi</Link>
+                    <div className="py-24 bg-surface border-t border-border-subtle rounded-t-[4rem] text-center mt-20 relative overflow-hidden">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-20">
+                            <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--accent-primary-20)_0%,transparent_70%)]"></div>
+                        </div>
+
+                        <div className="container relative space-y-10 max-w-2xl mx-auto">
+                            <div className="space-y-4">
+                                <h3 className="text-primary text-3xl font-black uppercase tracking-tight">Vuoi organizzare il tuo prossimo viaggio così?</h3>
+                                <p className="text-muted text-lg leading-relaxed">Crea itinerari AI, dividi le spese e condividi i ricordi con SplitPlan.</p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                <Link to="/auth" className="h-16 px-12 flex items-center justify-center bg-primary-blue text-white rounded-sm font-black uppercase text-[11px] tracking-[0.2em] hover:bg-primary-blue-light transition-all shadow-xl shadow-primary-blue/20">Registrati Gratis</Link>
+                                <Link to="/auth" className="h-16 px-12 flex items-center justify-center border border-border-subtle text-primary rounded-sm font-black uppercase text-[11px] tracking-[0.2em] hover:bg-elevated transition-all">Accedi</Link>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -214,16 +220,21 @@ const ShareTrip = ({ isJoinMode = false }) => {
         );
     } catch (renderError) {
         return (
-            <div style={{ paddingTop: 'var(--header-height, 60px)' }}>
+            <div className="pt-[var(--header-height,60px)] min-h-screen bg-base content-center">
                 {banner}
-                <div className="section text-center" style={{ paddingTop: '8rem' }}>
-                    <h2 className="text-error">Errore di Rendering</h2>
-                    <p>C'è stato un errore nel mostrare i dati del viaggio.</p>
-                    <div style={{ marginTop: '2rem', padding: '1rem', background: '#fee', borderRadius: '8px', display: 'inline-block', fontSize: '0.8rem', border: '1px solid #fcc', color: '#c00' }}>
-                        <strong>Errore:</strong> {renderError.message}
+                <div className="container max-w-lg mx-auto text-center space-y-8 animate-fade-in">
+                    <div className="space-y-4">
+                        <h2 className="text-red-500 text-3xl font-black uppercase tracking-tight">Errore di Rendering</h2>
+                        <p className="text-muted text-lg">C'è stato un errore nel mostrare i dati del viaggio.</p>
                     </div>
+                    
+                    <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-sm text-[11px] font-mono text-left text-red-400 overflow-x-auto whitespace-pre">
+                        <strong className="block mb-2 uppercase tracking-widest">Errore:</strong>
+                        {renderError.message}
+                    </div>
+
                     <div className="mt-8">
-                        <Link to="/" className="btn btn-primary">Torna alla Home</Link>
+                        <Link to="/" className="h-14 px-10 bg-primary-blue text-white font-black text-[10px] tracking-widest uppercase rounded-sm hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20 inline-flex items-center">Torna alla Home</Link>
                     </div>
                 </div>
             </div>

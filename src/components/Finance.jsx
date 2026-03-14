@@ -202,22 +202,22 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         <div className="container py-12 space-y-12">
             <div className="space-y-4">
                 <span className="subtle-heading">{t('finance.expenses', 'Finance')}</span>
-                <h2 className="text-white text-4xl md:text-5xl font-semibold tracking-tight uppercase">
+                <h2 className="text-primary text-4xl md:text-5xl font-semibold tracking-tight uppercase">
                     {t('finance.title', 'Gestione Spese')}
                 </h2>
             </div>
 
             {/* Global Stats Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30">
+                <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30 bg-surface">
                     <span className="subtle-heading !mb-0">{t('finance.totalSpent', 'Totale Speso')}</span>
-                    <div className="text-5xl font-black text-white">
+                    <div className="text-5xl font-black text-primary">
                         €{stats.total.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
 
                 <div className={cn(
-                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2",
+                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 bg-surface",
                     stats.userBalance >= 0 ? "border-green-500/30" : "border-red-500/30"
                 )}>
                     <span className="subtle-heading !mb-0">{t('finance.yourBalance', 'Tuo Bilancio')}</span>
@@ -245,12 +245,12 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             ) : (
                 <div className="space-y-10">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex bg-white/5 p-1 rounded-sm border border-white/5">
+                        <div className="flex bg-muted/30 p-1 rounded-sm border border-border-subtle">
                             <button
                                 onClick={() => setTab('summary')}
                                 className={cn(
                                     "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'summary' ? "bg-white text-black" : "text-gray-500 hover:text-white"
+                                    tab === 'summary' ? "bg-accent-primary text-background" : "text-muted hover:text-primary"
                                 )}
                             >
                                 {t('finance.tabs.balances', 'Bilanci')}
@@ -259,7 +259,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 onClick={() => setTab('list')}
                                 className={cn(
                                     "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'list' ? "bg-white text-black" : "text-gray-500 hover:text-white"
+                                    tab === 'list' ? "bg-accent-primary text-background" : "text-muted hover:text-primary"
                                 )}
                             >
                                 {t('finance.tabs.list', 'Lista')}
@@ -283,18 +283,18 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                     >
                         <form onSubmit={handleAddExpense} className="space-y-8 pt-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('finance.form.title', 'Cosa?')}</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">{t('finance.form.title', 'Cosa?')}</label>
                                 <input
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
                                     required
                                     placeholder={t('finance.form.titlePlaceholder', "es. Cena Sushi")}
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-sm px-4 text-white focus:border-white outline-none transition-all"
+                                    className="w-full h-14 bg-surface border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all placeholder:text-subtle"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('finance.form.amount', 'Importo')}</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted">{t('finance.form.amount', 'Importo')}</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -302,24 +302,24 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                         onChange={e => setAmount(e.target.value)}
                                         required
                                         placeholder="0.00"
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-sm px-4 text-white focus:border-white outline-none transition-all"
+                                        className="w-full h-14 bg-surface border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all placeholder:text-subtle"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('finance.form.currency', 'Valuta')}</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted">{t('finance.form.currency', 'Valuta')}</label>
                                     <select
                                         value={currency}
                                         onChange={e => setCurrency(e.target.value)}
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-sm px-4 text-white focus:border-white outline-none transition-all appearance-none"
+                                        className="w-full h-14 bg-surface border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all appearance-none"
                                     >
                                         {currencies.map(c => (
-                                            <option key={c.code} value={c.code} className="bg-zinc-900">{c.symbol} {c.code}</option>
+                                            <option key={c.code} value={c.code} className="bg-card">{c.symbol} {c.code}</option>
                                         ))}
                                     </select>
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 block">{t('finance.form.category', 'Categoria')}</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted block">{t('finance.form.category', 'Categoria')}</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {categories.map(cat => (
                                         <button
@@ -329,8 +329,8 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                             className={cn(
                                                 "p-4 rounded-sm border transition-all flex flex-col items-center gap-2",
                                                 category === cat.id
-                                                    ? "bg-white text-black border-white"
-                                                    : "bg-white/5 border-white/10 text-gray-500 hover:border-white/30 hover:text-white"
+                                                    ? "bg-accent-primary text-background border-accent-primary"
+                                                    : "bg-surface border-border-subtle text-muted hover:border-border-strong hover:text-primary"
                                             )}
                                         >
                                             <span className="text-xl">{cat.icon}</span>
@@ -340,14 +340,14 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t('finance.form.payer', 'Chi ha pagato?')}</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">{t('finance.form.payer', 'Chi ha pagato?')}</label>
                                 <select
                                     value={payerId}
                                     onChange={e => setPayerId(e.target.value)}
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-sm px-4 text-white focus:border-white outline-none transition-all appearance-none"
+                                    className="w-full h-14 bg-surface border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all appearance-none"
                                 >
                                     {participants.map(p => (
-                                        <option key={p.id} value={p.id} className="bg-zinc-900">{p.name}</option>
+                                        <option key={p.id} value={p.id} className="bg-card">{p.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -369,23 +369,23 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 </div>
                             ) : (
                                 [...expenses].reverse().map(exp => (
-                                    <div key={exp.id} className="premium-card !p-6 flex items-center justify-between group hover:border-primary-blue/30 transition-all">
+                                    <div key={exp.id} className="premium-card !p-6 flex items-center justify-between group hover:border-primary-blue/30 transition-all bg-card">
                                         <div className="flex items-center gap-6">
-                                            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                            <div className="w-14 h-14 bg-surface border border-border-subtle rounded-sm flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
                                                 {getCategoryIcon(exp.category)}
                                             </div>
                                             <div className="space-y-1">
-                                                <div className="text-lg font-bold text-white tracking-tight leading-none">{exp.title}</div>
-                                                <div className="text-[10px] uppercase font-bold tracking-widest text-gray-500">
+                                                <div className="text-lg font-bold text-primary tracking-tight leading-none">{exp.title}</div>
+                                                <div className="text-[10px] uppercase font-bold tracking-widest text-muted">
                                                     {t('finance.paidBy', 'Pagato da')} <span className="text-primary-blue">{getUserName(exp.payer_id)}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <div className="text-right space-y-0.5">
-                                                <div className="text-2xl font-black text-white">€{exp.amount.toFixed(2)}</div>
+                                                <div className="text-2xl font-black text-primary">€{exp.amount.toFixed(2)}</div>
                                                 {exp.currency && exp.currency !== 'EUR' && (
-                                                    <div className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">
+                                                    <div className="text-[10px] font-bold text-muted uppercase tracking-tighter">
                                                         {exp.original_amount?.toLocaleString()} {exp.currency}
                                                     </div>
                                                 )}
@@ -394,7 +394,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                                 {!readOnly && (
                                                     <button
                                                         onClick={() => handleDelete(exp.id)}
-                                                        className="w-10 h-10 flex items-center justify-center text-gray-700 hover:text-red-500 transition-colors"
+                                                        className="w-10 h-10 flex items-center justify-center text-muted hover:text-red-500 transition-colors"
                                                         title="Elimina"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -412,31 +412,31 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                         <div className="space-y-8 animate-fade-in">
                             <div className="space-y-1">
                                 <span className="subtle-heading !mb-0">{t('finance.balancesTitle', 'Settlements')}</span>
-                                <h3 className="text-white text-xl font-bold uppercase tracking-tight">Debiti e Crediti</h3>
+                                <h3 className="text-primary text-xl font-bold uppercase tracking-tight">Debiti e Crediti</h3>
                             </div>
 
                             {balances.length === 0 ? (
-                                <div className="premium-card !p-12 text-center space-y-4">
+                                <div className="premium-card !p-12 text-center space-y-4 bg-card">
                                     <div className="text-5xl">🎉</div>
                                     <div className="space-y-1">
-                                        <p className="text-white font-bold uppercase tracking-widest">{t('finance.balancedTitle', 'Tutti in pari!')}</p>
-                                        <p className="text-gray-500 text-xs">{t('finance.balancedDesc', 'Ancora nessuna spesa da conguagliare.')}</p>
+                                        <p className="text-primary font-bold uppercase tracking-widest">{t('finance.balancedTitle', 'Tutti in pari!')}</p>
+                                        <p className="text-muted text-xs">{t('finance.balancedDesc', 'Ancora nessuna spesa da conguagliare.')}</p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {balances.map((b, idx) => (
-                                        <div key={idx} className="premium-card !p-6 border-l-4 border-l-red-500 flex items-center justify-between">
+                                        <div key={idx} className="premium-card !p-6 border-l-4 border-l-red-500 flex items-center justify-between bg-card">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center font-black rounded-sm text-xs">
                                                     {getUserName(b.debtor_id).substring(0, 1).toUpperCase()}
                                                 </div>
                                                 <div className="space-y-0.5">
-                                                    <div className="text-sm font-bold text-white tracking-widest uppercase">
+                                                    <div className="text-sm font-bold text-primary tracking-widest uppercase">
                                                         {getUserName(b.debtor_id)}
                                                     </div>
-                                                    <div className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">
-                                                        {t('finance.owesTo', 'Owes to')} <span className="text-white">{getUserName(b.creditor_id)}</span>
+                                                    <div className="text-[10px] font-bold text-muted uppercase tracking-tighter">
+                                                        {t('finance.owesTo', 'Owes to')} <span className="text-primary">{getUserName(b.creditor_id)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -454,7 +454,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                         <div className="w-6 h-6 bg-primary-blue text-white flex items-center justify-center font-bold rounded-sm text-[10px]">i</div>
                                         <h4 className="text-primary-blue text-xs font-bold uppercase tracking-widest">{t('finance.tipTitle', 'AI Insight')}</h4>
                                     </div>
-                                    <p className="text-gray-500 text-xs leading-relaxed max-w-2xl">
+                                    <p className="text-muted text-xs leading-relaxed max-w-2xl">
                                         {t('finance.tipDesc', 'I bilanci sono calcolati automaticamente dividendo ogni spesa equamente tra tutti i partecipanti del viaggio.')}
                                     </p>
                                 </div>

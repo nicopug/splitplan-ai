@@ -80,7 +80,7 @@ function App() {
 
   try {
     return (
-      <div className="min-h-screen bg-bg-light">
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-300">
         {!isOnline && (
           <div style={{
             background: 'var(--accent-orange)',

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { cn } from '../lib/utils';
 
 // Fix for default marker icons in React-Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -219,15 +220,10 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
     };
 
     return (
-        <div style={{
-            height: '400px',
-            width: '100%',
-            borderRadius: '24px',
-            overflow: 'hidden',
-            boxShadow: isPremium ? '0 20px 40px rgba(0,0,0,0.1)' : 'var(--shadow-md)',
-            marginBottom: '2rem',
-            border: isPremium ? '1px solid #eee' : '1px solid #e0e0e0'
-        }}>
+        <div className={cn(
+            "h-[400px] w-full rounded-3xl overflow-hidden mb-8 border transition-all",
+            isPremium ? "shadow-xl border-border-subtle" : "shadow-md border-border-subtle"
+        )}>
             <MapContainer
                 center={bounds[0]}
                 zoom={13}
@@ -255,29 +251,29 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
 
                     return (
                         <Marker key={gIdx} position={[group.lat, group.lon]} icon={iconToUse}>
-                            <Popup>
-                                <div style={{
-                                    maxWidth: '250px',
-                                    maxHeight: '350px',
-                                    overflowY: 'auto',
-                                    paddingRight: '10px',
-                                    scrollbarWidth: 'thin'
-                                }}>
+                            <Popup className="premium-popup">
+                                <div className="max-w-[250px] max-h-[350px] overflow-y-auto pr-2 scrollbar-thin">
                                     {group.isHotel && (
-                                        <div style={{ marginBottom: sortedItems.length > 0 ? '8px' : '0', borderBottom: sortedItems.length > 0 ? '1px solid #eee' : 'none', paddingBottom: sortedItems.length > 0 ? '8px' : '0' }}>
-                                            <strong>🏨 Il Tuo Hotel</strong>
+                                        <div className={cn(
+                                            "mb-2 pb-2 border-b border-border-subtle",
+                                            sortedItems.length === 0 && "border-none pb-0 mb-0"
+                                        )}>
+                                            <strong className="text-primary-blue">🏨 Il Tuo Hotel</strong>
                                         </div>
                                     )}
                                     {sortedItems.map((item, iIdx) => {
                                         const dayNum = getDayNumber(item.start_time);
                                         const time = new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                         return (
-                                            <div key={iIdx} style={{ marginBottom: iIdx === sortedItems.length - 1 ? 0 : '10px' }}>
-                                                <div style={{ fontWeight: 'bold', color: 'var(--primary-blue)', fontSize: '0.9rem' }}>
+                                            <div key={iIdx} className={cn(
+                                                "space-y-1",
+                                                iIdx !== sortedItems.length - 1 && "mb-4"
+                                            )}>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-primary-blue/70">
                                                     {dayNum ? `Giorno ${dayNum}` : ''} • {time}
                                                 </div>
-                                                <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{item.title}</div>
-                                                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '2px' }}>{item.description}</div>
+                                                <div className="text-sm font-bold text-primary leading-tight">{item.title}</div>
+                                                <div className="text-[11px] text-muted leading-relaxed italic">{item.description}</div>
                                             </div>
                                         );
                                     })}

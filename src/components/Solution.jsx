@@ -35,28 +35,27 @@ const Solution = () => {
     ];
 
     return (
-        <section id="how-it-works" className="section bg-black">
+        <section id="how-it-works" className="section bg-base transition-colors duration-500">
             <div className="container h-full">
                 <div className="viewport-split items-center">
-
                     {/* Left: Steps */}
                     <div className="space-y-12 py-12">
                         <div className="space-y-4">
-                            <div className="inline-block px-3 py-1 rounded-sm border border-white/10 bg-white/5 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">
+                            <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
                                 {t('solution.badge', 'IL METODO')}
                             </div>
-                            <h2 className="text-white text-4xl font-semibold">{t('solution.title', '4 Fasi per il Viaggio Perfetto')}</h2>
+                            <h2 className="text-primary text-4xl lg:text-5xl font-semibold leading-tight uppercase tracking-tight">{t('solution.title', '4 Fasi per il Viaggio Perfetto')}</h2>
                         </div>
 
-                        <div className="space-y-8">
+                        <div className="space-y-10">
                             {steps.map((step, idx) => (
-                                <div key={idx} className="group flex gap-6">
-                                    <div className="text-gray-700 text-lg font-bold font-mono pt-1 transition-colors group-hover:text-white">
+                                <div key={idx} className="group flex gap-8">
+                                    <div className="text-subtle text-xl font-bold font-mono pt-1 transition-colors group-hover:text-primary-blue">
                                         {step.num}
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="text-white text-lg font-semibold">{step.title}</h4>
-                                        <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+                                        <h4 className="text-primary text-xl font-semibold uppercase tracking-tight group-hover:text-primary-blue transition-colors">{step.title}</h4>
+                                        <p className="text-muted text-lg leading-relaxed max-w-sm">
                                             {step.desc}
                                         </p>
                                     </div>
@@ -67,24 +66,21 @@ const Solution = () => {
 
                     {/* Right: Abstract Visual / Floating Mockup */}
                     <div className="relative flex items-center justify-center py-12">
-                        <div className="relative w-full max-w-[440px] aspect-[4/5] border border-white/5 rounded-lg bg-[#050505] flex items-center justify-center overflow-hidden">
+                        <div className="relative w-full max-w-[440px] aspect-[4/5] border border-border-medium rounded-lg bg-surface flex items-center justify-center overflow-hidden shadow-lg transition-all hover:shadow-2xl">
                             {/* Abstract connection lines or a minimal UI element */}
-                            <div className="absolute inset-0 opacity-20">
-                                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white to-transparent" />
-                                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
+                            <div className="absolute inset-0 opacity-10">
+                                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent" />
+                                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-primary to-transparent" />
                             </div>
 
                             <div className="z-10 text-center space-y-6">
-                                <div className="w-20 h-20 mx-auto rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
+                                <div className="w-24 h-24 mx-auto rounded-full border border-border-medium bg-card flex items-center justify-center text-4xl shadow-inner-white">
                                     ✈️
                                 </div>
-                                <div className="px-6 py-2 rounded-sm border border-white/10 bg-black text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                                <div className="px-6 py-2 rounded-sm border border-border-medium bg-base text-[10px] font-black tracking-widest text-muted uppercase">
                                     PLATFORM ECOSYSTEM
                                 </div>
                             </div>
-
-                            {/* Subtle scanline effect */}
-                            <div className="absolute inset-0 bg-scanline opacity-5 pointer-events-none" />
                         </div>
                     </div>
                 </div>

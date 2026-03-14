@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getEvents } from '../api';
+import { cn } from '../lib/utils';
 
 // Mappa tipo evento → emoji
 const EVENT_ICONS = {
@@ -27,61 +28,45 @@ const EventCard = ({ event }) => {
     const icon = EVENT_ICONS[event.type] || EVENT_ICONS.other;
 
     return (
-        <div style={{
-            background: impact.bg,
-            border: `1px solid ${impact.border}`,
-            borderRadius: '16px',
-            padding: '20px 24px',
-            display: 'flex',
-            gap: '16px',
-            alignItems: 'flex-start',
-        }}>
+        <div 
+            className="premium-card !p-6 flex gap-6 items-start bg-surface border-border-subtle hover:border-border-medium transition-all"
+            style={{ borderLeft: `4px solid ${impact.text}` }}
+        >
             {/* Icon */}
-            <div style={{ fontSize: '2rem', lineHeight: 1, flexShrink: 0 }}>{icon}</div>
+            <div className="text-4xl shrink-0">{icon}</div>
 
             {/* Content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                    <h3 style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <h3 className="text-primary font-bold text-[15px] m-0">
                         {event.title}
                     </h3>
-                    <span style={{
-                        fontSize: '0.65rem',
-                        fontWeight: 800,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: impact.text,
-                        background: impact.bg,
-                        border: `1px solid ${impact.border}`,
-                        borderRadius: '6px',
-                        padding: '2px 8px',
-                    }}>
+                    <span 
+                        className="text-[10px] font-black tracking-widest uppercase rounded-sm px-2 py-0.5 border"
+                        style={{ 
+                            color: impact.text, 
+                            borderColor: impact.border,
+                            backgroundColor: `${impact.text}15` 
+                        }}
+                    >
                         {impact.label}
                     </span>
                 </div>
 
                 {event.dates && (
-                    <p style={{ color: '#94a3b8', fontSize: '0.78rem', fontWeight: 600, margin: '0 0 8px 0' }}>
+                    <p className="text-subtle text-[11px] font-bold m-0 mb-2">
                         📅 {event.dates}
                     </p>
                 )}
 
-                <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
+                <p className="text-muted text-sm leading-relaxed m-0">
                     {event.description}
                 </p>
 
                 {event.affected_places && event.affected_places.length > 0 && (
-                    <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
                         {event.affected_places.map((place, i) => (
-                            <span key={i} style={{
-                                fontSize: '0.7rem',
-                                fontWeight: 700,
-                                color: '#94a3b8',
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                borderRadius: '6px',
-                                padding: '3px 10px',
-                            }}>
+                            <span key={i} className="text-[10px] font-bold text-muted bg-muted/20 border border-border-subtle rounded-sm px-2 py-0.5">
                                 📍 {place}
                             </span>
                         ))}
@@ -89,16 +74,7 @@ const EventCard = ({ event }) => {
                 )}
 
                 {event.travel_tip && (
-                    <div style={{
-                        marginTop: '12px',
-                        background: 'rgba(59,130,246,0.08)',
-                        border: '1px solid rgba(59,130,246,0.2)',
-                        borderRadius: '10px',
-                        padding: '10px 14px',
-                        fontSize: '0.8rem',
-                        color: '#93c5fd',
-                        lineHeight: 1.5,
-                    }}>
+                    <div className="mt-3 bg-primary-blue/5 border border-primary-blue/10 rounded-sm p-3 text-xs text-primary-blue leading-relaxed">
                         💡 <strong>Consiglio:</strong> {event.travel_tip}
                     </div>
                 )}
@@ -131,12 +107,12 @@ const Events = ({ trip }) => {
     // --- LOADING ---
     if (loading) {
         return (
-            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>🔍</div>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <div className="text-center py-20 px-5 space-y-4">
+                <div className="text-5xl animate-bounce">🔍</div>
+                <p className="text-muted text-sm font-black tracking-widest uppercase">
                     Ricerca eventi in corso...
                 </p>
-                <p style={{ color: '#475569', fontSize: '0.78rem', marginTop: '8px' }}>
+                <p className="text-subtle text-xs">
                     Gemini sta analizzando {trip.real_destination || trip.destination} nel periodo del tuo viaggio
                 </p>
             </div>
@@ -146,9 +122,9 @@ const Events = ({ trip }) => {
     // --- ERROR ---
     if (error) {
         return (
-            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
-                <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>{error}</p>
+            <div className="text-center py-20 px-5 space-y-4">
+                <div className="text-5xl">⚠️</div>
+                <p className="text-red-500 text-sm font-bold">{error}</p>
             </div>
         );
     }
@@ -156,12 +132,12 @@ const Events = ({ trip }) => {
     // --- EMPTY ---
     if (events.length === 0) {
         return (
-            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>🌿</div>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>
+            <div className="text-center py-20 px-5 space-y-4">
+                <div className="text-5xl opacity-40">🌿</div>
+                <p className="text-muted text-sm font-bold uppercase tracking-widest">
                     Nessun evento rilevante trovato per questo periodo.
                 </p>
-                <p style={{ color: '#475569', fontSize: '0.78rem', marginTop: '8px' }}>
+                <p className="text-subtle text-xs italic">
                     Sembra un periodo tranquillo — ottimo per visitare senza folle!
                 </p>
             </div>
@@ -174,40 +150,33 @@ const Events = ({ trip }) => {
     const lowImpact = events.filter(e => e.impact === 'low');
 
     return (
-        <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
+        <div className="container py-12 space-y-12">
 
             {/* Header */}
-            <div style={{ marginBottom: '2rem' }}>
-                <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#64748b' }}>
+            <div className="space-y-4">
+                <span className="subtle-heading">
                     AI • Aggiornato in tempo reale
                 </span>
-                <h2 style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '1.5rem', marginTop: '6px', marginBottom: '6px' }}>
+                <h2 className="text-primary font-bold text-3xl md:text-4xl tracking-tight uppercase">
                     Eventi a {trip.real_destination || trip.destination}
                 </h2>
-                <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <p className="text-muted text-xs font-bold uppercase tracking-widest">
                     {trip.start_date} → {trip.end_date} · {events.length} eventi trovati
                 </p>
             </div>
 
             {/* Sezioni per impatto */}
             {[
-                { label: '🔴 Alto impatto sul viaggio', items: highImpact },
-                { label: '🟡 Impatto medio', items: mediumImpact },
-                { label: '🟢 Info utili', items: lowImpact },
-            ].map(({ label, items }) =>
+                { label: 'Alto impatto sul viaggio', items: highImpact, color: 'text-red-500' },
+                { label: 'Impatto medio', items: mediumImpact, color: 'text-amber-500' },
+                { label: 'Info utili', items: lowImpact, color: 'text-green-500' },
+            ].map(({ label, items, color }) =>
                 items.length > 0 && (
-                    <div key={label} style={{ marginBottom: '2.5rem' }}>
-                        <h3 style={{
-                            fontSize: '0.7rem',
-                            fontWeight: 800,
-                            letterSpacing: '0.2em',
-                            textTransform: 'uppercase',
-                            color: '#475569',
-                            marginBottom: '1rem',
-                        }}>
+                    <div key={label} className="space-y-6">
+                        <h3 className={cn("subtle-heading !mb-0 text-[10px]", color)}>
                             {label}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div className="flex flex-col gap-4">
                             {items.map((event, i) => <EventCard key={i} event={event} />)}
                         </div>
                     </div>
@@ -215,7 +184,7 @@ const Events = ({ trip }) => {
             )}
 
             {/* Footer disclaimer */}
-            <p style={{ color: '#334155', fontSize: '0.7rem', textAlign: 'center', marginTop: '2rem', fontStyle: 'italic' }}>
+            <p className="text-subtle text-[10px] text-center italic mt-12 py-8 border-t border-border-subtle">
                 Le informazioni sugli eventi sono generate da AI e potrebbero non essere complete. Verifica sempre le fonti ufficiali prima di partire.
             </p>
         </div>

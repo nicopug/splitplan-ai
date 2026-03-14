@@ -84,26 +84,26 @@ const Logistics = ({ trip }) => {
         <div className="container py-12">
             <div className="max-w-4xl mx-auto space-y-16">
                 <div className="text-left space-y-4">
-                    <span className="subtle-heading">{t('logistics.title', 'Logistica & Prenotazioni')}</span>
-                    <h2 className="text-white text-3xl font-semibold tracking-tight uppercase">
+                    <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">{t('logistics.title', 'Logistica & Prenotazioni')}</span>
+                    <h2 className="text-primary text-4xl md:text-5xl font-black tracking-tight uppercase">
                         {t('logistics.subtitle', 'I link pronti per prenotare subito, senza impazzire.')}
                     </h2>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
                     {/* TRANSPORT (Flight, Train, or Car) */}
-                    <div className="premium-card p-10 flex flex-col items-center text-center space-y-6 group">
-                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-2 group-hover:bg-white group-hover:text-black transition-all">
-                            {trip.transport_mode === 'TRAIN' ? <Train className="w-8 h-8" /> :
-                                trip.transport_mode === 'CAR' ? <Car className="w-8 h-8" /> : <Plane className="w-8 h-8" />}
+                    <div className="premium-card bg-card border border-border-medium p-12 flex flex-col items-center text-center space-y-8 group shadow-md transition-all duration-500 hover:shadow-xl">
+                        <div className="w-20 h-20 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-2 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500 shadow-inner-white">
+                            {trip.transport_mode === 'TRAIN' ? <Train className="w-10 h-10" /> :
+                                trip.transport_mode === 'CAR' ? <Car className="w-10 h-10" /> : <Plane className="w-10 h-10" />}
                         </div>
 
                         {trip.transport_mode === 'TRAIN' ? (
                             <>
-                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                <h3 className="text-primary text-2xl font-black uppercase tracking-tight">
                                     {t('logistics.trainsTitle', 'Treni (Trainline)')}
                                 </h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">
+                                <p className="text-muted text-base leading-relaxed font-medium">
                                     {t('logistics.trainsDesc', { origin: trip.departure_city || origin, destination: destName, defaultValue: 'Prenota il tuo biglietto del treno da {{origin}} a {{destination}}.' })}
                                 </p>
                                 <Button
@@ -115,22 +115,22 @@ const Logistics = ({ trip }) => {
                             </>
                         ) : trip.transport_mode === 'CAR' ? (
                             <>
-                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                <h3 className="text-primary text-2xl font-black uppercase tracking-tight">
                                     {t('logistics.carTitle', 'Viaggio in Auto')}
                                 </h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">
+                                <p className="text-muted text-base leading-relaxed font-medium">
                                     {t('logistics.carDesc', { destination: destName, defaultValue: 'Pensiamo che userai la tua auto per questo viaggio verso {{destination}}.' })}
                                 </p>
-                                <div className="w-full p-4 bg-white/5 border border-white/5 rounded-sm text-[10px] font-bold text-gray-500 tracking-widest uppercase">
+                                <div className="w-full p-6 bg-surface border border-border-subtle rounded-sm text-[10px] font-black text-subtle tracking-widest uppercase">
                                     {t('logistics.carBudget', 'Abbiamo incluso una stima di carburante e pedaggi nel tuo Budget.')}
                                 </div>
                             </>
                         ) : (
                             <>
-                                <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                                <h3 className="text-primary text-2xl font-black uppercase tracking-tight">
                                     {t('logistics.flightsTitle', 'Voli (Skyscanner)')}
                                 </h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">
+                                <p className="text-muted text-base leading-relaxed font-medium">
                                     {t('logistics.flightsDesc', { origin: trip.departure_city || origin, destination: destName, count: numPeople, defaultValue: 'Cerca voli diretti da {{origin}} a {{destination}} per {{count}} persone.' })}
                                 </p>
                                 <Button
@@ -144,14 +144,14 @@ const Logistics = ({ trip }) => {
                     </div>
 
                     {/* HOTELS */}
-                    <div className="premium-card p-10 flex flex-col items-center text-center space-y-6 group">
-                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-white mb-2 group-hover:bg-white group-hover:text-black transition-all">
-                            <Home className="w-8 h-8" />
+                    <div className="premium-card bg-card border border-border-medium p-12 flex flex-col items-center text-center space-y-8 group shadow-md transition-all duration-500 hover:shadow-xl">
+                        <div className="w-20 h-20 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-2 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500 shadow-inner-white">
+                            <Home className="w-10 h-10" />
                         </div>
-                        <h3 className="text-white text-xl font-semibold uppercase tracking-tight">
+                        <h3 className="text-primary text-2xl font-black uppercase tracking-tight">
                             {t('logistics.hotelsTitle', 'Hotel (Booking.com)')}
                         </h3>
-                        <p className="text-gray-500 text-sm leading-relaxed">
+                        <p className="text-muted text-base leading-relaxed font-medium">
                             {t('logistics.hotelsDesc', { destination: destName, defaultValue: 'Le migliori offerte a {{destination}}.' })}
                         </p>
                         <Button

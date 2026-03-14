@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 @config "../tailwind.config.js";
@@ -54,9 +54,6 @@ html {
   scroll-behavior: smooth;
 }
 
-html.has-snap {
-  scroll-snap-type: y mandatory;
-}
 
 
 @theme {
@@ -165,8 +162,6 @@ html.has-snap {
 
   .section {
     min-height: 100vh;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
     display: flex;
     flex-direction: column;
     justify-content: center;

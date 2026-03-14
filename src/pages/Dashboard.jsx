@@ -55,7 +55,8 @@ const Dashboard = () => {
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
                     const token = localStorage.getItem('token');
-                    const response = await fetch(`${window.location.origin.includes('localhost') ? 'http://localhost:5678/api' : '/api'}/calendar/status`, {
+                    const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:8000' : '/api';
+                    const response = await fetch(`${apiUrl}/calendar/status`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (response.ok) {
@@ -118,16 +119,7 @@ const Dashboard = () => {
     const handleConnectCalendar = async () => {
         try {
             const token = localStorage.getItem('token');
-            // Costruiamo il redirect URL che il BACKEND deve usare per tornare QUI (o meglio, al suo callback che poi torna qui)
-            // In realtà il backend ha già logica per gestire il redirect.
-            // Chiamiamo /auth-url
-            const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:5678/api' : '/api';
-
-            // Il backend deve sapere dove redirigere POI l'utente finale? 
-            // Nel mio codice backend attuale, il callback reindirizza fisso a localhost:3000/dashboard.
-            // Questo è un problema per Vercel.
-            // FIX: Passiamo al backend un parametro `frontend_redirect_url`?
-            // No, semplifichiamo. Il backend farà redirect alla root dashboard.
+            const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:8000' : '/api';
 
             const res = await fetch(`${apiUrl}/calendar/auth-url?trip_id=${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -361,8 +353,8 @@ const Dashboard = () => {
 
                             <div className="flex flex-wrap items-center gap-3">
                                 {user && (
-                                    <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed 
-                                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]' 
+                                    <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed
+                                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
                                         : 'bg-[var(--bg-surface)] text-[var(--text-subtle)] border-[var(--border-subtle)]'
                                         }`}>
                                         {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM') : t('dashboard.freeUser', 'FREE')}
@@ -542,6 +534,19 @@ const Dashboard = () => {
                                                     <FileDown className="w-4 h-4" />
                                                     {t('dashboard.exportPdf', 'PDF')}
                                                 </Button>
+
+                                                {(user?.is_subscribed || trip.is_premium) && (
+                                                    <Button
+                                                        variant={isCalendarConnected ? "secondary" : "outline"}
+                                                        size="sm"
+                                                        onClick={handleConnectCalendar}
+                                                        className="gap-2"
+                                                    >
+                                                        <CalendarDays className={`w-4 h-4 ${isCalendarConnected ? 'text-emerald-500' : ''}`} />
+                                                        {isCalendarConnected ? t('dashboard.calendarConnected', 'Calendar Collegato') : t('dashboard.connectCalendar', 'Collega Calendar')}
+                                                    </Button>
+                                                )}
+
                                                 {isOrganizer && (
                                                     <Button variant="outline" size="sm" onClick={handleResetHotel}>
                                                         {t('dashboard.editLogistics', 'Modifica Logistica')}
@@ -582,7 +587,7 @@ const Dashboard = () => {
                                 <div className="flex justify-center gap-4">
                                     <Button onClick={() => navigate('/auth')}>Registrati Gratis</Button>
                                     <Button variant="outline" onClick={() => navigate('/auth')}>Accedi</Button>
-                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : user?.is_subscribed ? (

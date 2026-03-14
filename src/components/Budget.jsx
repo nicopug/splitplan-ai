@@ -178,7 +178,7 @@ const Budget = ({ trip, onUpdate }) => {
                 id: 'Remaining',
                 amount: remaining,
                 label: t('budget.categories.Available', 'Disponibile'),
-                color: '#f1f5f9',
+                color: 'var(--border-subtle)',
                 isRemaining: true
             });
         }

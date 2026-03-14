@@ -11,7 +11,7 @@ const getApiUrl = () => {
 
         // Sviluppo locale
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return "http://localhost:5678";
+            return "http://localhost:8000";
         }
 
         // Produzione su Vercel

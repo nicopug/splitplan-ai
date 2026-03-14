@@ -130,13 +130,13 @@ const MyTrips = () => {
                         <div className="flex bg-muted/20 p-1 rounded-sm mb-16 border border-border-subtle max-w-md mx-auto shadow-inner-white">
                             <button
                                 onClick={() => setActiveTab('active')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-primary-blue text-white shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Viaggi Attivi ({activeTrips.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('archived')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-primary-blue text-white shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Archivio ({archivedTrips.length})
                             </button>
@@ -159,7 +159,7 @@ const MyTrips = () => {
                                                 {trip.transport_mode === 'CAR' ? '🚗' : trip.transport_mode === 'TRAIN' ? '🚄' : '✈️'}
                                             </div>
                                             <div className="flex-1 space-y-1">
-                                                <h4 className="text-primary text-2xl font-semibold uppercase tracking-tight group-hover:text-primary-blue transition-colors">
+                                                <h4 className="text-primary text-2xl font-semibold uppercase tracking-tight transition-colors">
                                                     {trip.destination || trip.name}
                                                 </h4>
                                                 <div className="flex flex-wrap gap-x-8 gap-y-2">

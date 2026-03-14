@@ -60,12 +60,12 @@ def get_flow(redirect_uri=None):
             raise HTTPException(status_code=500, detail="OAuth Credentials not found (neither Env Vars nor File)")
 
     # Configura il Redirect URI
-    if os.getenv("VERCEL") or os.getenv("FRONTEND_URL"):
+    if os.getenv("VERCEL"):
         # Forza il link di produzione ufficiale del FRONTEND
         # Questo deve corrispondere a quanto inserito nella Google Cloud Console
         flow.redirect_uri = "https://splitplan-ai.vercel.app/calendar-callback"
     else:
-        # Fallback locale - ora punta al frontend locale
+        # Fallback locale - punta al frontend locale (Vite usa la 5173)
         flow.redirect_uri = "http://localhost:5173/calendar-callback"
 
     logger.info(f"Using FRONTEND REDIRECT_URI: {flow.redirect_uri}")
@@ -139,15 +139,17 @@ async def google_callback(
     logger.info(f"CALLBACK RECEIVED - code present: {bool(code)}, state: {state}, error: {error}")
     print(f"[CALENDAR] CALLBACK - code: {bool(code)}, state: {state}, error: {error}", flush=True)
     
+    frontend_url = "https://splitplan-ai.vercel.app" if os.getenv("VERCEL") else "http://localhost:5173"
+    
     try:
         # Se Google restituisce un errore (es. utente ha annullato)
         if error:
             logger.error(f"Google returned error: {error}")
-            return RedirectResponse(f"https://splitplan-ai.vercel.app?calendar_error={error}")
+            return RedirectResponse(f"{frontend_url}?calendar_error={error}")
 
         if not code or not state:
             logger.error("Missing code or state in callback")
-            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=missing_data")
+            return RedirectResponse(f"{frontend_url}?calendar_error=missing_data")
 
         # Decodifica lo stato (formato "trip_id:account_id" o "trip_id_account_id")
         # Usiamo un separatore più sicuro se necessario, ma gestiamo entrambi
@@ -156,7 +158,7 @@ async def google_callback(
         
         if len(parts) < 2:
             logger.error(f"Invalid state format: {state}")
-            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=invalid_state")
+            return RedirectResponse(f"{frontend_url}?calendar_error=invalid_state")
             
         trip_id = parts[0]
         account_id = int(parts[1])
@@ -176,9 +178,14 @@ async def google_callback(
             logger.info("Calendar connection saved to DB")
         else:
             logger.error(f"User {account_id} not found")
-            return RedirectResponse("https://splitplan-ai.vercel.app?calendar_error=user_not_found")
+            return RedirectResponse(f"{frontend_url}?calendar_error=user_not_found")
         
-        final_redirect = f"https://splitplan-ai.vercel.app/trip/{trip_id}?calendar_success=true"
+        # In locale reindirizziamo al componente di callback del frontend
+        if not os.getenv("VERCEL"):
+            final_redirect = f"{frontend_url}/calendar-callback?code={code}&state={state}"
+        else:
+            final_redirect = f"{frontend_url}/trip/{trip_id}?calendar_success=true"
+            
         logger.info(f"Success! Redirecting to {final_redirect}")
         return RedirectResponse(final_redirect)
         
@@ -186,7 +193,7 @@ async def google_callback(
         logger.error(f"CALLBACK FATAL ERROR: {str(e)}")
         logger.error(traceback.format_exc())
         err_msg = urllib.parse.quote(str(e))
-        return RedirectResponse(f"https://splitplan-ai.vercel.app?calendar_error={err_msg}")
+        return RedirectResponse(f"{frontend_url}?calendar_error={err_msg}")
 
 
 @router.get("/status")

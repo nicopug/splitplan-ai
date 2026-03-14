@@ -148,17 +148,18 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                             ref={hotelInputRef}
                             onChange={(e) => handleExtract(e.target.files[0], 'hotel')}
                         />
-                        <button
+                        <Button
                             type="button"
+                            variant="secondary"
                             onClick={() => hotelInputRef.current.click()}
                             disabled={extracting === 'hotel'}
-                            className="h-14 px-8 rounded-sm border border-border-subtle bg-surface hover:bg-elevated hover:border-border-medium transition-all flex items-center gap-3 group disabled:opacity-50"
+                            className="h-14 px-8 flex items-center gap-3 group"
                         >
                             {extracting === 'hotel' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-muted group-hover:text-primary-blue transition-colors" />}
-                            <span className="text-[10px] font-black tracking-widest uppercase text-muted group-hover:text-primary transition-colors">
+                            <span className="text-[10px] font-black tracking-widest uppercase">
                                 {t('hotelConfirm.uploadHotel', "Carica prenotazione Hotel")}
                             </span>
-                        </button>
+                        </Button>
                     </div>
 
                     {trip.transport_mode !== 'CAR' && (
@@ -170,17 +171,18 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                 ref={transportInputRef}
                                 onChange={(e) => handleExtract(e.target.files[0], 'transport')}
                             />
-                            <button
+                            <Button
                                 type="button"
+                                variant="secondary"
                                 onClick={() => transportInputRef.current.click()}
                                 disabled={extracting === 'transport'}
-                                className="h-14 px-8 rounded-sm border border-border-subtle bg-surface hover:bg-elevated hover:border-border-medium transition-all flex items-center gap-3 group disabled:opacity-50"
+                                className="h-14 px-8 flex items-center gap-3 group"
                             >
                                 {extracting === 'transport' ? <Loader2 className="w-4 h-4 animate-spin text-primary-blue" /> : <Upload className="w-4 h-4 text-muted group-hover:text-primary-blue transition-colors" />}
-                                <span className="text-[10px] font-black tracking-widest uppercase text-muted group-hover:text-primary transition-colors">
+                                <span className="text-[10px] font-black tracking-widest uppercase">
                                     {t('hotelConfirm.uploadTransport', { mode: trip.transport_mode === 'TRAIN' ? t('hotelConfirm.modeTrain') : t('hotelConfirm.modeFlight') })}
                                 </span>
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -267,10 +269,11 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                     </div>
 
                     <div className="md:col-span-2 mt-8">
-                        <button
+                        <Button
                             type="submit"
+                            variant="accent"
                             disabled={loading}
-                            className="w-full h-16 bg-primary-blue text-white font-black text-xs tracking-[0.2em] uppercase rounded-sm hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                            className="w-full h-16 text-xs tracking-[0.2em] uppercase font-black"
                         >
                             {loading ? (
                                 <>
@@ -283,7 +286,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
                                     {t('hotelConfirm.submitBtn', 'Salva e Genera Itinerario')}
                                 </>
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { uploadPhoto, getPhotos, deletePhoto } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
+import { Button } from './ui/button';
+import { Camera, Plus } from 'lucide-react';
 
 const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
     const { t } = useTranslation();
@@ -83,13 +85,14 @@ const Photos = ({ trip, readOnly = false, sharedPhotos = [] }) => {
                 </div>
 
                 {!readOnly && (
-                    <button
+                    <Button
                         onClick={handleUploadClick}
-                        className="h-12 px-8 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20"
+                        variant="accent"
+                        className="h-12 px-8 font-black uppercase text-[10px] tracking-widest"
                         disabled={loading}
                     >
                         {loading ? t('photos.loading', 'Caricamento...') : t('photos.addPhoto', '+ Aggiungi Foto')}
-                    </button>
+                    </Button>
                 )}
                 <input
                     type="file"

@@ -23,26 +23,26 @@
 
 [data-theme='light'] {
   --bg-base: #ffffff;
-  --bg-surface: #f8fafc;
+  --bg-surface: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
+  --bg-card-hover: #f8fafc;
   --bg-elevated: #ffffff;
 
   --accent-primary: #000000;
   --accent-muted: #f1f5f9;
-  --accent-digital-blue: #2563eb;
-  --accent-digital-blue-light: #3b82f6;
+  --accent-digital-blue: #0066ff;
+  --accent-digital-blue-light: #2563eb;
 
   --text-primary: #0f172a;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
 
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-medium: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.2);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.15);
+  --border-strong: rgba(0, 0, 0, 0.3);
 
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme='dark'] {

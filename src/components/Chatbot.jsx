@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { chatWithAI } from '../api';
 import Skeleton from './ui/Skeleton';
 import { cn } from '../lib/utils';
+import { Button } from './ui/button';
+import { Send } from 'lucide-react';
 
 const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) => {
     const { t } = useTranslation();
@@ -44,9 +46,9 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
     return (
         <div className="container py-12 flex justify-center pb-24 w-full relative">
             <div className="chat-container premium-card !p-0 w-full max-w-[850px] flex flex-col overflow-hidden bg-card border-border-medium shadow-2xl relative z-10 transition-all duration-500">
-                <div className="p-8 border-b border-border-subtle bg-primary-blue text-white flex justify-between items-center shadow-lg">
+                <div className="p-8 border-b border-border-subtle bg-primary text-base flex justify-between items-center shadow-lg">
                     <div>
-                        <h3 className="m-0 text-2xl font-black text-white uppercase tracking-tight">{t('chatbot.aiAssistant', 'Assistente AI')}</h3>
+                        <h3 className="m-0 text-2xl font-black text-base uppercase tracking-tight">{t('chatbot.aiAssistant', 'Assistente AI')}</h3>
                         <p className="m-0 text-[10px] uppercase font-black tracking-widest opacity-80">{t('chatbot.premiumOnly', 'Esclusivo per utenti Premium')}</p>
                     </div>
                     {onClose && (
@@ -65,7 +67,7 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                             "max-w-[80%] p-5 rounded-sm shadow-md border z-10 leading-relaxed text-[15px] transition-all animate-fade-in font-medium",
                             msg.role === 'user' 
                                 ? "self-end bg-primary-blue text-white border-primary-blue/20 shadow-primary-blue/10" 
-                                : "self-start bg-card text-primary border-border-subtle shadow-sm"
+                                : "self-start bg-elevated text-primary border-border-subtle shadow-sm"
                         )}>
                             {msg.text}
                         </div>
@@ -98,13 +100,14 @@ const Chatbot = ({ tripId, onItineraryUpdate, onClose, messages, setMessages }) 
                         placeholder={t('chatbot.placeholder', "Es: 'Aggiungi una cena stasera alle 20'")}
                         className="flex-1 px-6 py-4 bg-card border border-border-medium rounded-sm outline-none text-primary placeholder:text-muted/50 focus:border-primary-blue shadow-sm transition-all font-medium"
                     />
-                    <button 
+                    <Button 
                         type="submit" 
+                        variant="accent"
                         disabled={loading}
-                        className="px-10 py-4 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest rounded-sm hover:bg-primary-blue-light transition-all shadow-xl shadow-primary-blue/20 disabled:opacity-50"
+                        className="h-auto px-10 py-4 font-black uppercase text-[10px] tracking-widest"
                     >
                         {t('chatbot.send', 'Invia')}
-                    </button>
+                    </Button>
                 </form>
             </div>
         </div>

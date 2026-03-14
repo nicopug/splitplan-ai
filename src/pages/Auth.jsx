@@ -254,6 +254,13 @@ const Auth = ({ onLogin }) => {
     return (
         <div className="min-h-screen bg-black flex flex-col justify-center items-center px-4 pt-24 pb-12">
             <div className="premium-card w-full max-w-sm border-white/5 bg-zinc-950/50 backdrop-blur-md">
+                <div className="flex justify-center mb-6">
+                    <img 
+                        src="/file.svg" 
+                        alt="SplitPlan Logo" 
+                        className="w-12 h-12 invert"
+                    />
+                </div>
                 <div className="text-center mb-8">
                     <h2 className="text-white text-2xl font-semibold mb-2">
                         {isLogin ? 'Bentornato su SplitPlan' : 'Crea il tuo Account'}

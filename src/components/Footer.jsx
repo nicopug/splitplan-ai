@@ -8,7 +8,14 @@ const Footer = () => {
             <div className="container">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                     <div className="space-y-6">
-                        <div className="text-xl font-semibold text-white tracking-tight uppercase">SplitPlan</div>
+                        <div className="flex items-center gap-3 group">
+                            <img 
+                                src="/file.svg" 
+                                alt="SplitPlan Logo" 
+                                className="w-8 h-8 transition-all duration-500 group-hover:rotate-12 invert"
+                            />
+                            <div className="text-xl font-semibold text-white tracking-tight uppercase">SplitPlan</div>
+                        </div>
                         <p className="text-gray-500 text-sm max-w-xs leading-relaxed">
                             {t('footer.tagline', 'Rendiamo i viaggi di gruppo facili, divertenti e senza stress.')}
                         </p>

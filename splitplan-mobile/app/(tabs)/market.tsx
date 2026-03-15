@@ -16,8 +16,8 @@ const { width } = Dimensions.get('window');
 const PACKS = [
     { id: 'credit_1', title: '1 Credito', desc: 'Sblocca un viaggio Premium', price: '€3,99', emoji: '🪙', color: '#fbbf24' },
     { id: 'credit_3', title: '3 Crediti', desc: 'Risparmia il 25%', price: '€8,99', emoji: '🪙🪙🪙', color: '#3b82f6', popular: true },
-    { id: 'sub_monthly', title: 'SplitPlan Pro Mensile', desc: 'Accesso illimitato\nper 1 mese', price: '€4,99/mese', emoji: '💎', color: '#8b5cf6' },
-    { id: 'sub_annual', title: 'Piano Annuale', desc: 'Il miglior valore per\ngrandi viaggiatori', price: '€29,99/anno', emoji: '👑', color: '#f59e0b', dark: true },
+    { id: 'sub_monthly', title: 'SplitPlan Pro Mensile', desc: 'Accesso illimitato\nper 1 mese', price: '€7,99/mese', emoji: '💎', color: '#8b5cf6' },
+    { id: 'sub_annual', title: 'Piano Annuale', desc: 'Il miglior valore per\ngrandi viaggiatori', price: '€76,99/anno', emoji: '👑', color: '#f59e0b', dark: true },
 ];
 
 export default function MarketScreen() {

@@ -77,7 +77,7 @@ const Market = () => {
     return (
         <div className="min-h-screen pt-24 pb-12 bg-base transition-colors duration-500">
             <div className="container max-w-6xl mx-auto px-4">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-16"
@@ -95,7 +95,7 @@ const Market = () => {
                     </p>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -164,7 +164,7 @@ const Market = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">4,99€<span className="text-xs text-muted font-medium ml-1">/mese</span></div>
+                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">7,99€<span className="text-xs text-muted font-medium ml-1">/mese</span></div>
                                     <button
                                         onClick={() => handleCheckout('sub_monthly')}
                                         disabled={loading || user.subscription_plan === 'ANNUAL'}
@@ -206,7 +206,7 @@ const Market = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">29,99€<span className="text-xs text-muted font-medium ml-1">/anno</span></div>
+                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">€<span className="text-xs text-muted font-medium ml-1">/anno</span></div>
                                     <button
                                         onClick={() => handleCheckout('sub_annual')}
                                         disabled={loading}
@@ -220,7 +220,7 @@ const Market = () => {
                     </motion.div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -229,7 +229,7 @@ const Market = () => {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/5 blur-[120px] rounded-full pointer-events-none"></div>
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
                         <div className="flex-1 space-y-8">
-                            <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tighter uppercase leading-[0.9]">Perché scegliere <br/><span className="text-muted">SplitPlan Pro?</span></h2>
+                            <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tighter uppercase leading-[0.9]">Perché scegliere <br /><span className="text-muted">SplitPlan Pro?</span></h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {[
                                     "Itinerari AI Illimitati",

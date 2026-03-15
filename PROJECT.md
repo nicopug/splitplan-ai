@@ -101,8 +101,8 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 | **Free** | Gratis | Creazione viaggio base, partecipazione a viaggi altrui |
 | **1 Credito** | €3,99 | Sblocca 1 viaggio Premium (itinerario AI completo) |
 | **3 Crediti** | €8,99 | 3 viaggi Premium (risparmio ~25%) |
-| **SplitPlan Pro Mensile** | €4,99/mese | Itinerari AI illimitati, tutte le funzionalità |
-| **SplitPlan Pro Annuale** | €29,99/anno | Come mensile, risparmio ~50% |
+| **SplitPlan Pro Mensile** | €7,99/mese | Itinerari AI illimitati, tutte le funzionalità |
+| **SplitPlan Pro Annuale** | €76,99/anno | Come mensile, risparmio ~50% |
 
 ### Funzionalità Premium (bloccate per utenti free)
 - Generazione itinerario AI dettagliato

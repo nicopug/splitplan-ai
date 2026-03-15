@@ -181,7 +181,7 @@ const Auth = ({ onLogin }) => {
                             <div className="flex-1">
                                 <span className="subtle-heading text-[var(--accent-digital-blue)]">MOST POPULAR</span>
                                 <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro Mensile</h3>
-                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€4.99<span className="text-sm text-white/30 font-bold ml-1">/mese</span></div>
+                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€7.99<span className="text-sm text-white/30 font-bold ml-1">/mese</span></div>
                                 <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Per chi vuole il controllo totale e potenza IA senza alcun limite.</p>
                                 <ul className="space-y-4 mb-10">
                                     <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> AI Illimitata</li>
@@ -199,7 +199,7 @@ const Auth = ({ onLogin }) => {
                             <div className="flex-1">
                                 <span className="subtle-heading text-emerald-500 group-hover:text-emerald-400 transition-colors">SAVE 50%</span>
                                 <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro Annuale</h3>
-                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€29.99<span className="text-sm text-white/30 font-bold ml-1">/anno</span></div>
+                                <div className="text-5xl font-black text-white mb-8 tracking-tighter">€76.99<span className="text-sm text-white/30 font-bold ml-1">/anno</span></div>
                                 <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Il miglior valore per veri esploratori che viaggiano spesso.</p>
                                 <ul className="space-y-4 mb-10">
                                     <li className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-white/60"><span className="text-[var(--accent-digital-blue)] text-lg">✓</span> Tutto di Pro Mensile</li>
@@ -212,9 +212,9 @@ const Auth = ({ onLogin }) => {
                             </Button>
                         </div>
                     </div>
-                    
+
                     <div className="mt-16 text-center">
-                        <button 
+                        <button
                             onClick={() => handlePlanChoice(null)}
                             className="text-[10px] font-black tracking-[0.2em] uppercase text-black/30 hover:text-black transition-colors"
                         >
@@ -232,9 +232,9 @@ const Auth = ({ onLogin }) => {
             <div className="min-h-screen bg-[var(--bg-base)] flex flex-col justify-center items-center px-4 pt-24 pb-12 transition-colors duration-500">
                 <div className="premium-card w-full max-w-sm border-[var(--border-medium)] bg-[var(--bg-card)] backdrop-blur-md shadow-[var(--shadow-lg)]">
                     <div className="flex justify-center mb-6">
-                        <img 
-                            src="/file.svg" 
-                            alt="SplitPlan Logo" 
+                        <img
+                            src="/file.svg"
+                            alt="SplitPlan Logo"
                             className={`w-16 h-16 ${theme === 'dark' ? 'invert' : ''} transition-all duration-500`}
                         />
                     </div>
@@ -264,7 +264,7 @@ const Auth = ({ onLogin }) => {
                     )}
 
                     <div className="mt-8 text-center">
-                        <span 
+                        <span
                             onClick={() => setShowForgot(false)}
                             className="text-[10px] font-bold text-[var(--text-subtle)] hover:text-[var(--text-primary)] cursor-pointer transition-colors tracking-widest uppercase"
                         >
@@ -282,9 +282,9 @@ const Auth = ({ onLogin }) => {
         <div className="min-h-screen bg-[var(--bg-base)] flex flex-col justify-center items-center px-4 pt-24 pb-12 transition-colors duration-500">
             <div className="premium-card w-full max-w-sm border-[var(--border-medium)] bg-[var(--bg-card)] backdrop-blur-md shadow-[var(--shadow-lg)]">
                 <div className="flex justify-center mb-6">
-                    <img 
-                        src="/file.svg" 
-                        alt="SplitPlan Logo" 
+                    <img
+                        src="/file.svg"
+                        alt="SplitPlan Logo"
                         className={`w-16 h-16 ${theme === 'dark' ? 'invert' : ''} transition-all duration-500`}
                     />
                 </div>

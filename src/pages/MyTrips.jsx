@@ -4,6 +4,7 @@ import { getUserTrips, hideTrip, getUserStats } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Button } from '../components/ui/button';
+import { motion } from 'framer-motion';
 
 const MyTrips = () => {
     const [trips, setTrips] = useState([]);
@@ -57,6 +58,29 @@ const MyTrips = () => {
     const archivedTrips = trips.filter(t => t.status === 'COMPLETED');
     const currentTrips = activeTab === 'active' ? activeTrips : archivedTrips;
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: "spring",
+                stiffness: 100,
+                damping: 20
+            }
+        }
+    };
+
     return (
         <div className="pt-[var(--header-height)] min-h-screen bg-base">
             {/* Header Section */}
@@ -66,46 +90,45 @@ const MyTrips = () => {
                     <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--accent-primary-20)_0%,transparent_70%)]"></div>
                 </div>
 
-                <div className="container relative text-center space-y-4">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="container relative text-center space-y-4"
+                >
                     <span className="subtle-heading">YOUR JOURNEY</span>
-                    <h1 className="text-primary text-5xl md:text-6xl font-semibold tracking-tight uppercase">I miei Viaggi</h1>
+                    <h1 className="text-primary text-5xl md:text-6xl font-black tracking-tighter uppercase">I miei Viaggi</h1>
                     <p className="text-muted text-lg max-w-xl mx-auto leading-relaxed">La tua cronologia avventure su SplitPlan</p>
-                </div>
+                </motion.div>
             </div>
 
             <div className="container py-16">
                 {/* Stats Dashboard */}
                 {stats && stats.total_trips > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-                        <div className="premium-card !p-8 flex items-center gap-4 bg-card border-border-subtle hover:border-border-medium transition-all">
-                            <div className="w-14 h-14 rounded-sm bg-muted/20 border border-border-subtle flex items-center justify-center text-2xl shadow-inner-white">🌍</div>
-                            <div>
-                                <div className="text-3xl font-black text-primary">{stats.total_trips}</div>
-                                <div className="text-[10px] font-black text-subtle tracking-widest uppercase mb-1">Viaggi Totali</div>
-                            </div>
-                        </div>
-                        <div className="premium-card !p-8 flex items-center gap-4 bg-card border-border-subtle hover:border-border-medium transition-all">
-                            <div className="w-14 h-14 rounded-sm bg-muted/20 border border-border-subtle flex items-center justify-center text-2xl shadow-inner-white">💰</div>
-                            <div>
-                                <div className="text-3xl font-black text-primary">€{stats.total_spent.toLocaleString()}</div>
-                                <div className="text-[10px] font-black text-subtle tracking-widest uppercase mb-1">Spesa Totale</div>
-                            </div>
-                        </div>
-                        <div className="premium-card !p-8 flex items-center gap-4 bg-card border-border-subtle hover:border-border-medium transition-all">
-                            <div className="w-14 h-14 rounded-sm bg-muted/20 border border-border-subtle flex items-center justify-center text-2xl shadow-inner-white">📅</div>
-                            <div>
-                                <div className="text-3xl font-black text-primary">{stats.total_days}</div>
-                                <div className="text-[10px] font-black text-subtle tracking-widest uppercase mb-1">Giorni On the Road</div>
-                            </div>
-                        </div>
-                        <div className="premium-card !p-8 flex items-center gap-4 bg-card border-border-subtle hover:border-border-medium transition-all">
-                            <div className="w-14 h-14 rounded-sm bg-muted/20 border border-border-subtle flex items-center justify-center text-2xl shadow-inner-white">🏛️</div>
-                            <div>
-                                <div className="text-3xl font-black text-primary">{stats.unique_cities}</div>
-                                <div className="text-[10px] font-black text-subtle tracking-widest uppercase mb-1">Città Esplorate</div>
-                            </div>
-                        </div>
-                    </div>
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+                    >
+                        {[
+                            { icon: '🌍', val: stats.total_trips, label: 'Viaggi Totali' },
+                            { icon: '💰', val: `€${stats.total_spent.toLocaleString()}`, label: 'Spesa Totale' },
+                            { icon: '📅', val: stats.total_days, label: 'Giorni On the Road' },
+                            { icon: '🏛️', val: stats.unique_cities, label: 'Città Esplorate' }
+                        ].map((stat, i) => (
+                            <motion.div 
+                                key={i}
+                                variants={itemVariants}
+                                className="premium-card !p-8 flex items-center gap-4 bg-card border-border-subtle hover:border-border-medium transition-all"
+                            >
+                                <div className="w-14 h-14 rounded-sm bg-muted/20 border border-border-subtle flex items-center justify-center text-2xl shadow-inner-white">{stat.icon}</div>
+                                <div>
+                                    <div className="text-3xl font-black text-primary">{stat.val}</div>
+                                    <div className="text-[10px] font-black text-subtle tracking-widest uppercase mb-1">{stat.label}</div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 )}
 
                 {loading ? (
@@ -114,7 +137,11 @@ const MyTrips = () => {
                         <p className="text-muted tracking-widest uppercase text-[10px] font-black">Recuperando i tuoi ricordi...</p>
                     </div>
                 ) : trips.length === 0 ? (
-                    <div className="premium-card !p-20 text-center max-w-lg mx-auto flex flex-col items-center gap-6 bg-card border-border-subtle shadow-2xl">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="premium-card !p-20 text-center max-w-lg mx-auto flex flex-col items-center gap-6 bg-card border-border-subtle shadow-2xl"
+                    >
                         <div className="text-6xl">🌍</div>
                         <div className="space-y-4">
                             <h2 className="text-primary text-3xl font-semibold uppercase tracking-tight">Ancora nessun viaggio?</h2>
@@ -123,43 +150,53 @@ const MyTrips = () => {
                             </p>
                         </div>
                         <Button onClick={() => navigate('/')} size="lg" className="h-14 px-10 bg-primary-blue hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20">Inizia Ora</Button>
-                    </div>
+                    </motion.div>
                 ) : (
                     <div className="max-w-4xl mx-auto">
                         {/* Tabs */}
-                        <div className="flex bg-muted/20 p-1 rounded-sm mb-16 border border-border-subtle max-w-md mx-auto shadow-inner-white">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex bg-muted/20 p-1 rounded-sm mb-16 border border-border-subtle max-w-md mx-auto shadow-inner-white"
+                        >
                             <button
                                 onClick={() => setActiveTab('active')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-primary text-black shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Viaggi Attivi ({activeTrips.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('archived')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-primary text-black shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Archivio ({archivedTrips.length})
                             </button>
-                        </div>
+                        </motion.div>
 
-                        <div className="space-y-4">
+                        <motion.div 
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-6"
+                        >
                             {currentTrips.length === 0 ? (
                                 <div className="text-center py-24 text-muted text-[10px] font-black tracking-widest uppercase italic bg-surface/30 border border-dashed border-border-subtle rounded-sm">
                                     {activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
                                 </div>
                             ) : (
                                 currentTrips.slice().reverse().map(trip => (
-                                    <div
+                                    <motion.div
                                         key={trip.id}
+                                        variants={itemVariants}
                                         onClick={() => navigate(`/trip/${trip.id}`)}
-                                        className="premium-card !p-8 cursor-pointer group hover:translate-x-1 bg-card border-border-subtle hover:border-primary-blue/30 transition-all shadow-md hover:shadow-xl"
+                                        className="premium-card !p-8 cursor-pointer group bg-card border-border-subtle hover:border-primary-blue/30 transition-all shadow-md hover:shadow-2xl"
                                     >
                                         <div className="flex items-center gap-8">
                                             <div className={`w-16 h-16 rounded-sm flex items-center justify-center text-3xl transition-all shadow-inner-white ${trip.status === 'COMPLETED' ? 'bg-muted/30 text-subtle grayscale' : 'bg-primary-blue text-white'}`}>
                                                 {trip.transport_mode === 'CAR' ? '🚗' : trip.transport_mode === 'TRAIN' ? '🚄' : '✈️'}
                                             </div>
                                             <div className="flex-1 space-y-1">
-                                                <h4 className="text-primary text-2xl font-semibold uppercase tracking-tight transition-colors">
+                                                <h4 className="text-primary text-2xl font-black uppercase tracking-tight transition-colors">
                                                     {trip.destination || trip.name}
                                                 </h4>
                                                 <div className="flex flex-wrap gap-x-8 gap-y-2">
@@ -190,10 +227,10 @@ const MyTrips = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                             )}
-                        </div>
+                        </motion.div>
                     </div>
                 )}
             </div>

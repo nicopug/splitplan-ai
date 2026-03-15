@@ -14,6 +14,7 @@ import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, MessageSquare, Share2, X, CalendarDays } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import Events from '../components/Events';
 import { useTranslation } from 'react-i18next';
@@ -436,8 +437,13 @@ const Dashboard = () => {
             </div>
 
             {view === 'TRIP' && (
-                // GUEST WAITING SCREEN (Plan B override)
-                !isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    {/* GUEST WAITING SCREEN (Plan B override) */}
+                    {!isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
                     <div className="container py-12">
                         <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
                             <div className="text-5xl mb-8">🗳️</div>
@@ -564,14 +570,14 @@ const Dashboard = () => {
                                                 isPremium={user?.is_subscribed}
                                             />
                                         )}
-
                                         <Timeline items={itinerary} />
                                     </div>
                                 )}
                             </>
                         )}
-                    </>
-                )
+                        </>
+                    )}
+                </motion.div>
             )}
 
             {view === 'CHAT' && (
@@ -683,36 +689,67 @@ const GeneratingOverlay = ({ progress }) => {
     const msgIndex = Math.min(Math.floor(progress / 20), messages.length - 1);
 
     return (
-        <div className="fixed inset-0 bg-[var(--bg-base)]/95 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
-            <div className="max-w-md w-11/12 text-center space-y-12">
-                <div className="space-y-4">
-                    <span className="text-[var(--text-subtle)] text-[10px] font-bold tracking-[0.2em] uppercase">AI GENERATION</span>
-                    <h2 className="text-[var(--text-primary)] text-3xl md:text-4xl font-semibold tracking-tight uppercase">
-                        {t('dashboard.generatingTitle', 'Progettando il tuo viaggio...')}
-                    </h2>
-                    <p className="text-[var(--accent-primary)] text-sm font-bold tracking-widest uppercase animate-pulse h-6">
-                        {messages[msgIndex]}
-                    </p>
-                </div>
-
-                <div className="space-y-6">
-                    <div className="w-full h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
-                        <div
-                            className="bg-[var(--accent-primary)] h-full transition-all duration-300 shadow-[var(--shadow-md)] shadow-[var(--accent-digital-blue-dim)]"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-                    <div className="text-[var(--text-primary)] text-2xl font-black tracking-widest font-mono">
-                        {progress}%
-                    </div>
-                </div>
-
-                <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] max-w-xs mx-auto">
-                    {t('dashboard.generatingDesc', "L'intelligenza artificiale sta ottimizzando ritmi e tappe per il tuo gruppo.")}
-                </p>
+        <div className="fixed inset-0 bg-base z-[9999] flex flex-col items-center justify-center p-8 overflow-hidden">
+            {/* Background Orbs for atmosphere */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="orb orb-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] animate-glow-pulse opacity-20" />
             </div>
+
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="max-w-md w-full text-center space-y-12 relative z-10"
+            >
+                <div className="space-y-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="subtle-heading text-blue-500"
+                    >
+                        AI ENGINE ACTIVE
+                    </motion.div>
+                    <h2 className="text-primary text-4xl md:text-5xl font-black tracking-tighter uppercase leading-tight">
+                        {t('dashboard.generatingTitle', 'Crafting your <br/> perfect journey...').split('<br/>').map((line, i) => (
+                            <React.Fragment key={i}>{line}<br/></React.Fragment>
+                        ))}
+                    </h2>
+                    <div className="h-8 flex items-center justify-center">
+                        <AnimatePresence mode="wait">
+                            <motion.p 
+                                key={messages[msgIndex]}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="text-muted text-lg font-medium tracking-tight"
+                            >
+                                {messages[msgIndex]}
+                            </motion.p>
+                        </AnimatePresence>
+                    </div>
+                </div>
+
+                <div className="space-y-8">
+                    <div className="relative">
+                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                className="bg-gradient-to-r from-blue-600 to-cyan-400 h-full shadow-[0_0_20px_rgba(37,99,235,0.5)]"
+                                transition={{ duration: 0.5 }}
+                            />
+                        </div>
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-4xl font-black text-primary font-mono tabular-nums">
+                            {progress}%
+                        </div>
+                    </div>
+                </div>
+
+                <p className="text-[10px] text-muted font-black uppercase tracking-[0.25em] max-w-xs mx-auto leading-relaxed opacity-60">
+                    {t('dashboard.generatingDesc', "Our AI is optimizing rhythms and stops for your group's unique preferences.")}
+                </p>
+            </motion.div>
         </div>
     );
 };
 
-export default Dashboard;
+export default Dashboard;

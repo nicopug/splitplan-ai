@@ -15,6 +15,8 @@ const buttonVariants = cva(
                 ghost: "hover:bg-elevated text-muted hover:text-primary",
                 link: "text-primary underline-offset-4 hover:underline",
                 accent: "bg-primary-blue text-white hover:bg-primary-blue-light shadow-xl shadow-primary-blue/20",
+                magic: "btn-magic",
+                ai: "btn-magic shadow-[0_0_20px_rgba(0,102,255,0.4)]",
             },
             size: {
                 default: "h-10 px-6 py-2",

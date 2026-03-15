@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { Button } from './ui/button';
 
 const Hero = () => {
     const navigate = useNavigate();
@@ -45,108 +47,136 @@ const Hero = () => {
     };
 
     return (
-        <header className="section bg-[var(--bg-base)] overflow-hidden relative transition-colors duration-500">
-            <div className="container h-full min-h-[100vh] flex items-center py-20 relative z-10">
-                <div className="flex flex-col lg:flex-row w-full items-center gap-12 lg:gap-20">
+        <header className="section bg-base overflow-hidden relative min-h-screen flex items-center">
+            {/* Background Orbs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="orb orb-blue top-[-10%] left-[-10%] animate-orb" />
+                <div className="orb orb-violet top-[20%] right-[-5%] animate-orb" style={{ animationDelay: '-3s' }} />
+                <div className="orb orb-cyan bottom-[10%] left-[20%] animate-orb" style={{ animationDelay: '-6s' }} />
+            </div>
 
+            <div className="container relative z-10 py-20">
+                <div className="flex flex-col lg:flex-row w-full items-center gap-12 lg:gap-20">
                     {/* Left: Content */}
                     <div className="w-full lg:w-1/2 space-y-8 py-12 lg:pr-12 text-left">
-                        {/* Minimalist Badge */}
-                        <div className="inline-block px-3 py-1 rounded-sm border border-[var(--border-medium)] bg-[var(--bg-card)] text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--text-muted)]">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-blue-500"
+                        >
                             {t('hero.badge')}
-                        </div>
+                        </motion.div>
 
-                        {/* Heading */}
-                        <h1 className="text-[var(--text-primary)] text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight leading-[0.95]">
+                        <motion.h1 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-primary text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.9]"
+                        >
                             {t('hero.titlePrefix')}<br />
-                            <span className="text-[var(--text-muted)]">{t('hero.titleHighlight')}</span>
-                        </h1>
+                            <span className="text-muted block mt-2">{t('hero.titleHighlight')}</span>
+                        </motion.h1>
 
-                        {/* Description */}
-                        <p className="text-[var(--text-muted)] text-lg max-w-md leading-relaxed">
+                        <motion.p 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-muted text-xl max-w-lg leading-relaxed font-medium"
+                        >
                             {t('hero.description')}
-                        </p>
+                        </motion.p>
 
-                        {/* CTA Cluster */}
-                        <div className="flex items-center gap-6 pt-4">
-                            <button
-                                className="px-8 py-3 bg-[var(--accent-primary)] text-[var(--bg-base)] font-semibold rounded-sm hover:opacity-90 transition-all shadow-lg"
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="flex flex-wrap items-center gap-8 pt-4"
+                        >
+                            <Button
+                                variant="ai"
+                                size="lg"
+                                className="px-10 py-4 h-auto text-lg rounded-full"
                                 onClick={handleIniziaOra}
                                 disabled={loading}
                             >
                                 {loading ? t('common.loading') : t('hero.cta')}
-                            </button>
+                            </Button>
+                            
                             <button
-                                className="text-[var(--text-primary)] font-medium hover:opacity-70 transition-all flex items-center gap-2 group"
+                                className="text-primary font-bold hover:text-blue-500 transition-colors flex items-center gap-3 group text-lg"
                                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                             >
-                                {t('hero.learnMore', 'Scopri di più')}
-                                <svg className="w-4 h-4 transform group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                {t('hero.learnMore', 'Explore features')}
+                                <svg className="w-5 h-5 transform group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                        </div>
+                        </motion.div>
                     </div>
 
-                    {/* Right: Technical Visual (App Mockup) */}
-                    <div className="w-full lg:w-1/2 relative flex items-center justify-center lg:justify-end">
-                        {/* Void Background Effect - refined for both themes */}
-                        <div className="absolute inset-0 bg-radial-gradient from-[var(--accent-digital-blue)]/10 to-transparent opacity-40 pointer-events-none blur-3xl" />
-
-                        <div className="relative w-full max-w-[620px] shadow-[var(--shadow-lg)] border-[6px] border-black/10 rounded-lg overflow-hidden bg-[var(--bg-card)] z-10 transform lg:translate-x-4 hover:scale-[1.02] transition-transform duration-700">
+                    {/* Right: Technical Visual */}
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        transition={{ delay: 0.4, duration: 0.8 }}
+                        className="w-full lg:w-1/2 relative flex items-center justify-center lg:justify-end"
+                    >
+                        <div className="relative w-full max-w-[640px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] border border-white/10 rounded-2xl overflow-hidden bg-card z-10 transform hover:scale-[1.01] transition-transform duration-700">
                             <img
                                 src="/dashboard-preview.png"
                                 alt="SplitPlan Dashboard"
-                                className="w-full h-auto block opacity-95 hover:opacity-100 transition-opacity"
+                                className="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity duration-500"
                                 loading="lazy"
                             />
 
-                            {/* Discrete UI Overlays */}
-                            <div className="absolute top-4 left-4 px-3 py-1.5 bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-digital-blue)] animate-pulse" />
-                                    <span style={{ fontSize: '10px', color: 'var(--text-primary)', fontWeight: '600', letterSpacing: '0.05em' }}>AI ENGINE ACTIVE</span>
+                            {/* AI Overlay Badge */}
+                            <div className="absolute top-6 left-6 px-4 py-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-glow-pulse" />
+                                    <span style={{ fontSize: '11px', color: '#fff', fontWeight: '800', letterSpacing: '0.1em' }}>AI ENGINE ACTIVE</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
 
-
-            {/* Trip Type Selection Modal - Minimalist */}
+            {/* Trip Type Selection Modal */}
             {showTypeSelection && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--glass-bg)] backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-[var(--bg-surface)] w-full max-w-md border border-[var(--border-medium)] rounded-lg p-10 shadow-2xl animate-in zoom-in-95 duration-300">
-                        <h2 className="text-2xl font-semibold text-center mb-8 text-[var(--text-primary)]">{t('hero.selectionTitle')}</h2>
-                        <div className="grid grid-cols-2 gap-4">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-surface w-full max-w-md border border-white/10 rounded-3xl p-10 shadow-2xl"
+                    >
+                        <h2 className="text-3xl font-black text-center mb-8 tracking-tighter">{t('hero.selectionTitle')}</h2>
+                        <div className="grid grid-cols-2 gap-6">
                             <button
                                 onClick={() => handleCreateTrip('GROUP')}
-                                className="flex flex-col items-center gap-4 p-8 border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-medium)] transition-all rounded-sm"
+                                className="flex flex-col items-center gap-6 p-8 border border-white/5 bg-card hover:bg-elevated hover:border-blue-500/30 transition-all rounded-2xl group"
                             >
-                                <span className="text-3xl opacity-80">👥</span>
-                                <span className="font-semibold text-sm text-[var(--text-primary)]">{t('hero.groupTitle')}</span>
+                                <span className="text-5xl group-hover:scale-110 transition-transform">👥</span>
+                                <span className="font-bold text-sm uppercase tracking-widest">{t('hero.groupTitle')}</span>
                             </button>
                             <button
                                 onClick={() => handleCreateTrip('SOLO')}
-                                className="flex flex-col items-center gap-4 p-8 border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-medium)] transition-all rounded-sm"
+                                className="flex flex-col items-center gap-6 p-8 border border-white/5 bg-card hover:bg-elevated hover:border-blue-500/30 transition-all rounded-2xl group"
                             >
-                                <span className="text-3xl opacity-80">✈️</span>
-                                <span className="font-semibold text-sm text-[var(--text-primary)]">{t('hero.soloTitle')}</span>
+                                <span className="text-5xl group-hover:scale-110 transition-transform">✈️</span>
+                                <span className="font-bold text-sm uppercase tracking-widest">{t('hero.soloTitle')}</span>
                             </button>
                         </div>
                         <button
                             onClick={() => setShowTypeSelection(false)}
-                            className="w-full mt-8 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-xs font-semibold tracking-wider"
+                            className="w-full mt-10 text-muted hover:text-primary transition-colors text-xs font-black tracking-[0.2em] uppercase"
                         >
-                            {t('common.cancel').toUpperCase()}
+                            {t('common.cancel')}
                         </button>
-                    </div>
+                    </motion.div>
                 </div>
-            ) || null}
-
+            )}
         </header>
     );
 };
 
-export default Hero;
+export default Hero;

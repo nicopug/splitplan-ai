@@ -181,6 +181,25 @@ html {
     overflow: hidden;
   }
 
+  .premium-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      400px circle at var(--mouse-x, 0) var(--mouse-y, 0),
+      rgba(255, 255, 255, 0.06),
+      transparent 40%
+    );
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .premium-card:hover::before {
+    opacity: 1;
+  }
+
   .premium-card:hover {
     border-color: var(--border-medium);
     background-color: var(--bg-card-hover);
@@ -217,14 +236,14 @@ html {
 
   .viewport-split {
     display: grid;
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
     width: 100%;
     align-items: center;
   }
 
   @media (min-width: 1024px) {
     .viewport-split {
-      grid-template-cols: 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       text-align: left;
     }
   }

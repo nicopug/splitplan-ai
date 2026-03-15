@@ -1,11 +1,137 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createTrip } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
+import { Sparkles, Star, User, ChevronRight } from 'lucide-react';
+import { useSpotlight } from '../hooks/useSpotlight';
+
+const AIDemo = () => {
+    const { t } = useTranslation();
+    const { ref, onMouseMove } = useSpotlight();
+    const [messages, setMessages] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isTyping, setIsTyping] = useState(false);
+
+    const demoScript = [
+        { role: 'user', text: "Organizzami 3 giorni a Parigi per 4 persone, budget 500€ a testa. Musei sì, trappole per turisti no." },
+        { role: 'ai', text: "Parigi in arrivo! ✨ Voli a 120€. Hotel a Montmartre trovato. Ho inserito il Louvre giovedì (meno folla). Genero itinerario e spese..." },
+        { role: 'user', text: "Perfetto! Aggiungi un ristorante di pesce per sabato sera." },
+        { role: 'ai', text: "Certo! Ho prenotato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
+    ];
+
+    useEffect(() => {
+        if (currentIndex >= demoScript.length) {
+            const timeout = setTimeout(() => {
+                setMessages([]);
+                setCurrentIndex(0);
+            }, 5000);
+            return () => clearTimeout(timeout);
+        }
+
+        setIsTyping(true);
+        const timeout = setTimeout(() => {
+            setMessages(prev => [...prev, demoScript[currentIndex]]);
+            setIsTyping(false);
+            setCurrentIndex(prev => prev + 1);
+        }, currentIndex % 2 === 0 ? 1000 : 2500);
+
+        return () => clearTimeout(timeout);
+    }, [currentIndex]);
+
+    return (
+        <div 
+            ref={ref}
+            onMouseMove={onMouseMove}
+            className="premium-card w-full max-w-[540px] aspect-[4/3] bg-black/40 backdrop-blur-xl border-white/5 shadow-2xl flex flex-col p-0 overflow-hidden group"
+        >
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+                </div>
+                <div className="text-[10px] font-black tracking-widest text-muted uppercase">SplitPlan AI Engine</div>
+                <div className="w-6" />
+            </div>
+            
+            <div className="flex-1 p-6 space-y-6 overflow-y-auto no-scrollbar">
+                <AnimatePresence>
+                    {messages.map((msg, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${
+                                msg.role === 'user' 
+                                ? 'bg-white/10 text-white rounded-tr-none border border-white/10' 
+                                : 'bg-primary-blue/20 text-blue-100 rounded-tl-none border border-primary-blue/20'
+                            }`}>
+                                {msg.role === 'ai' && <Sparkles className="w-3 h-3 inline-block mr-2 text-blue-400 mb-1" />}
+                                {msg.text}
+                            </div>
+                        </motion.div>
+                    ))}
+                    {isTyping && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex justify-start"
+                        >
+                            <div className="bg-primary-blue/10 p-3 rounded-2xl rounded-tl-none flex gap-1">
+                                <div className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <div className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <div className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce" />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <div id="demo-end" />
+            </div>
+            
+            <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
+                <div className="flex-1 h-10 bg-white/5 rounded-full border border-white/10 flex items-center px-4 text-xs text-muted font-medium">
+                    Scrivi un messaggio...
+                </div>
+                <div className="w-10 h-10 bg-primary-blue rounded-full flex items-center justify-center text-white">
+                    <ChevronRight className="w-5 h-5" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SocialProof = () => {
+    return (
+        <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-4 mt-12 bg-white/[0.02] border border-white/5 px-6 py-4 rounded-2xl backdrop-blur-sm self-start"
+        >
+            <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-base bg-elevated flex items-center justify-center overflow-hidden">
+                        <User className="w-5 h-5 text-muted" />
+                    </div>
+                ))}
+            </div>
+            <div className="flex flex-col">
+                <div className="flex text-yellow-500 gap-0.5 mb-1">
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-current" />)}
+                </div>
+                <div className="text-[11px] font-bold text-muted uppercase tracking-widest whitespace-nowrap">
+                    Scelto da oltre <span className="text-primary">2.000</span> viaggiatori
+                </div>
+            </div>
+        </motion.div>
+    );
+};
 
 const Hero = () => {
     const navigate = useNavigate();
@@ -58,11 +184,11 @@ const Hero = () => {
             <div className="container relative z-10 py-20">
                 <div className="flex flex-col lg:flex-row w-full items-center gap-12 lg:gap-20">
                     {/* Left: Content */}
-                    <div className="w-full lg:w-1/2 space-y-8 py-12 lg:pr-12 text-left">
+                    <div className="w-full lg:w-1/2 space-y-8 py-12 lg:pr-12 text-left flex flex-col">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-blue-500"
+                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-blue-500 self-start"
                         >
                             {t('hero.badge')}
                         </motion.div>
@@ -112,31 +238,18 @@ const Hero = () => {
                                 </svg>
                             </button>
                         </motion.div>
+
+                        <SocialProof />
                     </div>
 
-                    {/* Right: Technical Visual */}
+                    {/* Right: Technical Visual (AI Demo) */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95, x: 20 }}
                         animate={{ opacity: 1, scale: 1, x: 0 }}
                         transition={{ delay: 0.4, duration: 0.8 }}
                         className="w-full lg:w-1/2 relative flex items-center justify-center lg:justify-end"
                     >
-                        <div className="relative w-full max-w-[640px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] border border-white/10 rounded-2xl overflow-hidden bg-card z-10 transform hover:scale-[1.01] transition-transform duration-700">
-                            <img
-                                src="/dashboard-preview.png"
-                                alt="SplitPlan Dashboard"
-                                className="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity duration-500"
-                                loading="lazy"
-                            />
-
-                            {/* AI Overlay Badge */}
-                            <div className="absolute top-6 left-6 px-4 py-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-glow-pulse" />
-                                    <span style={{ fontSize: '11px', color: '#fff', fontWeight: '800', letterSpacing: '0.1em' }}>AI ENGINE ACTIVE</span>
-                                </div>
-                            </div>
-                        </div>
+                        <AIDemo />
                     </motion.div>
                 </div>
             </div>
@@ -179,4 +292,5 @@ const Hero = () => {
     );
 };
 
-export default Hero;
+export default Hero;
+ Hero;

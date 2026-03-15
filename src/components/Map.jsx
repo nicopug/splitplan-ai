@@ -250,7 +250,7 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false }) =
                     }
 
                     return (
-                        <Marker key={gIdx} position={[group.lat, group.lon]} icon={iconToUse}>
+                        <Marker key={gIdx} position={[group.lat, group.lon]} {...(iconToUse ? { icon: iconToUse } : {})}>
                             <Popup className="premium-popup">
                                 <div className="max-w-[250px] max-h-[350px] overflow-y-auto pr-2 scrollbar-thin">
                                     {group.isHotel && (

@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlmodel import Session, select, func
-from typing import List, Dict, Any
-from datetime import datetime
-import math
+from auth import get_current_user
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
+from typing import List
+from datetime import datetime, timezone
+import json
+import logging
 
 from database import get_session
-from models import Trip, Participant, Expense, SQLModel
-from utils.currency import convert_to_euro, get_exchange_rates
+from models import Trip, Participant, Account, Expense, SQLModel
+from utils.currency import get_exchange_rates
 from admin_auth import verify_admin_token
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -28,7 +32,11 @@ class BalanceResult(SQLModel):
     creditor_name: str
 
 @router.post("/", response_model=Expense)
-async def create_expense(expense_req: CreateExpenseRequest, session: Session = Depends(get_session)):
+async def create_expense(
+    expense_req: CreateExpenseRequest,
+    current_user: Participant = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
     # 1. Validate Trip
     trip = session.get(Trip, expense_req.trip_id)
     if not trip:
@@ -38,6 +46,15 @@ async def create_expense(expense_req: CreateExpenseRequest, session: Session = D
     payer = session.get(Participant, expense_req.payer_id)
     if not payer:
         raise HTTPException(status_code=404, detail="Payer not found")
+
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == expense_req.trip_id,
+            Participant.account_id == current_user.id
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non autorizzato")
 
     # 3. Handle Currency Conversion
     amount_eur = expense_req.amount
@@ -49,9 +66,16 @@ async def create_expense(expense_req: CreateExpenseRequest, session: Session = D
             exchange_rate = rates[expense_req.currency.upper()]
             amount_eur = round(expense_req.amount / exchange_rate, 2)
         else:
-            print(f"[Warning] Rates for {expense_req.currency} not found. Using original amount.")
+            logger.warning(f"[Warning] Rates for {expense_req.currency} not found. Using original amount.")
 
     # 4. Create Expense
+    all_participant_ids = [p.id for p in session.exec(
+        select(Participant).where(Participant.trip_id == expense_req.trip_id)
+    ).all()]
+
+    # Se involved_user_ids è vuoto, coinvolge tutti
+    involved = expense_req.involved_user_ids if expense_req.involved_user_ids else all_participant_ids
+
     db_expense = Expense(
         trip_id=expense_req.trip_id,
         payer_id=expense_req.payer_id,
@@ -61,7 +85,8 @@ async def create_expense(expense_req: CreateExpenseRequest, session: Session = D
         currency=expense_req.currency.upper(),
         exchange_rate=exchange_rate,
         category=expense_req.category,
-        date=str(datetime.now())
+        date=str(datetime.now(timezone.utc)),
+        involved_ids=json.dumps(involved) # <- Salviamo chi è coinvolto
     )
     session.add(db_expense)
     session.commit()
@@ -70,11 +95,35 @@ async def create_expense(expense_req: CreateExpenseRequest, session: Session = D
     return db_expense
 
 @router.get("/{trip_id}", response_model=List[Expense])
-async def get_expenses(trip_id: int, session: Session = Depends(get_session)):
+async def get_expenses(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user)    
+):
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_user.id
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non autorizzato")
     return session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
 
 @router.get("/{trip_id}/balances", response_model=List[BalanceResult])
-async def get_balances(trip_id: int, session: Session = Depends(get_session)):
+async def get_balances(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user)    
+):
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_user.id
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non autorizzato")
     # Fetch all expenses and participants
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
     participants = session.exec(select(Participant).where(Participant.trip_id == trip_id)).all()
@@ -88,13 +137,24 @@ async def get_balances(trip_id: int, session: Session = Depends(get_session)):
     for exp in expenses:
         payer_id = exp.payer_id
         amount = exp.amount
+
+        # Recupera chi è coinvolto in questa spesa
+        if exp.involved_ids:
+            involved = json.loads(exp.involved_ids)
+            # Filtra solo participant IDs validi (per sicurezza)
+            involved = [pid for pid in involved if pid in balances]
+        else:
+            involved = list(balances.keys())  # fallback: tutti
+
+        if not involved:
+            involved = list(balances.keys())
+
         if payer_id in balances:
             balances[payer_id] += amount
-            
-        num_split = len(participants) 
-        split_amount = amount / num_split
-        for p in participants:
-            balances[p.id] -= split_amount
+
+        split_amount = amount / len(involved)
+        for pid in involved:
+            balances[pid] -= split_amount
 
     debtors = []
     creditors = []
@@ -130,10 +190,22 @@ async def get_balances(trip_id: int, session: Session = Depends(get_session)):
     return settlements
 
 @router.delete("/{expense_id}")
-async def delete_expense(expense_id: int, session: Session = Depends(get_session)):
+async def delete_expense(
+    expense_id: int,
+    session: Session = Depends(get_session),
+    current_user: Participant = Depends(get_current_user)
+):
     expense = session.get(Expense, expense_id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == expense.trip_id,
+            Participant.account_id == current_user.id
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non autorizzato")
     session.delete(expense)
     session.commit()
     return {"status": "ok"}

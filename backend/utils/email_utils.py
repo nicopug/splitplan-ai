@@ -1,5 +1,8 @@
 import os
 from fastapi_mail import ConnectionConfig
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_smtp_config():
     """Configurazione SMTP centralizzata con pulizia stringhe e logging robusto."""
@@ -8,16 +11,16 @@ def get_smtp_config():
         smtp_password = os.getenv("SMTP_PASSWORD", "").replace('"', '').replace("'", "").strip()
         
         if not smtp_user or not smtp_password:
-            print("[SMTP] ERRORE: Credenziali mancanti (SMTP_USER o SMTP_PASSWORD)")
+            logger.error("[SMTP] ERRORE: Credenziali mancanti (SMTP_USER o SMTP_PASSWORD)")
             return None, None, None
             
         smtp_port = int(os.getenv("SMTP_PORT", 587))
         smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
         
         # Log di debug sicuro
-        print(f"[SMTP] Preparo config per: {smtp_host}:{smtp_port}")
-        print(f"[SMTP] User: {smtp_user}")
-        print(f"[SMTP] Password Length: {len(smtp_password)}")
+        logger.info(f"[SMTP] Preparo config per: {smtp_host}:{smtp_port}")
+        logger.info(f"[SMTP] User: {smtp_user}")
+        logger.info(f"[SMTP] Password Length: {len(smtp_password)}")
 
         # Rilevamento automatico sicurezza in base alla porta
         use_starttls = smtp_port == 587
@@ -36,6 +39,6 @@ def get_smtp_config():
         )
         return smtp_user, smtp_password, conf
     except Exception as e:
-        print(f"[SMTP] Errore critico in get_smtp_config: {e}")
+        logger.error(f"[SMTP] Errore critico in get_smtp_config: {e}")
         return None, None, None
 

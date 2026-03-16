@@ -10,13 +10,15 @@ from typing import List, Dict, Optional
 import logging
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import httpx
+from sqlalchemy import update
 from google import genai
 from google.genai import types
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+import re
 
 from database import get_session
 from auth import get_current_user
@@ -36,10 +38,10 @@ ai_client = None
 AI_MODEL = "gemini-2.5-flash" 
 
 if GOOGLE_API_KEY:
-    print(f"[OK] System: Google Gemini Client initialized.")
+    logger.info(f"[OK] System: Google Gemini Client initialized.")
     ai_client = genai.Client(api_key=GOOGLE_API_KEY)
 else:
-    print(f"[WARNING] System: GOOGLE_API_KEY missing. Running in Mock/Manual mode.")
+    logger.warning(f"[WARNING] System: GOOGLE_API_KEY missing. Running in Mock/Manual mode.")
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -79,7 +81,7 @@ def check_rate_limit(account: Account, session: Session):
     if account.is_subscribed:
         return
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
     if account.last_usage_reset != today:
         account.daily_ai_usage = 0
@@ -88,15 +90,24 @@ def check_rate_limit(account: Account, session: Session):
         session.commit()
 
     FREE_LIMIT = 20
-    if account.daily_ai_usage >= FREE_LIMIT:
+
+    result = session.execute(
+        update(Account)
+        .where(
+            Account.id == account.id,
+            Account.daily_ai_usage < FREE_LIMIT
+        )
+        .values(
+            daily_ai_usage = Account.daily_ai_usage + 1
+        )
+    )
+    session.commit()
+
+    if result.rowcount == 0:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Hai raggiunto il limite giornaliero di {FREE_LIMIT} chiamate AI per utenti Free. Passa a Pro per navigare senza limiti!"
         )
-    
-    account.daily_ai_usage += 1
-    session.add(account)
-    session.commit()
 
 def require_premium(account: Account, trip: Trip):
     """Solleva un 403 se l'utente non è abbonato e il viaggio non è sbloccato."""
@@ -108,7 +119,7 @@ def require_premium(account: Account, trip: Trip):
 
 @router.post("/extract-receipt")
 async def extract_receipt(
-    type: str = Form(...), # 'hotel' o 'transport'
+    type: str = Form(...),
     file: UploadFile = File(...),
     current_user: Account = Depends(get_current_user),
     session: Session = Depends(get_session)
@@ -121,28 +132,28 @@ async def extract_receipt(
         contents = await file.read()
         
         if type == 'hotel':
-            prompt = """
+            prompt = f"""
             Analizza questa ricevuta o conferma di prenotazione HOTEL / AIRBNB.
             Estrai i seguenti dati in formato JSON puro, senza markdown:
-            {
+            {{
                 "hotel_name": "Nome della struttura",
                 "hotel_address": "Indirizzo completo",
                 "hotel_cost": 0.0 (costo totale in Euro),
                 "arrival_time": "HH:MM" (orario di check-in o arrivo previsto),
                 "return_time": "HH:MM" (orario di check-out o partenza prevista)
-            }
+            }}
             Se un dato non è presente, usa null o 0.0.
             LINGUA: {current_user.language.upper()}.
             """
         else:
-            prompt = """
+            prompt = f"""
             Analizza questa ricevuta o conferma di prenotazione VOLO / TRENO / BUS.
             Estrai i seguenti dati in formato JSON puro, senza markdown:
-            {
+            {{
                 "transport_cost": 0.0 (costo totale in Euro),
                 "arrival_time": "HH:MM" (orario di arrivo a destinazione),
                 "return_time": "HH:MM" (orario di partenza per il ritorno)
-            }
+            }}
             Se un dato non è presente, usa null o 0.0.
             LINGUA: {current_user.language.upper()}.
             """
@@ -159,21 +170,20 @@ async def extract_receipt(
         )
 
         raw_text = response.text.strip()
-        print(f"[DEBUG] Receipt AI Response: {raw_text}")
+        logger.info(f"[DEBUG] Receipt AI Response: {raw_text}")
 
-        import re
         json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
         if json_match:
             try:
                 data = json.loads(json_match.group())
                 return {"success": True, "data": data}
             except Exception as je:
-                print(f"[JSON Error] {je}")
+                logger.error(f"[JSON Error] {je}")
         
         return {"success": False, "data": {}, "message": "L'IA non è riuscita a estrarre i dati. Compila pure a mano."}
 
     except Exception as e:
-        print(f"[Receipt Error] {e}")
+        logger.error(f"[Receipt Error] {e}")
         return {"success": False, "data": {}, "message": f"Errore tecnico: {str(e)}"}
 
 class ChatRequest(SQLModel):
@@ -193,7 +203,7 @@ async def get_coordinates(address: str):
             "format": "json",
             "limit": 1
         }
-        headers = {'User-Agent': 'SplitPlanApp/1.0 (contact: alessiopuglise9@gmail.com)'} 
+        headers = {'User-Agent': f'SplitPlanApp/1.0 (contact: ({os.getenv("EMAIL_OSM")})'} 
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params, headers=headers, timeout=5.0)
             if response.status_code == 200:
@@ -201,7 +211,7 @@ async def get_coordinates(address: str):
                 if data:
                     return float(data[0]['lat']), float(data[0]['lon'])
     except Exception as e:
-        print(f"[OSM Error] Geocoding fallito per {address}: {e}")
+        logger.error(f"[OSM Error] Geocoding fallito per {address}: {e}")
     return None, None
 
 async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
@@ -236,7 +246,7 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
                 
                 return list(places_map.values())
     except Exception as e:
-        print(f"[OSM Error] Overpass fallito: {e}")
+        logger.error(f"[OSM Error] Overpass fallito: {e}")
     return []
 
 @router.get("/migrate-db-coords", dependencies=[Depends(verify_admin_token)])
@@ -394,7 +404,8 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
             d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
             d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
             days = abs((d2 - d1).days) + 1
-        except:
+        except Exception:
+            logger.error("Errore durante il calcolo dei giorni, utilizzo 7 giorni di default")
             days = 7
             
         car_prompt = ""
@@ -440,7 +451,7 @@ async def estimate_budget(trip_id: int, session: Session = Depends(get_session),
         
         return data
     except Exception as e:
-        print(f"[AI Error] Stima budget fallita: {e}")
+        logger.error(f"[AI Error] Stima budget fallita: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/", response_model=Dict)
@@ -467,7 +478,7 @@ async def create_trip(trip_data: TripBase, session: Session = Depends(get_sessio
         return {"trip_id": db_trip.id, "trip": db_trip}
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] create_trip: {e}")
+        logger.error(f"[ERROR] create_trip: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/my-trips")
@@ -491,7 +502,7 @@ async def get_my_trips(session: Session = Depends(get_session), current_account:
         
         return trips
     except Exception as e:
-        print(f"[ERROR] get_my_trips: {e}")
+        logger.error(f"[ERROR] get_my_trips: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/stats")
@@ -541,8 +552,8 @@ async def get_user_stats(session: Session = Depends(get_session), current_accoun
                 d1 = datetime.fromisoformat(t.start_date.replace('Z', ''))
                 d2 = datetime.fromisoformat(t.end_date.replace('Z', ''))
                 total_days += abs((d2 - d1).days) + 1
-            except:
-                pass
+            except Exception:
+                logger.error("Errore durante il calcolo dei giorni, utilizzo 7 giorni di default")
 
         return {
             "total_trips": len(trips),
@@ -553,7 +564,7 @@ async def get_user_stats(session: Session = Depends(get_session), current_accoun
             "cities_list": list(unique_cities)
         }
     except Exception as e:
-        print(f"[ERROR] get_user_stats: {e}")
+        logger.error(f"[ERROR] get_user_stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/complete")
@@ -582,7 +593,7 @@ async def complete_trip(trip_id: int, session: Session = Depends(get_session), c
         raise
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] complete_trip: {e}")
+        logger.error(f"[ERROR] complete_trip: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -609,7 +620,7 @@ async def hide_trip(trip_id: int, session: Session = Depends(get_session), curre
         raise
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] hide_trip: {e}")
+        logger.error(f"[ERROR] hide_trip: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/migrate-participants-active")
@@ -624,7 +635,7 @@ async def migrate_participants_active(session: Session = Depends(get_session)):
         session.rollback()
         if "already exists" in str(e) or "duplicate column" in str(e).lower():
             return {"status": "info", "message": "La colonna is_active esiste già."}
-        print(f"[Migration Error] {e}")
+        logger.error(f"[Migration Error] {e}")
         return {"status": "error", "message": str(e)}
 
 @router.get("/migrate-events-cache", dependencies=[Depends(verify_admin_token)])
@@ -669,7 +680,6 @@ async def generate_share_token(trip_id: int, session: Session = Depends(get_sess
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
     
-    # Verifica che l'utente sia l'organizzatore
     participant = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
     if not participant or not participant.is_organizer:
         raise HTTPException(status_code=403, detail="Solo l'organizzatore può generare il link di condivisione")
@@ -750,7 +760,7 @@ async def join_trip(token: str, session: Session = Depends(get_session), current
         raise
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] join_trip: {e}")
+        logger.error(f"[ERROR] join_trip: {e}")
         raise HTTPException(status_code=500, detail="Errore durante l'adesione al viaggio.")
 
 @router.patch("/{trip_id}")
@@ -904,7 +914,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                     session.add(prop)
                     new_proposals.append(prop)
                 
-                session.commit() # Flush proposals to get IDs
+                session.commit()
 
                 if trip.trip_type == "SOLO" and len(new_proposals) > 0:
                     best_p = new_proposals[0]
@@ -921,9 +931,9 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
             except Exception as e:
-                print(f"[AI Error] Generazione fallita: {e}")
+                logger.error(f"[AI Error] Generazione fallita: {e}")
 
-        print("AI fallita. Uso Mock Data.")
+        logger.info("AI fallita. Uso Mock Data.")
         iata_map = {"roma": "ROM", "milano": "MIL", "napoli": "NAP", "venezia": "VCE", "londra": "LON", "parigi": "PAR"}
         trip.departure_airport = iata_map.get(prefs.departure_airport.lower(), prefs.departure_airport[:3].upper())
         
@@ -965,15 +975,15 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] generate_proposals: {e}")
+        logger.error(f"[ERROR] generate_proposals: {e}")
         raise HTTPException(status_code=500, detail=f"Errore nella generazione: {str(e)}")
 
 async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Session):
     """Genera l'itinerario finale integrando nomi reali da OSM e AI avanzata"""
-    print(f"[System] Generating itinerary for Trip {trip.id}...")
+    logger.info(f"[System] Generating itinerary for Trip {trip.id}...")
     
     if not ai_client:
-        print("[Warning] AI Client not available, skipping itinerary generation.")
+        logger.warning("[Warning] AI Client not available, skipping itinerary generation.")
         return
 
     try:
@@ -982,8 +992,8 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
             num_days = abs((d2 - d1).days) + 1
         except Exception as e:
-            print(f"[Warning] Date parsing failed: {e}")
-            num_days = 5 # Fallback
+            logger.warning(f"[Warning] Date parsing failed: {e}")
+            num_days = 5
         
         hotel_lat = trip.hotel_latitude
         hotel_lon = trip.hotel_longitude
@@ -1013,13 +1023,12 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         if organizer_part and organizer_part.account_id:
             organizer_account = session.get(Account, organizer_part.account_id)
         
-        # Preferenza lingua
         lang = organizer_account.language.upper() if organizer_account else "ITALIANO"
 
         if trip.trip_intent == "BUSINESS" and organizer_account:
              if organizer_account and organizer_account.is_calendar_connected and organizer_account.google_calendar_token:
                  try:
-                     print(f"[System] Fetching calendar events for Organizer {organizer_account.email}...")
+                     logger.info(f"[System] Fetching calendar events for Organizer {organizer_account.email}...")
                      creds = Credentials.from_authorized_user_info(json.loads(organizer_account.google_calendar_token), ['https://www.googleapis.com/auth/calendar.events.readonly'])
                      service = build('calendar', 'v3', credentials=creds)
                      
@@ -1048,9 +1057,9 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                          
                          {chr(10).join(event_lines)}
                          """
-                         print(f"[System] Found {len(events)} calendar events.")
+                         logger.info(f"[System] Found {len(events)} calendar events.")
                  except Exception as exc:
-                     print(f"[Warning] Failed to fetch calendar events: {exc}")
+                     logger.warning(f"[Warning] Failed to fetch calendar events: {exc}")
 
         prompt = f"""
         Sei un esperto Travel Agent. Genera un itinerario di {num_days} giorni per il viaggio "{trip.name}" a {trip.destination}.
@@ -1145,7 +1154,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                     longitude=i_lon
                 )
             except Exception as ei:
-                print(f"[ERROR] Skip item {item.get('title')}: {ei}")
+                logger.error(f"[ERROR] Skip item {item.get('title')}: {ei}")
                 return None
 
         tasks = [process_item(item) for item in data.get("itinerary", [])]
@@ -1169,15 +1178,15 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                         amount=total_road,
                         description="Stima Carburante e Pedaggi (AI)",
                         category="Travel_Road",
-                        date=str(datetime.now())
+                        date=str(datetime.now(timezone.utc))
                     ))
 
         session.commit()
-        print(f"[SUCCESS] Itinerary for Trip {trip.id} generated correctly.")
+        logger.info(f"[SUCCESS] Itinerary for Trip {trip.id} generated correctly.")
 
     except Exception as e:
         session.rollback()
-        print(f"[AI Error] Generazione itinerario fallita: {e}")
+        logger.error(f"[AI Error] Generazione itinerario fallita: {e}")
         import traceback
         traceback.print_exc()
 
@@ -1217,7 +1226,7 @@ async def confirm_hotel(trip_id: int, hotel_data: HotelSelectionRequest, session
         return {"status": "success", "message": "Logistica confermata. Itinerario generato."}
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] confirm_hotel: {e}")
+        logger.error(f"[ERROR] confirm_hotel: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{trip_id}/reset-hotel")
@@ -1255,7 +1264,7 @@ async def reset_hotel(trip_id: int, session: Session = Depends(get_session), cur
         raise
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] reset_hotel: {e}")
+        logger.error(f"[ERROR] reset_hotel: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/vote/{proposal_id}")
@@ -1311,7 +1320,7 @@ async def vote_proposal(
         
         total_voters = session.exec(total_voters_query).one() or 0
         
-        print(f"[DEBUG] Voti: {total_voters}/{trip.num_people}")
+        logger.info(f"[DEBUG] Voti: {total_voters}/{trip.num_people}")
         
         if total_voters >= trip.num_people:
             all_props = session.exec(select(Proposal).where(Proposal.trip_id == trip.id)).all()
@@ -1335,7 +1344,7 @@ async def vote_proposal(
                 trip.status = "BOOKED"
                 session.add(trip)
                 session.commit()
-                print(f"[SUCCESS] Consenso raggiunto! Vincitore: {best_p.destination}")
+                logger.info(f"[SUCCESS] Consenso raggiunto! Vincitore: {best_p.destination}")
 
                 try:
                     organizer = session.exec(select(Participant).where(Participant.trip_id == trip.id, Participant.is_organizer == True)).first()
@@ -1362,9 +1371,9 @@ async def vote_proposal(
                             )
                             fm = FastMail(smtp_conf)
                             await fm.send_message(message)
-                            print(f"[OK] Email di conferma inviata a {organizer_account.email}")
+                            logger.info(f"[OK] Email di conferma inviata a {organizer_account.email}")
                 except Exception as email_err:
-                    print(f"[ERROR] Invio email conferma fallito: {email_err}")
+                    logger.error(f"[ERROR] Invio email conferma fallito: {email_err}")
         
         return {
             "status": "voted", 
@@ -1378,7 +1387,7 @@ async def vote_proposal(
         raise
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] vote_proposal: {e}")
+        logger.error(f"[ERROR] vote_proposal: {e}")
         raise HTTPException(status_code=500, detail=f"Errore nel voto: {str(e)}")
 
 @router.post("/{trip_id}/simulate-votes")
@@ -1398,7 +1407,7 @@ async def simulate_votes(trip_id: int, session: Session = Depends(get_session), 
                 
         return {"status": "votes_simulated", "voters": len(participants)}
     except Exception as e:
-        print(f"[ERROR] simulate_votes: {e}")
+        logger.error(f"[ERROR] simulate_votes: {e}")
         return {"status": "error", "message": "Errore durante la simulazione dei voti."}
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
@@ -1425,7 +1434,6 @@ async def get_participants(trip_id: int, session: Session = Depends(get_session)
 @router.post("/{trip_id}/chat")
 async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
     """Chat AI evoluta: gestisce contesto temporale, history e comandi multipli"""
-    import re
     try:
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -1476,7 +1484,7 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
         raw_text = response.text.strip()
         
-        print(f"[DEBUG] Raw AI Response: {raw_text}")
+        logger.info(f"[DEBUG] Raw AI Response: {raw_text}")
         
         json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
         if not json_match:
@@ -1503,7 +1511,7 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
                         if item and item.trip_id == trip_id: 
                             session.delete(item)
             except Exception as e:
-                print(f"[CMD Error] Fallito comando {cmd.get('action')}: {e}")
+                logger.error(f"[CMD Error] Fallito comando {cmd.get('action')}: {e}")
         
         session.commit()
         
@@ -1515,12 +1523,12 @@ async def chat_with_ai(trip_id: int, req: ChatRequest, session: Session = Depend
         
     except Exception as e:
         session.rollback()
-        print(f"[Chat Error] {e}")
+        logger.error(f"[Chat Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         session.rollback()
-        print(f"[Chat Error] {e}")
+        logger.error(f"[Chat Error] {e}")
         raise HTTPException(status_code=500, detail=f"Errore elaborazione chat: {str(e)}")
 @router.post("/buy-credits")
 async def buy_credits(amount: int, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
@@ -1795,11 +1803,10 @@ async def get_trip_events(
     if not check:
         raise HTTPException(status_code=403, detail="Non sei un partecipante di questo viaggio.")
 
-    # --- CACHE CHECK (3 giorni) ---
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     if trip.events_cache and trip.events_cache_date:
         cache_date = datetime.strptime(trip.events_cache_date, "%Y-%m-%d")
-        diff = (datetime.now() - cache_date).days
+        diff = (datetime.now(timezone.utc) - cache_date).days
         if diff < 3:
             logger.info(f"Cache eventi usata per viaggio {trip_id} (età: {diff} giorni)")
             return json.loads(trip.events_cache)
@@ -1854,7 +1861,6 @@ async def get_trip_events(
             ),
         )
         raw = response.text.strip().replace("```json", "").replace("```", "")
-        import re
         json_match = re.search(r'\{.*\}', raw, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group())
@@ -1862,7 +1868,6 @@ async def get_trip_events(
             logger.warning(f"Nessun JSON trovato nella risposta eventi: {raw[:200]}")
             data = {"events": []}
 
-        # --- SALVA CACHE ---
         trip.events_cache = json.dumps(data)
         trip.events_cache_date = today
         session.add(trip)

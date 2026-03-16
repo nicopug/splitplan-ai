@@ -78,7 +78,7 @@ async def get_auth_url(trip_id: int, current_user: Account = Depends(get_current
     """Restituisce l'URL di autorizzazione Google a cui reindirizzare l'utente."""
     try:
         flow = get_flow(redirect_uri)
-        print(f"[DEBUG] Generating Auth URL. Target redirect_uri: {flow.redirect_uri}")
+        logger.info(f"[DEBUG] Generating Auth URL. Target redirect_uri: {flow.redirect_uri}")
         # Usiamo un formato semplice per lo state per evitare problemi di encoding JSON
         state_data = f"{trip_id}:{current_user.id}"
         
@@ -137,7 +137,7 @@ async def google_callback(
 ):
     """Callback di Google che riceve il codice di autorizzazione."""
     logger.info(f"CALLBACK RECEIVED - code present: {bool(code)}, state: {state}, error: {error}")
-    print(f"[CALENDAR] CALLBACK - code: {bool(code)}, state: {state}, error: {error}", flush=True)
+    logger.info(f"[CALENDAR] CALLBACK - code: {bool(code)}, state: {state}, error: {error}")
     
     frontend_url = "https://splitplan-ai.vercel.app" if os.getenv("VERCEL") else "http://localhost:5173"
     

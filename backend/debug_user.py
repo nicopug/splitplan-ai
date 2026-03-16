@@ -1,6 +1,9 @@
 from sqlmodel import Session, select
 from database import engine
 from models import Account
+import logging
+
+logger = logging.getLogger(__name__)
 
 def check_and_reset_user():
     with Session(engine) as session:
@@ -10,16 +13,16 @@ def check_and_reset_user():
         results = session.exec(statement).all()
         
         if not results:
-            print("Nessun utente con calendario connesso trovato.")
+            logger.info("Nessun utente con calendario connesso trovato.")
             # Stampiamo tutti gli utenti per capire
             all_users = session.exec(select(Account)).all()
             for u in all_users:
-                print(f"User: {u.name} {u.surname}, Email: {u.email}, Premium: {u.is_subscribed}, Calendar: {u.is_calendar_connected}")
+                logger.info(f"User: {u.name} {u.surname}, Email: {u.email}, Premium: {u.is_subscribed}, Calendar: {u.is_calendar_connected}")
             return
 
         for user in results:
-            print(f"Trovato utente: {user.email}")
-            print(f"Stato attuale - Premium: {user.is_subscribed}, Calendar: {user.is_calendar_connected}")
+            logger.info(f"Trovato utente: {user.email}")
+            logger.info(f"Stato attuale - Premium: {user.is_subscribed}, Calendar: {user.is_calendar_connected}")
             
             # Reset per permettere un nuovo tentativo pulito
             user.is_calendar_connected = False
@@ -28,7 +31,7 @@ def check_and_reset_user():
             user.is_subscribed = True 
             
             session.add(user)
-            print(f"Resettato stato calendar per {user.email} e forzato Premium.")
+            logger.info(f"Resettato stato calendar per {user.email} e forzato Premium.")
         
         session.commit()
 

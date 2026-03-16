@@ -11,13 +11,13 @@ class Account(SQLModel, table=True):
     is_verified: bool = False
     is_subscribed: bool = False
     reset_in_progress: bool = False
-    google_calendar_token: Optional[str] = Field(default=None) # JSON dump of tokens
+    google_calendar_token: Optional[str] = Field(default=None)
     is_calendar_connected: bool = False
     credits: int = Field(default=0)
     daily_ai_usage: int = Field(default=0)
     last_usage_reset: Optional[str] = Field(default=None)
-    subscription_plan: Optional[str] = Field(default=None) # 'MONTHLY', 'ANNUAL', or None
-    subscription_expiry: Optional[str] = Field(default=None) # ISO format date
+    subscription_plan: Optional[str] = Field(default=None)
+    subscription_expiry: Optional[str] = Field(default=None) 
     auto_renew: bool = Field(default=True)
     language: str = Field(default="it")
 
@@ -26,17 +26,17 @@ class TripBase(SQLModel):
     name: str
     destination: str = "" 
     trip_type: str 
-    trip_intent: str = "LEISURE"  # "LEISURE" or "BUSINESS"
+    trip_intent: str = "LEISURE"
     budget: float = 0.0
-    start_date: str = ""
-    end_date: str = ""
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
     description: Optional[str] = None
     
     num_people: int = 1
     budget_per_person: float = 0.0
     must_have: Optional[str] = ""
     must_avoid: Optional[str] = ""
-    vibe: Optional[str] = ""  # Aggiunto per coerenza con l'AI
+    vibe: Optional[str] = ""
     
     accommodation: Optional[str] = None
     accommodation_location: Optional[str] = None
@@ -47,10 +47,9 @@ class TripBase(SQLModel):
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
     
-    # Orario di lavoro per viaggi BUSINESS
     work_start_time: Optional[str] = "09:00"
     work_end_time: Optional[str] = "18:00"
-    work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday" # Comma separated days
+    work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
     
     status: str = "PLANNING"
     winning_proposal_id: Optional[int] = None
@@ -62,8 +61,8 @@ class TripBase(SQLModel):
     transport_mode: str = "FLIGHT"
     is_premium: bool = Field(default=False)
 
-    events_cache: Optional[str] = Field(default=None)        # JSON stringa
-    events_cache_date: Optional[str] = Field(default=None)   # ISO date es. "2026-03-03"
+    events_cache: Optional[str] = Field(default=None)
+    events_cache_date: Optional[datetime] = Field(default=None)
 
 class Trip(TripBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -104,7 +103,7 @@ class Vote(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: int = Field(foreign_key="proposal.id")
     user_id: int = Field(foreign_key="participant.id")
-    score: int = Field(default=1)  # <--- ECCO IL CAMPO MANCANTE CHE CAUSAVA L'ERRORE!
+    score: int = Field(default=1)
     
     proposal: Optional[Proposal] = Relationship(back_populates="votes")
     participant: Optional[Participant] = Relationship(back_populates="votes")
@@ -127,13 +126,14 @@ class Expense(SQLModel, table=True):
     trip_id: int = Field(foreign_key="trip.id")
     payer_id: int = Field(foreign_key="participant.id")
     description: str
-    amount: float # Importo in EUR (valuta base per il bilancio)
-    original_amount: Optional[float] = None # Importo inserito (es. Yen)
-    currency: str = "EUR" # Valuta originale
-    exchange_rate: Optional[float] = 1.0 # Tasso applicato
+    amount: float
+    original_amount: Optional[float] = None
+    currency: str = "EUR"
+    exchange_rate: Optional[float] = 1.0
     date: str
     category: str = "General"
-    
+    involved_ids: Optional[str] = Field(default=None)  # ← JSON string es. "[1, 2, 3]"
+
     trip: Optional[Trip] = Relationship(back_populates="expenses")
     payer: Optional[Participant] = Relationship(back_populates="expenses")
 

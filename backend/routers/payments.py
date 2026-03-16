@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -106,7 +106,7 @@ async def process_successful_checkout(account: Account, product_type: str, strip
         account.is_subscribed = True
         account.subscription_plan = product["plan"]
         days = 365 if product["plan"] == "ANNUAL" else 30
-        account.subscription_expiry = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
+        account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
         account.auto_renew = True
         logger.info(f"[Activation] Abbonamento {product['plan']} attivato per account {account.id}")
 

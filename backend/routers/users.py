@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlmodel import Session, select
 
+from admin_auth import verify_admin_token
 from auth import (
     create_access_token,
     create_reset_token,
@@ -32,18 +33,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     logger.warning("SMTP Credentials non trovate in .env. L'invio email fallirà.")
 
-
-# ---------------------------------------------------------------------------
-# ADMIN AUTH DEPENDENCY (condivisa con main.py)
-# ---------------------------------------------------------------------------
-def verify_admin_token(x_admin_token: str = Header(...)):
-    admin_token = os.getenv("ADMIN_TOKEN")
-    if not admin_token:
-        raise HTTPException(status_code=503, detail="ADMIN_TOKEN non configurato sul server.")
-    if x_admin_token != admin_token:
-        raise HTTPException(status_code=403, detail="Token admin non valido.")
-
-
 # ---------------------------------------------------------------------------
 # SCHEMAS
 # ---------------------------------------------------------------------------
@@ -63,6 +52,23 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+class AccountResponse(BaseModel):
+    id: int
+    email: str
+    name: str
+    surname: str
+    is_verified: bool
+    is_subscribed: bool
+    reset_in_progress: bool
+    is_calendar_connected: bool
+    credits: int
+    daily_ai_usage: int
+    last_usage_reset: Optional[str]
+    subscription_plan: Optional[str]
+    subscription_expiry: Optional[str]
+    auto_renew: bool
+    language: str
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +229,7 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
     }
 
 
-@router.get("/me")
+@router.get("/me", response_model=AccountResponse)
 async def get_me(current_account: Account = Depends(get_current_user)):
     """Restituisce i dati dell'utente autenticato tramite JWT."""
     return current_account
@@ -314,13 +320,13 @@ async def toggle_subscription(
         current_account.is_subscribed = True
         current_account.subscription_plan = plan or "MONTHLY"
         days = 365 if current_account.subscription_plan == "ANNUAL" else 30
-        current_account.subscription_expiry = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
+        current_account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
         current_account.auto_renew = True
     else:
         if plan and current_account.subscription_plan != plan:
             current_account.subscription_plan = plan
             days = 365 if plan == "ANNUAL" else 30
-            current_account.subscription_expiry = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
+            current_account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
         else:
             current_account.is_subscribed = False
             current_account.subscription_plan = None

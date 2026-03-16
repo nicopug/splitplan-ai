@@ -1,6 +1,9 @@
 import os
 from sqlmodel import Session, create_engine, select
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Add backend to path to import models properly
 sys.path.append(os.path.abspath('.'))
@@ -18,9 +21,9 @@ engine = create_engine(db_url)
 with Session(engine) as s:
     trips = s.exec(select(Trip)).all()
     participants = s.exec(select(Participant)).all()
-    print("--- TRIPS ---")
+    logger.info("--- TRIPS ---")
     for t in trips:
-        print(f"ID: {t.id}, Name: {t.name}, Status: {t.status}, Real Dest: {t.real_destination}, Accomm: {t.accommodation}")
-    print("\n--- PARTICIPANTS ---")
+        logger.info(f"ID: {t.id}, Name: {t.name}, Status: {t.status}, Real Dest: {t.real_destination}, Accomm: {t.accommodation}")
+    logger.info("\n--- PARTICIPANTS ---")
     for p in participants:
-        print(f"TripID: {p.trip_id}, Name: {p.name}, Organizer: {p.is_organizer}, AccountID: {p.account_id}")
+        logger.info(f"TripID: {p.trip_id}, Name: {p.name}, Organizer: {p.is_organizer}, AccountID: {p.account_id}")

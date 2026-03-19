@@ -101,26 +101,28 @@ function App() {
         <Toast />
         <Modal />
         <Navbar user={user} />
-        <Routes>
-          <Route path="/" element={<Landing user={user} />} />
-          <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-          <Route path="/trip/:id" element={<Dashboard />} />
-          <Route path="/calendar-callback" element={<CalendarCallback />} />
-          <Route path="/my-trips" element={<MyTrips />} />
-          <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
-          <Route path="/share/:token" element={<ShareTrip />} />
-          <Route path="/market" element={<Market />} />
-          <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
-            const stored = JSON.parse(localStorage.getItem('user') || '{}');
-            const newUser = { ...stored, ...u };
-            setUser(newUser);
-            localStorage.setItem('user', JSON.stringify(newUser));
-          }} />} />
+        <main>
+          <Routes>
+            <Route path="/" element={<Landing user={user} />} />
+            <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
+            <Route path="/trip/:id" element={<Dashboard />} />
+            <Route path="/calendar-callback" element={<CalendarCallback />} />
+            <Route path="/my-trips" element={<MyTrips />} />
+            <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
+            <Route path="/share/:token" element={<ShareTrip />} />
+            <Route path="/market" element={<Market />} />
+            <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
+              const stored = JSON.parse(localStorage.getItem('user') || '{}');
+              const newUser = { ...stored, ...u };
+              setUser(newUser);
+              localStorage.setItem('user', JSON.stringify(newUser));
+            }} />} />
 
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
       </div>
     );
   } catch (err) {

@@ -54,7 +54,7 @@ const Solution = () => {
                                         {step.num}
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="text-primary text-xl font-semibold uppercase tracking-tight group-hover:text-primary-blue transition-colors">{step.title}</h4>
+                                        <h3 className="text-primary text-xl font-semibold uppercase tracking-tight group-hover:text-primary-blue transition-colors">{step.title}</h3>
                                         <p className="text-muted text-lg leading-relaxed max-w-sm">
                                             {step.desc}
                                         </p>

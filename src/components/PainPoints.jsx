@@ -32,7 +32,7 @@ const PainPoints = () => {
                                     {item.emoji}
                                 </div>
                                 <div className="space-y-4">
-                                    <h4 className="text-primary text-2xl font-black uppercase tracking-tight group-hover:text-blue-500 transition-colors">{item.title}</h4>
+                                    <h3 className="text-primary text-2xl font-black uppercase tracking-tight group-hover:text-blue-500 transition-colors">{item.title}</h3>
                                     <p className="text-muted text-lg leading-relaxed max-w-md font-medium">
                                         {item.desc}
                                     </p>

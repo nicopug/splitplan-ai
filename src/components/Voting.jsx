@@ -5,6 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Button } from './ui/button';
 import { Share2, CheckCircle2, Users, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer }) => {
     const { t } = useTranslation();
@@ -256,54 +258,79 @@ const Voting = ({ proposals: initialProposals, trip, onVoteComplete, isOrganizer
                                 <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">{t('voting.loading', 'Curatela opzioni in corso...')}</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                                 {proposals.map(prop => (
-                                    <div
+                                    <motion.div
                                         key={prop.id}
-                                        className="premium-card !p-0 group flex flex-col h-full overflow-hidden border-white/10"
+                                        whileHover={{ y: -8 }}
+                                        className="premium-card !p-0 group flex flex-col h-full overflow-hidden border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10"
                                     >
-                                        <div className="relative aspect-video overflow-hidden">
-                                            <img
-                                                src={prop.image_url}
-                                                alt={prop.destination}
-                                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
-                                                }}
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
-                                            <div className="absolute bottom-6 left-6 right-6 space-y-2">
-                                                <h3 className="text-white text-3xl font-bold uppercase tracking-tight">{prop.destination}</h3>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="bg-white text-black text-[10px] font-black px-2 py-0.5 rounded-sm">AI CHOICE</div>
+                                        <div 
+                                            className="cursor-pointer flex flex-col h-full"
+                                            onClick={() => handleVote(prop.id)}
+                                        >
+                                            {/* Image Header with Overlay */}
+                                            <div className="relative aspect-[4/3] overflow-hidden">
+                                                <img
+                                                    src={prop.image_url}
+                                                    alt={prop.destination}
+                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1080&auto=format&fit=crop";
+                                                    }}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                                                
+                                                {/* Badge */}
+                                                <div className="absolute top-6 left-6">
+                                                    <div className="px-2 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-sm text-[8px] font-black text-white uppercase tracking-widest">
+                                                        AI Recommended
+                                                    </div>
+                                                </div>
+
+                                                {/* Content Overlay */}
+                                                <div className="absolute bottom-6 left-6 right-6">
+                                                    <h3 className="text-white text-2xl font-black uppercase tracking-tight leading-none group-hover:translate-x-1 transition-transform">
+                                                        {prop.destination}
+                                                    </h3>
+                                                </div>
+                                            </div>
+
+                                            {/* Details Area */}
+                                            <div className="p-8 space-y-8 flex flex-col flex-1">
+                                                <p className="text-gray-500 text-xs font-medium leading-relaxed flex-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                    {prop.description}
+                                                </p>
+
+                                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                                    <Button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleVote(prop.id);
+                                                        }}
+                                                        disabled={loadingProposalId !== null}
+                                                        variant={votedId === prop.id ? "secondary" : "default"}
+                                                        fullWidth
+                                                        className={cn(
+                                                            "h-14 text-[10px] font-black uppercase tracking-[0.2em] rounded-sm transition-all shadow-lg",
+                                                            votedId === prop.id 
+                                                                ? "bg-white text-black" 
+                                                                : "bg-blue-600 border border-blue-500 text-white hover:bg-blue-500 hover:scale-[1.02] shadow-blue-900/40"
+                                                        )}
+                                                    >
+                                                        {loadingProposalId === prop.id ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            isSolo
+                                                                ? (votedId === prop.id ? t('voting.confirmed', 'META SCELTA') : t('voting.chooseAndProceed', "SCEGLI QUESTA META"))
+                                                                : (votedId === prop.id ? t('voting.voted', 'VOTO REGISTRATO') : t('voting.voteThis', 'VOTA QUESTA META'))
+                                                        )}
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="p-8 space-y-6 flex flex-col flex-1">
-                                            <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                                                {prop.description}
-                                            </p>
-
-                                            <Button
-                                                onClick={() => handleVote(prop.id)}
-                                                disabled={loadingProposalId !== null}
-                                                variant={votedId === prop.id ? "secondary" : "default"}
-                                                fullWidth
-                                                size="lg"
-                                                className={votedId === prop.id ? "bg-white text-black" : ""}
-                                            >
-                                                {loadingProposalId === prop.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    isSolo
-                                                        ? t('voting.chooseAndProceed', "Scegli Destinazione")
-                                                        : (votedId === prop.id ? t('voting.voted', 'Destinazione scelta') : t('voting.voteThis', 'Vota questa meta'))
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         )}

@@ -829,7 +829,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
 
         if ai_client:
             try:
-                num_props = 1 if trip.trip_type == "SOLO" else 3
+                num_props = 3
                 prompt = f"""
                 Agisci come un Travel Agent esperto. 
                 TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
@@ -916,15 +916,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 
                 session.commit()
 
-                if trip.trip_type == "SOLO" and len(new_proposals) > 0:
-                    best_p = new_proposals[0]
-                    trip.winning_proposal_id = best_p.id
-                    trip.destination = best_p.destination
-                    trip.real_destination = best_p.real_destination
-                    trip.destination_iata = best_p.destination_iata
-                    trip.status = "BOOKED"
-                else:
-                    trip.status = "VOTING"
+                trip.status = "VOTING"
                 
                 session.add(trip)
                 session.commit()
@@ -960,14 +952,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         
         session.commit()
 
-        if trip.trip_type == "SOLO" and len(final_props) > 0:
-            best_p = final_props[0]
-            trip.winning_proposal_id = best_p.id
-            trip.destination = best_p.destination
-            trip.real_destination = best_p.destination
-            trip.status = "BOOKED"
-        else:
-            trip.status = "VOTING"
+        trip.status = "VOTING"
             
         session.add(trip)
         session.commit()

@@ -3,12 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import {
-    Calendar as CalendarIcon,
     MapPin,
     Plane,
     Users,
@@ -20,23 +18,71 @@ import {
     Train,
     Car
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-
-const MadLibWord = ({ value, placeholder, children, className }) => (
-    <Popover>
-        <PopoverTrigger asChild>
-            <span className={cn(
-                "cursor-pointer border-b-2 border-dashed border-primary/30 hover:border-primary hover:text-primary transition-all px-1 mx-1 pb-1 font-black",
-                !value && "text-muted border-muted/30",
-                className
-            )}>
-                {value || placeholder}
+const ProgressIndicator = ({ step, totalSteps, t }) => (
+    <div className="w-full max-w-4xl mx-auto mb-12 px-4">
+        <div className="flex justify-between items-center mb-4">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">
+                {t('survey.progress', { current: step + 1, total: totalSteps, defaultValue: `Step ${step + 1} di ${totalSteps}` })}
             </span>
-        </PopoverTrigger>
-        <PopoverContent className="w-80 p-6 bg-card border-border-medium shadow-2xl z-[1000]">
-            {children}
-        </PopoverContent>
-    </Popover>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                {Math.round(((step + 1) / totalSteps) * 100)}%
+            </span>
+        </div>
+        <div className="h-1.5 w-full bg-surface border border-border-subtle rounded-full overflow-hidden">
+            <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+                className="h-full bg-gradient-to-r from-blue-600 to-cyan-400"
+            />
+        </div>
+    </div>
+);
+
+const StepWrapper = ({ title, subtitle, children, onNext, onBack, showSkip, isLast, step, totalSteps, t, isGenerating }) => (
+    <div className="section py-12 animate-fade-in min-h-[70vh] flex flex-col justify-center">
+        <div className="container max-w-4xl text-left space-y-12">
+            <div className="space-y-4">
+                <ProgressIndicator step={step} totalSteps={totalSteps} t={t} />
+                <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase leading-none">
+                    {title}
+                </h2>
+                {subtitle && <p className="text-muted text-lg font-medium">{subtitle}</p>}
+            </div>
+
+            <div className="space-y-10">
+                {children}
+
+                <div className="flex flex-wrap items-center gap-4 pt-8">
+                    {onBack && (
+                        <Button variant="ghost" onClick={onBack} className="text-muted hover:text-primary font-black uppercase text-[10px] tracking-widest px-0 mr-4">
+                            <ArrowLeft className="w-4 h-4 mr-2" /> {t('common.back', 'Indietro')}
+                        </Button>
+                    )}
+
+                    <Button
+                        onClick={onNext}
+                        disabled={isGenerating}
+                        size="lg"
+                        className="px-10 py-4 h-auto font-black uppercase tracking-widest text-xs group relative overflow-hidden active:scale-95 transition-all shadow-xl"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="relative z-10 flex items-center gap-2">
+                            {isLast ? (isGenerating ? '...' : <Sparkles className="w-4 h-4" />) : null}
+                            {isLast ? (isGenerating ? t('common.generating', 'Generazione...') : t('survey.generate', 'Scopri il tuo viaggio')) : t('common.next', 'Avanti')}
+                        </span>
+                    </Button>
+
+                    {showSkip && (
+                        <Button variant="outline" onClick={onNext} className="text-muted hover:text-primary font-black uppercase text-[10px] tracking-widest ml-4">
+                            {t('common.skip', 'Salta')}
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
 );
 
 const Survey = ({ trip, onComplete, isGenerating }) => {
@@ -61,19 +107,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         work_days: 'Monday,Tuesday,Wednesday,Thursday,Friday'
     });
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
 
-    const handleIntentSelect = (intent) => {
-        setFormData({ ...formData, trip_intent: intent });
-        setStep(1);
-    };
-
-    const handleTransportSelect = (mode) => {
-        setFormData({ ...formData, transport_mode: mode });
-        setStep(2);
-    };
 
     useEffect(() => {
         if (trip) {
@@ -121,213 +155,290 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         onComplete(formData);
     };
 
+    const totalSteps = 7;
+
+    const nextStep = () => setStep(prev => Math.min(prev + 1, totalSteps - 1));
+    const prevStep = () => setStep(prev => Math.max(prev - 1, 0));
+
     if (step === 0) {
         return (
-            <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
-                <div className="container max-w-4xl text-left space-y-12">
-                    <div className="space-y-4">
-                        <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">Step 01</span>
-                        <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase leading-none">
-                            Qual è lo scopo del <br/> tuo viaggio?
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <StepWrapper
+                title={t('survey.step0.title', 'Qual è lo scopo del tuo viaggio?')}
+                onNext={() => formData.trip_intent && nextStep()}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {[
+                        { id: 'LEISURE', icon: TreePalm, title: 'Vacanza', desc: 'Relax e scoperta.' },
+                        { id: 'BUSINESS', icon: Briefcase, title: 'Lavoro', desc: 'Efficienza e focus.' }
+                    ].map(intent => (
                         <div
+                            key={intent.id}
                             className={cn(
                                 "premium-card bg-card border p-12 cursor-pointer group transition-all duration-500 shadow-md",
-                                formData.trip_intent === 'LEISURE' ? "border-primary shadow-xl scale-[1.02]" : "border-border-medium hover:border-primary/50"
+                                formData.trip_intent === intent.id ? "border-primary shadow-xl scale-[1.02]" : "border-border-medium hover:border-primary/50"
                             )}
-                            onClick={() => handleIntentSelect('LEISURE')}
+                            onClick={() => setFormData({ ...formData, trip_intent: intent.id })}
                         >
-                            <div className="w-16 h-16 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-10 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500">
-                                <TreePalm className="w-8 h-8" />
+                            <div className={cn(
+                                "w-16 h-16 border rounded-sm flex items-center justify-center mb-10 transition-all duration-500",
+                                formData.trip_intent === intent.id ? "bg-primary text-base border-primary" : "bg-surface border-border-medium text-primary group-hover:bg-primary/10"
+                            )}>
+                                <intent.icon className="w-8 h-8" />
                             </div>
-                            <h3 className="text-primary text-2xl font-black uppercase tracking-tight mb-3">Vacanza</h3>
-                            <p className="text-muted text-base leading-relaxed">Relax e scoperta.</p>
+                            <h3 className="text-primary text-2xl font-black uppercase tracking-tight mb-3">{intent.title}</h3>
+                            <p className="text-muted text-base leading-relaxed">{intent.desc}</p>
                         </div>
-
-                        <div
-                            className={cn(
-                                "premium-card bg-card border p-12 cursor-pointer group transition-all duration-500 shadow-md",
-                                formData.trip_intent === 'BUSINESS' ? "border-primary shadow-xl scale-[1.02]" : "border-border-medium hover:border-primary/50"
-                            )}
-                            onClick={() => handleIntentSelect('BUSINESS')}
-                        >
-                            <div className="w-16 h-16 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-10 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500">
-                                <Briefcase className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-primary text-2xl font-black uppercase tracking-tight mb-3">Lavoro</h3>
-                            <p className="text-muted text-base leading-relaxed">Efficienza e focus.</p>
-                        </div>
-                    </div>
+                    ))}
                 </div>
-            </div>
+            </StepWrapper>
         );
     }
 
     if (step === 1) {
         return (
-            <div className="section py-16 animate-fade-in min-h-[60vh] flex flex-col justify-center">
-                <div className="container max-w-4xl text-left space-y-12">
+            <StepWrapper
+                title={t('survey.step1.title', 'Come ti sposti?')}
+                onBack={prevStep}
+                onNext={() => formData.transport_mode && nextStep()}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                        { id: 'CAR', icon: Car, title: 'Macchina' },
+                        { id: 'TRAIN', icon: Train, title: 'Treno' },
+                        { id: 'FLIGHT', icon: Plane, title: 'Volo' }
+                    ].map(mode => (
+                        <div
+                            key={mode.id}
+                            className={cn(
+                                "premium-card bg-card border p-8 cursor-pointer group transition-all duration-500 flex flex-col items-center text-center shadow-md",
+                                formData.transport_mode === mode.id ? "border-primary shadow-xl scale-105" : "border-border-medium hover:border-primary/50"
+                            )}
+                            onClick={() => setFormData({ ...formData, transport_mode: mode.id })}
+                        >
+                            <div className={cn(
+                                "w-12 h-12 border rounded-sm flex items-center justify-center mb-6 transition-all duration-500",
+                                formData.transport_mode === mode.id ? "bg-primary text-base border-primary" : "bg-surface border-border-medium text-primary group-hover:bg-primary/10"
+                            )}>
+                                <mode.icon className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-primary text-lg font-black uppercase tracking-tight">{mode.title}</h3>
+                        </div>
+                    ))}
+                </div>
+            </StepWrapper>
+        );
+    }
+
+    if (step === 2) {
+        return (
+            <StepWrapper
+                title={t('survey.step2.title', 'Con chi viaggi?')}
+                onBack={prevStep}
+                onNext={nextStep}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="max-w-md space-y-8">
                     <div className="space-y-4">
-                        <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-1 block">Step 02</span>
-                        <h2 className="text-primary text-4xl md:text-6xl font-black tracking-tight uppercase leading-none">
-                            Come ti sposti?
-                        </h2>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted flex items-center gap-2">
+                             <Users className="w-3 h-3"/> Numero di persone
+                        </Label>
+                        <div className="flex items-center gap-6 bg-surface p-4 rounded-sm border border-border-subtle">
+                            <Button variant="outline" onClick={() => setFormData({ ...formData, num_people: Math.max(1, formData.num_people - 1) })}>-</Button>
+                            <div className="flex-1 text-center">
+                                <span className="text-4xl font-black text-primary">{formData.num_people}</span>
+                                <span className="block text-[10px] font-bold text-muted uppercase tracking-widest mt-1">
+                                    {formData.num_people === 1 ? 'Persona' : 'Persone'}
+                                </span>
+                            </div>
+                            <Button variant="outline" onClick={() => setFormData({ ...formData, num_people: Math.min(20, formData.num_people + 1) })}>+</Button>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { id: 'CAR', icon: Car, title: 'Macchina' },
-                            { id: 'TRAIN', icon: Train, title: 'Treno' },
-                            { id: 'FLIGHT', icon: Plane, title: 'Volo' }
-                        ].map(mode => (
-                            <div
-                                key={mode.id}
-                                className={cn(
-                                    "premium-card bg-card border p-8 cursor-pointer group transition-all duration-500 flex flex-col items-center text-center shadow-md",
-                                    formData.transport_mode === mode.id ? "border-primary shadow-xl scale-105" : "border-border-medium hover:border-primary/50"
-                                )}
-                                onClick={() => handleTransportSelect(mode.id)}
-                            >
-                                <div className="w-12 h-12 bg-surface border border-border-medium rounded-sm flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-base group-hover:border-primary transition-all duration-500">
-                                    <mode.icon className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-primary text-lg font-black uppercase tracking-tight">{mode.title}</h3>
+                    {isGroup && formData.participant_names.length > 0 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted">Nomi dei partecipanti</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                                {formData.participant_names.map((name, i) => (
+                                    <Input
+                                        key={i}
+                                        value={name}
+                                        onChange={(e) => handleNameChange(i, e.target.value)}
+                                        placeholder={`Nome partecipante ${i + 2}`}
+                                        className="bg-surface h-12 border-border-subtle focus:border-primary"
+                                    />
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                    <Button variant="ghost" className="text-muted hover:text-primary self-start font-black uppercase text-[10px] tracking-widest" onClick={() => setStep(0)}>
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
-                    </Button>
+                        </div>
+                    )}
                 </div>
-            </div>
+            </StepWrapper>
+        );
+    }
+
+    if (step === 3) {
+        return (
+            <StepWrapper
+                title={t('survey.step3.title', 'Quando partiamo?')}
+                onBack={prevStep}
+                onNext={() => formData.start_date && formData.end_date && nextStep()}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="flex flex-col md:flex-row gap-12">
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2">Andata</Label>
+                        <div className="bg-card p-4 rounded-sm border border-border-medium inline-block shadow-lg">
+                            <Calendar
+                                mode="single"
+                                selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                                onSelect={(date) => date && setFormData({ ...formData, start_date: format(date, "yyyy-MM-dd") })}
+                                locale={it}
+                                className="rounded-md"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2">Ritorno</Label>
+                        <div className="bg-card p-4 rounded-sm border border-border-medium inline-block shadow-lg">
+                            <Calendar
+                                mode="single"
+                                selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                                onSelect={(date) => date && setFormData({ ...formData, end_date: format(date, "yyyy-MM-dd") })}
+                                locale={it}
+                                className="rounded-md"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </StepWrapper>
+        );
+    }
+
+    if (step === 4) {
+        return (
+            <StepWrapper
+                title={t('survey.step4.title', 'Dove andiamo?')}
+                onBack={prevStep}
+                onNext={() => formData.destination && nextStep()}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="max-w-2xl space-y-10">
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted flex items-center gap-2">
+                            <MapPin className="w-3 h-3" /> Destinazione
+                        </Label>
+                        <Input
+                            value={formData.destination}
+                            onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                            placeholder="es. Tokyo, Islanda, Roma..."
+                            className="h-20 text-3xl font-black bg-surface border-border-subtle focus:border-primary uppercase tracking-tight"
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted flex items-center gap-2">
+                            <Plane className="w-3 h-3" /> Punto di partenza
+                        </Label>
+                        <Input
+                            value={formData.departure_airport}
+                            onChange={(e) => setFormData({ ...formData, departure_airport: e.target.value })}
+                            placeholder="es. Milano, MXP, New York..."
+                            className="h-16 text-xl font-bold bg-surface border-border-subtle focus:border-primary"
+                        />
+                    </div>
+                </div>
+            </StepWrapper>
+        );
+    }
+
+    if (step === 5) {
+        return (
+            <StepWrapper
+                title={t('survey.step5.title', 'Qual è il tuo budget?')}
+                onBack={prevStep}
+                onNext={() => formData.budget && nextStep()}
+                step={step}
+                totalSteps={totalSteps}
+                t={t}
+                isGenerating={isGenerating}
+            >
+                <div className="max-w-md space-y-6">
+                    <div className="relative">
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary opacity-30">
+                            <Wallet className="w-8 h-8" />
+                        </div>
+                        <Input
+                            type="number"
+                            value={formData.budget}
+                            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                            placeholder="es. 1500"
+                            className="h-24 pl-20 text-5xl font-black bg-surface border-border-subtle focus:border-primary"
+                            autoFocus
+                        />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl font-black text-muted">
+                            €
+                        </div>
+                    </div>
+                    <p className="text-muted text-sm font-medium">Inserisci il budget totale stimato per il viaggio.</p>
+                </div>
+            </StepWrapper>
         );
     }
 
     return (
-        <div className="section py-16 animate-fade-in flex flex-col justify-center min-h-[80vh]">
-            <div className="container max-w-5xl">
-                <div className="mb-12">
-                    <Button variant="ghost" className="text-muted hover:text-primary font-black uppercase text-[10px] tracking-widest p-0 mb-4" onClick={() => setStep(1)}>
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Modifica trasporti
-                    </Button>
-                    <span className="text-subtle font-black tracking-[0.2em] uppercase text-[10px] mb-2 block">Final Generation</span>
+        <StepWrapper
+            title={t('survey.step6.title', 'Ultime preferenze?')}
+            subtitle={t('survey.step6.subtitle', 'Aggiungi dettagli per rendere il viaggio perfetto.')}
+            onBack={prevStep}
+            onNext={handleSubmit}
+            showSkip={true}
+            isLast={true}
+            step={step}
+            totalSteps={totalSteps}
+            t={t}
+            isGenerating={isGenerating}
+        >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-digital-blue flex items-center gap-2">
+                        <Sparkles className="w-3 h-3" /> Cose da includere
+                    </Label>
+                    <textarea
+                        value={formData.must_have}
+                        onChange={(e) => setFormData({ ...formData, must_have: e.target.value })}
+                        placeholder="es. Musei d'arte, street food, zone pedonali..."
+                        className="w-full h-48 p-6 bg-surface rounded-sm border border-border-subtle focus:border-primary outline-none text-primary font-medium resize-none transition-all"
+                    />
                 </div>
-
-                <div className="text-[2.5rem] md:text-[4rem] font-bold text-primary leading-tight tracking-tight mb-16">
-                    Voglio organizzare un viaggio di 
-                    <MadLibWord value={formData.trip_intent === 'LEISURE' ? 'Vacanza' : 'Lavoro'} placeholder="Scopo">
-                        <div className="grid grid-cols-2 gap-2">
-                           <Button variant={formData.trip_intent === 'LEISURE' ? 'default' : 'outline'} onClick={() => setFormData({...formData, trip_intent: 'LEISURE'})} className="text-[10px] font-black uppercase tracking-widest">Vacanza</Button>
-                           <Button variant={formData.trip_intent === 'BUSINESS' ? 'default' : 'outline'} onClick={() => setFormData({...formData, trip_intent: 'BUSINESS'})} className="text-[10px] font-black uppercase tracking-widest">Lavoro</Button>
-                        </div>
-                    </MadLibWord>
-                    in 
-                    <MadLibWord value={formData.transport_mode === 'FLIGHT' ? 'Volo' : formData.transport_mode === 'TRAIN' ? 'Treno' : 'Macchina'} placeholder="Mezzo">
-                        <div className="grid grid-cols-3 gap-2">
-                           <Button variant={formData.transport_mode === 'FLIGHT' ? 'default' : 'outline'} onClick={() => setFormData({...formData, transport_mode: 'FLIGHT'})} className="px-2 font-black"><Plane className="w-4 h-4"/></Button>
-                           <Button variant={formData.transport_mode === 'TRAIN' ? 'default' : 'outline'} onClick={() => setFormData({...formData, transport_mode: 'TRAIN'})} className="px-2 font-black"><Train className="w-4 h-4"/></Button>
-                           <Button variant={formData.transport_mode === 'CAR' ? 'default' : 'outline'} onClick={() => setFormData({...formData, transport_mode: 'CAR'})} className="px-2 font-black"><Car className="w-4 h-4"/></Button>
-                        </div>
-                    </MadLibWord>
-                    per 
-                    <MadLibWord value={formData.destination} placeholder="Destinazione">
-                        <Input 
-                            value={formData.destination} 
-                            onChange={(e) => setFormData({...formData, destination: e.target.value})}
-                            placeholder="es. Kyoto, New York..."
-                            className="h-12 bg-surface font-bold text-primary"
-                            autoFocus
-                        />
-                    </MadLibWord>
-                    partendo da 
-                    <MadLibWord value={formData.departure_airport} placeholder="Origine">
-                        <Input 
-                            value={formData.departure_airport} 
-                            onChange={(e) => setFormData({...formData, departure_airport: e.target.value})}
-                            placeholder="es. MXP, Roma..."
-                            className="h-12 bg-surface font-bold text-primary"
-                            autoFocus
-                        />
-                    </MadLibWord>
-                    per 
-                    <MadLibWord value={formData.num_people} placeholder="N° Persone">
-                        <div className="flex gap-2 items-center">
-                            <Button variant="outline" size="sm" onClick={() => setFormData({...formData, num_people: Math.max(1, formData.num_people - 1)})}>-</Button>
-                            <span className="flex-1 text-center font-bold text-lg">{formData.num_people}</span>
-                            <Button variant="outline" size="sm" onClick={() => setFormData({...formData, num_people: Math.min(10, formData.num_people + 1)})}>+</Button>
-                        </div>
-                    </MadLibWord>
-                    {isGroup ? 'partecipanti' : 'persona'}. Abbiamo un budget di 
-                    <MadLibWord value={formData.budget + '€'} placeholder="Budget">
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted">Budget Totale (€)</Label>
-                            <Input 
-                                type="number" 
-                                value={formData.budget} 
-                                onChange={(e) => setFormData({...formData, budget: e.target.value})}
-                                placeholder="es. 2000"
-                                className="h-12 bg-surface font-bold text-primary"
-                                autoFocus
-                            />
-                        </div>
-                    </MadLibWord>
-                    e viaggeremo dal 
-                    <MadLibWord value={formData.start_date ? format(new Date(formData.start_date), "dd/MM/yy") : null} placeholder="Inizio">
-                        <Calendar
-                            mode="single"
-                            selected={formData.start_date ? new Date(formData.start_date) : undefined}
-                            onSelect={(date) => date && setFormData({...formData, start_date: format(date, "yyyy-MM-dd")})}
-                            locale={it}
-                        />
-                    </MadLibWord>
-                    al 
-                    <MadLibWord value={formData.end_date ? format(new Date(formData.end_date), "dd/MM/yy") : null} placeholder="Fine">
-                        <Calendar
-                            mode="single"
-                            selected={formData.end_date ? new Date(formData.end_date) : undefined}
-                            onSelect={(date) => date && setFormData({...formData, end_date: format(date, "yyyy-MM-dd")})}
-                            locale={it}
-                        />
-                    </MadLibWord>.
-                    Mi piacerebbe includere 
-                    <MadLibWord value={formData.must_have} placeholder="Interessi" className="text-digital-blue border-digital-blue/30">
-                        <textarea 
-                            value={formData.must_have} 
-                            onChange={(e) => setFormData({...formData, must_have: e.target.value})}
-                            placeholder="es. Musei, Spiagge, Shopping..."
-                            className="w-full h-32 p-4 bg-surface rounded-sm border border-border-medium outline-none text-primary font-medium"
-                        />
-                    </MadLibWord>
-                    ed evitare 
-                    <MadLibWord value={formData.must_avoid} placeholder="Cose da evitare" className="text-[crimson] border-[crimson]/30">
-                        <textarea 
-                            value={formData.must_avoid} 
-                            onChange={(e) => setFormData({...formData, must_avoid: e.target.value})}
-                            placeholder="es. Club, Trekking..."
-                            className="w-full h-32 p-4 bg-surface rounded-sm border border-border-medium outline-none text-primary font-medium"
-                        />
-                    </MadLibWord>.
-                </div>
-
-                <div className="flex justify-center pt-8">
-                    <Button
-                        onClick={handleSubmit}
-                        size="xl"
-                        className="px-16 py-8 h-auto font-black uppercase tracking-[0.2em] text-sm group relative overflow-hidden active:scale-95 transition-all shadow-2xl"
-                        disabled={isGenerating || !formData.destination || !formData.start_date || !formData.end_date}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="relative z-10 flex items-center gap-4">
-                            {isGenerating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                            {isGenerating ? 'Generazione in corso...' : 'Scopri il tuo viaggio'}
-                        </span>
-                    </Button>
+                <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-[crimson] flex items-center gap-2">
+                        Cose da evitare
+                    </Label>
+                    <textarea
+                        value={formData.must_avoid}
+                        onChange={(e) => setFormData({ ...formData, must_avoid: e.target.value })}
+                        placeholder="es. Folle eccessive, trekking impegnativi, locali rumorosi..."
+                        className="w-full h-48 p-6 bg-surface rounded-sm border border-border-subtle focus:border-border-medium outline-none text-primary font-medium resize-none transition-all"
+                    />
                 </div>
             </div>
-        </div>
+        </StepWrapper>
     );
 };
 

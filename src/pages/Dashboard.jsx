@@ -1,23 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip } from '../api';
-import Survey from '../components/Survey';
-import Voting from '../components/Voting';
-import Timeline from '../components/Timeline';
-import Finance from '../components/Finance';
-import Logistics from '../components/Logistics';
-import HotelConfirmation from '../components/HotelConfirmation';
-import Photos from '../components/Photos';
-import Chatbot from '../components/Chatbot';
-import Budget from '../components/Budget';
-import Map from '../components/Map';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CreditCard, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, MessageSquare, Share2, X, CalendarDays } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
-import Events from '../components/Events';
 import { useTranslation } from 'react-i18next';
+
+// Lazy load heavy components
+const Survey = lazy(() => import('../components/Survey'));
+const Voting = lazy(() => import('../components/Voting'));
+const Timeline = lazy(() => import('../components/Timeline'));
+const Finance = lazy(() => import('../components/Finance'));
+const Logistics = lazy(() => import('../components/Logistics'));
+const HotelConfirmation = lazy(() => import('../components/HotelConfirmation'));
+const Photos = lazy(() => import('../components/Photos'));
+const Chatbot = lazy(() => import('../components/Chatbot'));
+const Budget = lazy(() => import('../components/Budget'));
+const Map = lazy(() => import('../components/Map'));
+const Events = lazy(() => import('../components/Events'));
+
+// Component Loader Fallback
+const ComponentLoader = () => (
+    <div className="flex items-center justify-center p-12 w-full h-full">
+        <div className="w-6 h-6 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+);
 
 const Dashboard = () => {
     const { id } = useParams();
@@ -471,19 +480,23 @@ const Dashboard = () => {
                     </div>
                 ) : (
                     <>
-                        {trip.status === 'PLANNING' && (
-                            <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
-                        )}
+                        <Suspense fallback={<ComponentLoader />}>
+                            {trip.status === 'PLANNING' && (
+                                <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
+                            )}
 
-                        {trip.status === 'VOTING' && (
-                            <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
-                        )}
+                            {trip.status === 'VOTING' && (
+                                <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
+                            )}
+                        </Suspense>
 
                         {trip.status === 'BOOKED' && (
                             <>
                                 {/* 1. Logistics (Premium only) */}
                                 {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
-                                    <Logistics trip={trip} />
+                                    <Suspense fallback={<ComponentLoader />}>
+                                        <Logistics trip={trip} />
+                                    </Suspense>
                                 )}
 
                                 {/* Guest CTA Section */}
@@ -511,13 +524,15 @@ const Dashboard = () => {
                                 {/* 3. Hotel Form or Wait Message */}
                                 {!trip.accommodation && (
                                     isOrganizer ? (
-                                        <HotelConfirmation
-                                            trip={trip}
-                                            onConfirm={fetchTrip}
-                                            setIsGenerating={setIsGenerating}
-                                            setProgress={setItineraryProgress}
-                                            isPremium={user?.is_subscribed || trip.is_premium}
-                                        />
+                                        <Suspense fallback={<ComponentLoader />}>
+                                            <HotelConfirmation
+                                                trip={trip}
+                                                onConfirm={fetchTrip}
+                                                setIsGenerating={setIsGenerating}
+                                                setProgress={setItineraryProgress}
+                                                isPremium={user?.is_subscribed || trip.is_premium}
+                                            />
+                                        </Suspense>
                                     ) : (
                                         <div className="container py-12">
                                             <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
@@ -576,19 +591,23 @@ const Dashboard = () => {
                                                 </div>
                                             </div>
 
-                                            <Timeline items={itinerary} />
+                                            <Suspense fallback={<ComponentLoader />}>
+                                                <Timeline items={itinerary} />
+                                            </Suspense>
                                         </div>
 
                                         {/* Right Side: Map (Sticky/Fixed) */}
                                         <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
                                             {trip.trip_intent !== 'BUSINESS' ? (
-                                                <Map
-                                                    items={itinerary}
-                                                    hotelLat={trip.hotel_latitude}
-                                                    hotelLon={trip.hotel_longitude}
-                                                    startDate={trip.start_date}
-                                                    isPremium={user?.is_subscribed || trip.is_premium}
-                                                />
+                                                <Suspense fallback={<ComponentLoader />}>
+                                                    <Map
+                                                        items={itinerary}
+                                                        hotelLat={trip.hotel_latitude}
+                                                        hotelLon={trip.hotel_longitude}
+                                                        startDate={trip.start_date}
+                                                        isPremium={user?.is_subscribed || trip.is_premium}
+                                                    />
+                                                </Suspense>
                                             ) : (
                                                 <div className="h-full flex items-center justify-center p-12 text-center">
                                                     <div className="max-w-xs">
@@ -649,12 +668,14 @@ const Dashboard = () => {
                                 </button>
                             </div>
                             <div className="flex-1 overflow-hidden">
-                                <Chatbot
-                                    tripId={id}
-                                    onItineraryUpdate={(newItinerary) => setItinerary(newItinerary)}
-                                    messages={chatMessages}
-                                    setMessages={setChatMessages}
-                                />
+                                <Suspense fallback={<ComponentLoader />}>
+                                    <Chatbot
+                                        tripId={id}
+                                        onItineraryUpdate={(newItinerary) => setItinerary(newItinerary)}
+                                        messages={chatMessages}
+                                        setMessages={setChatMessages}
+                                    />
+                                </Suspense>
                             </div>
                         </motion.div>
                     </div>
@@ -678,7 +699,9 @@ const Dashboard = () => {
                             </div>
                         </div>
                     ) : user?.is_subscribed ? (
-                        <Budget trip={trip} onUpdate={fetchTrip} />
+                                <Suspense fallback={<ComponentLoader />}>
+                                    <Budget trip={trip} onUpdate={fetchTrip} />
+                                </Suspense>
                     ) : (
                         <div className="container mt-8">
                             <div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]">
@@ -699,15 +722,21 @@ const Dashboard = () => {
             )}
 
             {view === 'FINANCE' && (
-                <Finance trip={trip} />
+                <Suspense fallback={<ComponentLoader />}>
+                    <Finance trip={trip} />
+                </Suspense>
             )}
 
             {view === 'PHOTOS' && (
-                <Photos trip={trip} />
+                <Suspense fallback={<ComponentLoader />}>
+                    <Photos trip={trip} />
+                </Suspense>
             )}
 
             {view === 'EVENTS' && (
-                <Events trip={trip} />
+                <Suspense fallback={<ComponentLoader />}>
+                    <Events trip={trip} />
+                </Suspense>
             )}
 
             {isGenerating && <GeneratingOverlay progress={itineraryProgress} />}

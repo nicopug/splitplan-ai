@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -8,17 +8,26 @@ import Solution from './components/Solution';
 import Features from './components/Features';
 import Pricing from './components/Pricing';
 import Footer from './components/Footer';
-import Dashboard from './pages/Dashboard';
-import MyTrips from './pages/MyTrips';
-import Auth from './pages/Auth';
-import ResetPassword from './pages/ResetPassword';
-import ShareTrip from './pages/ShareTrip';
-import CalendarCallback from './pages/CalendarCallback';
-import Market from './pages/Market';
-import CheckoutSuccess from './pages/CheckoutSuccess';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
 import { useToast } from './context/ToastContext';
+
+// Lazy load page components
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const MyTrips = lazy(() => import('./pages/MyTrips'));
+const Auth = lazy(() => import('./pages/Auth'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ShareTrip = lazy(() => import('./pages/ShareTrip'));
+const CalendarCallback = lazy(() => import('./pages/CalendarCallback'));
+const Market = lazy(() => import('./pages/Market'));
+const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+
+// Loading Fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 
 function Landing({ user }) {
@@ -102,26 +111,28 @@ function App() {
         <Modal />
         <Navbar user={user} />
         <main>
-          <Routes>
-            <Route path="/" element={<Landing user={user} />} />
-            <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-            <Route path="/trip/:id" element={<Dashboard />} />
-            <Route path="/calendar-callback" element={<CalendarCallback />} />
-            <Route path="/my-trips" element={<MyTrips />} />
-            <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
-            <Route path="/share/:token" element={<ShareTrip />} />
-            <Route path="/market" element={<Market />} />
-            <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
-              const stored = JSON.parse(localStorage.getItem('user') || '{}');
-              const newUser = { ...stored, ...u };
-              setUser(newUser);
-              localStorage.setItem('user', JSON.stringify(newUser));
-            }} />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Landing user={user} />} />
+              <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
+              <Route path="/trip/:id" element={<Dashboard />} />
+              <Route path="/calendar-callback" element={<CalendarCallback />} />
+              <Route path="/my-trips" element={<MyTrips />} />
+              <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
+              <Route path="/share/:token" element={<ShareTrip />} />
+              <Route path="/market" element={<Market />} />
+              <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
+                const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                const newUser = { ...stored, ...u };
+                setUser(newUser);
+                localStorage.setItem('user', JSON.stringify(newUser));
+              }} />} />
 
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     );

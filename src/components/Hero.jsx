@@ -188,7 +188,7 @@ const Hero = () => {
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-blue-400 self-start"
+                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-[#114DD0] dark:text-blue-400 self-start"
                         >
                             {t('hero.badge')}
                         </motion.div>

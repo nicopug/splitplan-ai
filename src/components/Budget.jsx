@@ -373,7 +373,7 @@ const Budget = ({ trip, onUpdate }) => {
                     {/* AI Estimation Section */}
                     <div className="premium-card !p-8 space-y-6 border border-primary-blue/20 bg-primary-blue/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-accent-primary text-background flex items-center justify-center font-bold rounded-sm">
+                            <div className="w-10 h-10 bg-accent-primary text-base flex items-center justify-center font-bold rounded-sm">
                                 <Sparkles className="w-5 h-5" />
                             </div>
                             <div className="space-y-1">

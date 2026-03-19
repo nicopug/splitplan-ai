@@ -161,13 +161,13 @@ const MyTrips = () => {
                         >
                             <button
                                 onClick={() => setActiveTab('active')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-primary text-black shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'active' ? 'bg-accent-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Viaggi Attivi ({activeTrips.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('archived')}
-                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-primary text-black shadow-xl' : 'text-subtle hover:text-primary'}`}
+                                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase rounded-sm transition-all ${activeTab === 'archived' ? 'bg-accent-primary text-base shadow-xl' : 'text-subtle hover:text-primary'}`}
                             >
                                 Archivio ({archivedTrips.length})
                             </button>

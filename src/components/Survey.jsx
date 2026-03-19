@@ -116,7 +116,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 destination: trip.destination || prev.destination,
                 departure_airport: trip.departure_airport || prev.departure_airport,
                 budget: trip.budget_per_person * (trip.num_people || 1) || prev.budget,
-                num_people: trip.num_people || prev.num_people,
+                num_people: isGroup ? Math.max(2, trip.num_people || prev.num_people) : 1,
                 start_date: trip.start_date || prev.start_date,
                 end_date: trip.end_date || prev.end_date,
                 must_have: trip.must_have || prev.must_have,
@@ -157,8 +157,21 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
     const totalSteps = 7;
 
-    const nextStep = () => setStep(prev => Math.min(prev + 1, totalSteps - 1));
-    const prevStep = () => setStep(prev => Math.max(prev - 1, 0));
+    const nextStep = () => {
+        if (step === 1 && !isGroup) {
+            setStep(3);
+        } else {
+            setStep(prev => Math.min(prev + 1, totalSteps - 1));
+        }
+    };
+
+    const prevStep = () => {
+        if (step === 3 && !isGroup) {
+            setStep(1);
+        } else {
+            setStep(prev => Math.max(prev - 1, 0));
+        }
+    };
 
     if (step === 0) {
         return (
@@ -254,14 +267,20 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                              <Users className="w-3 h-3"/> Numero di persone
                         </Label>
                         <div className="flex items-center gap-6 bg-surface p-4 rounded-sm border border-border-subtle">
-                            <Button variant="outline" onClick={() => setFormData({ ...formData, num_people: Math.max(1, formData.num_people - 1) })}>-</Button>
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setFormData({ ...formData, num_people: Math.max(isGroup ? 2 : 1, Number(formData.num_people) - 1) })}
+                                disabled={isGroup ? Number(formData.num_people) <= 2 : Number(formData.num_people) <= 1}
+                            >
+                                -
+                            </Button>
                             <div className="flex-1 text-center">
                                 <span className="text-4xl font-black text-primary">{formData.num_people}</span>
                                 <span className="block text-[10px] font-bold text-muted uppercase tracking-widest mt-1">
                                     {formData.num_people === 1 ? 'Persona' : 'Persone'}
                                 </span>
                             </div>
-                            <Button variant="outline" onClick={() => setFormData({ ...formData, num_people: Math.min(20, formData.num_people + 1) })}>+</Button>
+                            <Button variant="outline" onClick={() => setFormData({ ...formData, num_people: Math.min(20, Number(formData.num_people) + 1) })}>+</Button>
                         </div>
                     </div>
 

@@ -250,7 +250,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 onClick={() => setTab('summary')}
                                 className={cn(
                                     "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'summary' ? "bg-accent-primary text-background" : "text-muted hover:text-primary"
+                                    tab === 'summary' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
                                 )}
                             >
                                 {t('finance.tabs.balances', 'Bilanci')}
@@ -259,7 +259,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                 onClick={() => setTab('list')}
                                 className={cn(
                                     "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'list' ? "bg-accent-primary text-background" : "text-muted hover:text-primary"
+                                    tab === 'list' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
                                 )}
                             >
                                 {t('finance.tabs.list', 'Lista')}
@@ -328,13 +328,15 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                             onClick={() => setCategory(cat.id)}
                                             className={cn(
                                                 "p-4 rounded-sm border transition-all flex flex-col items-center gap-2",
-                                                category === cat.id
-                                                    ? "bg-accent-primary text-background border-accent-primary"
+                                            category === cat.id
+                                                    ? "bg-accent-primary text-base border-accent-primary"
                                                     : "bg-surface border-border-subtle text-muted hover:border-border-strong hover:text-primary"
                                             )}
                                         >
                                             <span className="text-xl">{cat.icon}</span>
-                                            <span className="text-[8px] font-black uppercase tracking-tighter text-center">{cat.label}</span>
+                                            <span className="text-[8px] font-black uppercase tracking-tighter text-center transition-colors">
+                                                {cat.label}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>

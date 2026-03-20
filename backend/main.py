@@ -15,7 +15,7 @@ from sqlmodel import text
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database import create_db_and_tables, get_session, engine
+from database import get_session, engine
 from routers import trips, photos, users, expenses, itinerary, payments, calendar
 from admin_auth import verify_admin_token
 

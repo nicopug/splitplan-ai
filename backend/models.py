@@ -28,6 +28,7 @@ class TripBase(SQLModel):
     trip_type: str 
     trip_intent: str = "LEISURE"
     budget: float = 0.0
+    budget_max: float = 0.0
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     description: Optional[str] = None

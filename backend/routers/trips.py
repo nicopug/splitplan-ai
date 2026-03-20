@@ -50,6 +50,7 @@ class PreferencesRequest(SQLModel):
     destination: str
     departure_airport: str
     budget: float
+    budget_max: float = 0.0
     num_people: int = 1
     start_date: str
     end_date: str
@@ -326,6 +327,18 @@ async def migrate_trip_work_hours(session: Session = Depends(get_session)):
         session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_days VARCHAR DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday';"))
         session.commit()
         return {"status": "success", "message": "Colonne work_start/end_time e work_days aggiunte."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.get("/migrate-budget-max", dependencies=[Depends(verify_admin_token)])
+async def migrate_budget_max(session: Session = Depends(get_session)):
+    """Aggiunge budget_max alla tabella trip"""
+    from sqlalchemy import text
+    try:
+        session.execute(text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS budget_max FLOAT DEFAULT 0.0;"))
+        session.commit()
+        return {"status": "success", "message": "Colonna budget_max aggiunta."}
     except Exception as e:
         session.rollback()
         return {"status": "error", "message": str(e)}
@@ -802,7 +815,9 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
             
-        trip.budget_per_person = prefs.budget / prefs.num_people
+        trip.budget = prefs.budget
+        trip.budget_max = prefs.budget_max
+        trip.budget_per_person = (prefs.budget_max or prefs.budget) / prefs.num_people
         trip.num_people = prefs.num_people
         trip.start_date = prefs.start_date
         trip.end_date = prefs.end_date
@@ -836,7 +851,7 @@ async def generate_proposals(trip_id: int, prefs: PreferencesRequest, session: S
                 TASK 2: Genera {num_props} {"proposta" if num_props == 1 else "proposte UNICHE"} per: {prefs.destination}. 
                 {"Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico)." if num_props > 1 else ""}
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne') per differenziarle.
-                Dati: Budget {prefs.budget}€, {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
+                Dati: Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 {"ORARIO LAVORO: dalle " + prefs.work_start_time + " alle " + prefs.work_end_time + " nei giorni: " + prefs.work_days if prefs.trip_intent == "BUSINESS" else ""}
 

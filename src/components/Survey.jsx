@@ -94,6 +94,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         destination: '',
         departure_airport: '',
         budget: '',
+        budget_max: '',
         num_people: isGroup ? 2 : 1,
         start_date: '',
         end_date: '',
@@ -115,7 +116,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 ...prev,
                 destination: trip.destination || prev.destination,
                 departure_airport: trip.departure_airport || prev.departure_airport,
-                budget: trip.budget_per_person * (trip.num_people || 1) || prev.budget,
+                budget: trip.budget || (trip.budget_per_person * (trip.num_people || 1)) || prev.budget,
+                budget_max: trip.budget_max || prev.budget_max,
                 num_people: isGroup ? Math.max(2, trip.num_people || prev.num_people) : 1,
                 start_date: trip.start_date || prev.start_date,
                 end_date: trip.end_date || prev.end_date,
@@ -397,24 +399,44 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 t={t}
                 isGenerating={isGenerating}
             >
-                <div className="max-w-md space-y-6">
-                    <div className="relative">
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary opacity-30">
-                            <Wallet className="w-8 h-8" />
-                        </div>
-                        <Input
-                            type="number"
-                            value={formData.budget}
-                            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                            placeholder="es. 1500"
-                            className="h-24 pl-20 text-5xl font-black bg-surface border-border-subtle focus:border-primary"
-                            autoFocus
-                        />
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl font-black text-muted">
-                            €
+                <div className="max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2">Budget Minimo</Label>
+                        <div className="relative">
+                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary opacity-30">
+                                <Wallet className="w-6 h-6" />
+                            </div>
+                            <Input
+                                type="number"
+                                value={formData.budget}
+                                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                                placeholder="es. 800"
+                                className="h-20 pl-16 text-3xl font-black bg-surface border-border-subtle focus:border-primary"
+                                autoFocus
+                            />
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-xl font-black text-muted">€</div>
                         </div>
                     </div>
-                    <p className="text-muted text-sm font-medium">Inserisci il budget totale stimato per il viaggio.</p>
+
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2">Budget Massimo</Label>
+                        <div className="relative">
+                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary opacity-30">
+                                <Wallet className="w-6 h-6" />
+                            </div>
+                            <Input
+                                type="number"
+                                value={formData.budget_max}
+                                onChange={(e) => setFormData({ ...formData, budget_max: e.target.value })}
+                                placeholder="es. 1200"
+                                className="h-20 pl-16 text-3xl font-black bg-surface border-border-subtle focus:border-primary"
+                            />
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-xl font-black text-muted">€</div>
+                        </div>
+                    </div>
+                    <div className="md:col-span-2">
+                        <p className="text-muted text-sm font-medium">Inserisci un range di budget per una stima più flessibile (es. 800€ - 1200€).</p>
+                    </div>
                 </div>
             </StepWrapper>
         );

@@ -49,7 +49,7 @@ function Calendar({
                 Caption: ({ displayMonth }) => {
                     const { goToMonth, nextMonth, previousMonth } = useNavigation();
                     return (
-                        <div className="flex items-center justify-between mb-4 h-10 px-2 w-full">
+                        <div className="flex items-center justify-between mb-4 h-10 px-1">
                             <button
                                 type="button"
                                 className={cn(
@@ -62,7 +62,7 @@ function Calendar({
                                 <ChevronLeft className="h-4 w-4" />
                             </button>
                             <span className="text-sm font-black uppercase tracking-widest text-primary">
-                                {format(displayMonth, "MMMM yyyy", { locale: it }).toUpperCase()}
+                                {format(displayMonth, "MMMM yyyy", { locale: it })}
                             </span>
                             <button
                                 type="button"

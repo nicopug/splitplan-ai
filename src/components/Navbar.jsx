@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 const Navbar = ({ user: propUser }) => {
     const [user, setUser] = useState(propUser);

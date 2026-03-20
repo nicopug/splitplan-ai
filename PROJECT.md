@@ -208,7 +208,7 @@ Il modello di business si basa su un sistema **freemium con crediti** e **abbona
 
 * \[x] **Storico viaggi \& Statistiche** — Implementazione della sezione archivio con dashboard di riepilogo per i viaggi conclusi.
 * \[x] **Supporto multi-lingua** (attualmente solo italiano nell'UI)
-* \[-] **App mobile nativa** (React Native o Flutter)
+* \[x] **App mobile nativa** (React Native o Flutter)
 * \[x] **Raccomandazioni ristoranti** tramite Overpass API (POI discovery)
 
 \---

@@ -34,9 +34,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Avvio applicazione: creazione tabelle DB...")
-    create_db_and_tables()
-    logger.info("Tabelle DB pronte.")
+    logger.info("Avvio applicazione...")
+    # create_db_and_tables() # Gestito da Alembic
     yield
     logger.info("Spegnimento applicazione.")
 
@@ -81,10 +80,8 @@ app.include_router(calendar.router)
 
 @app.get("/admin/init-db", dependencies=[Depends(verify_admin_token)], tags=["admin"])
 def init_db():
-    """Forza la creazione delle tabelle. Richiede header X-Admin-Token."""
-    create_db_and_tables()
-    logger.info("[ADMIN] init-db eseguito.")
-    return {"message": "Tabelle DB create con successo."}
+    """Endpoint deprecato. Usare alembic upgrade head."""
+    return {"message": "Endpoint deprecato. Usare 'alembic upgrade head' dalla riga di comando."}
 
 
 @app.get("/admin/migrate-calendar", dependencies=[Depends(verify_admin_token)], tags=["admin"])

@@ -11,6 +11,8 @@ import Footer from './components/Footer';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
 import { useToast } from './context/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Toaster } from 'sonner';
 
 // Lazy load page components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -89,52 +91,55 @@ function App() {
 
   try {
     return (
-      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-300">
-        {!isOnline && (
-          <div style={{
-            background: 'var(--accent-orange)',
-            color: 'white',
-            textAlign: 'center',
-            padding: '0.5rem',
-            fontSize: '0.85rem',
-            fontWeight: 'bold',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999
-          }}>
-            {t('app.offlineBanner', 'Modalità Offline - Stai visualizzando i dati salvati')}
-          </div>
-        )}
-        <Toast />
-        <Modal />
-        <Navbar user={user} />
-        <main>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Landing user={user} />} />
-              <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-              <Route path="/trip/:id" element={<Dashboard />} />
-              <Route path="/calendar-callback" element={<CalendarCallback />} />
-              <Route path="/my-trips" element={<MyTrips />} />
-              <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
-              <Route path="/share/:token" element={<ShareTrip />} />
-              <Route path="/market" element={<Market />} />
-              <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
-                const stored = JSON.parse(localStorage.getItem('user') || '{}');
-                const newUser = { ...stored, ...u };
-                setUser(newUser);
-                localStorage.setItem('user', JSON.stringify(newUser));
-              }} />} />
+      <ErrorBoundary>
+        <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-300">
+          {!isOnline && (
+            <div style={{
+              background: 'var(--accent-orange)',
+              color: 'white',
+              textAlign: 'center',
+              padding: '0.5rem',
+              fontSize: '0.85rem',
+              fontWeight: 'bold',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999
+            }}>
+              {t('app.offlineBanner', 'Modalità Offline - Stai visualizzando i dati salvati')}
+            </div>
+          )}
+          <Toaster richColors position="bottom-right" />
+          <Toast />
+          <Modal />
+          <Navbar user={user} />
+          <main>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Landing user={user} />} />
+                <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
+                <Route path="/trip/:id" element={<Dashboard />} />
+                <Route path="/calendar-callback" element={<CalendarCallback />} />
+                <Route path="/my-trips" element={<MyTrips />} />
+                <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
+                <Route path="/share/:token" element={<ShareTrip />} />
+                <Route path="/market" element={<Market />} />
+                <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
+                  const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                  const newUser = { ...stored, ...u };
+                  setUser(newUser);
+                  localStorage.setItem('user', JSON.stringify(newUser));
+                }} />} />
 
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Suspense>
-        </main>
-      </div>
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Suspense>
+          </main>
+        </div>
+      </ErrorBoundary>
     );
   } catch (err) {
     setGlobalError(err.message);

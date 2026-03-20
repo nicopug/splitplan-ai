@@ -129,6 +129,13 @@ async def extract_receipt(
     if not ai_client:
         raise HTTPException(status_code=500, detail="AI Client non inizializzato.")
 
+    MAX_FILE_SIZE = 3 * 1024 * 1024 # 3 MB
+    if getattr(file, "size", 0) and file.size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File troppo grande. Il limite è di 3 MB."
+        )
+
     try:
         contents = await file.read()
         

@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+
 // Configurazione API URL migliorata
 const getApiUrl = () => {
     // 1. Priorità: variabile d'ambiente
@@ -44,13 +46,27 @@ const getAuthHeadersMultipart = () => {
 // Gestione errori migliorata
 const handleResponse = async (response) => {
     if (!response.ok) {
-        let errorMessage = `Request failed with status ${response.status}`;
+        let errorMessage = `Richiesta fallita con status ${response.status}`;
+        let errorData = {};
+        
         try {
-            const errorData = await response.json();
+            errorData = await response.json();
             errorMessage = errorData.detail || errorData.message || errorMessage;
-        } catch (e) {
-            // Se non riesce a parsare il JSON, usa il messaggio di default
+        } catch (e) { }
+
+        // Trigger notifiche toast globali basate sullo status
+        if (response.status === 401) {
+            toast.error("Sessione scaduta o non valida. Effettua nuovamente il login.");
+        } else if (response.status === 403) {
+            toast.warning("Questa è una funzione premium. Effettua l'upgrade per sbloccarla.");
+        } else if (response.status === 429) {
+            toast.error("Hai raggiunto il limite giornaliero per l'AI. Riprova domani o passa a Pro!");
+        } else if (response.status >= 500) {
+            toast.error("Problema al server. Stiamo lavorando per risolverlo.");
+        } else {
+            toast.error(errorMessage);
         }
+
         throw new Error(errorMessage);
     }
     return response.json();

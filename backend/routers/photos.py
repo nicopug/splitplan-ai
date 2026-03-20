@@ -58,6 +58,14 @@ async def upload_photo(
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     file_name = f"{trip_id}/{uuid.uuid4()}.{file_ext}"
     
+    MAX_FILE_SIZE = 3 * 1024 * 1024 # 3 MB
+    if getattr(file, "size", 0) and file.size > MAX_FILE_SIZE:
+        from fastapi import status
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Immagine troppo grande. Il limite è di 3 MB."
+        )
+    
     try:
         file_content = await file.read()
         supabase.storage.from_(BUCKET_NAME).upload(

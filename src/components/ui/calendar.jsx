@@ -1,6 +1,8 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, useNavigation } from "react-day-picker"
+import { format } from "date-fns"
+import { it } from "date-fns/locale"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -18,17 +20,6 @@ function Calendar({
             classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4",
-                month_caption: "flex justify-center pt-1 pb-4 relative items-center h-10 bg-transparent",
-                caption_label: "text-sm font-black uppercase tracking-widest text-[#000000] dark:text-[#ffffff] relative z-10",
-                nav: "space-x-1 flex items-center",
-                button_previous: cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1 top-4 text-primary hover:bg-elevated border-border-subtle"
-                ),
-                button_next: cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1 top-4 text-primary hover:bg-elevated border-border-subtle"
-                ),
                 month_grid: "w-full border-collapse space-y-1",
                 weekdays: "flex",
                 weekday:
@@ -55,12 +46,38 @@ function Calendar({
                 ...classNames,
             }}
             components={{
-                Chevron: ({ ...props }) => {
-                    if (props.orientation === "left") {
-                        return <ChevronLeft className="h-4 w-4" />
-                    }
-                    return <ChevronRight className="h-4 w-4" />
-                },
+                Caption: ({ displayMonth }) => {
+                    const { goToMonth, nextMonth, previousMonth } = useNavigation();
+                    return (
+                        <div className="flex items-center justify-between mb-4 h-10 px-2 w-full">
+                            <button
+                                type="button"
+                                className={cn(
+                                    buttonVariants({ variant: "outline" }),
+                                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-primary border-border-subtle"
+                                )}
+                                disabled={!previousMonth}
+                                onClick={() => previousMonth && goToMonth(previousMonth)}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span className="text-sm font-black uppercase tracking-widest text-primary">
+                                {format(displayMonth, "MMMM yyyy", { locale: it }).toUpperCase()}
+                            </span>
+                            <button
+                                type="button"
+                                className={cn(
+                                    buttonVariants({ variant: "outline" }),
+                                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-primary border-border-subtle"
+                                )}
+                                disabled={!nextMonth}
+                                onClick={() => nextMonth && goToMonth(nextMonth)}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    );
+                }
             }}
             formatters={{
                 formatWeekdayName: (date) => {

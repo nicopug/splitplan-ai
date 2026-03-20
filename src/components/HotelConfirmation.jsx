@@ -106,7 +106,7 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
         <div className="container py-12 animate-fade-in">
             <div className="premium-card max-w-4xl mx-auto bg-card border-border-subtle shadow-xl">
                 <div className="text-center mb-12 space-y-4">
-                    <span className="subtle-heading">Step 2: {t('hotelConfirm.title', 'Conferma Logistica')}</span>
+                    <span className="subtle-heading">{t('hotelConfirm.title', 'Conferma Logistica')}</span>
                     <p className="text-muted text-sm mt-2">
                         <span dangerouslySetInnerHTML={{
                             __html: t('hotelConfirm.subtitle', {

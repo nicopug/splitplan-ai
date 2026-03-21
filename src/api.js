@@ -51,7 +51,14 @@ const handleResponse = async (response) => {
         
         try {
             errorData = await response.json();
-            errorMessage = errorData.detail || errorData.message || errorMessage;
+            if (Array.isArray(errorData.detail)) {
+                errorMessage = errorData.detail.map(e => e.msg || 'Errore di validazione').join(', ');
+            } else {
+                errorMessage = errorData.detail || errorData.message || errorMessage;
+            }
+            if (typeof errorMessage !== 'string') {
+                errorMessage = JSON.stringify(errorMessage);
+            }
         } catch (e) { }
 
         // Trigger notifiche toast globali basate sullo status

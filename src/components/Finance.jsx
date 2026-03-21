@@ -57,8 +57,6 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         if (readOnly) return;
         setLoading(true);
         try {
-            // First run migration silently just in case
-            try { await migrateExpenses(); } catch (e) { }
 
             const [exp, bal, parts] = await Promise.all([
                 getExpenses(trip.id),
@@ -175,7 +173,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
     const getUserName = (id) => {
         const u = participants.find(p => p.id === id);
-        return u ? u.name : `User ${id}`;
+        return (u && u.name) ? u.name : `User ${id}`;
     };
 
     const getCategoryIcon = (cat) => {
@@ -188,9 +186,10 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         const perPerson = participants.length > 0 ? total / participants.length : 0;
 
         let userBalance = 0;
-        if (currentUser && participants.some(p => p.id === currentUser.id)) {
+        const myParticipant = currentUser ? participants.find(p => p.account_id === currentUser.id) : null;
+        if (myParticipant) {
             const myPaid = expenses
-                .filter(e => e.payer_id === currentUser.id)
+                .filter(e => e.payer_id === myParticipant.id)
                 .reduce((acc, e) => acc + e.amount, 0);
             userBalance = myPaid - perPerson;
         }

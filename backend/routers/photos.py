@@ -93,7 +93,7 @@ async def get_photos(
     current_account: Account = Depends(get_current_user)
 ):
     _check_partecipant(trip_id, current_account, session)
-    return session.exec(statement).all()
+    return session.exec(select(Photo).where(Photo.trip_id == trip_id)).all()
 
 @router.delete("/photos/{photo_id}")
 async def delete_photo(

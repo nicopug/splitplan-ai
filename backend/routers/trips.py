@@ -1810,10 +1810,9 @@ async def get_trip_events(
     if not check:
         raise HTTPException(status_code=403, detail="Non sei un partecipante di questo viaggio.")
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    now_utc = datetime.now(timezone.utc)
     if trip.events_cache and trip.events_cache_date:
-        cache_date = datetime.strptime(trip.events_cache_date, "%Y-%m-%d")
-        diff = (datetime.now(timezone.utc) - cache_date).days
+        diff = (now_utc.replace(tzinfo=None) - trip.events_cache_date.replace(tzinfo=None)).days
         if diff < 3:
             logger.info(f"Cache eventi usata per viaggio {trip_id} (età: {diff} giorni)")
             return json.loads(trip.events_cache)
@@ -1876,7 +1875,7 @@ async def get_trip_events(
             data = {"events": []}
 
         trip.events_cache = json.dumps(data)
-        trip.events_cache_date = today
+        trip.events_cache_date = now_utc
         session.add(trip)
         session.commit()
 

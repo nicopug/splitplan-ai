@@ -50,7 +50,7 @@ def base_template(content: str) -> str:
                                                 Pianifica • Vota • Parti
                                             </p>
                                             <p style="margin: 0; color: #bbb; font-size: 11px; line-height: 1.6;">
-                                                &copy; 2025 SplitPlan. Tutti i diritti riservati.<br>
+                                                &copy; 2026 SplitPlan. Tutti i diritti riservati.<br>
                                                 Questa email è stata inviata automaticamente.<br>
                                                 Non rispondere a questo messaggio.
                                             </p>

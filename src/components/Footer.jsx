@@ -24,14 +24,14 @@ const Footer = () => {
 
                     <div className="flex flex-wrap gap-10 text-[11px] font-black tracking-[0.2em] uppercase text-muted">
                         <a href="/privacy" className="hover:text-primary transition-colors duration-300">Privacy</a>
-                        <a href="#" className="hover:text-primary transition-colors duration-300">Terms</a>
+                        <a href="/terms" className="hover:text-primary transition-colors duration-300">Terms</a>
                         <a href="mailto:splitplan.ai@gmail.com" className="hover:text-primary transition-colors duration-300">Contact</a>
                     </div>
                 </div>
 
                 <div className="mt-20 pt-10 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="text-[10px] text-muted uppercase tracking-[0.3em] font-black">
-                        {t('footer.rights', '© 2025 SplitPlan AI.')}
+                        {t('footer.rights', '© 2026 SplitPlan AI.')}
                     </div>
                     <div className="flex items-center gap-3 px-6 py-2 rounded-sm border border-border-medium bg-card shadow-sm">
                         <div className="relative flex items-center justify-center">

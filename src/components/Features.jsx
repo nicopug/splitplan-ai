@@ -41,11 +41,11 @@ const ComparisonTable = () => {
     const { t } = useTranslation();
     
     const rows = [
-        { label: "Itinerari Generati dall'AI", booking: false, splitwise: false, chatgpt: true, splitplan: true },
-        { label: "Gestione Divisione Spese", booking: false, splitwise: true, chatgpt: false, splitplan: true },
-        { label: "Logistica Voli/Hotel Sincrona", booking: true, splitwise: false, chatgpt: false, splitplan: true },
-        { label: "Supporto Chatbot Real-time", booking: false, splitwise: false, chatgpt: false, splitplan: true },
-        { label: "Mappa di Gruppo Interattiva", booking: false, splitwise: false, chatgpt: false, splitplan: true },
+        { label: t('features.row1'), booking: false, splitwise: false, chatgpt: true, splitplan: true },
+        { label: t('features.row2'), booking: false, splitwise: true, chatgpt: false, splitplan: true },
+        { label: t('features.row3'), booking: true, splitwise: false, chatgpt: false, splitplan: true },
+        { label: t('features.row4'), booking: false, splitwise: false, chatgpt: false, splitplan: true },
+        { label: t('features.row5'), booking: false, splitwise: false, chatgpt: false, splitplan: true },
     ];
 
     const competitors = [
@@ -61,7 +61,7 @@ const ComparisonTable = () => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/5">
-                            <th className="p-8 text-[11px] font-black tracking-[0.2em] uppercase text-muted">Feature</th>
+                            <th className="p-8 text-[11px] font-black tracking-[0.2em] uppercase text-muted">{t('features.tableFeature')}</th>
                             {competitors.map(comp => (
                                 <th key={comp.key} className={`p-8 text-center text-[11px] font-black tracking-[0.2em] uppercase ${comp.highlight ? 'text-primary-blue bg-primary-blue/5' : 'text-muted'}`}>
                                     {comp.name}
@@ -93,7 +93,7 @@ const ComparisonTable = () => {
             </div>
             <div className="mt-8 text-center">
                 <p className="text-[10px] font-black text-muted tracking-widest uppercase">
-                    Perché usare 4 app quando ne basta una?
+                    {t('features.tableFooter')}
                 </p>
             </div>
         </div>
@@ -137,7 +137,7 @@ const Features = () => {
                         transition={{ duration: 0.5 }}
                         className="subtle-heading"
                     >
-                        Master the Journey
+                        {t('features.sectionBadge')}
                     </motion.div>
                     <motion.h2 
                         initial={{ opacity: 0, y: 20 }}
@@ -145,8 +145,8 @@ const Features = () => {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9]"
                     >
-                        Every detail, <br />
-                        <span className="text-muted">perfectly synced.</span>
+                        {t('features.sectionTitle')} <br />
+                        <span className="text-muted">{t('features.sectionSubtitle')}</span>
                     </motion.h2>
                 </div>
 

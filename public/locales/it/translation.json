@@ -24,6 +24,7 @@
         "titleHighlight": "All-in-One",
         "description": "Dimentica le chat infinite e i file Excel. SplitPlan è il tuo Agente, Mediatore e CFO personale. Organizza viaggi perfetti senza stress.",
         "cta": "Inizia Ora",
+        "learnMore": "Esplora le funzionalità",
         "selectionTitle": "Come viaggi oggi?",
         "groupTitle": "In Gruppo",
         "groupDesc": "Risolvi i conflitti e dividi le spese.",
@@ -38,6 +39,7 @@
         "successMessage": "Viaggio creato con successo!"
     },
     "painPoints": {
+        "badge": "Il Problema",
         "title": "Basta con il Caos Organizzativo",
         "subtitle": "Organizzare un viaggio non dovrebbe essere un secondo lavoro.",
         "chaosTitle": "Caos Decisionale",
@@ -50,6 +52,7 @@
     "solution": {
         "badge": "Il Nostro Metodo",
         "title": "4 Fasi per il Viaggio Perfetto",
+        "ecosystem": "Piattaforma Integrata",
         "steps": {
             "s1": {
                 "title": "Decisione & Consenso",
@@ -72,6 +75,16 @@
     "features": {
         "title": "Perché SplitPlan è",
         "highlight": "Unico?",
+        "sectionBadge": "Padroneggia il Viaggio",
+        "sectionTitle": "Ogni dettaglio,",
+        "sectionSubtitle": "perfettamente sincronizzato.",
+        "tableFeature": "Funzionalità",
+        "tableFooter": "Perché usare 4 app quando ne basta una?",
+        "row1": "Itinerari Generati dall'AI",
+        "row2": "Gestione Divisione Spese",
+        "row3": "Logistica Voli/Hotel Sincrona",
+        "row4": "Supporto Chatbot Real-time",
+        "row5": "Mappa di Gruppo Interattiva",
         "mediator_title": "Mediatore Sociale AI",
         "mediator_desc": "Non siamo solo un motore di ricerca (come Skyscanner). Siamo l'amico che mette tutti d'accordo.",
         "finance_title": "Finanza Integrata",

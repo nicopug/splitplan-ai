@@ -10,6 +10,7 @@ import Pricing from './components/Pricing';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
+import Privacy from './pages/Privacy';
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
@@ -135,6 +136,7 @@ function App() {
                 }} />} />
 
                 <Route path="*" element={<Navigate to="/" />} />
+                <Route path="/privacy" element={<Privacy />} />
               </Routes>
             </Suspense>
           </main>

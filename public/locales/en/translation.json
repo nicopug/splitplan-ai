@@ -24,6 +24,7 @@
         "titleHighlight": "All-in-One",
         "description": "Forget endless chats and Excel files. SplitPlan is your Agent, Mediator, and personal CFO. Organize perfect trips without stress.",
         "cta": "Start Now",
+        "learnMore": "Explore features",
         "selectionTitle": "How are you traveling today?",
         "groupTitle": "In Group",
         "groupDesc": "Resolve conflicts and split expenses.",
@@ -38,6 +39,7 @@
         "successMessage": "Trip created successfully!"
     },
     "painPoints": {
+        "badge": "The Problem",
         "title": "No More Organizational Chaos",
         "subtitle": "Organizing a trip shouldn't be a second job.",
         "chaosTitle": "Decision Chaos",
@@ -50,6 +52,7 @@
     "solution": {
         "badge": "Our Method",
         "title": "4 Phases for the Perfect Trip",
+        "ecosystem": "Integrated Platform",
         "steps": {
             "s1": {
                 "title": "Decision & Consensus",
@@ -72,6 +75,16 @@
     "features": {
         "title": "Why is SplitPlan",
         "highlight": "Unique?",
+        "sectionBadge": "Master the Journey",
+        "sectionTitle": "Every detail,",
+        "sectionSubtitle": "perfectly synced.",
+        "tableFeature": "Feature",
+        "tableFooter": "Why use 4 apps when one is enough?",
+        "row1": "AI-Generated Itineraries",
+        "row2": "Expense Splitting Management",
+        "row3": "Synced Flights/Hotel Logistics",
+        "row4": "Real-time Chatbot Support",
+        "row5": "Interactive Group Map",
         "mediator_title": "AI Social Mediator",
         "mediator_desc": "We are not just a search engine (like Skyscanner). We are the friend who makes everyone agree.",
         "finance_title": "Integrated Finance",

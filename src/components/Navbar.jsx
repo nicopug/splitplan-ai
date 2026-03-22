@@ -110,6 +110,17 @@ const Navbar = ({ user: propUser }) => {
 
                     {/* Right Side: User & CTA */}
                     <div className="hidden md:flex items-center gap-6">
+                        {/* Language Toggle */}
+                        <button
+                            onClick={() => changeLanguage(currentLanguage.startsWith('it') ? 'en' : 'it')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--border-medium)] hover:bg-[var(--accent-muted)] transition-all text-[var(--text-primary)] text-[11px] font-black tracking-widest uppercase"
+                            aria-label="Switch language"
+                        >
+                            <span className={currentLanguage.startsWith('it') ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}>IT</span>
+                            <span className="text-[var(--text-muted)]">|</span>
+                            <span className={currentLanguage.startsWith('en') ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}>EN</span>
+                        </button>
+
                         {/* Theme Toggle */}
                         <button
                             onClick={toggleTheme}
@@ -180,7 +191,17 @@ const Navbar = ({ user: propUser }) => {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <div className="md:hidden flex items-center gap-4">
+                    <div className="md:hidden flex items-center gap-3">
+                        {/* Language Toggle Mobile */}
+                        <button
+                            onClick={() => changeLanguage(currentLanguage.startsWith('it') ? 'en' : 'it')}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-[var(--border-medium)] text-[10px] font-black tracking-widest uppercase text-[var(--text-primary)]"
+                            aria-label="Switch language"
+                        >
+                            <span className={currentLanguage.startsWith('it') ? 'opacity-100' : 'opacity-40'}>IT</span>
+                            <span className="opacity-20">|</span>
+                            <span className={currentLanguage.startsWith('en') ? 'opacity-100' : 'opacity-40'}>EN</span>
+                        </button>
                         <button
                             onClick={toggleTheme}
                             className="p-2 text-[var(--text-primary)]"

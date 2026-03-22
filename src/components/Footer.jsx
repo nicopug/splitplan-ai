@@ -10,9 +10,9 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                     <div className="space-y-6">
                         <div className="flex items-center gap-3 group">
-                            <img 
-                                src="/file.svg" 
-                                alt="SplitPlan Logo" 
+                            <img
+                                src="/file.svg"
+                                alt="SplitPlan Logo"
                                 className={`w-14 h-14 transition-all duration-500 group-hover:rotate-12 ${theme === 'dark' ? 'invert' : ''}`}
                             />
                             <div className="text-xl font-black text-primary tracking-tight uppercase">SplitPlan</div>
@@ -23,7 +23,7 @@ const Footer = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-10 text-[11px] font-black tracking-[0.2em] uppercase text-muted">
-                        <a href="#" className="hover:text-primary transition-colors duration-300">Privacy</a>
+                        <a href="/privacy" className="hover:text-primary transition-colors duration-300">Privacy</a>
                         <a href="#" className="hover:text-primary transition-colors duration-300">Terms</a>
                         <a href="mailto:splitplan.ai@gmail.com" className="hover:text-primary transition-colors duration-300">Contact</a>
                     </div>

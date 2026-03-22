@@ -10,7 +10,7 @@ const PainPoints = () => {
                     {/* Left: Strong Statement */}
                     <div className="space-y-8 py-12">
                         <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
-                            THE PROBLEM
+                            {t('painPoints.badge')}
                         </div>
                         <h2 className="text-primary text-5xl lg:text-7xl font-black leading-[0.9] max-w-sm uppercase tracking-tighter">
                             {t('painPoints.title', 'Basta con il Caos Organizzativo')}

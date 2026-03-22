@@ -78,7 +78,7 @@ const Solution = () => {
                                     ✈️
                                 </div>
                                 <div className="px-6 py-2 rounded-sm border border-border-medium bg-base text-[10px] font-black tracking-widest text-muted uppercase">
-                                    PLATFORM ECOSYSTEM
+                                    {t('solution.ecosystem')}
                                 </div>
                             </div>
                         </div>

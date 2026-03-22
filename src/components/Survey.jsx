@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { estimateSurveyBudget } from '../api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -108,6 +109,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         work_days: 'Monday,Tuesday,Wednesday,Thursday,Friday'
     });
 
+    const [suggestedBudget, setSuggestedBudget] = useState(null);
+    const [isEstimatingBudget, setIsEstimatingBudget] = useState(false);
+
 
 
     useEffect(() => {
@@ -145,6 +149,27 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             return { ...prev, participant_names: currentNames };
         });
     }, [formData.num_people, isGroup]);
+
+    useEffect(() => {
+        if (step === 5 && !suggestedBudget && !isEstimatingBudget && formData.destination) {
+            setIsEstimatingBudget(true);
+            estimateSurveyBudget(formData)
+                .then(data => {
+                    if (data && data.budget_max > 0) {
+                        setSuggestedBudget(data);
+                    } else {
+                        setSuggestedBudget({ error: true });
+                    }
+                })
+                .catch(err => {
+                    console.error("Scusa, errore budget stima:", err);
+                    setSuggestedBudget({ error: true });
+                })
+                .finally(() => {
+                    setIsEstimatingBudget(false);
+                });
+        }
+    }, [step, formData.destination, formData.start_date, suggestedBudget, isEstimatingBudget]);
 
     const handleNameChange = (index, value) => {
         const newNames = [...formData.participant_names];
@@ -434,8 +459,43 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             <div className="absolute right-6 top-1/2 -translate-y-1/2 text-xl font-black text-muted">€</div>
                         </div>
                     </div>
-                    <div className="md:col-span-2">
-                        <p className="text-muted text-sm font-medium">Inserisci un range di budget per una stima più flessibile (es. 800€ - 1200€).</p>
+                    <div className="md:col-span-2 mt-4">
+                        {isEstimatingBudget ? (
+                            <div className="flex items-center gap-4 text-primary font-medium bg-surface p-5 rounded-lg border border-border-medium border-dashed animate-pulse">
+                                <div className="bg-border-medium/20 text-muted p-3 rounded-full animate-spin">
+                                    <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-muted uppercase font-black tracking-widest mb-1">Analisi in corso...</span>
+                                    <span className="font-bold text-primary text-sm">L'IA sta calcolando il limite di spesa per {formData.destination}</span>
+                                </div>
+                            </div>
+                        ) : suggestedBudget && !suggestedBudget.error ? (
+                            <div 
+                                className="relative overflow-hidden group flex flex-col gap-1 cursor-pointer p-6 rounded-lg border border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:border-blue-500/60 hover:from-blue-500/20 hover:to-cyan-500/20 transition-all duration-300 shadow-sm hover:shadow-[0_8px_30px_-5px_rgba(0,102,255,0.4)]"
+                                onClick={() => setFormData(prev => ({ ...prev, budget: suggestedBudget.budget_min, budget_max: suggestedBudget.budget_max }))}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div className="relative z-10 flex gap-5 items-center">
+                                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-4 rounded-full border border-blue-500/30 text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                                        <Sparkles className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-blue-500/80 text-[10px] uppercase font-black tracking-widest mb-1 group-hover:text-blue-500 transition-colors">💡 Suggerimento IA</span>
+                                        <span className="font-bold text-primary text-lg">
+                                            Tra <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-400">{suggestedBudget.budget_min}€</span> e <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-400">{suggestedBudget.budget_max}€</span> per {formData.num_people} {formData.num_people > 1 ? 'persone' : 'persona'}.
+                                        </span>
+                                        <span className="text-[10px] font-black text-cyan-500 uppercase tracking-widest mt-2 flex items-center gap-1 group-hover:translate-x-2 transition-transform opacity-70 group-hover:opacity-100">
+                                            Clicca per applicarlo automaticamente &rarr;
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-surface/50 p-4 rounded-lg flex items-start gap-4 inline-block border border-border-medium border-dashed">
+                               <p className="text-muted text-sm font-medium">Inserisci un range di budget per permettere all'AI di strutturare hotel e trasporti nel bilancio.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </StepWrapper>

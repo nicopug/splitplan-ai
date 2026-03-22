@@ -238,6 +238,33 @@ export const estimateBudget = async (tripId) => {
     return handleResponse(response);
 };
 
+export const estimateSurveyBudget = async (data) => {
+    const response = await fetch(`${API_URL}/trips/estimate-survey-budget`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    });
+    return handleResponse(response);
+};
+
+export const searchTripOptions = async (tripId, type) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/search-options`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ type })
+    });
+    return handleResponse(response);
+};
+
+export const confirmTripOption = async (tripId, optionData) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/confirm-option`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(optionData)
+    });
+    return handleResponse(response);
+};
+
 export const updateTrip = async (tripId, updates) => {
     const response = await fetch(`${API_URL}/trips/${tripId}`, {
         method: "PATCH",

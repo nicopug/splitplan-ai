@@ -64,6 +64,23 @@ class PreferencesRequest(SQLModel):
     work_end_time: Optional[str] = "18:00"
     work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
 
+class SurveyBudgetRequest(SQLModel):
+    destination: str
+    departure_airport: str
+    start_date: str
+    end_date: str
+    transport_mode: Optional[str] = "FLIGHT"
+    num_people: int = 1
+
+class SearchOptionRequest(SQLModel):
+    type: str # 'flight' or 'hotel'
+
+class ConfirmOptionRequest(SQLModel):
+    type: str
+    price: float
+    provider: str
+    details: str
+
 class HotelSelectionRequest(SQLModel):
     hotel_name: str
     hotel_address: str
@@ -404,6 +421,134 @@ async def optimize_itinerary(trip_id: int, session: Session = Depends(get_sessio
         
         session.commit()
         return {"status": "success", "updated_count": total_updated}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/estimate-survey-budget")
+async def estimate_survey_budget(request: SurveyBudgetRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Stima il budget iniziale durante il Survey, senza salvare il viaggio"""
+    check_rate_limit(current_account, session)
+    if not ai_client:
+        return {"budget_min": 0, "budget_max": 0, "breakdown": {}}
+        
+    try:
+        try:
+            d1 = datetime.fromisoformat(request.start_date.replace('Z', ''))
+            d2 = datetime.fromisoformat(request.end_date.replace('Z', ''))
+            days = abs((d2 - d1).days) + 1
+        except Exception:
+            days = 7
+            
+        prompt = f"""
+        L'utente sta pianificando un viaggio. Destinazione: {request.destination}. Partenza da: {request.departure_airport}.
+        Dati: {request.num_people} persona/e, durata {days} giorni. Mezzo: {request.transport_mode}.
+        
+        Calcola un range di BUDJET IDEALE per l'INTERO GRUPPO ({request.num_people} persone), tenendo conto del costo stimato dei trasporti ({request.transport_mode}), del costo medio degli hotel ({days} notti), e dei costi di vita (pasti, trasporti locali).
+        RESTITUISCI SOLO JSON (senza testo descrittivo aggiuntivo, senza formattazione markdown).
+        {{
+            "budget_min": 1000,
+            "budget_max": 1500
+        }}
+        """
+        response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
+        raw_text = response.text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw_text)
+        
+        return {
+            "budget_min": float(data.get("budget_min", 0)),
+            "budget_max": float(data.get("budget_max", 0))
+        }
+    except Exception as e:
+        logger.error(f"[AI Error] Stima budget survey fallita: {e}")
+        return {"budget_min": 0, "budget_max": 0}
+
+@router.post("/{trip_id}/search-options")
+async def search_trip_options(trip_id: int, request: SearchOptionRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Simula una ricerca OTA (Voli o Hotel) tramite AI restituendo 6 opzioni"""
+    check_rate_limit(current_account, session)
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    if not ai_client:
+        return []
+
+    try:
+        try:
+            d1 = datetime.fromisoformat(trip.start_date.replace('Z', ''))
+            d2 = datetime.fromisoformat(trip.end_date.replace('Z', ''))
+            days = abs((d2 - d1).days) + 1
+        except Exception:
+            days = 7
+
+        if request.type == "hotel":
+            prompt = f"""
+            Agisci come l'API di un aggregatore alberghiero (es. Booking.com).
+            L'utente sta cercando un Hotel a {trip.destination} per {days} notti per {trip.num_people} persone.
+            Genera esattamente 6 opzioni RESTITUENDOLE esclusivamente in formato JSON. 
+            Il formato DEVE essere un array di oggetti, senza markdown o testo extra:
+            [
+              {{
+                "id": "h1",
+                "provider": "Booking.com",
+                "title": "Hotel Stella Alpine ***",
+                "price": 450.0,
+                "details": "Colazione inclusa, 2km dal centro",
+                "booking_url": "https://www.booking.com/searchresults.html?ss={quote(trip.destination or '')}"
+              }}
+            ]
+            Dai prezzi realistici in EURO per {days} notti totali e varia da budget ostello a hotel lusso.
+            """
+        else:
+            prompt = f"""
+            Agisci come l'API di Skyscanner/Trainline.
+            L'utente sta cercando trasporti andata/ritorno ({trip.transport_mode}) per {trip.destination} per {trip.num_people} persone.
+            Genera esattamente 6 opzioni RESTITUENDOLE esclusivamente in formato JSON.
+            Il formato DEVE essere un array di oggetti, senza markdown o testo extra:
+            [
+              {{
+                "id": "f1",
+                "provider": "Ryanair",
+                "title": "Volo Diretto A/R",
+                "price": 120.5,
+                "details": "Partenza 08:00 - Arrivo 10:15 / Bagaglio a mano",
+                "booking_url": "https://www.skyscanner.net/"
+              }}
+            ]
+            Dai prezzi realistici in EURO per tutto il gruppo ({trip.num_people} persone) e varia le compagnie.
+            """
+
+        response = await ai_client.aio.models.generate_content(model=AI_MODEL, contents=prompt)
+        raw_text = response.text.replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw_text)
+        return {"options": data}
+    except Exception as e:
+        logger.error(f"[AI Error] Errore simulazione OTA: {e}")
+        return {"options": []}
+
+@router.post("/{trip_id}/confirm-option")
+async def confirm_trip_option(trip_id: int, request: ConfirmOptionRequest, session: Session = Depends(get_session), current_account: Account = Depends(get_current_user)):
+    """Salva il costo dell'opzione selezionata (Volo/Hotel) sul budget del viaggio"""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    participant = session.exec(select(Participant).where(Participant.trip_id == trip_id, Participant.account_id == current_account.id)).first()
+    if not participant:
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+
+    try:
+        if request.type == "hotel":
+            trip.hotel_cost = request.price
+            trip.accommodation_location = request.title # store the name dynamically
+        else:
+            trip.transport_cost = request.price
+            
+        session.add(trip)
+        session.commit()
+        session.refresh(trip)
+        return {"status": "success", "trip": trip}
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=str(e))

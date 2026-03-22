@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { confirmHotel, extractReceiptData } from '../api';
 import { useToast } from '../context/ToastContext';
@@ -6,7 +6,7 @@ import { Upload, FileText, Sparkles, Loader2, Info, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
-const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) => {
+const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress, prefillData }) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [hotelName, setHotelName] = useState('');
@@ -21,6 +21,25 @@ const HotelConfirmation = ({ trip, onConfirm, setIsGenerating, setProgress }) =>
 
     const hotelInputRef = useRef(null);
     const transportInputRef = useRef(null);
+
+    // Auto-fill from OTA prefill when passed in from Logistics selection
+    useEffect(() => {
+        if (!prefillData) return;
+        if (prefillData.type === 'hotel') {
+            if (prefillData.title) setHotelName(prefillData.title);
+            if (prefillData.details) setHotelAddress(prefillData.details);
+            if (prefillData.price) setHotelCost(prefillData.price.toString());
+        } else {
+            if (prefillData.price) setFlightCost(prefillData.price.toString());
+            if (prefillData.details) {
+                // Try to extract times from details text e.g. 'Partenza 08:00 - Arrivo 10:15'
+                const arrMatch = prefillData.details.match(/(Arrivo|Arrive|arriva)\s+(\d{2}:\d{2})/i);
+                const depMatch = prefillData.details.match(/(Partenza|Departure|parte)\s+(\d{2}:\d{2})/i);
+                if (arrMatch) setArrivalTime(arrMatch[2]);
+                if (depMatch) setReturnTime(depMatch[2]);
+            }
+        }
+    }, [prefillData]);
 
     const handleExtract = async (file, type) => {
         if (!file) return;

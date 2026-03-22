@@ -6,7 +6,7 @@ import { useModal } from '../context/ModalContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
-import { Sparkles, Star, User, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronRight } from 'lucide-react';
 import { useSpotlight } from '../hooks/useSpotlight';
 
 const AIDemo = () => {
@@ -106,32 +106,7 @@ const AIDemo = () => {
     );
 };
 
-const SocialProof = () => {
-    return (
-        <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center gap-4 mt-12 bg-white/[0.02] border border-white/5 px-6 py-4 rounded-2xl backdrop-blur-sm self-start"
-        >
-            <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-base bg-elevated flex items-center justify-center overflow-hidden">
-                        <User className="w-5 h-5 text-muted" />
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col">
-                <div className="flex text-yellow-500 gap-0.5 mb-1">
-                    {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-current" />)}
-                </div>
-                <div className="text-[11px] font-bold text-muted uppercase tracking-widest whitespace-nowrap">
-                    Scelto da oltre <span className="text-primary">2.000</span> viaggiatori
-                </div>
-            </div>
-        </motion.div>
-    );
-};
+
 
 const Hero = () => {
     const navigate = useNavigate();
@@ -239,7 +214,7 @@ const Hero = () => {
                             </button>
                         </motion.div>
 
-                        <SocialProof />
+
                     </div>
 
                     {/* Right: Technical Visual (AI Demo) */}

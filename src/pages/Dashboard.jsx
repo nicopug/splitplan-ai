@@ -49,6 +49,7 @@ const Dashboard = () => {
     const [itineraryProgress, setItineraryProgress] = useState(0);
     const [isCalendarConnected, setIsCalendarConnected] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [prefillData, setPrefillData] = useState(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -495,7 +496,7 @@ const Dashboard = () => {
                                 {/* 1. Logistics (Premium only) */}
                                 {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
                                     <Suspense fallback={<ComponentLoader />}>
-                                        <Logistics trip={trip} />
+                                        <Logistics trip={trip} onPrefill={(data) => setPrefillData(data)} />
                                     </Suspense>
                                 )}
 
@@ -524,15 +525,18 @@ const Dashboard = () => {
                                 {/* 3. Hotel Form or Wait Message */}
                                 {!trip.accommodation && (
                                     isOrganizer ? (
-                                        <Suspense fallback={<ComponentLoader />}>
+                        <div id="hotel-confirmation-form">
+                                    <Suspense fallback={<ComponentLoader />}>
                                             <HotelConfirmation
                                                 trip={trip}
                                                 onConfirm={fetchTrip}
                                                 setIsGenerating={setIsGenerating}
                                                 setProgress={setItineraryProgress}
                                                 isPremium={user?.is_subscribed || trip.is_premium}
+                                                prefillData={prefillData}
                                             />
-                                        </Suspense>
+                                    </Suspense>
+                                </div>
                                     ) : (
                                         <div className="container py-12">
                                             <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">

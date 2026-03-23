@@ -22,11 +22,34 @@ WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
 
 PRODUCTS = {
-    "credit_1":   {"name": "SplitPlan - 1 Credito",       "amount": 399,  "credits": 1, "mode": "payment"},
-    "credit_3":   {"name": "SplitPlan - 3 Crediti",        "amount": 899,  "credits": 3, "mode": "payment"},
-    "sub_monthly":{"name": "SplitPlan Pro - Mensile",      "amount": 499,  "plan": "MONTHLY", "mode": "subscription", "interval": "month"},
-    "sub_annual": {"name": "SplitPlan Pro - Annuale",      "amount": 2999, "plan": "ANNUAL",  "mode": "subscription", "interval": "year"},
+    "credit_1": {
+        "name": "SplitPlan - 1 Credito",
+        "amount": 399,
+        "credits": 1,
+        "mode": "payment",
+    },
+    "credit_3": {
+        "name": "SplitPlan - 3 Crediti",
+        "amount": 899,
+        "credits": 3,
+        "mode": "payment",
+    },
+    "sub_monthly": {
+        "name": "SplitPlan Pro - Mensile",
+        "amount": 499,
+        "plan": "MONTHLY",
+        "mode": "subscription",
+        "interval": "month",
+    },
+    "sub_annual": {
+        "name": "SplitPlan Pro - Annuale",
+        "amount": 2999,
+        "plan": "ANNUAL",
+        "mode": "subscription",
+        "interval": "year",
+    },
 }
+
 
 class CheckoutRequest(BaseModel):
     product_type: str
@@ -34,10 +57,17 @@ class CheckoutRequest(BaseModel):
 
 # ---- IDEMPOTENCY ----
 
+
 def _is_already_processed(stripe_event_id: str, session: Session) -> bool:
-    return session.exec(
-        select(ProcessedStripeEvent).where(ProcessedStripeEvent.stripe_event_id == stripe_event_id)
-    ).first() is not None
+    return (
+        session.exec(
+            select(ProcessedStripeEvent).where(
+                ProcessedStripeEvent.stripe_event_id == stripe_event_id
+            )
+        ).first()
+        is not None
+    )
+
 
 def _mark_as_processed(stripe_event_id: str, session: Session) -> None:
     session.add(ProcessedStripeEvent(stripe_event_id=stripe_event_id))
@@ -46,6 +76,7 @@ def _mark_as_processed(stripe_event_id: str, session: Session) -> None:
 
 
 # ---- CHECKOUT ----
+
 
 @router.post("/create-checkout")
 async def create_checkout(
@@ -63,17 +94,41 @@ async def create_checkout(
             "cancel_url": f"{FRONTEND_URL}/market",
             "client_reference_id": str(current_account.id),
             "customer_email": current_account.email,
-            "metadata": {"product_type": req.product_type, "account_id": str(current_account.id)},
+            "metadata": {
+                "product_type": req.product_type,
+                "account_id": str(current_account.id),
+            },
         }
         if product["mode"] == "payment":
             params["mode"] = "payment"
-            params["line_items"] = [{"price_data": {"currency": "eur", "product_data": {"name": product["name"]}, "unit_amount": product["amount"]}, "quantity": 1}]
+            params["line_items"] = [
+                {
+                    "price_data": {
+                        "currency": "eur",
+                        "product_data": {"name": product["name"]},
+                        "unit_amount": product["amount"],
+                    },
+                    "quantity": 1,
+                }
+            ]
         else:
             params["mode"] = "subscription"
-            params["line_items"] = [{"price_data": {"currency": "eur", "product_data": {"name": product["name"]}, "unit_amount": product["amount"], "recurring": {"interval": product["interval"]}}, "quantity": 1}]
+            params["line_items"] = [
+                {
+                    "price_data": {
+                        "currency": "eur",
+                        "product_data": {"name": product["name"]},
+                        "unit_amount": product["amount"],
+                        "recurring": {"interval": product["interval"]},
+                    },
+                    "quantity": 1,
+                }
+            ]
 
         checkout_session = stripe.checkout.Session.create(**params)
-        logger.info(f"Checkout creato per account {current_account.id}, prodotto {req.product_type}")
+        logger.info(
+            f"Checkout creato per account {current_account.id}, prodotto {req.product_type}"
+        )
         return {"url": checkout_session.url}
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error checkout account {current_account.id}: {e}")
@@ -85,7 +140,10 @@ async def create_checkout(
 
 # ---- ACTIVATION ----
 
-async def process_successful_checkout(account: Account, product_type: str, stripe_event_id: str, session: Session):
+
+async def process_successful_checkout(
+    account: Account, product_type: str, stripe_event_id: str, session: Session
+):
     """
     Attiva crediti/abbonamento. Idempotente: usa stripe_event_id per
     garantire che webhook e verify-session non processino due volte lo stesso pagamento.
@@ -101,14 +159,20 @@ async def process_successful_checkout(account: Account, product_type: str, strip
 
     if product["mode"] == "payment":
         account.credits += product["credits"]
-        logger.info(f"[Activation] +{product['credits']} crediti per account {account.id}")
+        logger.info(
+            f"[Activation] +{product['credits']} crediti per account {account.id}"
+        )
     else:
         account.is_subscribed = True
         account.subscription_plan = product["plan"]
         days = 365 if product["plan"] == "ANNUAL" else 30
-        account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
+        account.subscription_expiry = (
+            datetime.now(timezone.utc) + timedelta(days=days)
+        ).strftime("%Y-%m-%d")
         account.auto_renew = True
-        logger.info(f"[Activation] Abbonamento {product['plan']} attivato per account {account.id}")
+        logger.info(
+            f"[Activation] Abbonamento {product['plan']} attivato per account {account.id}"
+        )
 
     session.add(account)
     session.commit()
@@ -120,11 +184,21 @@ async def process_successful_checkout(account: Account, product_type: str, strip
         smtp_user, smtp_password, smtp_conf = get_smtp_config()
         if smtp_user and smtp_password:
             amount_str = f"EUR{product['amount']/100:.2f}"
-            credits_text = f"+{product['credits']} Crediti" if "credits" in product else f"Piano {product['plan']}"
+            credits_text = (
+                f"+{product['credits']} Crediti"
+                if "credits" in product
+                else f"Piano {product['plan']}"
+            )
             message = MessageSchema(
                 subject="Ricevuta di acquisto SplitPlan",
                 recipients=[account.email],
-                body=purchase_receipt_email(name=account.name, product_name=product["name"], amount=amount_str, credits_added=credits_text, market_url=f"{FRONTEND_URL}/market"),
+                body=purchase_receipt_email(
+                    name=account.name,
+                    product_name=product["name"],
+                    amount=amount_str,
+                    credits_added=credits_text,
+                    market_url=f"{FRONTEND_URL}/market",
+                ),
                 subtype=MessageType.html,
             )
             await FastMail(smtp_conf).send_message(message)
@@ -135,6 +209,7 @@ async def process_successful_checkout(account: Account, product_type: str, strip
 
 # ---- WEBHOOK ----
 
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, session: Session = Depends(get_session)):
     payload = await request.body()
@@ -144,6 +219,7 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
             event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
         else:
             import json
+
             event = json.loads(payload)
             logger.warning("[Webhook] STRIPE_WEBHOOK_SECRET non configurato.")
     except (ValueError, stripe.error.SignatureVerificationError) as e:
@@ -169,7 +245,9 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
         sub = event["data"]["object"]
         email = sub.get("customer_email") or ""
         if email:
-            account = session.exec(select(Account).where(Account.email == email)).first()
+            account = session.exec(
+                select(Account).where(Account.email == email)
+            ).first()
             if account:
                 account.is_subscribed = False
                 account.subscription_plan = None
@@ -183,6 +261,7 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
 
 
 # ---- VERIFY SESSION ----
+
 
 @router.get("/verify-session")
 async def verify_session(
@@ -200,13 +279,20 @@ async def verify_session(
             if not PRODUCTS.get(product_type):
                 return {"status": "paid", "credits": current_account.credits}
             # Prefix "verify_" distingue dal webhook ma rimane idempotente su chiamate multiple
-            await process_successful_checkout(current_account, product_type, f"verify_{session_id}", session)
+            await process_successful_checkout(
+                current_account, product_type, f"verify_{session_id}", session
+            )
             return {
-                "status": "paid", "id": current_account.id, "email": current_account.email,
-                "name": current_account.name, "surname": current_account.surname,
-                "credits": current_account.credits, "is_subscribed": current_account.is_subscribed,
+                "status": "paid",
+                "id": current_account.id,
+                "email": current_account.email,
+                "name": current_account.name,
+                "surname": current_account.surname,
+                "credits": current_account.credits,
+                "is_subscribed": current_account.is_subscribed,
                 "subscription_plan": current_account.subscription_plan,
-                "subscription_expiry": current_account.subscription_expiry, "product_type": product_type,
+                "subscription_expiry": current_account.subscription_expiry,
+                "product_type": product_type,
             }
         return {"status": cs.payment_status}
     except stripe.error.StripeError as e:
@@ -216,6 +302,7 @@ async def verify_session(
 
 # ---- PORTAL ----
 
+
 @router.post("/portal")
 async def create_portal_session(
     session: Session = Depends(get_session),
@@ -224,8 +311,12 @@ async def create_portal_session(
     try:
         customers = stripe.Customer.list(email=current_account.email, limit=1)
         if not customers.data:
-            raise HTTPException(status_code=404, detail="Nessun abbonamento attivo trovato")
-        portal = stripe.billing_portal.Session.create(customer=customers.data[0].id, return_url=f"{FRONTEND_URL}/market")
+            raise HTTPException(
+                status_code=404, detail="Nessun abbonamento attivo trovato"
+            )
+        portal = stripe.billing_portal.Session.create(
+            customer=customers.data[0].id, return_url=f"{FRONTEND_URL}/market"
+        )
         return {"url": portal.url}
     except stripe.error.StripeError as e:
         logger.error(f"[Portal] {e}")

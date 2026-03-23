@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -22,7 +22,7 @@ from auth import (
 )
 from database import get_session
 from email_templates import reset_password_email, verification_email
-from models import Account, Participant
+from models import Account
 from utils.email_utils import get_smtp_config
 
 load_dotenv()
@@ -33,6 +33,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     logger.warning("SMTP Credentials non trovate in .env. L'invio email fallirà.")
 
+
 # ---------------------------------------------------------------------------
 # SCHEMAS
 # ---------------------------------------------------------------------------
@@ -42,16 +43,20 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
+
 class LoginRequest(BaseModel):
     email: str
     password: str
 
+
 class ForgotPasswordRequest(BaseModel):
     email: str
+
 
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
 
 class AccountResponse(BaseModel):
     id: int
@@ -76,10 +81,19 @@ class AccountResponse(BaseModel):
 # Tutti protetti da X-Admin-Token. Da eseguire UNA VOLTA via curl/Postman.
 # ---------------------------------------------------------------------------
 
-@router.get("/admin/migrate-security", dependencies=[Depends(verify_admin_token)], tags=["admin"])
+
+@router.get(
+    "/admin/migrate-security",
+    dependencies=[Depends(verify_admin_token)],
+    tags=["admin"],
+)
 async def migrate_db_security(session: Session = Depends(get_session)):
     try:
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS reset_in_progress BOOLEAN DEFAULT FALSE;"))
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS reset_in_progress BOOLEAN DEFAULT FALSE;"
+            )
+        )
         session.commit()
         logger.info("[ADMIN] Migrazione security completata.")
         return {"message": "Colonna reset_in_progress aggiunta."}
@@ -87,11 +101,24 @@ async def migrate_db_security(session: Session = Depends(get_session)):
         logger.error(f"[ADMIN] migrate-security fallita: {e}")
         return {"error": str(e)}
 
-@router.get("/admin/migrate-rate-limit", dependencies=[Depends(verify_admin_token)], tags=["admin"])
+
+@router.get(
+    "/admin/migrate-rate-limit",
+    dependencies=[Depends(verify_admin_token)],
+    tags=["admin"],
+)
 async def migrate_rate_limit_fields(session: Session = Depends(get_session)):
     try:
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS daily_ai_usage INTEGER DEFAULT 0;"))
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS last_usage_reset VARCHAR;"))
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS daily_ai_usage INTEGER DEFAULT 0;"
+            )
+        )
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS last_usage_reset VARCHAR;"
+            )
+        )
         session.commit()
         logger.info("[ADMIN] Migrazione rate limit completata.")
         return {"message": "Campi rate limit aggiunti."}
@@ -99,12 +126,29 @@ async def migrate_rate_limit_fields(session: Session = Depends(get_session)):
         logger.error(f"[ADMIN] migrate-rate-limit fallita: {e}")
         return {"error": str(e)}
 
-@router.get("/admin/migrate-subscription", dependencies=[Depends(verify_admin_token)], tags=["admin"])
+
+@router.get(
+    "/admin/migrate-subscription",
+    dependencies=[Depends(verify_admin_token)],
+    tags=["admin"],
+)
 async def migrate_subscription_fields(session: Session = Depends(get_session)):
     try:
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR;"))
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_expiry VARCHAR;"))
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT TRUE;"))
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR;"
+            )
+        )
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS subscription_expiry VARCHAR;"
+            )
+        )
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT TRUE;"
+            )
+        )
         session.commit()
         logger.info("[ADMIN] Migrazione subscription completata.")
         return {"message": "Campi subscription aggiunti."}
@@ -112,10 +156,19 @@ async def migrate_subscription_fields(session: Session = Depends(get_session)):
         logger.error(f"[ADMIN] migrate-subscription fallita: {e}")
         return {"error": str(e)}
 
-@router.get("/admin/migrate-language", dependencies=[Depends(verify_admin_token)], tags=["admin"])
+
+@router.get(
+    "/admin/migrate-language",
+    dependencies=[Depends(verify_admin_token)],
+    tags=["admin"],
+)
 async def migrate_language_field(session: Session = Depends(get_session)):
     try:
-        session.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS language VARCHAR DEFAULT 'it';"))
+        session.execute(
+            text(
+                "ALTER TABLE account ADD COLUMN IF NOT EXISTS language VARCHAR DEFAULT 'it';"
+            )
+        )
         session.commit()
         logger.info("[ADMIN] Migrazione language completata.")
         return {"message": "Campo language aggiunto."}
@@ -127,6 +180,7 @@ async def migrate_language_field(session: Session = Depends(get_session)):
 # ---------------------------------------------------------------------------
 # AUTH ENDPOINTS
 # ---------------------------------------------------------------------------
+
 
 @router.post("/register")
 async def register(req: RegisterRequest, session: Session = Depends(get_session)):
@@ -151,14 +205,18 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
 
     if smtp_user and smtp_password:
         try:
-            logger.info(f"[AUTH] Tentativo invio email di verifica tramite {smtp_user}...")
+            logger.info(
+                f"[AUTH] Tentativo invio email di verifica tramite {smtp_user}..."
+            )
             verification_token = create_verification_token(email=req.email)
             frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
             verification_url = f"{frontend_url}/verify?token={verification_token}"
             message = MessageSchema(
                 subject="Verifica il tuo account SplitPlan ✈️",
                 recipients=[req.email],
-                body=verification_email(name=req.name, verification_url=verification_url),
+                body=verification_email(
+                    name=req.name, verification_url=verification_url
+                ),
                 subtype=MessageType.html,
             )
             fm = FastMail(smtp_conf)
@@ -171,10 +229,16 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
         logger.warning("[AUTH] SMTP non configurato correttamente.")
 
     if not is_email_sent:
-        logger.error(f"[AUTH] Registrazione completata per {req.email} ma l'email di verifica non è partita.")
-        return {"message": "Registrazione completata, ma non siamo riusciti a inviare l'email di verifica. Contatta l'assistenza o riprova più tardi."}
+        logger.error(
+            f"[AUTH] Registrazione completata per {req.email} ma l'email di verifica non è partita."
+        )
+        return {
+            "message": "Registrazione completata, ma non siamo riusciti a inviare l'email di verifica. Contatta l'assistenza o riprova più tardi."
+        }
 
-    return {"message": "Registrazione completata. Controlla la tua email per la verifica."}
+    return {
+        "message": "Registrazione completata. Controlla la tua email per la verifica."
+    }
 
 
 @router.get("/verify-email")
@@ -203,10 +267,15 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
         raise HTTPException(status_code=401, detail="Email o password non corretti")
 
     if account.reset_in_progress:
-        raise HTTPException(status_code=403, detail="Reset della password in corso. Usa il link inviato via email.")
+        raise HTTPException(
+            status_code=403,
+            detail="Reset della password in corso. Usa il link inviato via email.",
+        )
 
     if not account.is_verified:
-        raise HTTPException(status_code=403, detail="Profilo non verificato. Controlla la tua email.")
+        raise HTTPException(
+            status_code=403, detail="Profilo non verificato. Controlla la tua email."
+        )
 
     access_token = create_access_token(data={"sub": account.email})
     logger.info(f"Login effettuato per account {account.id}")
@@ -253,7 +322,9 @@ async def validate_reset_token(token: str, session: Session = Depends(get_sessio
 
 
 @router.post("/forgot-password")
-async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends(get_session)):
+async def forgot_password(
+    req: ForgotPasswordRequest, session: Session = Depends(get_session)
+):
     account = session.exec(select(Account).where(Account.email == req.email)).first()
     if not account:
         # Risposta volutamente ambigua per sicurezza (non rivela se l'email esiste)
@@ -277,14 +348,20 @@ async def forgot_password(req: ForgotPasswordRequest, session: Session = Depends
             return {"message": "Email di reset inviata correttamente."}
         except Exception as e:
             logger.error(f"Errore invio email reset per {req.email}: {e}")
-            raise HTTPException(status_code=500, detail="Errore nell'invio dell'email di reset")
+            raise HTTPException(
+                status_code=500, detail="Errore nell'invio dell'email di reset"
+            )
     else:
         logger.error("SMTP non configurato durante reset password.")
-        raise HTTPException(status_code=500, detail="Configurazione email mancante sul server")
+        raise HTTPException(
+            status_code=500, detail="Configurazione email mancante sul server"
+        )
 
 
 @router.post("/reset-password")
-async def reset_password(req: ResetPasswordRequest, session: Session = Depends(get_session)):
+async def reset_password(
+    req: ResetPasswordRequest, session: Session = Depends(get_session)
+):
     payload = decode_token(req.token)
     if not payload or payload.get("type") != "reset":
         raise HTTPException(status_code=400, detail="Token non valido o scaduto")
@@ -295,7 +372,10 @@ async def reset_password(req: ResetPasswordRequest, session: Session = Depends(g
         raise HTTPException(status_code=404, detail="Account non trovato")
 
     if verify_password(req.new_password, account.hashed_password):
-        raise HTTPException(status_code=400, detail="La nuova password non può essere uguale a quella attuale")
+        raise HTTPException(
+            status_code=400,
+            detail="La nuova password non può essere uguale a quella attuale",
+        )
 
     account.hashed_password = get_password_hash(req.new_password)
     account.reset_in_progress = False
@@ -309,6 +389,7 @@ async def reset_password(req: ResetPasswordRequest, session: Session = Depends(g
 # SUBSCRIPTION MANAGEMENT (richiede JWT)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/toggle-subscription")
 async def toggle_subscription(
     plan: Optional[str] = Body(None, embed=True),
@@ -320,13 +401,17 @@ async def toggle_subscription(
         current_account.is_subscribed = True
         current_account.subscription_plan = plan or "MONTHLY"
         days = 365 if current_account.subscription_plan == "ANNUAL" else 30
-        current_account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
+        current_account.subscription_expiry = (
+            datetime.now(timezone.utc) + timedelta(days=days)
+        ).strftime("%Y-%m-%d")
         current_account.auto_renew = True
     else:
         if plan and current_account.subscription_plan != plan:
             current_account.subscription_plan = plan
             days = 365 if plan == "ANNUAL" else 30
-            current_account.subscription_expiry = (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
+            current_account.subscription_expiry = (
+                datetime.now(timezone.utc) + timedelta(days=days)
+            ).strftime("%Y-%m-%d")
         else:
             current_account.is_subscribed = False
             current_account.subscription_plan = None
@@ -335,7 +420,9 @@ async def toggle_subscription(
     session.add(current_account)
     session.commit()
     session.refresh(current_account)
-    logger.info(f"Subscription aggiornata per account {current_account.id}: subscribed={current_account.is_subscribed}")
+    logger.info(
+        f"Subscription aggiornata per account {current_account.id}: subscribed={current_account.is_subscribed}"
+    )
 
     return {
         "is_subscribed": current_account.is_subscribed,

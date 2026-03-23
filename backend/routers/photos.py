@@ -24,90 +24,98 @@ BUCKET_NAME = "trip-photos"
 if not SUPABASE_URL or not SUPABASE_KEY:
     logger.warning("Supabase credentials not found. Photo upload will fail.")
 
+
 def get_supabase() -> Client:
     if not SUPABASE_URL or not SUPABASE_KEY:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
+
 def _check_partecipant(trip_id: int, account: Account, session: Session):
     """Verifica che l'utente sia un partecipante del viaggio."""
     member = session.exec(
         select(Participant).where(
-            Participant.trip_id == trip_id,
-            Participant.account_id == account.id
+            Participant.trip_id == trip_id, Participant.account_id == account.id
         )
     ).first()
     if not member:
-        raise HTTPException(status_code=403, detail="Non sei un partecipante di questo viaggio")
+        raise HTTPException(
+            status_code=403, detail="Non sei un partecipante di questo viaggio"
+        )
 
 
 @router.post("/{trip_id}/photos", response_model=Photo)
 async def upload_photo(
-    trip_id: int, 
-    file: UploadFile = File(...), 
+    trip_id: int,
+    file: UploadFile = File(...),
     session: Session = Depends(get_session),
-    current_account: Account = Depends(get_current_user)
+    current_account: Account = Depends(get_current_user),
 ):
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato.")
-    
+
     _check_partecipant(trip_id, current_account, session)
-    
+
     supabase = get_supabase()
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     file_name = f"{trip_id}/{uuid.uuid4()}.{file_ext}"
-    
-    MAX_FILE_SIZE = 3 * 1024 * 1024 # 3 MB
+
+    MAX_FILE_SIZE = 3 * 1024 * 1024  # 3 MB
     if getattr(file, "size", 0) and file.size > MAX_FILE_SIZE:
         from fastapi import status
+
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Immagine troppo grande. Il limite è di 3 MB."
+            detail="Immagine troppo grande. Il limite è di 3 MB.",
         )
-    
+
     try:
         file_content = await file.read()
         supabase.storage.from_(BUCKET_NAME).upload(
             path=file_name,
             file=file_content,
-            file_options={"content-type": file.content_type}
+            file_options={"content-type": file.content_type},
         )
         public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_name)
-        
+
         db_photo = Photo(trip_id=trip_id, url=public_url)
         session.add(db_photo)
         session.commit()
         session.refresh(db_photo)
-        logger.info(f"Foto caricata per viaggio {trip_id} da account {current_account.id}")
+        logger.info(
+            f"Foto caricata per viaggio {trip_id} da account {current_account.id}"
+        )
         return db_photo
-        
+
     except Exception as e:
         logger.error(f"Errore upload foto viaggio {trip_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+
 
 @router.get("/{trip_id}/photos", response_model=List[Photo])
 async def get_photos(
     trip_id: int,
     session: Session = Depends(get_session),
-    current_account: Account = Depends(get_current_user)
+    current_account: Account = Depends(get_current_user),
 ):
     _check_partecipant(trip_id, current_account, session)
     return session.exec(select(Photo).where(Photo.trip_id == trip_id)).all()
+
 
 @router.delete("/photos/{photo_id}")
 async def delete_photo(
     photo_id: int,
     session: Session = Depends(get_session),
-    current_account: Account = Depends(get_current_user)
+    current_account: Account = Depends(get_current_user),
 ):
     photo = session.get(Photo, photo_id)
     if not photo:
         raise HTTPException(status_code=404, detail="Foto non trovata")
-    
+
     # Verifica che l'utente sia partecipante del viaggio a cui appartiene la foto
     _check_partecipant(photo.trip_id, current_account, session)
-    
+
     supabase = get_supabase()
     try:
         if BUCKET_NAME in photo.url:

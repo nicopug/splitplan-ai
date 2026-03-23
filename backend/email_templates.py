@@ -164,7 +164,14 @@ def reset_password_email(name: str, reset_url: str) -> str:
     return base_template(content)
 
 
-def booking_confirmation_email(name: str, trip_name: str, destination: str, dates: str, price: str, itinerary_url: str) -> str:
+def booking_confirmation_email(
+    name: str,
+    trip_name: str,
+    destination: str,
+    dates: str,
+    price: str,
+    itinerary_url: str,
+) -> str:
     """Template email per la conferma della prenotazione del viaggio."""
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">
@@ -228,7 +235,9 @@ def booking_confirmation_email(name: str, trip_name: str, destination: str, date
     return base_template(content)
 
 
-def purchase_receipt_email(name: str, product_name: str, amount: str, credits_added: str, market_url: str) -> str:
+def purchase_receipt_email(
+    name: str, product_name: str, amount: str, credits_added: str, market_url: str
+) -> str:
     """Template email per la ricevuta d'acquisto."""
     content = f"""
         <div style="text-align: center; margin-bottom: 30px;">

@@ -8,14 +8,14 @@ from dotenv import load_dotenv
 base_dir = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(base_dir, "..", ".env"))
 
-from fastapi import FastAPI, Depends, Header, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import text
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database import get_session, engine
+from database import engine
 from routers import trips, photos, users, expenses, itinerary, payments, calendar
 from admin_auth import verify_admin_token
 
@@ -49,7 +49,7 @@ app = FastAPI(root_path=ROOT_PATH, lifespan=lifespan)
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://splitplan-ai.vercel.app"
+    "https://splitplan-ai.vercel.app",
 ]
 
 app.add_middleware(
@@ -78,19 +78,34 @@ app.include_router(calendar.router)
 # Esempio curl: curl -H "X-Admin-Token: il_tuo_token_qui" http://localhost:8000/api/admin/init-db
 # ---------------------------------------------------------------------------
 
+
 @app.get("/admin/init-db", dependencies=[Depends(verify_admin_token)], tags=["admin"])
 def init_db():
     """Endpoint deprecato. Usare alembic upgrade head."""
-    return {"message": "Endpoint deprecato. Usare 'alembic upgrade head' dalla riga di comando."}
+    return {
+        "message": "Endpoint deprecato. Usare 'alembic upgrade head' dalla riga di comando."
+    }
 
 
-@app.get("/admin/migrate-calendar", dependencies=[Depends(verify_admin_token)], tags=["admin"])
+@app.get(
+    "/admin/migrate-calendar",
+    dependencies=[Depends(verify_admin_token)],
+    tags=["admin"],
+)
 def migrate_db_calendar():
     """Aggiunge le colonne Google Calendar. Richiede header X-Admin-Token."""
     try:
         with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"))
-            conn.execute(text("ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"
+                )
+            )
             conn.commit()
         logger.info("[ADMIN] migrate-calendar eseguita.")
         return {"status": "success", "message": "Colonne calendar aggiunte."}
@@ -107,7 +122,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Errore non gestito su {request.method} {request.url}: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Si è verificato un'errore interno del server. Riprova più tardi."}
+        content={
+            "detail": "Si è verificato un'errore interno del server. Riprova più tardi."
+        },
     )
 
 

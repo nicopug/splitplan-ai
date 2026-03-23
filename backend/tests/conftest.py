@@ -8,6 +8,7 @@ from main import app
 # Setup in-memory SQLite database for testing
 DATABASE_URL = "sqlite://"
 
+
 @pytest.fixture(name="session")
 def session_fixture():
     engine = create_engine(
@@ -20,10 +21,12 @@ def session_fixture():
         yield session
     SQLModel.metadata.drop_all(engine)
 
+
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
     def get_session_override():
         return session
+
     app.dependency_overrides[get_session] = get_session_override
     client = TestClient(app)
     yield client

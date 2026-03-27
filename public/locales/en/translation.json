@@ -443,6 +443,18 @@
         "restartBtn": "Restart App",
         "offlineBanner": "Offline Mode - You are viewing saved data"
     },
+    "business": {
+        "title": "For Business",
+        "headline": "Does your team travel often?",
+        "subheadline": "SplitPlan handles trips, budgets, and logistics automatically.",
+        "bullet1_title": "Smart Expense Policy",
+        "bullet1_desc": "Set budget limits and approved expense categories for every team.",
+        "bullet2_title": "Admin Dashboard",
+        "bullet2_desc": "Overview of all active trips, real-time costs, and team roadmap.",
+        "bullet3_title": "Automated Reporting",
+        "bullet3_desc": "Export detailed, accounting-ready reports with a single click.",
+        "cta": "Contact us for a Demo"
+    },
     "footer": {
         "tagline": "We make group trips easy, fun, and stress-free.",
         "usefulLinks": "Useful Links",

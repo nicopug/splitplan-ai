@@ -443,6 +443,18 @@
         "restartBtn": "Riavvia App",
         "offlineBanner": "Modalità Offline - Stai visualizzando i dati salvati"
     },
+    "business": {
+        "title": "Per le Aziende",
+        "headline": "Il tuo team viaggia spesso?",
+        "subheadline": "SplitPlan gestisce trasferte, budget e logistica in automatico.",
+        "bullet1_title": "Policy Spese Intelligenti",
+        "bullet1_desc": "Imposta limiti di budget e categorie di spesa approvate per ogni team.",
+        "bullet2_title": "Dashboard Amministratore",
+        "bullet2_desc": "Visione d’insieme su tutte le trasferte attive, costi in tempo reale e roadmap del team.",
+        "bullet3_title": "Reporting Automatizzato",
+        "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click.",
+        "cta": "Contattaci per una Demo"
+    },
     "footer": {
         "tagline": "Rendiamo i viaggi di gruppo facili, divertenti e senza stress.",
         "usefulLinks": "Link Utili",

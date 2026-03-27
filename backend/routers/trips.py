@@ -1447,10 +1447,12 @@ async def generate_proposals(
 
         mock_options = []
         if trip.trip_type == "SOLO":
+            mock_dest = prefs.destination or trip.name
             mock_options.append(
                 Proposal(
                     trip_id=trip_id,
-                    destination=f"{prefs.destination} Smart",
+                    destination=f"{mock_dest} Smart",
+                    real_destination=mock_dest,
                     destination_iata="ROM",
                     price_estimate=prefs.budget,
                     description="Il tuo viaggio perfetto.",
@@ -1458,10 +1460,12 @@ async def generate_proposals(
                 )
             )
         else:
+            mock_dest = prefs.destination or trip.name
             mock_options = [
                 Proposal(
                     trip_id=trip_id,
-                    destination=f"{prefs.destination} Smart",
+                    destination=f"{mock_dest} Smart",
+                    real_destination=mock_dest,
                     destination_iata="JFK",
                     price_estimate=prefs.budget,
                     description="Opzione equilibrata.",

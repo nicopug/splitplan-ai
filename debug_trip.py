@@ -7,11 +7,14 @@ from backend.database import engine
 from backend.models import Trip
 
 with Session(engine) as session:
-    trip = session.get(Trip, 235)
+    trip = session.get(Trip, 238)
     if trip:
         print(f"Trip ID: {trip.id}")
         print(f"Status: {trip.status}")
         print(f"Type: {trip.trip_type}")
         print(f"Intent: {trip.trip_intent}")
+        print(f"Name: {trip.name}")
+        print(f"Destination: {trip.destination}")
+        print(f"Real Destination: {trip.real_destination}")
     else:
-        print("Trip 235 not found")
+        print("Trip 238 not found")

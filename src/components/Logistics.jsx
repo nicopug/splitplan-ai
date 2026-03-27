@@ -32,7 +32,7 @@ const Logistics = ({ trip, onPrefill }) => {
     };
 
     const origin = trip.departure_airport || "MXP";
-    const destName = trip.real_destination || trip.destination || t('logistics.destinationFallback', 'Destinazione');
+    const destName = trip.real_destination || trip.destination || trip.name || t('logistics.destinationFallback', 'Destinazione');
     const dest = trip.destination_iata || "JFK";
     const start = formatDate(trip.start_date);
     const end = formatDate(trip.end_date);

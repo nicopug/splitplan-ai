@@ -113,6 +113,20 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     const [suggestedBudget, setSuggestedBudget] = useState(null);
     const [isEstimatingBudget, setIsEstimatingBudget] = useState(false);
 
+    useEffect(() => {
+        if (trip.name && !formData.destination) {
+            let suggestedDest = trip.name
+                .replace(/^Trasferta a /i, '')
+                .replace(/^Viaggio a /i, '')
+                .replace(/^Trip to /i, '')
+                .trim();
+            
+            if (suggestedDest.length > 0 && suggestedDest.length < 30) {
+                setFormData(prev => ({ ...prev, destination: suggestedDest }));
+            }
+        }
+    }, [trip.name]);
+
 
 
     useEffect(() => {

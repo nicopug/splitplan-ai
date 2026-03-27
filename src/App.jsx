@@ -41,8 +41,8 @@ function Landing({ user }) {
       <Hero />
       <PainPoints />
       <Solution />
-      <Features />
       <Business />
+      <Features />
       <Pricing user={user} />
       <Footer />
     </>

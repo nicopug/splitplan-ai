@@ -242,7 +242,7 @@ const Dashboard = () => {
             setProposals(props);
             setTrip(prev => ({
                 ...prev,
-                status: 'VOTING',
+                status: (surveyData.trip_intent === 'BUSINESS' || surveyData.trip_type === 'SOLO') ? 'BOOKED' : 'VOTING',
                 num_people: surveyData.num_people,
                 transport_mode: surveyData.transport_mode,
                 destination: surveyData.destination,

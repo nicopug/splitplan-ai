@@ -1308,6 +1308,9 @@ async def generate_proposals(
         if ai_client:
             try:
                 num_props = 3
+                if prefs.trip_intent == "BUSINESS":
+                    num_props = 1
+
                 prompt = f"""
                 Agisci come un Travel Agent esperto. 
                 TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
@@ -1408,7 +1411,14 @@ async def generate_proposals(
 
                 session.commit()
 
-                trip.status = "VOTING"
+                if prefs.trip_intent == "BUSINESS" and new_proposals:
+                    trip.status = "BOOKED"
+                    trip.selected_proposal_id = new_proposals[0].id
+                    # Assicuriamoci che la destinazione del viaggio coincida con la proposta scelta
+                    trip.destination = new_proposals[0].real_destination or new_proposals[0].destination
+                    trip.destination_iata = new_proposals[0].destination_iata
+                else:
+                    trip.status = "VOTING"
 
                 session.add(trip)
                 session.commit()
@@ -1634,7 +1644,15 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         {calendar_prompt}
 
         SCOPO DEL VIAGGIO: {trip.trip_intent}
-        {"Se il viaggio è BUSINESS (LAVORO), PRIORITÀ ASSOLUTA a: efficienza, hotel con coworking/Wi-Fi eccellente, pasti veloci ma di qualità, posizioni centrali vicino a hub di trasporto. Evita attività troppo rilassate o dispersive. Ottimizza per produttività. RISPETTA L'ORARIO DI LAVORO: dalle " + (trip.work_start_time or '09:00') + " alle " + (trip.work_end_time or '18:00') + " esclusivamente nei giorni: " + (trip.work_days or 'Monday,Tuesday,Wednesday,Thursday,Friday') + ". Negli ALTRI giorni del viaggio (es. Weekend o giorni non lavorativi indicati), pianifica l'itinerario come un normale viaggio di piacere (LEISURE), bilanciando relax e scoperte." if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
+        {"INDIRIZZO UFFICIO/SEDE (LUOGO DI LAVORO): " + trip.office_address if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
+        
+        {"Se il viaggio è BUSINESS (LAVORO):" if trip.trip_intent == "BUSINESS" else ""}
+        {"- PRIORITÀ ASSOLUTA: Efficienza e produttività." if trip.trip_intent == "BUSINESS" else ""}
+        {"- LUOGO DI LAVORO: Tutte le sessioni di lavoro si svolgono all'indirizzo " + trip.office_address + ". NON scrivere mai che l'utente lavora dall'hotel (NO 'lavoro dall'hotel')." if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
+        {"- COMMUTING: Includi esplicitamente gli spostamenti (tipo TRANSPORT) tra l'hotel e l'ufficio all'inizio e alla fine di ogni sessione lavorativa." if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
+        {"- ORARIO DI LAVORO: Rispetta tassativamente " + (trip.work_start_time or '09:00') + " - " + (trip.work_end_time or '18:00') + " nei giorni " + (trip.work_days or 'Lun-Ven') + "." if trip.trip_intent == "BUSINESS" else ""}
+
+        {"" if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
 
         REGOLE CRITICHE:
         1. SEQUENZA LOGICA: Rispetta l'ordine cronologico (Colazione -> Mattina -> Pranzo -> Pomeriggio -> Cena).

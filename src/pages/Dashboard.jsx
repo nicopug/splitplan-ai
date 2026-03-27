@@ -625,26 +625,16 @@ const Dashboard = () => {
                                             </Suspense>
                                         </div>
 
-                                        {/* Right Side: Map (Sticky/Fixed) */}
                                         <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
-                                            {trip.trip_intent !== 'BUSINESS' ? (
-                                                <Suspense fallback={<ComponentLoader />}>
-                                                    <Map
-                                                        items={itinerary}
-                                                        hotelLat={trip.hotel_latitude}
-                                                        hotelLon={trip.hotel_longitude}
-                                                        startDate={trip.start_date}
-                                                        isPremium={user?.is_subscribed || trip.is_premium}
-                                                    />
-                                                </Suspense>
-                                            ) : (
-                                                <div className="h-full flex items-center justify-center p-12 text-center">
-                                                    <div className="max-w-xs">
-                                                        <MapIcon className="w-12 h-12 text-[var(--text-subtle)] mx-auto mb-4 opacity-20" />
-                                                        <p className="text-[var(--text-subtle)] text-xs font-bold uppercase tracking-widest">Mappa non disponibile per viaggi Business</p>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <Suspense fallback={<ComponentLoader />}>
+                                                <Map
+                                                    items={itinerary}
+                                                    hotelLat={trip.hotel_latitude}
+                                                    hotelLon={trip.hotel_longitude}
+                                                    startDate={trip.start_date}
+                                                    isPremium={user?.is_subscribed || trip.is_premium}
+                                                />
+                                            </Suspense>
                                         </div>
                                     </div>
                                 )}

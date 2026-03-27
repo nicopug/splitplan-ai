@@ -173,17 +173,15 @@ const ShareTrip = ({ isJoinMode = false }) => {
                             </div>
 
                             <div className="space-y-12">
-                                {trip?.trip_intent !== 'BUSINESS' && (
-                                    <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                                        <Map
-                                            items={itinerary}
-                                            hotelLat={trip?.hotel_latitude}
-                                            hotelLon={trip?.hotel_longitude}
-                                            startDate={trip?.start_date}
-                                            isPremium={user?.is_subscribed}
-                                        />
-                                    </div>
-                                )}
+                                <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                                    <Map
+                                        items={itinerary}
+                                        hotelLat={trip?.hotel_latitude}
+                                        hotelLon={trip?.hotel_longitude}
+                                        startDate={trip?.start_date}
+                                        isPremium={user?.is_subscribed}
+                                    />
+                                </div>
                                 <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
                                     <Timeline items={itinerary} />
                                 </div>

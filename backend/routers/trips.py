@@ -1308,7 +1308,7 @@ async def generate_proposals(
         if ai_client:
             try:
                 num_props = 3
-                if prefs.trip_intent == "BUSINESS":
+                if prefs.trip_intent == "BUSINESS" or trip.trip_type == "SOLO":
                     num_props = 1
 
                 prompt = f"""
@@ -1411,7 +1411,7 @@ async def generate_proposals(
 
                 session.commit()
 
-                if prefs.trip_intent == "BUSINESS" and new_proposals:
+                if (prefs.trip_intent == "BUSINESS" or trip.trip_type == "SOLO") and new_proposals:
                     trip.status = "BOOKED"
                     trip.selected_proposal_id = new_proposals[0].id
                     # Assicuriamoci che la destinazione del viaggio coincida con la proposta scelta
@@ -1498,7 +1498,15 @@ async def generate_proposals(
 
         session.commit()
 
-        trip.status = "VOTING"
+        session.commit()
+
+        if prefs.trip_intent == "BUSINESS" or trip.trip_type == "SOLO":
+            trip.status = "BOOKED"
+            if final_props:
+                trip.selected_proposal_id = final_props[0].id
+                trip.destination = final_props[0].real_destination or final_props[0].destination
+        else:
+            trip.status = "VOTING"
 
         session.add(trip)
         session.commit()

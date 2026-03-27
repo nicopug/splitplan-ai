@@ -240,16 +240,22 @@ const Dashboard = () => {
             await new Promise(r => setTimeout(r, 500));
             
             setProposals(props);
+            const isSoloOrBusiness = surveyData.trip_intent === 'BUSINESS' || trip.trip_type === 'SOLO';
+            
             setTrip(prev => ({
                 ...prev,
-                status: (surveyData.trip_intent === 'BUSINESS' || surveyData.trip_type === 'SOLO') ? 'BOOKED' : 'VOTING',
+                status: isSoloOrBusiness ? 'BOOKED' : 'VOTING',
                 num_people: surveyData.num_people,
                 transport_mode: surveyData.transport_mode,
                 destination: surveyData.destination,
                 departure_airport: surveyData.departure_airport,
                 trip_intent: surveyData.trip_intent
             }));
-            fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
+
+            // Rinfresca dopo un breve ritardo per dare tempo al DB di persistere
+            setTimeout(() => {
+                fetchTrip();
+            }, 1000);
         } catch (e) {
             clearInterval(progressInterval);
             showToast("Errore generazione: " + e.message, "error");

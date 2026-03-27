@@ -219,8 +219,26 @@ const Dashboard = () => {
 
     const handleSurveyComplete = async (surveyData) => {
         setIsGenerating(true);
+        setItineraryProgress(0);
+        
+        const progressInterval = setInterval(() => {
+            setItineraryProgress(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prev + 5;
+            });
+        }, 400);
+
         try {
             const props = await generateProposals(id, surveyData);
+            clearInterval(progressInterval);
+            setItineraryProgress(100);
+            
+            // Aspetta un attimo prima di chiudere l'overlay per mostrare il 100%
+            await new Promise(r => setTimeout(r, 500));
+            
             setProposals(props);
             setTrip(prev => ({
                 ...prev,
@@ -233,6 +251,7 @@ const Dashboard = () => {
             }));
             fetchTrip(); // Rinfresca per impostare correttamente isOrganizer
         } catch (e) {
+            clearInterval(progressInterval);
             showToast("Errore generazione: " + e.message, "error");
         } finally {
             setIsGenerating(false);

@@ -159,6 +159,8 @@
         "consensusReached": "Consensus Reached!",
         "consensusDesc": "Great news! The group has chosen {{destination}} as the official destination. The organizer is now finalizing logistics and hotel details to generate the final itinerary.",
         "waitingConfirmation": "Waiting for final confirmation...",
+        "generatingTitle": "Crafting your <br/> perfect journey...",
+        "generatingDesc": "Our AI is optimizing rhythms and stops for your group's unique preferences.",
         "itineraryTitle": "Your Itinerary",
         "exportPdf": "PDF",
         "editLogistics": "Edit Logistics",

@@ -1279,6 +1279,7 @@ async def generate_proposals(
         trip.end_date = prefs.end_date
         trip.departure_airport = prefs.departure_airport
         trip.departure_city = prefs.departure_airport
+        trip.destination = prefs.destination
         trip.must_have = prefs.must_have
         trip.must_avoid = prefs.must_avoid
         trip.trip_intent = prefs.trip_intent
@@ -1451,7 +1452,7 @@ async def generate_proposals(
             mock_options.append(
                 Proposal(
                     trip_id=trip_id,
-                    destination=f"{mock_dest} Smart",
+                    destination=mock_dest,
                     real_destination=mock_dest,
                     destination_iata="ROM",
                     price_estimate=prefs.budget,
@@ -1464,7 +1465,7 @@ async def generate_proposals(
             mock_options = [
                 Proposal(
                     trip_id=trip_id,
-                    destination=f"{mock_dest} Smart",
+                    destination=mock_dest,
                     real_destination=mock_dest,
                     destination_iata="JFK",
                     price_estimate=prefs.budget,

@@ -84,6 +84,7 @@ class PreferencesRequest(SQLModel):
     work_start_time: Optional[str] = "09:00"
     work_end_time: Optional[str] = "18:00"
     work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
+    office_address: Optional[str] = None
 
 
 class SurveyBudgetRequest(SQLModel):
@@ -460,6 +461,24 @@ async def migrate_budget_max(session: Session = Depends(get_session)):
         return {"status": "error", "message": str(e)}
 
 
+@router.get("/migrate-office-address", dependencies=[Depends(verify_admin_token)])
+async def migrate_office_address(session: Session = Depends(get_session)):
+    """Aggiunge office_address alla tabella trip"""
+    from sqlalchemy import text
+
+    try:
+        session.execute(
+            text(
+                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS office_address VARCHAR;"
+            )
+        )
+        session.commit()
+        return {"status": "success", "message": "Colonna office_address aggiunta."}
+    except Exception as e:
+        session.rollback()
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/{trip_id}/optimize")
 async def optimize_itinerary(
     trip_id: int,
@@ -608,9 +627,14 @@ async def search_trip_options(
             days = 7
 
         if request.type == "hotel":
+            office_prompt = ""
+            if trip.trip_intent == "BUSINESS" and trip.office_address:
+                office_prompt = f"IMPORTANTE: L'utente deve lavorare in {trip.office_address}. Suggerisci hotel vicini a questo indirizzo e specifica la distanza nei 'details'."
+
             prompt = f"""
             Agisci come l'API di un aggregatore alberghiero (es. Booking.com).
             L'utente sta cercando un Hotel a {trip.destination} per {days} notti per {trip.num_people} persone.
+            {office_prompt}
             Genera esattamente 6 opzioni RESTITUENDOLE esclusivamente in formato JSON. 
             Il formato DEVE essere un array di oggetti, senza markdown o testo extra:
             [
@@ -1261,6 +1285,7 @@ async def generate_proposals(
         trip.work_start_time = prefs.work_start_time
         trip.work_end_time = prefs.work_end_time
         trip.work_days = prefs.work_days
+        trip.office_address = prefs.office_address
 
         if prefs.transport_mode:
             trip.transport_mode = prefs.transport_mode
@@ -1292,6 +1317,7 @@ async def generate_proposals(
                 Dati: Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 {"ORARIO LAVORO: dalle " + prefs.work_start_time + " alle " + prefs.work_end_time + " nei giorni: " + prefs.work_days if prefs.trip_intent == "BUSINESS" else ""}
+                {"INDIRIZZO UFFICIO (Sede Operativa): " + prefs.office_address + " - IMPORTANTE: Scegli zone comode per raggiungere questo indirizzo." if prefs.trip_intent == "BUSINESS" and prefs.office_address else ""}
 
                 TASK 3: Analizza la distanza tra la partenza ({prefs.departure_airport}) e la destinazione ({prefs.destination}).
                 Scegli il "suggested_transport_mode" tra: FLIGHT, TRAIN, CAR.

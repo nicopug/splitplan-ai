@@ -1,0 +1,47 @@
+├───backend\
+|   .env
+│   .gitignore
+│   admin_auth.py
+│   alembic.ini
+│   auth.py
+│   database.py
+│   debug_user.py
+│   email_templates.py
+│   fix_db.py
+│   inspect_db.py
+│   main.py
+│   models.py
+│   requirements.txt
+│   test_smtp.py
+│   __init__.py
+│
+│
+├───alembic
+│   │   env.py
+│   │   README
+│   │   script.py.mako
+│   │
+│   ├───versions
+│            2cab18db85c5_initial.py  
+│
+├───routers
+│       calendar.py
+│       expenses.py
+│       itinerary.py
+│       payments.py
+│       photos.py
+│       trips.py
+│       users.py
+│       _migration_snippet.py
+│       __init__.py
+│
+├───tests
+│       conftest.py
+│       test_auth.py
+│       test_expenses.py
+│       test_trips.py
+│
+├───utils
+│   │   currency.py
+│   │   email_utils.py
+

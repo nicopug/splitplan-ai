@@ -33,6 +33,7 @@ class TripBase(SQLModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     description: Optional[str] = None
+    office_address: Optional[str] = None
 
     num_people: int = 1
     budget_per_person: float = 0.0

@@ -230,6 +230,11 @@
         "submitGenerating": "Generating...",
         "submitCreateGroup": "Create Plan and Invite",
         "submitGenerateSolo": "Generate Options",
+        "step4": {
+            "title": "Where are we going?",
+            "officeAddressLabel": "Office/HQ Address (optional)",
+            "officeAddressPlaceholder": "e.g. 1 High St, Business Center..."
+        },
         "days": {
             "Monday": "Mon",
             "Tuesday": "Tue",

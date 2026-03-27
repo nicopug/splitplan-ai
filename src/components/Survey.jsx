@@ -106,7 +106,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         trip_intent: 'LEISURE',
         work_start_time: '09:00',
         work_end_time: '18:00',
-        work_days: 'Monday,Tuesday,Wednesday,Thursday,Friday'
+        work_days: 'Monday,Tuesday,Wednesday,Thursday,Friday',
+        office_address: ''
     });
 
     const [suggestedBudget, setSuggestedBudget] = useState(null);
@@ -408,6 +409,27 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             className="h-16 text-xl font-bold bg-surface border-border-subtle focus:border-primary"
                         />
                     </div>
+
+                    {formData.trip_intent === 'BUSINESS' && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-4 pt-4 border-t border-border-subtle"
+                        >
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                <Briefcase className="w-3 h-3" /> {t('survey.step4.officeAddressLabel', 'Indirizzo Sede/Ufficio (opzionale)')}
+                            </Label>
+                            <Input
+                                value={formData.office_address}
+                                onChange={(e) => setFormData({ ...formData, office_address: e.target.value })}
+                                placeholder={t('survey.step4.officeAddressPlaceholder', 'es. Via Roma 1, Sede Aziendale...')}
+                                className="h-16 text-xl font-bold bg-surface border-border-subtle focus:border-primary"
+                            />
+                            <p className="text-[10px] text-muted font-medium italic">
+                                * L'IA userà questo indirizzo per consigliarti hotel vicini e ottimizzare gli spostamenti casa-ufficio.
+                            </p>
+                        </motion.div>
+                    )}
                 </div>
             </StepWrapper>
         );

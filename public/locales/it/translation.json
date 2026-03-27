@@ -230,6 +230,11 @@
         "submitGenerating": "Generazione in corso...",
         "submitCreateGroup": "Crea il Piano e Invita",
         "submitGenerateSolo": "Genera Opzioni",
+        "step4": {
+            "title": "Dove andiamo?",
+            "officeAddressLabel": "Indirizzo Sede/Ufficio (opzionale)",
+            "officeAddressPlaceholder": "es. Via Roma 1, Sede Aziendale..."
+        },
         "days": {
             "Monday": "Lun",
             "Tuesday": "Mar",

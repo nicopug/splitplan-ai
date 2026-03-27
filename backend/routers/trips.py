@@ -1414,7 +1414,7 @@ async def generate_proposals(
 
                 if (prefs.trip_intent == "BUSINESS" or trip.trip_type == "SOLO") and new_proposals:
                     trip.status = "BOOKED"
-                    trip.selected_proposal_id = new_proposals[0].id
+                    trip.winning_proposal_id = new_proposals[0].id
                     # Assicuriamoci che la destinazione del viaggio coincida con la proposta scelta
                     trip.destination = new_proposals[0].real_destination or new_proposals[0].destination
                     trip.destination_iata = new_proposals[0].destination_iata
@@ -1448,7 +1448,7 @@ async def generate_proposals(
 
         mock_options = []
         if trip.trip_type == "SOLO":
-            mock_dest = prefs.destination or trip.name
+            mock_dest = prefs.destination
             mock_options.append(
                 Proposal(
                     trip_id=trip_id,
@@ -1461,7 +1461,7 @@ async def generate_proposals(
                 )
             )
         else:
-            mock_dest = prefs.destination or trip.name
+            mock_dest = prefs.destination
             mock_options = [
                 Proposal(
                     trip_id=trip_id,
@@ -1508,7 +1508,7 @@ async def generate_proposals(
         if prefs.trip_intent == "BUSINESS" or trip.trip_type == "SOLO":
             trip.status = "BOOKED"
             if final_props:
-                trip.selected_proposal_id = final_props[0].id
+                trip.winning_proposal_id = final_props[0].id
                 trip.destination = final_props[0].real_destination or final_props[0].destination
         else:
             trip.status = "VOTING"

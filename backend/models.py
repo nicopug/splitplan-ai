@@ -21,6 +21,8 @@ class Account(SQLModel, table=True):
     subscription_expiry: Optional[str] = Field(default=None)
     auto_renew: bool = Field(default=True)
     language: str = Field(default="it")
+    terms_accepted: bool = Field(default=True)
+    privacy_accepted: bool = Field(default=True)
 
 
 class TripBase(SQLModel):
@@ -161,3 +163,15 @@ class ProcessedStripeEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     stripe_event_id: str = Field(unique=True, index=True)
     processed_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class DemoLead(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    full_name: str
+    company_name: str
+    work_email: str
+    phone_number: Optional[str] = None
+    team_size: str
+    travel_frequency: str
+    message: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)

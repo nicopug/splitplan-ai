@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Building2, LayoutDashboard, FileBarChart, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -24,6 +25,7 @@ const BusinessFeature = ({ icon: Icon, title, desc, delay }) => (
 
 const Business = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     const features = [
         {
@@ -89,7 +91,10 @@ const Business = () => {
                                 transition={{ delay: 0.3 }}
                                 className="flex flex-wrap gap-4"
                             >
-                                <Button className="h-14 px-8 text-xs font-black tracking-[0.2em] uppercase group">
+                                <Button 
+                                    onClick={() => navigate('/demo')}
+                                    className="h-14 px-8 text-xs font-black tracking-[0.2em] uppercase group"
+                                >
                                     {t('business.cta')}
                                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Button>

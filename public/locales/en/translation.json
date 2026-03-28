@@ -455,6 +455,11 @@
         "bullet3_desc": "Export detailed, accounting-ready reports with a single click.",
         "cta": "Contact us for a Demo"
     },
+    "demo": {
+        "success_toast": "Request submitted! We'll contact you shortly.",
+        "title": "Configure your Business Account",
+        "subtitle": "Talk to an expert to scale your company's travel management."
+    },
     "footer": {
         "tagline": "We make group trips easy, fun, and stress-free.",
         "usefulLinks": "Useful Links",

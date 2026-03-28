@@ -11,8 +11,8 @@ import Business from './components/Business';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
@@ -26,6 +26,7 @@ const ShareTrip = lazy(() => import('./pages/ShareTrip'));
 const CalendarCallback = lazy(() => import('./pages/CalendarCallback'));
 const Market = lazy(() => import('./pages/Market'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+const DemoRequest = lazy(() => import('./pages/DemoRequest'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -138,9 +139,11 @@ function App() {
                   localStorage.setItem('user', JSON.stringify(newUser));
                 }} />} />
 
-                <Route path="*" element={<Navigate to="/" />} />
+                <Route path="/demo" element={<DemoRequest />} />
+
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Suspense>
           </main>

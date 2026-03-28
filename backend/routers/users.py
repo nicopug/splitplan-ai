@@ -42,6 +42,8 @@ class RegisterRequest(BaseModel):
     surname: str
     email: str
     password: str
+    terms_accepted: bool = False
+    privacy_accepted: bool = False
 
 
 class LoginRequest(BaseModel):
@@ -195,6 +197,8 @@ async def register(req: RegisterRequest, session: Session = Depends(get_session)
         hashed_password=get_password_hash(req.password),
         name=req.name,
         surname=req.surname,
+        terms_accepted=req.terms_accepted,
+        privacy_accepted=req.privacy_accepted,
     )
     session.add(new_account)
     session.commit()

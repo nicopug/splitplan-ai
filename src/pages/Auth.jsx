@@ -12,7 +12,8 @@ const Auth = ({ onLogin }) => {
         surname: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        consentAccepted: false
     });
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
@@ -63,8 +64,8 @@ const Auth = ({ onLogin }) => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
 
         if (name === 'password' && !isLogin) {
             validatePassword(value);
@@ -127,11 +128,16 @@ const Auth = ({ onLogin }) => {
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');
                 }
+                if (!formData.consentAccepted) {
+                    throw new Error('Devi accettare i Termini e la Privacy per continuare');
+                }
                 await register({
                     name: formData.name,
                     surname: formData.surname,
                     email: formData.email,
-                    password: formData.password
+                    password: formData.password,
+                    terms_accepted: formData.consentAccepted,
+                    privacy_accepted: formData.consentAccepted
                 });
 
                 localStorage.setItem('pending_plan_selection', 'true');
@@ -405,6 +411,20 @@ const Auth = ({ onLogin }) => {
                                     placeholder="••••••••"
                                     className="w-full bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--accent-digital-blue)] transition-colors"
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    {!isLogin && (
+                        <div className="space-y-3 pt-2">
+                            <div className="flex items-start gap-3 group cursor-pointer" onClick={() => setFormData(p => ({ ...p, consentAccepted: !p.consentAccepted }))}>
+                                <div className={`mt-1 min-w-[16px] w-4 h-4 rounded-sm border flex items-center justify-center transition-all duration-300 ${formData.consentAccepted ? 'bg-[var(--accent-digital-blue)] border-[var(--accent-digital-blue)]' : 'border-[var(--border-medium)]'}`}>
+                                    {formData.consentAccepted && <span className="text-white text-[10px]">✓</span>}
+                                </div>
+                                <input type="checkbox" name="consentAccepted" checked={formData.consentAccepted} onChange={handleChange} className="hidden" />
+                                <span className="text-[10px] font-bold text-[var(--text-subtle)] tracking-wider leading-relaxed">
+                                    ACCETTO I <a href="/terms" target="_blank" className="text-[var(--text-primary)] hover:underline" onClick={e => e.stopPropagation()}>TERMINI DI SERVIZIO</a> E LA <a href="/privacy" target="_blank" className="text-[var(--text-primary)] hover:underline" onClick={e => e.stopPropagation()}>PRIVACY POLICY</a>
+                                </span>
                             </div>
                         </div>
                     )}

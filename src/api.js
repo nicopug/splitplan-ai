@@ -478,6 +478,7 @@ export const deletePhoto = async (photoId) => {
 // --- Auth & Users ---
 
 export const register = async (userData) => {
+    // userData must include name, surname, email, password, terms_accepted, privacy_accepted
     const response = await fetch(`${API_URL}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -574,6 +575,17 @@ export const updateLanguage = async (language) => {
 export const getEvents = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/events`, {
         headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+// --- Leads ---
+
+export const submitDemoRequest = async (leadData) => {
+    const response = await fetch(`${API_URL}/leads/demo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadData)
     });
     return handleResponse(response);
 };

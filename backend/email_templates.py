@@ -295,6 +295,127 @@ def purchase_receipt_email(
 
         <p style="color: #777; font-size: 13px; line-height: 1.6; text-align: center; margin: 0;">
             Grazie per aver scelto SplitPlan per i tuoi viaggi di gruppo!
+    """
+    return base_template(content)
+
+
+def demo_request_notification_email(
+    full_name: str,
+    company_name: str,
+    work_email: str,
+    phone_number: str,
+    team_size: str,
+    travel_frequency: str,
+    message: str,
+) -> str:
+    """Template email per notificare l'admin di una nuova richiesta demo B2B."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #f0f7ff; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                \U0001f4bc
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Nuova Richiesta Demo B2B
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;">
+            Hai ricevuto una nuova richiesta di demo per <strong>SplitPlan Business</strong>. Ecco i dettagli del lead:
+        </p>
+
+        <!-- LEAD DETAILS -->
+        <div style="background-color: #fff; border-radius: 16px; padding: 24px; margin-bottom: 30px; border: 1px solid #eef1f5; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                        <span style="color: #999; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Nominativo</span>
+                        <span style="color: #1a1a1a; font-size: 15px; font-weight: 600;">{full_name}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                        <span style="color: #999; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Azienda</span>
+                        <span style="color: #1a1a1a; font-size: 15px; font-weight: 600;">{company_name}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                        <span style="color: #999; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Email Lavorativa</span>
+                        <span style="color: #23599E; font-size: 15px; font-weight: 600;">{work_email}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                        <span style="color: #999; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Telefono</span>
+                        <span style="color: #1a1a1a; font-size: 15px; font-weight: 600;">{phone_number or "Non fornito"}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #f0f2f5;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="50%" style="padding-right: 10px;">
+                                    <span style="color: #999; font-size: 11px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Dimensione Team</span>
+                                    <span style="color: #1a1a1a; font-size: 14px; font-weight: 600;">{team_size}</span>
+                                </td>
+                                <td width="50%">
+                                    <span style="color: #999; font-size: 11px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Frequenza Viaggi</span>
+                                    <span style="color: #1a1a1a; font-size: 14px; font-weight: 600;">{travel_frequency}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0;">
+                        <span style="color: #999; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Messaggio/Note</span>
+                        <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 0; font-style: italic;">
+                            "{message or "Nessun messaggio aggiuntivo."}"
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p style="color: #777; font-size: 13px; line-height: 1.6; text-align: center; margin: 0;">
+            Si prega di ricontattare il potenziale cliente entro le prossime 24 ore lavorative.
+        </p>
+    """
+    return base_template(content)
+
+
+def demo_request_confirmation_email(full_name: str, company_name: str) -> str:
+    """Template email di conferma/ringraziamento per il cliente che richiede la demo."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                \u2705
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Richiesta Ricevuta!
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{full_name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            Grazie per l'interesse verso <strong>SplitPlan Business</strong> per la tua azienda (<strong>{company_name}</strong>).
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            Abbiamo preso in carico la tua richiesta. Un nostro esperto analizzerà le vostre esigenze di trasferta e ti contatterà via email o telefono per fissare una demo personalizzata nei prossimi giorni.
+        </p>
+
+        <div style="background-color: #f0f7ff; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 30px; border: 1px solid #d0e7ff;">
+            <p style="color: #23599E; font-size: 14px; font-weight: 700; margin: 0;">
+                Presto scoprirai come ottimizzare i viaggi del tuo team con l'AI!
+            </p>
+        </div>
+
+        <p style="color: #999; font-size: 12px; line-height: 1.6; text-align: center; margin: 0;">
+            A presto,<br>
+            Il Team di SplitPlan Corporate
         </p>
     """
     return base_template(content)

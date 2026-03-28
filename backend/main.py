@@ -16,7 +16,7 @@ from sqlmodel import text
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database import engine
-from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads
+from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights
 from admin_auth import verify_admin_token
 
 # ---------------------------------------------------------------------------
@@ -71,6 +71,7 @@ app.include_router(itinerary.router)
 app.include_router(payments.router)
 app.include_router(calendar.router)
 app.include_router(leads.router)
+app.include_router(flights.router, prefix="/trips", tags=["Flights"])
 
 
 # ---------------------------------------------------------------------------

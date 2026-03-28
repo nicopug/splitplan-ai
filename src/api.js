@@ -254,6 +254,14 @@ export const searchTripOptions = async (tripId, type) => {
     return handleResponse(response);
 };
 
+export const searchRealFlights = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/search-flights`, {
+        method: "GET",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 export const confirmTripOption = async (tripId, optionData) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/confirm-option`, {
         method: "POST",

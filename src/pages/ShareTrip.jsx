@@ -31,7 +31,6 @@ const ShareTrip = ({ isJoinMode = false }) => {
             try {
                 // 1. Recuperiamo i dati base del viaggio condiviso
                 const res = await getSharedTrip(token);
-                console.log("[DEBUG] Shared Trip Data:", res);
 
                 // 2. SE SIAMO IN MODALITÀ JOIN
                 if (isJoinMode) {
@@ -116,7 +115,7 @@ const ShareTrip = ({ isJoinMode = false }) => {
                 {banner}
 
                 <div className="border-b border-border-subtle py-16 text-center bg-surface relative overflow-hidden">
-                     {/* Decorative background glow */}
+                    {/* Decorative background glow */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-30">
                         <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--accent-primary-20)_0%,transparent_70%)]"></div>
                     </div>
@@ -225,7 +224,7 @@ const ShareTrip = ({ isJoinMode = false }) => {
                         <h2 className="text-red-500 text-3xl font-black uppercase tracking-tight">Errore di Rendering</h2>
                         <p className="text-muted text-lg">C'è stato un errore nel mostrare i dati del viaggio.</p>
                     </div>
-                    
+
                     <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-sm text-[11px] font-mono text-left text-red-400 overflow-x-auto whitespace-pre">
                         <strong className="block mb-2 uppercase tracking-widest">Errore:</strong>
                         {renderError.message}

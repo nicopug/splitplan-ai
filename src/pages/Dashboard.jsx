@@ -158,13 +158,9 @@ const Dashboard = () => {
             const storedUser = localStorage.getItem('user');
             if (storedUser && storedUser !== 'undefined') {
                 const userObj = JSON.parse(storedUser);
-                console.log('🔍 DEBUG isOrganizer - User from localStorage:', userObj);
-
                 const parts = await getParticipants(id);
-                console.log('🔍 DEBUG isOrganizer - Participants list:', parts);
 
                 const me = parts.find(p => p.account_id === userObj.id || (p.name && p.name.toLowerCase() === userObj.name.toLowerCase()));
-                console.log('🔍 DEBUG - Found participant match:', me);
 
                 if (me) {
                     setIsOrganizer(!!me.is_organizer);
@@ -220,7 +216,7 @@ const Dashboard = () => {
     const handleSurveyComplete = async (surveyData) => {
         setIsGenerating(true);
         setItineraryProgress(0);
-        
+
         const progressInterval = setInterval(() => {
             setItineraryProgress(prev => {
                 if (prev >= 90) {
@@ -235,13 +231,13 @@ const Dashboard = () => {
             const props = await generateProposals(id, surveyData);
             clearInterval(progressInterval);
             setItineraryProgress(100);
-            
+
             // Aspetta un attimo prima di chiudere l'overlay per mostrare il 100%
             await new Promise(r => setTimeout(r, 500));
-            
+
             setProposals(props);
             const isSoloOrBusiness = surveyData.trip_intent === 'BUSINESS' || trip.trip_type === 'SOLO';
-            
+
             setTrip(prev => ({
                 ...prev,
                 status: isSoloOrBusiness ? 'BOOKED' : 'VOTING',
@@ -348,11 +344,10 @@ const Dashboard = () => {
                             <button
                                 key={btn.id}
                                 onClick={() => setView(btn.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm text-[10px] font-bold tracking-widest uppercase transition-all ${
-                                    view === btn.id 
-                                        ? 'bg-[var(--accent-primary)] text-[var(--bg-base)] shadow-md' 
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm text-[10px] font-bold tracking-widest uppercase transition-all ${view === btn.id
+                                        ? 'bg-[var(--accent-primary)] text-[var(--bg-base)] shadow-md'
                                         : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
-                                }`}
+                                    }`}
                             >
                                 {btn.icon}
                                 <span>{btn.label}</span>
@@ -380,7 +375,7 @@ const Dashboard = () => {
                         {trip.name}
                     </h2>
                     <div className="flex gap-2 h-10 overflow-x-auto no-scrollbar items-center">
-                         {/* We can potentially add an icon-only nav here for mobile if needed, but keeping it simple for now */}
+                        {/* We can potentially add an icon-only nav here for mobile if needed, but keeping it simple for now */}
                     </div>
                 </div>
 
@@ -397,368 +392,368 @@ const Dashboard = () => {
                         </div>
                     )}
 
-            {/* Premium Soft Paywall Banner */}
-            {user && !user.is_subscribed && trip && !trip.is_premium && (
-                <div className="container mt-8">
-                    <div className="premium-card bg-[var(--bg-card)] border-[var(--border-medium)] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative shadow-[var(--shadow-lg)]">
-                        <div className="relative flex items-center gap-6">
-                            <div className="w-14 h-14 bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm flex items-center justify-center shrink-0">
-                                <Sparkles className="w-6 h-6 text-[var(--accent-primary)]" />
-                            </div>
-                            <div className="text-left">
-                                <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-2 uppercase tracking-tight">
-                                    {t('dashboard.unlockTitle', "Premium Features")}
-                                </h3>
-                                <p className="text-[var(--text-muted)] text-sm max-w-lg leading-relaxed">
-                                    {t('dashboard.unlockDesc', "Sblocca l'itinerario ottimizzato, la logistica automatica e l'assistente AI senza limiti.")}
-                                </p>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const res = await unlockTrip(trip.id);
-                                    showToast(res.message, "success");
-                                    fetchTrip();
-                                    const updatedUser = { ...user, credits: res.credits };
-                                    setUser(updatedUser);
-                                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                                } catch (e) {
-                                    showToast(e.message, "error");
-                                }
-                            }}
-                            className="px-8 py-4 bg-[var(--text-primary)] text-[var(--bg-base)] text-[10px] font-black tracking-widest uppercase rounded-sm hover:opacity-90 transition-all shrink-0 shadow-[var(--shadow-md)]"
-                        >
-                            {t('dashboard.unlockBtn', 'Sblocca ora (1 🪙)')}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-                {/* Header (Secondary actions) */}
-                <div className={`border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/30 backdrop-blur-md py-4 hidden lg:block`}>
-                    <div className="container flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            {user && (
-                                <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed
-                                    ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
-                                    : 'bg-[var(--bg-surface)] text-[var(--text-subtle)] border-[var(--border-subtle)]'
-                                    }`}>
-                                    {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM') : t('dashboard.freeUser', 'FREE')}
-                                </span>
-                            )}
-                            {trip.status !== 'PLANNING' && (
-                                <span className="px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)]">
-                                    {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
-                                        trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
-                                </span>
-                            )}
-                        </div>
-
-                        {user && isOrganizer && trip.status === 'BOOKED' && (
-                            <button
-                                onClick={async () => {
-                                    const confirmed = await showConfirm(
-                                        t('dashboard.confirmCompleteTitle', "Concludi Viaggio"),
-                                        t('dashboard.confirmCompleteDesc', "Vuoi segnare questo viaggio come concluso?")
-                                    );
-                                    if (confirmed) {
-                                        try {
-                                            await completeTrip(id);
-                                            showToast(t('dashboard.tripCompleted', "Viaggio concluso!"), "success");
-                                            fetchTrip();
-                                        } catch (e) {
-                                            showToast(t('common.error', "Errore") + ": " + e.message, "error");
-                                        }
-                                    }
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                            >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>{t('dashboard.completeTrip', 'Concludi Viaggio')}</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-            {view === 'TRIP' && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    {/* GUEST WAITING SCREEN (Plan B override) */}
-                    {!isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
-                    <div className="container py-12">
-                        <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
-                            <div className="text-5xl mb-8">🗳️</div>
-                            <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
-                                {t('dashboard.votoRegistrato', 'Voto Registrato!') || 'Voto Registrato!'}
-                            </h2>
-                            <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10">
-                                {t('dashboard.votoRegistratoDesc', 'Grazie per aver espresso la tua preferenza. L\'organizzatore sta pianificando il viaggio. Una volta completato, chiedi il link di sola lettura per l\'itinerario finale.')}
-                            </p>
-                            <div className="inline-block px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase">
-                                {t('dashboard.closePage', 'Puoi chiudere questa pagina.')}
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <Suspense fallback={<ComponentLoader />}>
-                            {trip.status === 'PLANNING' && (
-                                <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
-                            )}
-
-                            {trip.status === 'VOTING' && (
-                                <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
-                            )}
-                        </Suspense>
-
-                        {trip.status === 'BOOKED' && (
-                            <>
-                                {/* 1. Logistics (Premium only) */}
-                                {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
-                                    <Suspense fallback={<ComponentLoader />}>
-                                        <Logistics trip={trip} onPrefill={(data) => setPrefillData(data)} />
-                                    </Suspense>
-                                )}
-
-                                {/* Guest CTA Section */}
-                                {!user && (
-                                    <div className="container py-12">
-                                        <div className="premium-card text-center max-w-2xl mx-auto py-12 border-[var(--accent-digital-blue-dim)] bg-[var(--accent-digital-blue-dim)]/20 shadow-[var(--shadow-lg)]">
-                                            <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-4 uppercase tracking-tight">
-                                                {t('dashboard.guestCta.title', 'Pianifica il tuo prossimo viaggio')}
-                                            </h3>
-                                            <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
-                                                {t('dashboard.guestCta.desc', 'Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.')}
-                                            </p>
-                                            <div className="flex justify-center gap-4">
-                                                <Button onClick={() => navigate('/auth')}>
-                                                    {t('dashboard.guestCta.register', 'Registrati Gratis')}
-                                                </Button>
-                                                <Button variant="outline" onClick={() => navigate('/auth')}>
-                                                    {t('dashboard.guestCta.login', 'Accedi')}
-                                                </Button>
-                                            </div>
-                                        </div>
+                    {/* Premium Soft Paywall Banner */}
+                    {user && !user.is_subscribed && trip && !trip.is_premium && (
+                        <div className="container mt-8">
+                            <div className="premium-card bg-[var(--bg-card)] border-[var(--border-medium)] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative shadow-[var(--shadow-lg)]">
+                                <div className="relative flex items-center gap-6">
+                                    <div className="w-14 h-14 bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm flex items-center justify-center shrink-0">
+                                        <Sparkles className="w-6 h-6 text-[var(--accent-primary)]" />
                                     </div>
-                                )}
-
-                                {/* 3. Hotel Form or Wait Message */}
-                                {!trip.accommodation && (
-                                    isOrganizer ? (
-                        <div id="hotel-confirmation-form">
-                                    <Suspense fallback={<ComponentLoader />}>
-                                            <HotelConfirmation
-                                                trip={trip}
-                                                onConfirm={fetchTrip}
-                                                setIsGenerating={setIsGenerating}
-                                                setProgress={setItineraryProgress}
-                                                isPremium={user?.is_subscribed || trip.is_premium}
-                                                prefillData={prefillData}
-                                            />
-                                    </Suspense>
-                                </div>
-                                    ) : (
-                                        <div className="container py-12">
-                                            <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
-                                                <div className="text-4xl mb-8">✨</div>
-                                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
-                                                    {t('dashboard.consensusReached', 'Consenso Raggiunto!')}
-                                                </h2>
-                                                <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10 mx-auto">
-                                                    {t('dashboard.consensusDesc', {
-                                                        defaultValue: "Ottime notizie! Il gruppo ha scelto {{destination}} come meta ufficiale. L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.",
-                                                        destination: trip.destination
-                                                    })}
-                                                </p>
-                                                <div className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase">
-                                                    {t('dashboard.waitingConfirmation', 'In attesa della conferma finale...')}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                )}
-
-                                {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
-                                {trip.accommodation && itinerary && itinerary.length > 0 && (
-                                    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-112px)] overflow-hidden">
-                                        {/* Left Side: Timeline (Scrollable) */}
-                                        <div className="w-full lg:w-1/2 overflow-y-auto custom-scrollbar p-6 lg:p-12 border-r border-[var(--border-subtle)]">
-                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
-                                                <h2 className="text-[var(--text-primary)] text-3xl font-semibold tracking-tight uppercase">
-                                                    {t('dashboard.itineraryTitle', 'Il tuo Itinerario')}
-                                                </h2>
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-9 gap-2 px-4">
-                                                        <FileDown className="w-3.5 h-3.5" />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">{t('dashboard.exportPdf', 'PDF')}</span>
-                                                    </Button>
-
-                                                    {(user?.is_subscribed || trip.is_premium) && (
-                                                        <Button
-                                                            variant={isCalendarConnected ? "secondary" : "outline"}
-                                                            size="sm"
-                                                            onClick={handleConnectCalendar}
-                                                            className="h-9 gap-2 px-4"
-                                                        >
-                                                            <CalendarDays className={`w-3.5 h-3.5 ${isCalendarConnected ? 'text-emerald-500' : ''}`} />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">
-                                                                {isCalendarConnected ? t('dashboard.calendarConnected', 'Calendar') : t('dashboard.connectCalendar', 'Collega')}
-                                                            </span>
-                                                        </Button>
-                                                    )}
-
-                                                    {isOrganizer && (
-                                                        <Button variant="outline" size="sm" onClick={handleResetHotel} className="h-9 px-4">
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{t('dashboard.editLogistics', 'Logistica')}</span>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <Suspense fallback={<ComponentLoader />}>
-                                                <Timeline items={itinerary} />
-                                            </Suspense>
-                                        </div>
-
-                                        <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
-                                            <Suspense fallback={<ComponentLoader />}>
-                                                <Map
-                                                    items={itinerary}
-                                                    hotelLat={trip.hotel_latitude}
-                                                    hotelLon={trip.hotel_longitude}
-                                                    startDate={trip.start_date}
-                                                    isPremium={user?.is_subscribed || trip.is_premium}
-                                                />
-                                            </Suspense>
-                                        </div>
+                                    <div className="text-left">
+                                        <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-2 uppercase tracking-tight">
+                                            {t('dashboard.unlockTitle', "Premium Features")}
+                                        </h3>
+                                        <p className="text-[var(--text-muted)] text-sm max-w-lg leading-relaxed">
+                                            {t('dashboard.unlockDesc', "Sblocca l'itinerario ottimizzato, la logistica automatica e l'assistente AI senza limiti.")}
+                                        </p>
                                     </div>
-                                )}
-                            </>
-                        )}
-                        </>
-                    )}
-                </motion.div>
-            )}
-
-            {/* AI Floating Action Button */}
-            {user && user.is_subscribed && trip.status === 'BOOKED' && (
-                <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-base rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100] group overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Sparkles className="w-6 h-6 relative z-10" />
-                </button>
-            )}
-
-            {/* AI Side Drawer */}
-            <AnimatePresence>
-                {isChatOpen && (
-                    <div className="fixed inset-0 z-[1000] flex justify-end">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsChatOpen(false)}
-                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="w-full sm:max-w-md h-full bg-card border-l border-border-subtle relative z-10 shadow-2xl flex flex-col"
-                        >
-                            <div className="p-8 border-b border-border-subtle flex justify-between items-center bg-primary text-base">
-                                <div>
-                                    <h3 className="m-0 text-2xl font-black uppercase tracking-tight">AI Assistant</h3>
-                                    <p className="m-0 text-[10px] uppercase font-black tracking-widest opacity-80">Premium Intelligence</p>
                                 </div>
+
                                 <button
-                                    onClick={() => setIsChatOpen(false)}
-                                    className="bg-white/10 border border-white/20 text-white w-10 h-10 rounded-sm flex items-center justify-center hover:bg-white/20 transition-all font-black"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await unlockTrip(trip.id);
+                                            showToast(res.message, "success");
+                                            fetchTrip();
+                                            const updatedUser = { ...user, credits: res.credits };
+                                            setUser(updatedUser);
+                                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                                        } catch (e) {
+                                            showToast(e.message, "error");
+                                        }
+                                    }}
+                                    className="px-8 py-4 bg-[var(--text-primary)] text-[var(--bg-base)] text-[10px] font-black tracking-widest uppercase rounded-sm hover:opacity-90 transition-all shrink-0 shadow-[var(--shadow-md)]"
                                 >
-                                    <X className="w-5 h-5" />
+                                    {t('dashboard.unlockBtn', 'Sblocca ora (1 🪙)')}
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-hidden">
-                                <Suspense fallback={<ComponentLoader />}>
-                                    <Chatbot
-                                        tripId={id}
-                                        onItineraryUpdate={(newItinerary) => setItinerary(newItinerary)}
-                                        messages={chatMessages}
-                                        setMessages={setChatMessages}
-                                    />
-                                </Suspense>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {view === 'BUDGET' && (
-                <div className="flex justify-center w-full">
-                    {!user ? (
-                        <div className="container mt-8">
-                            <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-lg)]">
-                                <div className="text-5xl mb-6">💰</div>
-                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
-                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
-                                    Tieni traccia del tuo budget di viaggio in tempo reale. Accedi o Registrati per gestire le tue spese in modo professionale.
-                                </p>
-                                <div className="flex justify-center gap-4">
-                                    <Button onClick={() => navigate('/auth')}>Registrati Gratis</Button>
-                                    <Button variant="outline" onClick={() => navigate('/auth')}>Accedi</Button>
-                                </div>
-                            </div>
                         </div>
-                    ) : user?.is_subscribed ? (
+                    )}
+
+                    {/* Header (Secondary actions) */}
+                    <div className={`border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/30 backdrop-blur-md py-4 hidden lg:block`}>
+                        <div className="container flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                {user && (
+                                    <span className={`px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border transition-all ${user.is_subscribed
+                                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
+                                        : 'bg-[var(--bg-surface)] text-[var(--text-subtle)] border-[var(--border-subtle)]'
+                                        }`}>
+                                        {user.is_subscribed ? t('dashboard.premiumSubscriber', 'PREMIUM') : t('dashboard.freeUser', 'FREE')}
+                                    </span>
+                                )}
+                                {trip.status !== 'PLANNING' && (
+                                    <span className="px-2 py-1 rounded-sm text-[8px] font-bold tracking-[0.2em] uppercase border bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)]">
+                                        {trip.transport_mode === 'TRAIN' ? t('dashboard.train', 'TRENO') :
+                                            trip.transport_mode === 'CAR' ? t('dashboard.car', 'AUTO') : t('dashboard.flight', 'AEREO')}
+                                    </span>
+                                )}
+                            </div>
+
+                            {user && isOrganizer && trip.status === 'BOOKED' && (
+                                <button
+                                    onClick={async () => {
+                                        const confirmed = await showConfirm(
+                                            t('dashboard.confirmCompleteTitle', "Concludi Viaggio"),
+                                            t('dashboard.confirmCompleteDesc', "Vuoi segnare questo viaggio come concluso?")
+                                        );
+                                        if (confirmed) {
+                                            try {
+                                                await completeTrip(id);
+                                                showToast(t('dashboard.tripCompleted', "Viaggio concluso!"), "success");
+                                                fetchTrip();
+                                            } catch (e) {
+                                                showToast(t('common.error', "Errore") + ": " + e.message, "error");
+                                            }
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>{t('dashboard.completeTrip', 'Concludi Viaggio')}</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {view === 'TRIP' && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            {/* GUEST WAITING SCREEN (Plan B override) */}
+                            {!isOrganizer && (trip.status === 'PLANNING' || (hasVoted && trip.status === 'VOTING')) ? (
+                                <div className="container py-12">
+                                    <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
+                                        <div className="text-5xl mb-8">🗳️</div>
+                                        <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
+                                            {t('dashboard.votoRegistrato', 'Voto Registrato!') || 'Voto Registrato!'}
+                                        </h2>
+                                        <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10">
+                                            {t('dashboard.votoRegistratoDesc', 'Grazie per aver espresso la tua preferenza. L\'organizzatore sta pianificando il viaggio. Una volta completato, chiedi il link di sola lettura per l\'itinerario finale.')}
+                                        </p>
+                                        <div className="inline-block px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm text-[10px] font-bold text-[var(--text-subtle)] tracking-widest uppercase">
+                                            {t('dashboard.closePage', 'Puoi chiudere questa pagina.')}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <Suspense fallback={<ComponentLoader />}>
+                                        {trip.status === 'PLANNING' && (
+                                            <Survey trip={trip} onComplete={handleSurveyComplete} isGenerating={isGenerating} />
+                                        )}
+
+                                        {trip.status === 'VOTING' && (
+                                            <Voting proposals={proposals} trip={trip} onVoteComplete={handleVotingComplete} isOrganizer={isOrganizer} />
+                                        )}
+                                    </Suspense>
+
+                                    {trip.status === 'BOOKED' && (
+                                        <>
+                                            {/* 1. Logistics (Premium only) */}
+                                            {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
+                                                <Suspense fallback={<ComponentLoader />}>
+                                                    <Logistics trip={trip} onPrefill={(data) => setPrefillData(data)} />
+                                                </Suspense>
+                                            )}
+
+                                            {/* Guest CTA Section */}
+                                            {!user && (
+                                                <div className="container py-12">
+                                                    <div className="premium-card text-center max-w-2xl mx-auto py-12 border-[var(--accent-digital-blue-dim)] bg-[var(--accent-digital-blue-dim)]/20 shadow-[var(--shadow-lg)]">
+                                                        <h3 className="text-[var(--text-primary)] text-xl font-semibold mb-4 uppercase tracking-tight">
+                                                            {t('dashboard.guestCta.title', 'Pianifica il tuo prossimo viaggio')}
+                                                        </h3>
+                                                        <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+                                                            {t('dashboard.guestCta.desc', 'Accedi o Registrati per sbloccare l\'itinerario completo, la gestione budget e la chat AI.')}
+                                                        </p>
+                                                        <div className="flex justify-center gap-4">
+                                                            <Button onClick={() => navigate('/auth')}>
+                                                                {t('dashboard.guestCta.register', 'Registrati Gratis')}
+                                                            </Button>
+                                                            <Button variant="outline" onClick={() => navigate('/auth')}>
+                                                                {t('dashboard.guestCta.login', 'Accedi')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 3. Hotel Form or Wait Message */}
+                                            {!trip.accommodation && (
+                                                isOrganizer ? (
+                                                    <div id="hotel-confirmation-form">
+                                                        <Suspense fallback={<ComponentLoader />}>
+                                                            <HotelConfirmation
+                                                                trip={trip}
+                                                                onConfirm={fetchTrip}
+                                                                setIsGenerating={setIsGenerating}
+                                                                setProgress={setItineraryProgress}
+                                                                isPremium={user?.is_subscribed || trip.is_premium}
+                                                                prefillData={prefillData}
+                                                            />
+                                                        </Suspense>
+                                                    </div>
+                                                ) : (
+                                                    <div className="container py-12">
+                                                        <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] text-center max-w-2xl mx-auto py-16 shadow-[var(--shadow-lg)]">
+                                                            <div className="text-4xl mb-8">✨</div>
+                                                            <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-4 uppercase tracking-tight">
+                                                                {t('dashboard.consensusReached', 'Consenso Raggiunto!')}
+                                                            </h2>
+                                                            <p className="text-[var(--text-muted)] text-lg leading-relaxed mb-10 mx-auto">
+                                                                {t('dashboard.consensusDesc', {
+                                                                    defaultValue: "Ottime notizie! Il gruppo ha scelto {{destination}} come meta ufficiale. L'organizzatore sta ora ultimando i dettagli della logistica e dell'hotel per generare l'itinerario finale.",
+                                                                    destination: trip.destination
+                                                                })}
+                                                            </p>
+                                                            <div className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase">
+                                                                {t('dashboard.waitingConfirmation', 'In attesa della conferma finale...')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            )}
+
+                                            {/* 4. Itinerary Section: Visible only when hotel is confirmed and itinerary exists */}
+                                            {trip.accommodation && itinerary && itinerary.length > 0 && (
+                                                <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-112px)] overflow-hidden">
+                                                    {/* Left Side: Timeline (Scrollable) */}
+                                                    <div className="w-full lg:w-1/2 overflow-y-auto custom-scrollbar p-6 lg:p-12 border-r border-[var(--border-subtle)]">
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
+                                                            <h2 className="text-[var(--text-primary)] text-3xl font-semibold tracking-tight uppercase">
+                                                                {t('dashboard.itineraryTitle', 'Il tuo Itinerario')}
+                                                            </h2>
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-9 gap-2 px-4">
+                                                                    <FileDown className="w-3.5 h-3.5" />
+                                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{t('dashboard.exportPdf', 'PDF')}</span>
+                                                                </Button>
+
+                                                                {(user?.is_subscribed || trip.is_premium) && (
+                                                                    <Button
+                                                                        variant={isCalendarConnected ? "secondary" : "outline"}
+                                                                        size="sm"
+                                                                        onClick={handleConnectCalendar}
+                                                                        className="h-9 gap-2 px-4"
+                                                                    >
+                                                                        <CalendarDays className={`w-3.5 h-3.5 ${isCalendarConnected ? 'text-emerald-500' : ''}`} />
+                                                                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                                                                            {isCalendarConnected ? t('dashboard.calendarConnected', 'Calendar') : t('dashboard.connectCalendar', 'Collega')}
+                                                                        </span>
+                                                                    </Button>
+                                                                )}
+
+                                                                {isOrganizer && (
+                                                                    <Button variant="outline" size="sm" onClick={handleResetHotel} className="h-9 px-4">
+                                                                        <span className="text-[10px] font-bold uppercase tracking-widest">{t('dashboard.editLogistics', 'Logistica')}</span>
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <Suspense fallback={<ComponentLoader />}>
+                                                            <Timeline items={itinerary} />
+                                                        </Suspense>
+                                                    </div>
+
+                                                    <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
+                                                        <Suspense fallback={<ComponentLoader />}>
+                                                            <Map
+                                                                items={itinerary}
+                                                                hotelLat={trip.hotel_latitude}
+                                                                hotelLon={trip.hotel_longitude}
+                                                                startDate={trip.start_date}
+                                                                isPremium={user?.is_subscribed || trip.is_premium}
+                                                            />
+                                                        </Suspense>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* AI Floating Action Button */}
+                    {user && user.is_subscribed && trip.status === 'BOOKED' && (
+                        <button
+                            onClick={() => setIsChatOpen(true)}
+                            className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-base rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100] group overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Sparkles className="w-6 h-6 relative z-10" />
+                        </button>
+                    )}
+
+                    {/* AI Side Drawer */}
+                    <AnimatePresence>
+                        {isChatOpen && (
+                            <div className="fixed inset-0 z-[1000] flex justify-end">
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    onClick={() => setIsChatOpen(false)}
+                                    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                />
+                                <motion.div
+                                    initial={{ x: '100%' }}
+                                    animate={{ x: 0 }}
+                                    exit={{ x: '100%' }}
+                                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                    className="w-full sm:max-w-md h-full bg-card border-l border-border-subtle relative z-10 shadow-2xl flex flex-col"
+                                >
+                                    <div className="p-8 border-b border-border-subtle flex justify-between items-center bg-primary text-base">
+                                        <div>
+                                            <h3 className="m-0 text-2xl font-black uppercase tracking-tight">AI Assistant</h3>
+                                            <p className="m-0 text-[10px] uppercase font-black tracking-widest opacity-80">Premium Intelligence</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsChatOpen(false)}
+                                            className="bg-white/10 border border-white/20 text-white w-10 h-10 rounded-sm flex items-center justify-center hover:bg-white/20 transition-all font-black"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <Suspense fallback={<ComponentLoader />}>
+                                            <Chatbot
+                                                tripId={id}
+                                                onItineraryUpdate={(newItinerary) => setItinerary(newItinerary)}
+                                                messages={chatMessages}
+                                                setMessages={setChatMessages}
+                                            />
+                                        </Suspense>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+
+                    {view === 'BUDGET' && (
+                        <div className="flex justify-center w-full">
+                            {!user ? (
+                                <div className="container mt-8">
+                                    <div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-lg)]">
+                                        <div className="text-5xl mb-6">💰</div>
+                                        <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
+                                        <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                            Tieni traccia del tuo budget di viaggio in tempo reale. Accedi o Registrati per gestire le tue spese in modo professionale.
+                                        </p>
+                                        <div className="flex justify-center gap-4">
+                                            <Button onClick={() => navigate('/auth')}>Registrati Gratis</Button>
+                                            <Button variant="outline" onClick={() => navigate('/auth')}>Accedi</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : user?.is_subscribed ? (
                                 <Suspense fallback={<ComponentLoader />}>
                                     <Budget trip={trip} onUpdate={fetchTrip} />
                                 </Suspense>
-                    ) : (
-                        <div className="container mt-8">
-                            <div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]">
-                                <div className="text-5xl mb-6">✨</div>
-                                <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
-                                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
-                                    Gli utenti <b>Premium</b> possono vedere quanto hanno speso per volo e hotel, e monitorare quanto rimane per attività e pasti.
-                                </p>
-                                <Button
-                                    onClick={() => navigate('/auth')}
-                                >
-                                    Scopri Premium
-                                </Button>
-                            </div>
+                            ) : (
+                                <div className="container mt-8">
+                                    <div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]">
+                                        <div className="text-5xl mb-6">✨</div>
+                                        <h2 className="text-[var(--text-primary)] text-2xl font-semibold mb-3 uppercase tracking-tight">Gestione Budget Avanzata</h2>
+                                        <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+                                            Gli utenti <b>Premium</b> possono vedere quanto hanno speso per volo e hotel, e monitorare quanto rimane per attività e pasti.
+                                        </p>
+                                        <Button
+                                            onClick={() => navigate('/auth')}
+                                        >
+                                            Scopri Premium
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
-            )}
 
-            {view === 'FINANCE' && (
-                <Suspense fallback={<ComponentLoader />}>
-                    <Finance trip={trip} />
-                </Suspense>
-            )}
+                    {view === 'FINANCE' && (
+                        <Suspense fallback={<ComponentLoader />}>
+                            <Finance trip={trip} />
+                        </Suspense>
+                    )}
 
-            {view === 'PHOTOS' && (
-                <Suspense fallback={<ComponentLoader />}>
-                    <Photos trip={trip} />
-                </Suspense>
-            )}
+                    {view === 'PHOTOS' && (
+                        <Suspense fallback={<ComponentLoader />}>
+                            <Photos trip={trip} />
+                        </Suspense>
+                    )}
 
-            {view === 'EVENTS' && (
-                <Suspense fallback={<ComponentLoader />}>
-                    <Events trip={trip} />
-                </Suspense>
-            )}
+                    {view === 'EVENTS' && (
+                        <Suspense fallback={<ComponentLoader />}>
+                            <Events trip={trip} />
+                        </Suspense>
+                    )}
 
-            {isGenerating && <GeneratingOverlay progress={itineraryProgress} />}
+                    {isGenerating && <GeneratingOverlay progress={itineraryProgress} />}
                 </div> {/* Close Main View Container */}
             </div> {/* Close Main Content Area */}
         </div> /* Close Layout Wrapper */
@@ -783,7 +778,7 @@ const GeneratingOverlay = ({ progress }) => {
                 <div className="orb orb-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] animate-glow-pulse opacity-20" />
             </div>
 
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="max-w-md w-full text-center space-y-12 relative z-10"
@@ -798,12 +793,12 @@ const GeneratingOverlay = ({ progress }) => {
                     </motion.div>
                     <h2 className="text-primary text-4xl md:text-5xl font-black tracking-tighter uppercase leading-tight">
                         {t('dashboard.generatingTitle', 'Crafting your <br/> perfect journey...').split('<br/>').map((line, i) => (
-                            <React.Fragment key={i}>{line}<br/></React.Fragment>
+                            <React.Fragment key={i}>{line}<br /></React.Fragment>
                         ))}
                     </h2>
                     <div className="h-8 flex items-center justify-center">
                         <AnimatePresence mode="wait">
-                            <motion.p 
+                            <motion.p
                                 key={messages[msgIndex]}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -840,4 +835,4 @@ const GeneratingOverlay = ({ progress }) => {
     );
 };
 
-export default Dashboard;
+export default Dashboard;

@@ -10,7 +10,7 @@ const DemoRequest = () => {
     const { t } = useTranslation();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         full_name: '',
         company_name: '',
@@ -51,8 +51,8 @@ const DemoRequest = () => {
         return (
             <div className="min-h-screen pt-[var(--header-height,60px)] flex items-center justify-center bg-base overflow-hidden relative">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-blue/10 blur-[120px] rounded-full pointer-events-none" />
-                
-                <motion.div 
+
+                <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="premium-card max-w-lg w-full p-12 text-center space-y-8 relative z-10"
@@ -67,8 +67,8 @@ const DemoRequest = () => {
                         </p>
                     </div>
                     <div className="pt-6">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="w-full h-14 uppercase font-black tracking-widest text-[10px]"
                             onClick={() => window.location.href = '/'}
                         >
@@ -85,18 +85,18 @@ const DemoRequest = () => {
         <div className="min-h-screen pt-[var(--header-height,60px)] bg-base">
             <div className="container py-12 lg:py-24">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                    
+
                     {/* Left: Value Proposition */}
                     <div className="space-y-12 sticky top-32">
                         <div className="space-y-6">
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="subtle-heading text-primary-blue"
                             >
                                 SplitPlan for Business
                             </motion.div>
-                            <motion.h1 
+                            <motion.h1
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
@@ -106,7 +106,7 @@ const DemoRequest = () => {
                                 <span className="text-primary-blue">viaggi di lavoro</span> <br />
                                 senza stress.
                             </motion.h1>
-                            <motion.p 
+                            <motion.p
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
@@ -118,7 +118,7 @@ const DemoRequest = () => {
 
                         <div className="space-y-6">
                             {benefits.map((b, i) => (
-                                <motion.div 
+                                <motion.div
                                     key={i}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -143,20 +143,19 @@ const DemoRequest = () => {
                                         <div key={i} className="w-8 h-8 rounded-full border-2 border-base bg-elevated" />
                                     ))}
                                 </div>
-                                <p className="text-xs text-subtle font-medium">Oltre 50 aziende usano già SplitPlan</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Right: Form */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         className="premium-card p-8 lg:p-12 relative overflow-hidden"
                     >
                         {/* Decorative background grid */}
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-                        
+
                         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -164,7 +163,7 @@ const DemoRequest = () => {
                                         <User size={12} className="text-primary-blue" />
                                         Nome Completo
                                     </label>
-                                    <input 
+                                    <input
                                         required
                                         type="text"
                                         name="full_name"
@@ -179,7 +178,7 @@ const DemoRequest = () => {
                                         <Building2 size={12} className="text-primary-blue" />
                                         Azienda
                                     </label>
-                                    <input 
+                                    <input
                                         required
                                         type="text"
                                         name="company_name"
@@ -197,7 +196,7 @@ const DemoRequest = () => {
                                         <Mail size={12} className="text-primary-blue" />
                                         Email di Lavoro
                                     </label>
-                                    <input 
+                                    <input
                                         required
                                         type="email"
                                         name="work_email"
@@ -212,7 +211,7 @@ const DemoRequest = () => {
                                         <Phone size={12} className="text-primary-blue" />
                                         Telefono (Opzionale)
                                     </label>
-                                    <input 
+                                    <input
                                         type="tel"
                                         name="phone_number"
                                         value={formData.phone_number}
@@ -229,7 +228,7 @@ const DemoRequest = () => {
                                         <Users size={12} className="text-primary-blue" />
                                         Dimensione Team
                                     </label>
-                                    <select 
+                                    <select
                                         name="team_size"
                                         value={formData.team_size}
                                         onChange={handleChange}
@@ -246,7 +245,7 @@ const DemoRequest = () => {
                                         <Calendar size={12} className="text-primary-blue" />
                                         Frequenza Viaggi
                                     </label>
-                                    <select 
+                                    <select
                                         name="travel_frequency"
                                         value={formData.travel_frequency}
                                         onChange={handleChange}
@@ -265,7 +264,7 @@ const DemoRequest = () => {
                                     <MessageSquare size={12} className="text-primary-blue" />
                                     Esigenze Specifiche
                                 </label>
-                                <textarea 
+                                <textarea
                                     name="message"
                                     value={formData.message}
                                     onChange={handleChange}
@@ -276,7 +275,7 @@ const DemoRequest = () => {
                             </div>
 
                             <div className="pt-4">
-                                <Button 
+                                <Button
                                     disabled={isLoading}
                                     className="w-full h-16 bg-primary-blue hover:bg-primary-blue-light text-white font-black uppercase tracking-[0.2em] text-[11px] group shadow-xl shadow-primary-blue/20"
                                 >
@@ -284,7 +283,7 @@ const DemoRequest = () => {
                                     {!isLoading && <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                                 </Button>
                             </div>
-                            
+
                             <p className="text-[9px] text-subtle text-center uppercase tracking-widest leading-relaxed">
                                 Cliccando su "Prenota la Demo Gratuita" accetti la nostra Informativa sulla Privacy e acconsenti ad essere contattato per scopi commerciali.
                             </p>

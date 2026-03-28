@@ -28,8 +28,6 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl();
 
-console.log("🔗 API URL:", API_URL);
-
 const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -48,7 +46,7 @@ const handleResponse = async (response) => {
     if (!response.ok) {
         let errorMessage = `Richiesta fallita con status ${response.status}`;
         let errorData = {};
-        
+
         try {
             errorData = await response.json();
             if (Array.isArray(errorData.detail)) {

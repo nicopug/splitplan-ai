@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createTrip } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
@@ -20,7 +20,7 @@ const AIDemo = () => {
         { role: 'user', text: "Organizzami 3 giorni a Parigi per 4 persone, budget 500€ a testa. Musei sì, trappole per turisti no." },
         { role: 'ai', text: "Parigi in arrivo! ✨ Voli a 120€. Hotel a Montmartre trovato. Ho inserito il Louvre giovedì (meno folla). Genero itinerario e spese..." },
         { role: 'user', text: "Perfetto! Aggiungi un ristorante di pesce per sabato sera." },
-        { role: 'ai', text: "Certo! Ho prenotato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
+        { role: 'ai', text: "Certo! Ho trovato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
     ];
 
     useEffect(() => {
@@ -68,8 +68,8 @@ const AIDemo = () => {
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                             <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                ? 'bg-white/10 text-white rounded-tr-none border border-white/10'
-                                : 'bg-primary-blue/20 text-blue-100 rounded-tl-none border border-primary-blue/20'
+                                    ? 'bg-white/10 text-white rounded-tr-none border border-white/10'
+                                    : 'bg-primary-blue/20 text-blue-100 rounded-tl-none border border-primary-blue/20'
                                 }`}>
                                 {msg.role === 'ai' && <Sparkles className="w-3 h-3 inline-block mr-2 text-blue-400 mb-1" />}
                                 {msg.text}
@@ -77,11 +77,7 @@ const AIDemo = () => {
                         </motion.div>
                     ))}
                     {isTyping && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex justify-start"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                             <div className="bg-primary-blue/10 p-3 rounded-2xl rounded-tl-none flex gap-1">
                                 <div className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                 <div className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -90,7 +86,6 @@ const AIDemo = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <div id="demo-end" />
             </div>
 
             <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
@@ -105,8 +100,6 @@ const AIDemo = () => {
     );
 };
 
-
-
 const Hero = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -118,12 +111,21 @@ const Hero = () => {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) setUser(JSON.parse(storedUser));
+        if (storedUser && storedUser !== 'undefined') {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("User parse error", e);
+            }
+        }
     }, []);
 
     const handleIniziaOra = () => {
-        if (user) setShowTypeSelection(true);
-        else navigate('/auth');
+        if (user) {
+            setShowTypeSelection(true);
+        } else {
+            navigate('/auth');
+        }
     };
 
     const handleCreateTrip = async (type) => {
@@ -134,6 +136,7 @@ const Hero = () => {
 
         const tripName = await showPrompt(title, message, placeholder);
         if (!tripName) return;
+
         setLoading(true);
         try {
             const data = await createTrip({ name: tripName, trip_type: type });
@@ -148,7 +151,7 @@ const Hero = () => {
 
     return (
         <header className="section bg-base overflow-hidden relative min-h-screen flex items-center">
-            {/* Background Orbs - Invariati */}
+            {/* Background Orbs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="orb orb-blue top-[-10%] left-[-10%] animate-orb" />
                 <div className="orb orb-violet top-[20%] right-[-5%] animate-orb" style={{ animationDelay: '-3s' }} />
@@ -157,12 +160,11 @@ const Hero = () => {
 
             <div className="container relative z-10 py-20">
                 <div className="flex flex-col lg:flex-row w-full items-center gap-12 lg:gap-20">
-                    {/* Left: Content */}
                     <div className="w-full lg:w-1/2 space-y-8 py-12 lg:pr-12 text-left flex flex-col">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-[#114DD0] dark:text-blue-400 self-start"
+                            className="inline-block px-3 py-1 rounded-full border border-border-medium bg-card/50 backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] uppercase text-primary-blue self-start"
                         >
                             {t('hero.badge')}
                         </motion.div>
@@ -196,23 +198,21 @@ const Hero = () => {
                                 <Button
                                     variant="ai"
                                     size="lg"
-                                    className="px-10 py-4 h-auto text-lg rounded-full"
+                                    className="px-10 py-4 h-auto text-lg rounded-full shadow-xl shadow-primary-blue/20"
                                     onClick={handleIniziaOra}
                                     disabled={loading}
                                 >
                                     {loading ? t('common.loading') : t('hero.cta')}
                                 </Button>
 
-                                {/* Nuova CTA testuale per aziende */}
                                 <button
-                                    className="text-primary-blue font-bold hover:text-blue-500 transition-colors flex items-center gap-2 group text-sm md:text-base"
+                                    className="text-primary-blue font-bold hover:text-blue-500 transition-colors flex items-center gap-2 group text-base"
                                     onClick={() => navigate('/demo')}
                                 >
                                     {t('hero.businessCta')}
                                 </button>
                             </motion.div>
 
-                            {/* Nota Business */}
                             <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -224,7 +224,6 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    {/* Right: AI Demo - Invariato */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, x: 20 }}
                         animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -236,11 +235,45 @@ const Hero = () => {
                 </div>
             </div>
 
-            {/* Modal Selezione Viaggio - Invariato */}
-            {/* ... */}
+            {/* MODAL DI SELEZIONE - FONDAMENTALE PER FAR FUNZIONARE IL TASTO */}
+            <AnimatePresence>
+                {showTypeSelection && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-card w-full max-w-md border border-white/10 rounded-3xl p-10 shadow-2xl relative"
+                        >
+                            <h2 className="text-3xl font-black text-center mb-8 tracking-tighter text-primary">{t('hero.selectionTitle')}</h2>
+                            <div className="grid grid-cols-2 gap-6">
+                                <button
+                                    onClick={() => handleCreateTrip('GROUP')}
+                                    className="flex flex-col items-center gap-6 p-8 border border-white/5 bg-white/5 hover:bg-white/10 hover:border-blue-500/30 transition-all rounded-2xl group"
+                                >
+                                    <span className="text-5xl group-hover:scale-110 transition-transform">👥</span>
+                                    <span className="font-bold text-sm uppercase tracking-widest text-primary">{t('hero.groupTitle')}</span>
+                                </button>
+                                <button
+                                    onClick={() => handleCreateTrip('SOLO')}
+                                    className="flex flex-col items-center gap-6 p-8 border border-white/5 bg-white/5 hover:bg-white/10 hover:border-blue-500/30 transition-all rounded-2xl group"
+                                >
+                                    <span className="text-5xl group-hover:scale-110 transition-transform">✈️</span>
+                                    <span className="font-bold text-sm uppercase tracking-widest text-primary">{t('hero.soloTitle')}</span>
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setShowTypeSelection(false)}
+                                className="w-full mt-10 text-muted hover:text-primary transition-colors text-xs font-black tracking-[0.2em] uppercase"
+                            >
+                                {t('common.cancel')}
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </header>
     );
 };
 
 export default Hero;
-Hero;

@@ -297,7 +297,7 @@ const Dashboard = () => {
                         { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: trip.status === 'BOOKED' || trip.status === 'APPROVED' },
                         { id: 'FINANCE', label: t('dashboard.tabs.finance'), icon: <Coins className="w-4 h-4" />, condition: user && trip.trip_type !== 'SOLO' },
                         { id: 'PHOTOS', label: t('dashboard.tabs.photos'), icon: <Camera className="w-4 h-4" /> },
-                        { id: 'EVENTS', label: t('dashboard.tabs.events'), icon: <CalendarDays className="w-4 h-4" />, condition: trip.status === 'BOOKED' || trip.status === 'APPROVED' }
+                        { id: 'EVENTS', label: t('dashboard.tabs.events'), icon: <CalendarDays className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && trip.trip_intent !== 'BUSINESS' }
                     ].map(btn => (
                         (!btn.hasOwnProperty('condition') || btn.condition) && (
                             <button
@@ -499,7 +499,9 @@ const Dashboard = () => {
 
                     {view === 'FINANCE' && <Suspense fallback={<ComponentLoader />}><Finance trip={trip} /></Suspense>}
                     {view === 'PHOTOS' && <Suspense fallback={<ComponentLoader />}><Photos trip={trip} /></Suspense>}
-                    {view === 'EVENTS' && <Suspense fallback={<ComponentLoader />}><Events trip={trip} /></Suspense>}
+                    {view === 'EVENTS' && trip.trip_intent !== 'BUSINESS' && (
+                        <Suspense fallback={<ComponentLoader />}><Events trip={trip} /></Suspense>
+                    )}
                     {isGenerating && <GeneratingOverlay progress={itineraryProgress} />}
                 </div>
             </div>

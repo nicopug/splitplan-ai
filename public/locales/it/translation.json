@@ -471,5 +471,14 @@
         "privacy": "Privacy Policy",
         "contact": "Contatti",
         "rights": "© 2026 SplitPlan AI. Tutti i diritti riservati."
+    },
+    "roi": {
+        "badge": "Calcolatore ROI",
+        "title": "Quanto ti costa non usare SplitPlan?",
+        "trips_label": "Trasferte annue del team",
+        "cost_label": "Costo orario medio dipendente (€)",
+        "hours_saved": "Ore di lavoro recuperate",
+        "money_saved": "Risparmio annuo netto",
+        "assumption": "*Stima basata su un recupero medio di 2 ore (ricerca, prenotazione, note spese e approvazione) per ogni singola trasferta."
     }
 }

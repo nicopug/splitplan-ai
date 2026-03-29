@@ -476,5 +476,14 @@
         "privacy": "Privacy Policy",
         "contact": "Contact",
         "rights": "© 2026 SplitPlan AI. All rights reserved."
+    },
+    "roi": {
+        "badge": "ROI Calculator",
+        "title": "How much does it cost NOT to use SplitPlan?",
+        "trips_label": "Annual team trips",
+        "cost_label": "Average employee hourly cost (€)",
+        "hours_saved": "Work hours recovered",
+        "money_saved": "Net annual savings",
+        "assumption": "*Estimate based on an average recovery of 2 hours (research, booking, expensing, and approval) for each single trip."
     }
 }

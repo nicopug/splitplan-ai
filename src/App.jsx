@@ -16,6 +16,7 @@ const Terms = lazy(() => import('./pages/Terms'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
+import ROICalculator from './components/ROICalculator';
 
 // Lazy load page components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -43,6 +44,7 @@ function Landing({ user }) {
       <PainPoints />
       <Solution />
       <Features />
+      <ROICalculator />
       <Pricing user={user} />
       <Business />
       <Footer />
@@ -138,7 +140,7 @@ function App() {
                   setUser(newUser);
                   localStorage.setItem('user', JSON.stringify(newUser));
                 }} />} />
-
+                <Route path="/roi" element={<ROICalculator />} />
                 <Route path="/demo" element={<DemoRequest />} />
 
                 <Route path="/privacy" element={<Privacy />} />

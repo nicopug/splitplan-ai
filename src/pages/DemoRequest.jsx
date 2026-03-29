@@ -102,9 +102,11 @@ const DemoRequest = () => {
                                 transition={{ delay: 0.1 }}
                                 className="text-5xl lg:text-7xl font-black uppercase tracking-tighter leading-[0.85] text-primary"
                             >
-                                Gestisci i <br />
-                                <span className="text-primary-blue">viaggi di lavoro</span> <br />
-                                senza stress.
+                                {t('business.headlinePart1')} <br />
+                                <span className="text-primary-blue">
+                                    {t('business.headlinePart2')}
+                                </span> <br />
+                                {t('business.headlinePart3')}
                             </motion.h1>
                             <motion.p
                                 initial={{ opacity: 0, y: 20 }}
@@ -112,7 +114,7 @@ const DemoRequest = () => {
                                 transition={{ delay: 0.2 }}
                                 className="text-xl text-muted font-medium tracking-tight max-w-md leading-relaxed"
                             >
-                                Unisciti a centinaia di aziende che hanno ottimizzato la logistica delle trasferte con il nostro motore AI.
+                                {t('business.subheadline')}
                             </motion.p>
                         </div>
 
@@ -279,14 +281,23 @@ const DemoRequest = () => {
                                     disabled={isLoading}
                                     className="w-full h-16 bg-primary-blue hover:bg-primary-blue-light text-white font-black uppercase tracking-[0.2em] text-[11px] group shadow-xl shadow-primary-blue/20"
                                 >
-                                    {isLoading ? 'Invio in corso...' : 'Prenota la Demo Gratuita'}
+                                    {isLoading ? t('common.loading') : t('business.cta')}
                                     {!isLoading && <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                                 </Button>
+                                <p className="mt-3 text-[10px] text-primary-blue font-bold uppercase tracking-widest text-center">
+                                    {t('business.demo_note')}
+                                </p>
                             </div>
 
-                            <p className="text-[9px] text-subtle text-center uppercase tracking-widest leading-relaxed">
-                                Cliccando su "Prenota la Demo Gratuita" accetti la nostra Informativa sulla Privacy e acconsenti ad essere contattato per scopi commerciali.
+                            <p className="text-[9px] text-subtle text-center uppercase tracking-widest leading-relaxed mt-6">
+                                {t('business.privacy_disclaimer')}
                             </p>
+
+                            <div className="mt-8 pt-6 border-t border-white/5 text-center">
+                                <p className="text-[10px] text-muted font-medium uppercase tracking-[0.1em]">
+                                    {t('business.trust_note')}
+                                </p>
+                            </div>
                         </form>
                     </motion.div>
                 </div>

@@ -42,9 +42,15 @@ const Solution = () => {
                     <div className="space-y-12 py-12">
                         <div className="space-y-4">
                             <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
-                                {t('solution.badge', 'IL METODO')}
+                                {t('solution.badge')}
                             </div>
-                            <h2 className="text-primary text-4xl lg:text-5xl font-semibold leading-tight uppercase tracking-tight">{t('solution.title', '4 Fasi per il Viaggio Perfetto')}</h2>
+                            <h2 className="text-primary text-4xl lg:text-5xl font-black leading-tight uppercase tracking-tighter">
+                                {t('solution.title')} <br />
+                                <span className="text-muted">{t('solution.titleSuffix')}</span>
+                            </h2>
+                            <p className="text-muted text-lg leading-relaxed max-w-md font-medium">
+                                {t('solution.subtitle')}
+                            </p>
                         </div>
 
                         <div className="space-y-10">

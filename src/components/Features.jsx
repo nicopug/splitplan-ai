@@ -6,7 +6,7 @@ import { useSpotlight } from '../hooks/useSpotlight';
 
 const FeatureCard = ({ feature, idx }) => {
     const { ref, onMouseMove } = useSpotlight();
-    
+
     return (
         <motion.div
             ref={ref}
@@ -30,7 +30,7 @@ const FeatureCard = ({ feature, idx }) => {
                     </p>
                 </div>
             </div>
-            
+
             {/* Decorative background circle */}
             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-500" />
         </motion.div>
@@ -39,7 +39,7 @@ const FeatureCard = ({ feature, idx }) => {
 
 const ComparisonTable = () => {
     const { t } = useTranslation();
-    
+
     const rows = [
         { label: t('features.row1'), booking: false, splitwise: false, chatgpt: true, splitplan: true },
         { label: t('features.row2'), booking: false, splitwise: true, chatgpt: false, splitplan: true },
@@ -131,7 +131,7 @@ const Features = () => {
         <section id="features" className="section bg-base py-32">
             <div className="container">
                 <div className="text-center mb-16 space-y-4">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
@@ -139,7 +139,7 @@ const Features = () => {
                     >
                         {t('features.sectionBadge')}
                     </motion.div>
-                    <motion.h2 
+                    <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}

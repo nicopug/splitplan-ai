@@ -19,11 +19,13 @@
         "delete": "Elimina"
     },
     "hero": {
-        "badge": "Il Futuro dei Viaggi è Qui",
-        "titlePrefix": "L'Agente di Viaggio AI",
-        "titleHighlight": "All-in-One",
-        "description": "Dimentica le chat infinite e i file Excel. SplitPlan è il tuo Agente, Mediatore e CFO personale. Organizza viaggi perfetti senza stress.",
+        "badge": "Il Futuro dei Viaggi e delle Trasferte è Qui",
+        "titlePrefix": "Il Futuro dei Viaggi",
+        "titleHighlight": "e delle Trasferte",
+        "description": "Dimentica chat infinite, fogli Excel e prenotazioni manuali. SplitPlan pianifica viaggi, divide spese e gestisce trasferte aziendali in automatico.",
         "cta": "Inizia Ora",
+        "businessCta": "Soluzione per aziende →",
+        "businessNote": "Soluzioni Business disponibili su richiesta",
         "learnMore": "Esplora le funzionalità",
         "selectionTitle": "Come viaggi oggi?",
         "groupTitle": "In Gruppo",
@@ -40,58 +42,57 @@
     },
     "painPoints": {
         "badge": "Il Problema",
-        "title": "Basta con il Caos Organizzativo",
-        "subtitle": "Organizzare un viaggio non dovrebbe essere un secondo lavoro.",
+        "title": "BASTA CON IL CAOS ORGANIZZATIVO",
+        "titleSuffix1": "PER GRUPPI E",
+        "titleSuffix2": "PER AZIENDE",
+        "subtitle": "Organizzare un viaggio non dovrebbe essere un secondo lavoro. Che si tratti di amici o di un team aziendale.",
         "chaosTitle": "Caos Decisionale",
-        "chaosDesc": "Chat WhatsApp infinite, link persi, e nessuno che prende una decisione. Il 70% dei viaggi di gruppo muore qui.",
+        "chaosDesc": "Chat WhatsApp infinite, link persi, e nessuno che prende una decisione. Succede nei gruppi di amici… e nei team aziendali sotto pressione.",
         "fragmentationTitle": "Frammentazione",
-        "fragmentationDesc": "5 app diverse aperte: Booking, Maps, Notes, Splitwise... Un incubo logistico da gestire.",
+        "fragmentationDesc": "5 app diverse aperte. Per le aziende si aggiungono policy, approvazioni e budget da rispettare.",
         "financeTitle": "Imbarazzo Finanziario",
-        "financeDesc": "\"Chi deve quanto a chi?\". Rincorrere gli amici per i soldi è la parte peggiore del viaggio."
+        "financeDesc": "Rincorrere gli amici per i soldi è stressante. In azienda diventa un problema di contabilità e reportistica."
     },
     "solution": {
         "badge": "Il Nostro Metodo",
-        "title": "4 Fasi per il Viaggio Perfetto",
+        "title": "4 FASI PER IL VIAGGIO PERFETTO",
+        "titleSuffix": "PER GRUPPI E PER TEAM AZIENDALI",
+        "subtitle": "La nostra AI gestisce preferenze, logistica, budget e report. Funziona per vacanze e trasferte.",
         "ecosystem": "Piattaforma Integrata",
         "steps": {
             "s1": {
                 "title": "Decisione & Consenso",
-                "desc": "L'AI raccoglie i gusti di tutti e propone 3 opzioni perfette. Risolve i conflitti prima che nascano."
+                "desc": "L'AI raccoglie i gusti di tutti e propone 3 opzioni perfette. Per i team aziendali, tiene conto anche di policy e limiti di budget approvati."
             },
             "s2": {
                 "title": "Logistica Proattiva",
-                "desc": "Voli e hotel prenotati in sync con il budget approvato. Niente sorprese."
+                "desc": "Voli e hotel prenotati in sync con il budget. Per le aziende automatizziamo approvazioni e preferenze di viaggio del team."
             },
             "s3": {
                 "title": "Itinerario Dinamico",
-                "desc": "Pianificazione intelligente, ottimizzata geograficamente per massimizzare il tempo. Modifica l'itinerario in un click grazie all'Assistente AI."
+                "desc": "Pianificazione intelligente, ottimizzata geograficamente. Perfetto per gruppi e per team che devono rispettare meeting e orari."
             },
             "s4": {
                 "title": "CFO del Viaggio",
-                "desc": "Tiene traccia delle spese in tempo reale e calcola i conguagli. Tu goditi il viaggio."
+                "desc": "Tiene traccia delle spese in tempo reale, calcola conguagli e genera report pronti per la contabilità."
             }
         }
     },
     "features": {
-        "title": "Perché SplitPlan è",
-        "highlight": "Unico?",
         "sectionBadge": "Padroneggia il Viaggio",
-        "sectionTitle": "Ogni dettaglio,",
-        "sectionSubtitle": "perfettamente sincronizzato.",
-        "tableFeature": "Funzionalità",
-        "tableFooter": "Perché usare 4 app quando ne basta una?",
+        "sectionTitle": "PADRONEGGIA IL VIAGGIO",
+        "sectionSubtitle": "PER GRUPPI E PER TEAM AZIENDALI",
+        "mediator_title": "Mediatore Sociale AI",
+        "mediator_desc": "Non siamo solo un motore di ricerca. Siamo l'amico che mette tutti d'accordo e il collega virtuale che allinea il team sulle decisioni di viaggio.",
+        "endtoend_title": "Esperienza End-to-End",
+        "endtoend_desc": "Dal \"Dove andiamo?\" al \"Che foto assurda!\". E per le aziende, dall'approvazione della trasferta alla ricevuta finale.",
+        "finance_title": "Finanza Integrata",
+        "finance_desc": "Splitwise fa solo i conti. Noi integriamo i pagamenti e per i team aziendali generiamo report pronti per la contabilità.",
         "row1": "Itinerari Generati dall'AI",
         "row2": "Gestione Divisione Spese",
         "row3": "Logistica Voli/Hotel Sincrona",
         "row4": "Supporto Chatbot Real-time",
         "row5": "Mappa di Gruppo Interattiva",
-        "mediator_title": "Mediatore Sociale AI",
-        "mediator_desc": "Non siamo solo un motore di ricerca (come Skyscanner). Siamo l'amico che mette tutti d'accordo.",
-        "finance_title": "Finanza Integrata",
-        "finance_desc": "Splitwise fa solo i conti. Noi integriamo i pagamenti nelle prenotazioni e nel budget giornaliero.",
-        "endtoend_title": "Esperienza End-to-End",
-        "endtoend_desc": "Dal \"Dove andiamo?\" al \"Che foto assurda!\", tutto in un'unica app.",
-        "comparison_title": "Confronto Veloce",
         "hotels_only": "Solo Hotel",
         "expenses_only": "Solo Spese",
         "text_only": "Solo Testo",
@@ -121,7 +122,9 @@
         "pro_annual_feat2": "Badge Esclusivo",
         "pro_annual_feat3": "Blocco Prezzo",
         "save_50": "SALVA 50%",
-        "subscribe": "Abbonati"
+        "subscribe": "Abbonati",
+        "business_ready": "Soluzioni Business disponibili su richiesta",
+        "business_cta": "SEI UN'AZIENDA? RICHIEDI UNA DEMO →"
     },
     "dashboard": {
         "title": "Dashboard Viaggio",
@@ -445,15 +448,20 @@
     },
     "business": {
         "title": "Per le Aziende",
-        "headline": "Il tuo team viaggia spesso?",
-        "subheadline": "SplitPlan gestisce trasferte, budget e logistica in automatico.",
+        "headlinePart1": "AUTOMATIZZA",
+        "headlinePart2": "TRASFERTE E BUDGET",
+        "headlinePart3": "IN POLICY.",
+        "subheadline": "Unisciti alle aziende che hanno ottimizzato la logistica con SplitPlan.",
+        "trust_note": "Soluzioni enterprise: integrazioni, policy, reportistica.",
+        "demo_note": "UN NOSTRO ACCOUNT MANAGER TI CONTATTERÀ PER UNA DEMO PERSONALIZZATA.",
+        "cta": "Prenota la Demo Gratuita",
+        "privacy_disclaimer": "CLICCANDO SU \"PRENOTA LA DEMO GRATUITA\" ACCETTI LA NOSTRA INFORMATIVA SULLA PRIVACY E ACCONSENTI AD ESSERE CONTATTATO PER SCOPI COMMERCIALI.",
         "bullet1_title": "Policy Spese Intelligenti",
         "bullet1_desc": "Imposta limiti di budget e categorie di spesa approvate per ogni team.",
         "bullet2_title": "Dashboard Amministratore",
-        "bullet2_desc": "Visione d’insieme su tutte le trasferte attive, costi in tempo reale e roadmap del team.",
+        "bullet2_desc": "Visione d'insieme su tutte le trasferte attive, costi in tempo reale e roadmap del team.",
         "bullet3_title": "Reporting Automatizzato",
-        "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click.",
-        "cta": "Contattaci per una Demo"
+        "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click."
     },
     "footer": {
         "tagline": "Rendiamo i viaggi di gruppo facili, divertenti e senza stress.",

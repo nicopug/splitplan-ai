@@ -12,8 +12,16 @@ const PainPoints = () => {
                         <div className="inline-block px-3 py-1 rounded-sm border border-border-medium bg-card text-[10px] font-black tracking-[0.2em] uppercase text-muted">
                             {t('painPoints.badge')}
                         </div>
-                        <h2 className="text-primary text-5xl lg:text-7xl font-black leading-[0.9] max-w-sm uppercase tracking-tighter">
-                            {t('painPoints.title', 'Basta con il Caos Organizzativo')}
+                        <h2 className="text-primary text-5xl lg:text-7xl font-black leading-[0.9] max-w-4xl uppercase tracking-tighter">
+                            {t('painPoints.title')}
+                            {/* Prima riga grigia: - PER GRUPPI E */}
+                            <span className="text-muted block mt-4">
+                                {t('painPoints.titleSuffix1')}
+                            </span>
+                            {/* Seconda riga grigia: PER AZIENDE */}
+                            <span className="text-muted block">
+                                {t('painPoints.titleSuffix2')}
+                            </span>
                         </h2>
                         <p className="text-muted text-xl max-w-sm leading-relaxed font-medium">
                             {t('painPoints.subtitle', 'Organizzare un viaggio non dovrebbe essere un secondo lavoro.')}

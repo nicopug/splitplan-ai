@@ -19,11 +19,13 @@
         "delete": "Delete"
     },
     "hero": {
-        "badge": "The Future of Travel is Here",
-        "titlePrefix": "The AI Travel Agent",
-        "titleHighlight": "All-in-One",
-        "description": "Forget endless chats and Excel files. SplitPlan is your Agent, Mediator, and personal CFO. Organize perfect trips without stress.",
+        "badge": "The Future of Travel and Business Trips is Here",
+        "titlePrefix": "THE FUTURE OF TRAVEL",
+        "titleHighlight": "AND BUSINESS TRIPS",
+        "description": "Forget endless chats, Excel files, and manual bookings. SplitPlan plans trips, splits expenses, and manages business travel automatically.",
         "cta": "Start Now",
+        "businessCta": "Solutions for business →",
+        "businessNote": "Business Solutions available on request",
         "learnMore": "Explore features",
         "selectionTitle": "How are you traveling today?",
         "groupTitle": "In Group",
@@ -40,57 +42,57 @@
     },
     "painPoints": {
         "badge": "The Problem",
-        "title": "No More Organizational Chaos",
-        "subtitle": "Organizing a trip shouldn't be a second job.",
+        "title": "NO MORE ORGANIZATIONAL CHAOS",
+        "titleSuffix1": "FOR GROUPS AND",
+        "titleSuffix2": "BUSINESSES",
+        "subtitle": "Organizing a trip shouldn't be a second job. Whether it's friends or a corporate team.",
         "chaosTitle": "Decision Chaos",
-        "chaosDesc": "Endless WhatsApp chats, lost links, and no one making a decision. 70% of group trips die here.",
+        "chaosDesc": "Endless WhatsApp chats, lost links, and no one making a decision. It happens in groups of friends... and in business teams under pressure.",
         "fragmentationTitle": "Fragmentation",
-        "fragmentationDesc": "5 different apps open: Booking, Maps, Notes, Splitwise... A logistical nightmare to manage.",
+        "fragmentationDesc": "5 different apps open. For companies, travel policies, approvals, and budgets must be respected.",
         "financeTitle": "Financial Embarrassment",
-        "financeDesc": "\"Who owes what to whom?\". Chasing friends for money is the worst part of the trip."
+        "financeDesc": "Chasing friends for money is the worst part. For companies, it becomes an accounting and reporting issue."
     },
     "solution": {
         "badge": "Our Method",
-        "title": "4 Phases for the Perfect Trip",
+        "title": "4 PHASES FOR THE PERFECT TRIP",
+        "titleSuffix": "FOR GROUPS AND CORPORATE TEAMS",
+        "subtitle": "Our AI manages preferences, logistics, budget, and reports. Works for vacations and business trips.",
         "ecosystem": "Integrated Platform",
         "steps": {
             "s1": {
                 "title": "Decision & Consensus",
-                "desc": "AI gathers everyone's tastes and proposes 3 perfect options. Resolves conflicts before they arise."
+                "desc": "AI gathers everyone's tastes and proposes 3 perfect options. For corporate teams, it also accounts for policies and approved budget limits."
             },
             "s2": {
                 "title": "Proactive Logistics",
-                "desc": "Flights and hotels booked in sync with the approved budget. No surprises."
+                "desc": "Flights and hotels booked in sync with the budget. For companies, we automate approvals and team travel preferences."
             },
             "s3": {
                 "title": "Dynamic Itinerary",
-                "desc": "Smart planning, geographically optimized to maximize time. Change the itinerary in one click thanks to the AI Assistant."
+                "desc": "Smart planning, geographically optimized. Perfect for groups and teams that need to adhere to meetings and schedules."
             },
             "s4": {
                 "title": "Trip CFO",
-                "desc": "Tracks expenses in real-time and calculates settlements. You enjoy the trip."
+                "desc": "Tracks expenses in real-time, calculates settlements, and generates accounting-ready reports."
             }
         }
     },
     "features": {
-        "title": "Why is SplitPlan",
-        "highlight": "Unique?",
         "sectionBadge": "Master the Journey",
-        "sectionTitle": "Every detail,",
-        "sectionSubtitle": "perfectly synced.",
-        "tableFeature": "Feature",
-        "tableFooter": "Why use 4 apps when one is enough?",
+        "sectionTitle": "MASTER THE JOURNEY",
+        "sectionSubtitle": "FOR GROUPS AND CORPORATE TEAMS",
+        "mediator_title": "AI Social Mediator",
+        "mediator_desc": "We aren't just a search engine. We are the friend who makes everyone agree and the virtual colleague who aligns the team on travel decisions.",
+        "endtoend_title": "End-to-End Experience",
+        "endtoend_desc": "From \"Where should we go?\" to \"What a photo!\". And for companies, from trip approval to the final receipt.",
+        "finance_title": "Integrated Finance",
+        "finance_desc": "Splitwise only does math. We integrate payments and for corporate teams, we generate accounting-ready reports.",
         "row1": "AI-Generated Itineraries",
         "row2": "Expense Splitting Management",
         "row3": "Synced Flights/Hotel Logistics",
         "row4": "Real-time Chatbot Support",
         "row5": "Interactive Group Map",
-        "mediator_title": "AI Social Mediator",
-        "mediator_desc": "We are not just a search engine (like Skyscanner). We are the friend who makes everyone agree.",
-        "finance_title": "Integrated Finance",
-        "finance_desc": "Splitwise only does the math. We integrate payments into bookings and daily budgets.",
-        "endtoend_title": "End-to-End Experience",
-        "endtoend_desc": "From \"Where should we go?\" to \"What an awesome photo!\", all in one app.",
         "comparison_title": "Quick Comparison",
         "hotels_only": "Hotels Only",
         "expenses_only": "Expenses Only",
@@ -121,7 +123,9 @@
         "pro_annual_feat2": "Exclusive Badge",
         "pro_annual_feat3": "Price Lock",
         "save_50": "SAVE 50%",
-        "subscribe": "Subscribe"
+        "subscribe": "Subscribe",
+        "business_ready": "Business Solutions available on request",
+        "business_cta": "ARE YOU A COMPANY? REQUEST A DEMO →"
     },
     "dashboard": {
         "title": "Trip Dashboard",
@@ -445,15 +449,19 @@
     },
     "business": {
         "title": "For Business",
-        "headline": "Does your team travel often?",
-        "subheadline": "SplitPlan handles trips, budgets, and logistics automatically.",
-        "bullet1_title": "Smart Expense Policy",
+        "headlinePart1": "AUTOMATE",
+        "headlinePart2": "TRAVEL AND BUDGETS",
+        "headlinePart3": "IN POLICY.",
+        "subheadline": "Join companies that have optimized their logistics with SplitPlan.",
+        "trust_note": "Enterprise solutions: integrations, policies, and reporting.",
+        "demo_note": "A DEDICATED ACCOUNT MANAGER WILL CONTACT YOU FOR A PERSONALIZED DEMO.",
+        "cta": "Book a Free Demo",
+        "privacy_disclaimer": "BY CLICKING \"BOOK A FREE DEMO\" YOU ACCEPT OUR PRIVACY POLICY AND CONSENT TO BE CONTACTED FOR COMMERCIAL PURPOSES.",
         "bullet1_desc": "Set budget limits and approved expense categories for every team.",
         "bullet2_title": "Admin Dashboard",
         "bullet2_desc": "Overview of all active trips, real-time costs, and team roadmap.",
         "bullet3_title": "Automated Reporting",
-        "bullet3_desc": "Export detailed, accounting-ready reports with a single click.",
-        "cta": "Contact us for a Demo"
+        "bullet3_desc": "Export detailed, accounting-ready reports with a single click."
     },
     "demo": {
         "success_toast": "Request submitted! We'll contact you shortly.",

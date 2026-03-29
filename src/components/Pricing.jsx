@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Zap } from 'lucide-react';
 import { useSpotlight } from '../hooks/useSpotlight';
+import { useNavigate } from 'react-router-dom';
 
 const PricingCard = ({ title, price, period, description, features, buttonText, highlighted = false }) => {
     const { ref, onMouseMove } = useSpotlight();
@@ -12,8 +13,8 @@ const PricingCard = ({ title, price, period, description, features, buttonText, 
             ref={ref}
             onMouseMove={onMouseMove}
             className={`premium-card p-10 flex flex-col h-full gap-8 border transition-all duration-500 overflow-hidden ${highlighted
-                    ? 'border-primary-blue/30 bg-primary-blue/[0.03] shadow-2xl scale-105 z-10'
-                    : 'border-white/5 bg-card/40 shadow-xl'
+                ? 'border-primary-blue/30 bg-primary-blue/[0.03] shadow-2xl scale-105 z-10'
+                : 'border-white/5 bg-card/40 shadow-xl'
                 }`}
         >
             <div className="space-y-4">
@@ -53,8 +54,8 @@ const PricingCard = ({ title, price, period, description, features, buttonText, 
             <button
                 onClick={() => window.location.href = '/market'}
                 className={`w-full h-14 rounded-xl text-[11px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 ${highlighted
-                        ? 'bg-primary-blue text-white shadow-xl shadow-primary-blue/20 hover:scale-[1.02]'
-                        : 'border border-white/10 text-primary hover:bg-white/5'
+                    ? 'bg-primary-blue text-white shadow-xl shadow-primary-blue/20 hover:scale-[1.02]'
+                    : 'border border-white/10 text-primary hover:bg-white/5'
                     }`}
             >
                 {highlighted && <Zap className="w-4 h-4 fill-current" />}
@@ -66,6 +67,7 @@ const PricingCard = ({ title, price, period, description, features, buttonText, 
 
 const Pricing = ({ user }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'annual'
     const isPremium = user?.is_subscribed;
     const isLoggedIn = !!user;
@@ -163,6 +165,21 @@ const Pricing = ({ user }) => {
                             highlighted={true}
                             buttonText={isLoggedIn && isPremium ? "Tuo Piano" : "Passa a Pro"}
                         />
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        className="mt-12 text-center space-y-4"
+                    >
+                        <p className="text-muted text-sm font-medium italic">
+                            {t('pricing.business_ready')}
+                        </p>
+                        <button
+                            onClick={() => navigate('/demo')}
+                            className="text-primary-blue font-black uppercase tracking-[0.2em] text-[10px] hover:text-blue-400 transition-colors"
+                        >
+                            {t('pricing.business_cta')} {/* <--- Sostituisci il testo fisso con questo */}
+                        </button>
                     </motion.div>
                 </div>
             </div>

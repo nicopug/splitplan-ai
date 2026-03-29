@@ -20,9 +20,9 @@ const Logistics = ({ trip, onPrefill }) => {
     const [hotelOptions, setHotelOptions] = useState([]);
     const [isLoadingHotels, setIsLoadingHotels] = useState(false);
 
-    const origin = trip.departure_airport || "MXP";
+    const origin = trip.departure_airport || trip.departure_city || "Partenza";
     const destName = trip.real_destination || trip.destination || t('logistics.destinationFallback', 'Destinazione');
-    const dest = trip.destination_iata || "JFK";
+    const dest = trip.destination_iata || destName;
     const numPeople = trip.num_people || 1;
 
     const fallbackHotelLink = (() => {

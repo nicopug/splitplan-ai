@@ -1314,8 +1314,8 @@ async def generate_proposals(
 
                 prompt = f"""
                 Agisci come un Travel Agent esperto. 
-                TASK 1: Trova il codice IATA di 3 lettere per la partenza: "{prefs.departure_airport}".
-                TASK 2: Genera {num_props} {"proposta" if num_props == 1 else "proposte UNICHE"} per: {prefs.destination}. 
+                TASK 1: Trova il codice aeroportuale IATA UFFICIALE E CORRETTO di 3 lettere (es. Bologna è BLQ) per la partenza: "{prefs.departure_airport}". Se la parola è una città generica ignora aeroporti militari o cargo e prendi l'aeroporto civile principale.
+                TASK 2: Genera {num_props} {"proposta" if num_props == 1 else "proposte UNICHE"} per: {prefs.destination}. Attribuisci a ciascuna proposta il GIUSTO codice IATA di partenza ("XXX" in JSON) e destinazione.
                 {"Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico)." if num_props > 1 else ""}
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne') per differenziarle.
                 Dati: Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.

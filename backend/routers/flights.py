@@ -6,9 +6,16 @@ from sqlmodel import Session
 from database import get_session
 from models import Trip, Account
 from routers.users import get_current_user
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+try:
+    ai_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+except Exception:
+    ai_client = None
 
 DUFFEL_API_KEY = os.getenv("DUFFEL_API_KEY")
 DUFFEL_BASE_URL = "https://api.duffel.com"
@@ -54,13 +61,41 @@ def search_flights(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    origin_iata = (trip.departure_airport or "").strip().upper()
-    dest_iata = (trip.destination_iata or "").strip().upper()
+    origin_iata = (trip.departure_airport or trip.departure_city or "").strip()
+    dest_iata = (trip.destination_iata or trip.real_destination or trip.destination or "").strip()
 
-    if not origin_iata or not dest_iata:
+    # Se non sono codici IATA da 3 lettere, usiamo l'IA come fallback al volo
+    if len(origin_iata) != 3 or len(dest_iata) != 3:
+        if ai_client and origin_iata and dest_iata:
+            try:
+                logger.info(f"[Duffel] Inferring IATA codes via AI for: {origin_iata} -> {dest_iata}")
+                prompt = f"Trova i codici aeroportuali IATA ufficiali di 3 lettere. Partenza: '{origin_iata}' (es. Bologna è BLQ). Destinazione: '{dest_iata}'. Rispondi RIGOROSAMENTE E SOLO con i due codici separati da virgola (es. BLQ,JFK). Attenzione ai codici corretti!"
+                
+                resp = ai_client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt,
+                )
+                parts = [p.strip().upper()[:3] for p in resp.text.split(',')]
+                if len(parts) >= 2:
+                    origin_iata = parts[0]
+                    dest_iata = parts[1]
+                    
+                    # Salviamo nel DB per le prossime volte
+                    trip.departure_airport = origin_iata
+                    trip.destination_iata = dest_iata
+                    session.add(trip)
+                    session.commit()
+            except Exception as e:
+                logger.error(f"[Duffel] Fallback IATA fallito: {e}")
+
+    # Pulizia finale
+    origin_iata = origin_iata[:3].upper()
+    dest_iata = dest_iata[:3].upper()
+
+    if len(origin_iata) != 3 or len(dest_iata) != 3:
         raise HTTPException(
             status_code=400,
-            detail="Il viaggio non ha aeroporti IATA. Genera prima le proposte AI così vengono calcolati automaticamente."
+            detail="Non siamo riusciti a identificare gli aeroporti (codici IATA) per questo viaggio. Genera le proposte dell'IA prima di cercare i voli."
         )
 
     if not trip.start_date:
@@ -77,13 +112,28 @@ def search_flights(
 
     logger.info(f"[Duffel v2] {origin_iata}→{dest_iata} · {departure_date} · {num_passengers}pax")
 
+    slices = [{
+        "origin": origin_iata,
+        "destination": dest_iata,
+        "departure_date": departure_date,
+    }]
+
+    is_round_trip = False
+    if trip.end_date:
+        return_date = (
+            trip.end_date if isinstance(trip.end_date, str) else trip.end_date.strftime("%Y-%m-%d")
+        ).split("T")[0]
+        if return_date != departure_date:
+            is_round_trip = True
+            slices.append({
+                "origin": dest_iata,
+                "destination": origin_iata,
+                "departure_date": return_date,
+            })
+
     payload = {
         "data": {
-            "slices": [{
-                "origin": origin_iata,
-                "destination": dest_iata,
-                "departure_date": departure_date,
-            }],
+            "slices": slices,
             "passengers": [{"type": "adult"} for _ in range(num_passengers)],
             "cabin_class": "economy",
         }
@@ -117,31 +167,47 @@ def search_flights(
 
         formatted = []
         for offer in top_offers:
-            airline_name = offer.get("owner", {}).get("name", "Compagnia Aerea")
+            airline_name = offer.get("owner", {}).get("name", "Compagnia")
 
             slices = offer.get("slices", [])
-            duration_str = "–"
-            departure_time = ""
-            arrival_time = ""
+            duration_out = "–"
+            departure_out = ""
+            arrival_out = ""
+            
+            duration_in = "–"
+            departure_in = ""
 
-            if slices:
-                duration_str = _parse_duration(slices[0].get("duration", ""))
-                segments = slices[0].get("segments", [])
-                if segments:
-                    departure_time = segments[0].get("departing_at", "")[:16].replace("T", " ")
-                    arrival_time = segments[-1].get("arriving_at", "")[:16].replace("T", " ")
+            if slices and len(slices) >= 1:
+                duration_out = _parse_duration(slices[0].get("duration", ""))
+                seg_out = slices[0].get("segments", [])
+                if seg_out:
+                    departure_out = seg_out[0].get("departing_at", "")[:16].replace("T", " ")
+                    arrival_out = seg_out[-1].get("arriving_at", "")[:16].replace("T", " ")
+
+            if is_round_trip and len(slices) >= 2:
+                duration_in = _parse_duration(slices[1].get("duration", ""))
+                seg_in = slices[1].get("segments", [])
+                if seg_in:
+                    departure_in = seg_in[0].get("departing_at", "")[:16].replace("T", " ")
 
             price = float(offer.get("total_amount", 0))
             currency = offer.get("total_currency", "EUR")
 
-            details_parts = [f"{origin_iata} → {dest_iata}"]
-            if departure_time:
-                details_parts.append(f"Partenza: {departure_time}")
-            if arrival_time:
-                details_parts.append(f"Arrivo: {arrival_time}")
-            if duration_str != "–":
-                details_parts.append(f"Durata: {duration_str}")
-            details_parts.append(f"{num_passengers} pax")
+            # Crea testo dettagli
+            if is_round_trip:
+                details_parts = [f"Andata: {departure_out}"]
+                if departure_in:
+                    details_parts.append(f"Ritorno: {departure_in}")
+                details_parts.append(f"{num_passengers} pax (A/R)")
+            else:
+                details_parts = [f"{origin_iata} → {dest_iata}"]
+                if departure_out:
+                    details_parts.append(f"Partenza: {departure_out}")
+                if arrival_out:
+                    details_parts.append(f"Arrivo: {arrival_out}")
+                if duration_out != "–":
+                    details_parts.append(f"Durata: {duration_out}")
+                details_parts.append(f"{num_passengers} pax")
 
             formatted.append({
                 "id": offer.get("id", ""),

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Download } from 'lucide-react'; // Aggiunto Download
 import { cn } from '../lib/utils';
 import Skeleton from './ui/Skeleton';
 import Drawer from './ui/Drawer';
@@ -18,6 +18,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
     const [participants, setParticipants] = useState((readOnly && sharedParticipants) ? sharedParticipants : []);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(!readOnly);
+    const [exporting, setExporting] = useState(false); // Stato per il download
 
     const currentUser = useMemo(() => {
         try {
@@ -52,6 +53,40 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         { id: 'Shopping', label: t('finance.categories.Shopping', 'Shopping'), icon: '🛍️' },
         { id: 'Other', label: t('finance.categories.Other', 'Altro'), icon: '📦' }
     ];
+
+    // Funzione per l'Export CSV (B2B Feature)
+    const handleExportCSV = async () => {
+        if (!trip?.id) return;
+        setExporting(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses/${trip.id}/export`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Errore nel download');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SplitPlan_Report_Trip_${trip.id}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            showToast("Report scaricato con successo", "success");
+        } catch (error) {
+            console.error(error);
+            showToast("Impossibile scaricare il report", "error");
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const fetchData = async () => {
         if (readOnly) return;
@@ -266,12 +301,24 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                         </div>
 
                         {!readOnly && (
-                            <button
-                                onClick={() => setShowForm(!showForm)}
-                                className="h-12 px-8 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20"
-                            >
-                                {showForm ? t('finance.cancel', 'Annulla') : t('finance.addExpense', '+ Nuova Spesa')}
-                            </button>
+                            <div className="flex items-center gap-4">
+                                {/* Nuovo Bottone Export CSV */}
+                                <button
+                                    onClick={handleExportCSV}
+                                    disabled={exporting || expenses.length === 0}
+                                    className="h-12 px-6 border border-border-strong text-primary font-black uppercase text-[10px] tracking-widest hover:bg-surface transition-all flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <Download size={14} />
+                                    {exporting ? '...' : 'Report .CSV'}
+                                </button>
+
+                                <button
+                                    onClick={() => setShowForm(!showForm)}
+                                    className="h-12 px-8 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-all shadow-lg shadow-primary-blue/20"
+                                >
+                                    {showForm ? t('finance.cancel', 'Annulla') : t('finance.addExpense', '+ Nuova Spesa')}
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -327,7 +374,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                             onClick={() => setCategory(cat.id)}
                                             className={cn(
                                                 "p-4 rounded-sm border transition-all flex flex-col items-center gap-2",
-                                            category === cat.id
+                                                category === cat.id
                                                     ? "bg-accent-primary text-base border-accent-primary"
                                                     : "bg-surface border-border-subtle text-muted hover:border-border-strong hover:text-primary"
                                             )}

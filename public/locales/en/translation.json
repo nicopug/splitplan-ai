@@ -366,6 +366,7 @@
         "initialBudget": "of initial €{{total}}",
         "spentOver": "You are over the budget",
         "spentStill": "Still spendable",
+        "expense": "Report downloaded!",
         "categoriesTitle": "Expense Breakdown",
         "noExpenses": "No expenses recorded yet to show the chart.",
         "usage": "Budget Usage",

@@ -5,6 +5,9 @@ from typing import List
 from datetime import datetime, timezone
 import json
 import logging
+import csv
+import io
+from fastapi.responses import StreamingResponse
 
 from database import get_session
 from models import Trip, Participant, Account, Expense, SQLModel
@@ -228,6 +231,62 @@ async def delete_expense(
     session.delete(expense)
     session.commit()
     return {"status": "ok"}
+
+@router.get("/{trip_id}/export", response_class=StreamingResponse)
+async def export_expenses_csv(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user),
+):
+    # 1. Verifica autorizzazione (l'utente deve far parte del viaggio)
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id, Participant.account_id == current_user.id
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non autorizzato a scaricare i dati di questo viaggio")
+
+    # 2. Recupera le spese
+    expenses = session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
+    
+    if not expenses:
+        raise HTTPException(404, "Nessuna spesa trovata per questo viaggio")
+
+    # 3. Creazione del file CSV in memoria (StringIO)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';') # Usiamo il punto e virgola, più amato da Excel in Italia
+    
+    # Header del CSV
+    writer.writerow(["Data", "Categoria", "Descrizione", "Pagato da", "Importo Originale", "Valuta", "Importo in EUR", "Tasso Cambio"])
+
+    for exp in expenses:
+        # Grazie alla relazione in models.py, possiamo accedere a exp.payer.name
+        payer_name = exp.payer.name if exp.payer else "Sconosciuto"
+        # Pulizia data (prendiamo solo YYYY-MM-DD se presente)
+        clean_date = exp.date[:10] if exp.date else "N/A"
+        
+        writer.writerow([
+            clean_date,
+            exp.category,
+            exp.description,
+            payer_name,
+            exp.original_amount,
+            exp.currency,
+            exp.amount,
+            exp.exchange_rate
+        ])
+
+    # 4. Preparazione della risposta per il download
+    output.seek(0)
+    filename = f"SplitPlan_Export_Trip_{trip_id}.csv"
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 
 
 @router.post("/migrate-schema", dependencies=[Depends(verify_admin_token)])

@@ -364,6 +364,7 @@
         "perPerson": "A persona",
         "initialBudget": "di €{{total}} iniziali",
         "spentOver": "Sei andato oltre il budget",
+        "expense": "Report scaricato!",
         "spentStill": "Ancora spendibili",
         "categoriesTitle": "Suddivisione Spese",
         "noExpenses": "Ancora nessuna spesa registrata per mostrare il grafico.",

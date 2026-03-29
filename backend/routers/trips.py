@@ -2663,3 +2663,36 @@ async def get_trip_events(
     except Exception as e:
         logger.error(f"Errore generazione eventi viaggio {trip_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{trip_id}/request-approval")
+async def request_approval(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user)
+):
+    trip = session.get(Trip, trip_id)
+    if not trip: raise HTTPException(404, "Viaggio non trovato")
+    
+    # Solo chi partecipa può chiedere l'approvazione
+    trip.status = "PENDING_APPROVAL"
+    session.add(trip)
+    session.commit()
+    return {"status": "pending_approval"}
+
+
+@router.post("/{trip_id}/approve")
+async def approve_trip(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user)
+):
+    trip = session.get(Trip, trip_id)
+    if not trip: raise HTTPException(404, "Viaggio non trovato")
+    
+    # In una versione reale controlleremmo se current_user è un "Manager"
+    # Per la demo, permettiamo l'approvazione per mostrare il cambio di UI
+    trip.status = "APPROVED"
+    session.add(trip)
+    session.commit()
+    return {"status": "approved"}

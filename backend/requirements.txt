@@ -21,3 +21,5 @@ aiosqlite
 stripe
 alembic
 duffel-api
+fastapi-sso
+itsdangerous

@@ -3,6 +3,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+from starlette.middleware.sessions import SessionMiddleware
 
 # Carica .env dalla root del progetto
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +17,7 @@ from sqlmodel import text
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database import engine
-from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights
+from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso
 from admin_auth import verify_admin_token
 
 # ---------------------------------------------------------------------------
@@ -60,6 +61,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
+
 # ---------------------------------------------------------------------------
 # ROUTER
 # ---------------------------------------------------------------------------
@@ -72,6 +75,7 @@ app.include_router(payments.router)
 app.include_router(calendar.router)
 app.include_router(leads.router)
 app.include_router(flights.router, prefix="/trips", tags=["Flights"])
+app.include_router(sso.router)
 
 
 # ---------------------------------------------------------------------------

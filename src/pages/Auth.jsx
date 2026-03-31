@@ -61,7 +61,8 @@ const Auth = ({ onLogin }) => {
         }
     }, [searchParams, navigate, onLogin]);
 
-    const handleGoogleLogin = () => {
+    const handleGoogleLogin = (e) => {
+        e.preventDefault();
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         window.location.href = `${apiUrl}/auth/google/login`;
     };
@@ -481,6 +482,7 @@ const Auth = ({ onLogin }) => {
                 </div>
 
                 <Button
+                    type="button"
                     variant="outline"
                     onClick={handleGoogleLogin}
                     className="w-full flex gap-3 h-12 bg-[var(--bg-surface)] hover:bg-[var(--bg-base)] border-[var(--border-medium)] transition-colors"
@@ -505,7 +507,7 @@ const Auth = ({ onLogin }) => {
                     </p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

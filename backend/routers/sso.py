@@ -13,7 +13,7 @@ router = APIRouter(prefix="/auth", tags=["SSO"])
 google_sso = GoogleSSO(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    redirect_uri="https://splitplan-ai.vercel.app/api/auth/google/callback"
+    redirect_uri=os.getenv("GOOGLE_REDIRECT_URI")
 )
 
 @router.get("/google/login")

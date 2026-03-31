@@ -9,7 +9,7 @@ import os
 
 router = APIRouter(prefix="/auth", tags=["SSO"])
 
-# Configura le chiavi che prenderai da Google Cloud Console
+# Configura le chiavi di Google Cloud Console
 google_sso = GoogleSSO(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),

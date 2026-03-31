@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi_sso.sso.google import GoogleSSO
@@ -5,20 +6,30 @@ from sqlmodel import Session, select
 from database import get_session
 from models import Account
 from auth import create_access_token
-import os
+from dotenv import load_dotenv
+
+# Forza il caricamento del .env
+load_dotenv()
 
 router = APIRouter(prefix="/auth", tags=["SSO"])
 
-# Configura le chiavi di Google Cloud Console
+# Debug per te: controlla cosa legge all'avvio
+print(f"DEBUG SSO - Client ID: {os.getenv('GOOGLE_CLIENT_ID')}")
+print(f"DEBUG SSO - Redirect URI: {os.getenv('REDIRECT_URI')}")
+
 google_sso = GoogleSSO(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    redirect_uri=os.getenv("GOOGLE_REDIRECT_URI")
+    # Se la variabile manca, mettiamo un default per evitare il crash, 
+    # ma Google darà comunque errore se non corrisponde.
+    redirect_uri=os.getenv("REDIRECT_URI", "") 
 )
 
 @router.get("/google/login")
 async def google_login():
-    with google_sso:
+    if not google_sso.redirect_uri:
+        raise HTTPException(status_code=500, detail="Configurazione REDIRECT_URI mancante nel server")
+    async with google_sso:
         return await google_sso.get_login_redirect()
 
 @router.get("/google/callback")

@@ -62,8 +62,11 @@ const Auth = ({ onLogin }) => {
     }, [searchParams, navigate, onLogin]);
 
     const handleGoogleLogin = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // <--- AGGIUNGI QUESTO: Blocca il refresh della pagina
+        e.stopPropagation(); // <--- AGGIUNGI QUESTO: Evita conflitti con altri click
+
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        console.log("Reindirizzamento a:", `${apiUrl}/auth/google/login`);
         window.location.href = `${apiUrl}/auth/google/login`;
     };
     // ----------------------------------------------------------------
@@ -482,7 +485,7 @@ const Auth = ({ onLogin }) => {
                 </div>
 
                 <Button
-                    type="button"
+                    type="button" // <--- AGGIUNGI QUESTO: Dice a React che NON è un tasto di invio form
                     variant="outline"
                     onClick={handleGoogleLogin}
                     className="w-full flex gap-3 h-12 bg-[var(--bg-surface)] hover:bg-[var(--bg-base)] border-[var(--border-medium)] transition-colors"

@@ -7,7 +7,6 @@ class Account(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
     hashed_password: Optional[str] = Field(default=None)
-    sso_provider: Optional[str] = Field(default=None)
     name: str
     surname: str
     is_verified: bool = False

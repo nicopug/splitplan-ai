@@ -10,6 +10,7 @@ from supabase import create_client, Client
 from auth import get_current_user
 from database import get_session
 from models import Photo, Trip, Account, Participant
+from utils.access import check_participant
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +32,6 @@ def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def _check_partecipant(trip_id: int, account: Account, session: Session):
-    """Verifica che l'utente sia un partecipante del viaggio."""
-    member = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id, Participant.account_id == account.id
-        )
-    ).first()
-    if not member:
-        raise HTTPException(
-            status_code=403, detail="Non sei un partecipante di questo viaggio"
-        )
-
 
 @router.post("/{trip_id}/photos", response_model=Photo)
 async def upload_photo(
@@ -55,7 +44,7 @@ async def upload_photo(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato.")
 
-    _check_partecipant(trip_id, current_account, session)
+    check_participant(trip_id, current_account, session)
 
     supabase = get_supabase()
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
@@ -99,7 +88,7 @@ async def get_photos(
     session: Session = Depends(get_session),
     current_account: Account = Depends(get_current_user),
 ):
-    _check_partecipant(trip_id, current_account, session)
+    check_participant(trip_id, current_account, session)
     return session.exec(select(Photo).where(Photo.trip_id == trip_id)).all()
 
 
@@ -114,7 +103,7 @@ async def delete_photo(
         raise HTTPException(status_code=404, detail="Foto non trovata")
 
     # Verifica che l'utente sia partecipante del viaggio a cui appartiene la foto
-    _check_partecipant(photo.trip_id, current_account, session)
+    check_participant(photo.trip_id, current_account, session)
 
     supabase = get_supabase()
     try:

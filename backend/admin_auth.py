@@ -1,5 +1,6 @@
 from fastapi import Header, HTTPException
 import os
+import secrets
 
 
 def verify_admin_token(x_admin_token: str = Header(...)):
@@ -12,5 +13,5 @@ def verify_admin_token(x_admin_token: str = Header(...)):
         raise HTTPException(
             status_code=503, detail="ADMIN_TOKEN non configurato sul server."
         )
-    if x_admin_token != admin_token:
+    if not secrets.compare_digest(x_admin_token, admin_token):
         raise HTTPException(status_code=403, detail="Token admin non valido.")

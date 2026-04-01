@@ -45,6 +45,7 @@ from models import (
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
+from utils.crypto import decrypt_text
 from admin_auth import verify_admin_token
 
 load_dotenv()
@@ -117,29 +118,41 @@ class HotelSelectionRequest(SQLModel):
     return_time: Optional[str] = None
 
 
+FREE_LIMIT = 20
+
+
 def check_rate_limit(account: Account, session: Session):
     """
     Verifica e incrementa il limite di utilizzo AI giornaliero.
-    Free: 20 chiamate/giorno.
-    Pro: Illimitato (per ora).
+    Free: 20 chiamate/giorno. Pro: illimitato.
+
+    L'UPDATE atomico gestisce sia il reset giornaliero che l'incremento in
+    una sola query, eliminando la race condition che si aveva con i due step
+    separati (read-then-write).
     """
     if account.is_subscribed:
         return
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    if account.last_usage_reset != today:
-        account.daily_ai_usage = 0
-        account.last_usage_reset = today
-        session.add(account)
-        session.commit()
-
-    FREE_LIMIT = 20
+    from sqlalchemy import case as sa_case, text as sa_text
 
     result = session.execute(
         update(Account)
-        .where(Account.id == account.id, Account.daily_ai_usage < FREE_LIMIT)
-        .values(daily_ai_usage=Account.daily_ai_usage + 1)
+        .where(
+            Account.id == account.id,
+            # Passa solo se è un nuovo giorno OPPURE siamo ancora sotto il limite
+            sa_text(
+                "(:today != last_usage_reset OR daily_ai_usage < :limit)"
+            ).bindparams(today=today, limit=FREE_LIMIT),
+        )
+        .values(
+            daily_ai_usage=sa_case(
+                (Account.last_usage_reset != today, 1),
+                else_=Account.daily_ai_usage + 1,
+            ),
+            last_usage_reset=today,
+        )
     )
     session.commit()
 
@@ -1590,7 +1603,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                         f"[System] Fetching calendar events for Organizer {organizer_account.email}..."
                     )
                     creds = Credentials.from_authorized_user_info(
-                        json.loads(organizer_account.google_calendar_token),
+                        json.loads(decrypt_text(organizer_account.google_calendar_token)),
                         ["https://www.googleapis.com/auth/calendar.events.readonly"],
                     )
                     service = build("calendar", "v3", credentials=creds)

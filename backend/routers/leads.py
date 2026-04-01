@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 from database import get_session
 from models import DemoLead
 from utils.email_utils import get_smtp_config
+from admin_auth import verify_admin_token
 from email_templates import demo_request_notification_email, demo_request_confirmation_email
 from datetime import datetime
 
@@ -84,7 +85,7 @@ async def create_demo_lead(
         logger.error(f"[LEADS] Error saving lead: {e}")
         raise HTTPException(status_code=500, detail=f"Error saving lead: {str(e)}")
 
-@router.get("/demo", tags=["admin"])
+@router.get("/demo", tags=["admin"], dependencies=[Depends(verify_admin_token)])
 async def list_demo_leads(session: Session = Depends(get_session)):
     """
     Returns a list of all demo leads.

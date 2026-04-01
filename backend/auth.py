@@ -79,6 +79,11 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
 
+    # Rifiuta token di verifica email o di reset password usati come access token
+    token_type = payload.get("type")
+    if token_type in ("verification", "reset"):
+        raise credentials_exception
+
     email: str = payload.get("sub")
     if email is None:
         raise credentials_exception

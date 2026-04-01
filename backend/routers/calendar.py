@@ -5,6 +5,7 @@ from sqlmodel import Session
 from database import get_session
 from auth import get_current_user
 from models import Account
+from utils.crypto import encrypt_text, decrypt_text
 import os
 import logging
 from google_auth_oauthlib.flow import Flow
@@ -126,8 +127,8 @@ async def exchange_token(
 
         credentials = flow.credentials
 
-        # Salva i token nel DB dell'utente corrente
-        current_user.google_calendar_token = credentials.to_json()
+        # Salva i token nel DB cifrati
+        current_user.google_calendar_token = encrypt_text(credentials.to_json())
         current_user.is_calendar_connected = True
 
         session.add(current_user)
@@ -198,7 +199,7 @@ async def google_callback(
 
         user = session.get(Account, account_id)
         if user:
-            user.google_calendar_token = credentials.to_json()
+            user.google_calendar_token = encrypt_text(credentials.to_json())
             user.is_calendar_connected = True
             session.add(user)
             session.commit()

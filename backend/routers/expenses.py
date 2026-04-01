@@ -40,7 +40,7 @@ class BalanceResult(SQLModel):
 @router.post("/", response_model=Expense)
 async def create_expense(
     expense_req: CreateExpenseRequest,
-    current_user: Participant = Depends(get_current_user),
+    current_user: Account = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     # 1. Validate Trip
@@ -215,7 +215,7 @@ async def get_balances(
 async def delete_expense(
     expense_id: int,
     session: Session = Depends(get_session),
-    current_user: Participant = Depends(get_current_user),
+    current_user: Account = Depends(get_current_user),
 ):
     expense = session.get(Expense, expense_id)
     if not expense:

@@ -13,9 +13,6 @@ load_dotenv()
 
 router = APIRouter(prefix="/auth", tags=["SSO"])
 
-# Debug per te: controlla cosa legge all'avvio
-print(f"DEBUG SSO - Client ID: {os.getenv('GOOGLE_CLIENT_ID')}")
-print(f"DEBUG SSO - Redirect URI: {os.getenv('REDIRECT_URI')}")
 
 @router.get("/google/login")
 async def google_login():
@@ -25,8 +22,6 @@ async def google_login():
         redirect_uri="http://localhost:8000/auth/google/callback" 
     )
 
-    print(f"--- DEBUG: Sto inviando a Google questo redirect_uri: '{sso.redirect_uri}' ---")
-    
     if not sso.redirect_uri:
         raise HTTPException(status_code=500, detail="Configurazione REDIRECT_URI mancante nel server")
     async with sso:

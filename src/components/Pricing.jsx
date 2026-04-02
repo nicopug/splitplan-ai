@@ -82,15 +82,15 @@ const Pricing = ({ user }) => {
                         whileInView={{ opacity: 1, y: 0 }}
                         className="inline-block px-3 py-1 rounded-full border border-white/5 bg-card/50 text-[10px] font-black tracking-[0.2em] uppercase text-blue-500"
                     >
-                        Pricing
+                        {t('pricing.badge_label')}
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         className="text-5xl md:text-7xl font-black text-primary tracking-tighter uppercase leading-[0.9]"
                     >
-                        Choose your <br />
-                        <span className="text-muted">adventure.</span>
+                        {t('pricing.section_title_part1')} <br />
+                        <span className="text-muted">{t('pricing.section_title_part2')}</span>
                     </motion.h2>
 
                     {/* Billing Toggle */}
@@ -104,13 +104,13 @@ const Pricing = ({ user }) => {
                             onClick={() => setBillingCycle('monthly')}
                             className={`relative px-6 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all z-10 ${billingCycle === 'monthly' ? 'text-black' : 'text-muted'}`}
                         >
-                            Mensile
+                            {t('pricing.billing_monthly')}
                         </button>
                         <button
                             onClick={() => setBillingCycle('annual')}
                             className={`relative px-6 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all z-10 ${billingCycle === 'annual' ? 'text-black' : 'text-muted'}`}
                         >
-                            Annuale
+                            {t('pricing.billing_annual')}
                         </button>
                         <motion.div
                             animate={{ x: billingCycle === 'monthly' ? 0 : '100%', left: billingCycle === 'monthly' ? 0 : -8 }}
@@ -119,7 +119,7 @@ const Pricing = ({ user }) => {
                         />
 
                         <div className="absolute -right-4 -top-4 rotate-12 bg-emerald-500 text-black text-[10px] font-black px-3 py-1 rounded-full shadow-lg animate-bounce">
-                            RISPARMI 50%
+                            {t('pricing.save_50')}
                         </div>
                     </motion.div>
                 </div>

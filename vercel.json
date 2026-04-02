@@ -1,18 +1,5 @@
 {
     "cleanUrls": true,
-    "builds": [
-        {
-            "src": "backend/main.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        }
-    ],
     "headers": [
         {
             "source": "/sitemap.xml",
@@ -32,11 +19,15 @@
             "headers": [
                 {
                     "key": "Content-Security-Policy",
-                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live; style-src 'self' 'unsafe-inline' https://googleapis.com; font-src 'self' https://gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com; connect-src 'self' https://*.supabase.co https://*.vercel.app https://googleapis.com https://googleapis.com https://gstatic.com; worker-src 'self' blob:;"
+                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com; connect-src 'self' https://*.supabase.co https://*.vercel.app https://www.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:;"
                 },
                 {
                     "key": "X-Frame-Options",
                     "value": "DENY"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
                 },
                 {
                     "key": "Strict-Transport-Security",
@@ -45,6 +36,10 @@
                 {
                     "key": "Referrer-Policy",
                     "value": "strict-origin-when-cross-origin"
+                },
+                {
+                    "key": "Permissions-Policy",
+                    "value": "camera=(), microphone=(), geolocation=()"
                 }
             ]
         }

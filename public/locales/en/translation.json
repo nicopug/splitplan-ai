@@ -125,7 +125,12 @@
         "save_50": "SAVE 50%",
         "subscribe": "Subscribe",
         "business_ready": "Business Solutions available on request",
-        "business_cta": "ARE YOU A COMPANY? REQUEST A DEMO →"
+        "business_cta": "ARE YOU A COMPANY? REQUEST A DEMO →",
+        "badge_label": "Pricing",
+        "section_title_part1": "Choose your",
+        "section_title_part2": "adventure.",
+        "billing_monthly": "Monthly",
+        "billing_annual": "Annual"
     },
     "dashboard": {
         "title": "Trip Dashboard",

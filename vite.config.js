@@ -11,10 +11,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'SplitPlan',
+        name: 'SplitPlan AI',
         short_name: 'SplitPlan',
-        description: 'Pianifica il tuo viaggio senza stress',
+        description: 'Pianifica viaggi di gruppo e trasferte aziendali con l\'intelligenza artificiale.',
+        lang: 'it',
         theme_color: '#23599e',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192x192.png',

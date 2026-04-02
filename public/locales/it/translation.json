@@ -124,7 +124,12 @@
         "save_50": "SALVA 50%",
         "subscribe": "Abbonati",
         "business_ready": "Soluzioni Business disponibili su richiesta",
-        "business_cta": "SEI UN'AZIENDA? RICHIEDI UNA DEMO →"
+        "business_cta": "SEI UN'AZIENDA? RICHIEDI UNA DEMO →",
+        "badge_label": "Pricing",
+        "section_title_part1": "Scegli la tua",
+        "section_title_part2": "avventura.",
+        "billing_monthly": "Mensile",
+        "billing_annual": "Annuale"
     },
     "dashboard": {
         "title": "Dashboard Viaggio",

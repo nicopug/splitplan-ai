@@ -1,0 +1,36 @@
+# SplitPlan AI
+> Piattaforma AI per pianificare viaggi di gruppo e gestire trasferte aziendali.
+
+SplitPlan AI e' una piattaforma SaaS che combina pianificazione AI di viaggi, decisioni di gruppo, divisione spese e gestione trasferte aziendali in un unico strumento. Serve sia gruppi di consumatori (amici, famiglie) che aziende che gestiscono le trasferte dei dipendenti.
+
+## Funzionalita' Principali
+- Generazione itinerari AI (Google Gemini 2.5 Flash)
+- Votazione di gruppo e mediazione AI per la scelta della destinazione
+- Tracciamento spese in tempo reale e divisione automatica
+- Gestione trasferte aziendali: compliance policy, report di spesa, coordinamento team
+- Mappe interattive con OpenStreetMap/Leaflet
+- Integrazione Google Calendar
+- Link prenotazione voli e hotel (Trainline, Booking)
+- Chat AI integrata per assistenza durante il viaggio
+
+## Caso d'Uso B2B
+SplitPlan sostituisce strumenti frammentati (Booking.com per la logistica, Splitwise per le spese, ChatGPT per la pianificazione) con un'unica piattaforma integrata. Target: HR Manager, Travel Manager, Direttori Finance di aziende italiane con dipendenti in trasferta.
+
+## Caso d'Uso B2C
+Gruppi di amici (20-35 anni) che organizzano viaggi di gruppo: weekend, vacanze, eventi. L'AI media i conflitti di preferenze e ottimizza itinerari e budget.
+
+## Pricing
+- Free: pianificazione AI base, chat di gruppo, mappa interattiva
+- Pro Mensile: EUR 7.99/mese - AI illimitata, gestione budget, export PDF, sync Google Calendar
+- Pro Annuale: EUR 76.99/anno (risparmio 50%)
+- Enterprise: contattare per demo personalizzata
+
+## Tecnologia
+- Frontend: React 19, Vite 7, Tailwind CSS 4
+- Backend: FastAPI, PostgreSQL (Supabase)
+- AI: Google Gemini 2.5 Flash
+- Deployment: Vercel
+
+## Contatti e Demo
+- Demo aziendale: https://splitplan-ai.vercel.app/demo
+- Homepage: https://splitplan-ai.vercel.app

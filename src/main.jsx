@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import './i18n'
@@ -8,7 +8,9 @@ import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
 import { ModalProvider } from './context/ModalContext'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root')
+
+const app = (
   <React.StrictMode>
     <ThemeProvider>
       <ToastProvider>
@@ -19,5 +21,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </BrowserRouter>
       </ToastProvider>
     </ThemeProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )
+
+// Se react-snap ha già pre-renderizzato l'HTML, idrata invece di creare da zero
+if (rootElement.hasChildNodes()) {
+  hydrateRoot(rootElement, app)
+} else {
+  createRoot(rootElement).render(app)
+}

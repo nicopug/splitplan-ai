@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { register, login, verifyEmail, toggleSubscription, forgotPassword } from '../api';
+import { register, login, verifyEmail, toggleSubscription, forgotPassword, API_URL } from '../api';
 import { Button } from '../components/ui/button';
 import { useTheme } from '../context/ThemeContext';
 
@@ -39,7 +39,7 @@ const Auth = ({ onLogin }) => {
             localStorage.setItem('token', urlToken);
 
             // 2. Recupera i dati dell'utente dal backend
-            fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+            fetch(`${API_URL}/users/me`, {
                 headers: { 'Authorization': `Bearer ${urlToken}` }
             })
                 .then(res => {
@@ -62,12 +62,9 @@ const Auth = ({ onLogin }) => {
     }, [searchParams, navigate, onLogin]);
 
     const handleGoogleLogin = (e) => {
-        e.preventDefault(); // <--- AGGIUNGI QUESTO: Blocca il refresh della pagina
-        e.stopPropagation(); // <--- AGGIUNGI QUESTO: Evita conflitti con altri click
-
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        console.log("Reindirizzamento a:", `${apiUrl}/auth/google/login`);
-        window.location.href = `${apiUrl}/auth/google/login`;
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = `${API_URL}/auth/google/login`;
     };
     // ----------------------------------------------------------------
 

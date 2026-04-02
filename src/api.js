@@ -27,6 +27,7 @@ const getApiUrl = () => {
 };
 
 const API_URL = getApiUrl();
+export { API_URL };
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("token");

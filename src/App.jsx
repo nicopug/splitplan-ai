@@ -56,16 +56,20 @@ function Landing({ user }) {
 function App() {
   const [user, setUser] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [globalError, setGlobalError] = useState(null);
   const { showToast } = useToast();
   const { t } = useTranslation();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const handleUnhandledRejection = (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      showToast(t('app.asyncError', 'Si è verificato un errore inaspettato. Riprova.'), 'error');
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     try {
       const storedUser = localStorage.getItem('user');
@@ -79,26 +83,11 @@ function App() {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, []);
 
-  // Global Error Handler for rendering
-  if (globalError) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', paddingTop: '10rem' }}>
-        <h2>{t('app.errorTitle', 'Ops! Il sito ha riscontrato un problema critico')}</h2>
-        <pre style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '8px', display: 'inline-block', color: 'red', marginTop: '1rem' }}>
-          {globalError}
-        </pre>
-        <div style={{ marginTop: '2rem' }}>
-          <button onClick={() => window.location.href = '/'} className="btn btn-primary">{t('app.restartBtn', 'Riavvia App')}</button>
-        </div>
-      </div>
-    );
-  }
-
-  try {
-    return (
+  return (
       <ErrorBoundary>
         <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-300">
           {!isOnline && (
@@ -129,9 +118,9 @@ function App() {
                 <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-                <Route path="/trip/:id" element={<Dashboard />} />
+                <Route path="/trip/:id" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
                 <Route path="/calendar-callback" element={<CalendarCallback />} />
-                <Route path="/my-trips" element={<MyTrips />} />
+                <Route path="/my-trips" element={<ErrorBoundary><MyTrips /></ErrorBoundary>} />
                 <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
                 <Route path="/share/:token" element={<ShareTrip />} />
                 <Route path="/market" element={<Market />} />
@@ -143,7 +132,7 @@ function App() {
                 }} />} />
                 <Route path="/roi" element={<ROICalculator />} />
                 <Route path="/demo" element={<DemoRequest />} />
-                <Route path="/manager" element={<CompanyDashboard />} />
+                <Route path="/manager" element={<ErrorBoundary><CompanyDashboard /></ErrorBoundary>} />
 
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
@@ -153,11 +142,7 @@ function App() {
           </main>
         </div>
       </ErrorBoundary>
-    );
-  } catch (err) {
-    setGlobalError(err.message);
-    return null;
-  }
+  );
 }
 
 export default App;

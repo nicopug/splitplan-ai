@@ -226,18 +226,17 @@ async def extract_receipt(
                 prompt,
                 genai.types.Part.from_bytes(data=contents, mime_type=file.content_type),
             ],
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
 
         raw_text = response.text.strip()
         logger.info(f"[DEBUG] Receipt AI Response: {raw_text}")
 
-        json_match = re.search(r"\{.*\}", raw_text, re.DOTALL)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
-                return {"success": True, "data": data}
-            except Exception as je:
-                logger.error(f"[JSON Error] {je}")
+        try:
+            data = json.loads(raw_text)
+            return {"success": True, "data": data}
+        except (json.JSONDecodeError, ValueError) as je:
+            logger.error(f"[JSON Error] {je}")
 
         return {
             "success": False,
@@ -601,10 +600,11 @@ async def estimate_survey_budget(
         }}
         """
         response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL, contents=prompt
+            model=AI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        raw_text = response.text.replace("```json", "").replace("```", "").strip()
-        data = json.loads(raw_text)
+        data = json.loads(response.text)
 
         return {
             "budget_min": float(data.get("budget_min", 0)),
@@ -682,10 +682,11 @@ async def search_trip_options(
             """
 
         response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL, contents=prompt
+            model=AI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        raw_text = response.text.replace("```json", "").replace("```", "").strip()
-        data = json.loads(raw_text)
+        data = json.loads(response.text)
         return {"options": data}
     except Exception as e:
         logger.error(f"[AI Error] Errore simulazione OTA: {e}")
@@ -791,18 +792,18 @@ async def estimate_budget(
         """
 
         response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL, contents=prompt
+            model=AI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        data = json.loads(
-            response.text.replace("```json", "").replace("```", "").strip()
-        )
+        data = json.loads(response.text)
 
         data["days_count"] = days
 
         return data
     except Exception as e:
         logger.error(f"[AI Error] Stima budget fallita: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Errore interno del server. Riprova.")
 
 
 @router.post("/", response_model=Dict)
@@ -1462,11 +1463,11 @@ async def generate_proposals(
                 """
 
                 response = await ai_client.aio.models.generate_content(
-                    model=AI_MODEL, contents=prompt
+                    model=AI_MODEL,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(response_mime_type="application/json"),
                 )
-                data = json.loads(
-                    response.text.replace("```json", "").replace("```", "").strip()
-                )
+                data = json.loads(response.text)
 
                 if data.get("departure_iata_normalized"):
                     trip.departure_airport = data["departure_iata_normalized"].upper()
@@ -1630,7 +1631,7 @@ async def generate_proposals(
         session.rollback()
         logger.error(f"[ERROR] generate_proposals: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Errore nella generazione: {str(e)}"
+            status_code=500, detail="Errore interno del server. Riprova."
         )
 
 
@@ -1812,10 +1813,11 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         """
 
         response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL, contents=prompt
+            model=AI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        text = response.text.replace("```json", "").replace("```", "").strip()
-        data = json.loads(text)
+        data = json.loads(response.text)
 
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
         session.commit()
@@ -2159,7 +2161,7 @@ async def vote_proposal(
     except Exception as e:
         session.rollback()
         logger.error(f"[ERROR] vote_proposal: {e}")
-        raise HTTPException(status_code=500, detail=f"Errore nel voto: {str(e)}")
+        raise HTTPException(status_code=500, detail="Errore interno del server. Riprova.")
 
 
 @router.post("/{trip_id}/simulate-votes")
@@ -2297,22 +2299,17 @@ async def chat_with_ai(
             }
 
         response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL, contents=prompt
+            model=AI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         raw_text = response.text.strip()
 
         logger.info(f"[DEBUG] Raw AI Response: {raw_text}")
 
-        json_match = re.search(r"\{.*\}", raw_text, re.DOTALL)
-        if not json_match:
-            return {
-                "reply": "Scusa, non sono riuscito a elaborare la modifica. Prova a chiedermelo in modo diverso.",
-                "itinerary": [i.model_dump() for i in itinerary],
-            }
-
         try:
-            data = json.loads(json_match.group())
-        except:
+            data = json.loads(raw_text)
+        except (json.JSONDecodeError, ValueError):
             return {
                 "reply": "C'è stato un errore nel formato della risposta AI. Riprova tra un istante.",
                 "itinerary": [i.model_dump() for i in itinerary],
@@ -2357,7 +2354,7 @@ async def chat_with_ai(
         session.rollback()
         logger.error(f"[Chat Error] {e}")
         raise HTTPException(
-            status_code=500, detail=f"Errore elaborazione chat: {str(e)}"
+            status_code=500, detail="Errore interno del server. Riprova."
         )
 
 

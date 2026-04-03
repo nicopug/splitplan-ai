@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip } from '../api';
 import { useToast } from '../context/ToastContext';
@@ -50,6 +50,8 @@ const Dashboard = () => {
     const [isCalendarConnected, setIsCalendarConnected] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [prefillData, setPrefillData] = useState(null);
+
+    const isBusiness = trip?.trip_intent === 'BUSINESS';
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -294,7 +296,7 @@ const Dashboard = () => {
                 <nav className="flex-1 px-4 space-y-1">
                     {[
                         { id: 'TRIP', label: t('dashboard.tabs.trip'), icon: <MapIcon className="w-4 h-4" />, condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' || trip.status === 'APPROVED' || trip.status === 'PENDING_APPROVAL' },
-                        { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: trip.status === 'BOOKED' || trip.status === 'APPROVED' },
+                        { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && !isBusiness },
                         { id: 'FINANCE', label: t('dashboard.tabs.finance'), icon: <Coins className="w-4 h-4" />, condition: user && trip.trip_type !== 'SOLO' },
                         { id: 'PHOTOS', label: t('dashboard.tabs.photos'), icon: <Camera className="w-4 h-4" /> },
                         { id: 'EVENTS', label: t('dashboard.tabs.events'), icon: <CalendarDays className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && trip.trip_intent !== 'BUSINESS' }

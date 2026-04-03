@@ -1259,6 +1259,44 @@ async def update_trip(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.delete("/{trip_id}")
+async def delete_trip(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """Elimina un viaggio. Solo l'organizzatore può eliminarlo."""
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    organizer = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_account.id,
+            Participant.is_organizer == True,
+        )
+    ).first()
+    if not organizer:
+        raise HTTPException(status_code=403, detail="Solo l'organizzatore può eliminare il viaggio")
+
+    # Elimina dati collegati
+    session.exec(delete(Photo).where(Photo.trip_id == trip_id))
+    session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip_id))
+    session.exec(delete(Expense).where(Expense.trip_id == trip_id))
+
+    for proposal in session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all():
+        session.exec(delete(Vote).where(Vote.proposal_id == proposal.id))
+        session.delete(proposal)
+
+    session.exec(delete(Participant).where(Participant.trip_id == trip_id))
+    session.delete(trip)
+    session.commit()
+
+    logger.info(f"Viaggio {trip_id} eliminato da account {current_account.id}")
+    return {"message": "Viaggio eliminato con successo."}
+
+
 @router.post("/{trip_id}/generate-proposals", response_model=List[Proposal])
 async def generate_proposals(
     trip_id: int,
@@ -1331,7 +1369,7 @@ async def generate_proposals(
                 TASK 2: Genera {num_props} {"proposta" if num_props == 1 else "proposte UNICHE"} per: {prefs.destination}. Attribuisci a ciascuna proposta il GIUSTO codice IATA di partenza ("XXX" in JSON) e destinazione.
                 {"Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico)." if num_props > 1 else ""}
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne') per differenziarle.
-                Dati: Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), {prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
+                Dati: {f"Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), " if prefs.budget > 0 else ""}{prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 {"ORARIO LAVORO: dalle " + prefs.work_start_time + " alle " + prefs.work_end_time + " nei giorni: " + prefs.work_days if prefs.trip_intent == "BUSINESS" else ""}
                 {"INDIRIZZO UFFICIO (Sede Operativa): " + prefs.office_address + " - IMPORTANTE: Scegli zone comode per raggiungere questo indirizzo." if prefs.trip_intent == "BUSINESS" and prefs.office_address else ""}
@@ -2709,3 +2747,18 @@ async def approve_trip(
     session.add(trip)
     session.commit()
     return {"status": "approved"}
+
+
+@router.post("/{trip_id}/reject")
+async def reject_trip(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    _: Account = Depends(get_current_user)
+):
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(404, "Viaggio non trovato")
+    trip.status = "BOOKED"  # Torna allo stato precedente (BOOKED)
+    session.add(trip)
+    session.commit()
+    return {"status": "rejected"}

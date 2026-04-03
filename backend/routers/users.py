@@ -22,7 +22,7 @@ from auth import (
 )
 from database import get_session
 from email_templates import reset_password_email, verification_email
-from models import Account
+from models import Account, Participant
 from utils.email_utils import get_smtp_config
 
 load_dotenv()
@@ -456,6 +456,28 @@ async def cancel_subscription(
         "message": "Abbonamento annullato con successo. Sei tornato al piano Free.",
         "is_subscribed": False,
     }
+
+
+@router.delete("/delete-account")
+async def delete_account(
+    current_account: Account = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Elimina permanentemente l'account dell'utente autenticato e tutti i dati associati."""
+    account_id = current_account.id
+    email = current_account.email
+
+    # Elimina partecipazioni (e relative votes/expenses tramite cascade DB)
+    participants = session.exec(
+        select(Participant).where(Participant.account_id == account_id)
+    ).all()
+    for p in participants:
+        session.delete(p)
+
+    session.delete(current_account)
+    session.commit()
+    logger.info(f"Account {account_id} ({email}) eliminato permanentemente.")
+    return {"message": "Account eliminato con successo."}
 
 
 @router.post("/update-language")

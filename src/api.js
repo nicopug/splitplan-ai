@@ -586,6 +586,24 @@ export const getEvents = async (tripId) => {
     return handleResponse(response);
 };
 
+// --- Delete ---
+
+export const deleteAccount = async () => {
+    const response = await fetch(`${API_URL}/users/delete-account`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const deleteTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 // --- Leads ---
 
 export const submitDemoRequest = async (leadData) => {

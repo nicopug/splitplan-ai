@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserTrips, hideTrip, getUserStats } from '../api';
+import { getUserTrips, hideTrip, getUserStats, deleteTrip } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Button } from '../components/ui/button';
@@ -47,6 +47,24 @@ const MyTrips = () => {
             try {
                 await hideTrip(tripId);
                 showToast("Viaggio nascosto", "success");
+                fetchTripsAndStats();
+            } catch (error) {
+                showToast("Errore: " + error.message, "error");
+            }
+        }
+    };
+
+    const handleDeleteTrip = async (e, tripId) => {
+        e.stopPropagation();
+        const confirmed = await showConfirm(
+            "Elimina Viaggio",
+            "Sei sicuro di voler eliminare permanentemente questo viaggio? Tutti i dati (itinerario, spese, foto) verranno cancellati. Questa azione non è reversibile."
+        );
+
+        if (confirmed) {
+            try {
+                await deleteTrip(tripId);
+                showToast("Viaggio eliminato", "success");
                 fetchTripsAndStats();
             } catch (error) {
                 showToast("Errore: " + error.message, "error");
@@ -219,8 +237,15 @@ const MyTrips = () => {
                                                     {trip.status === 'BOOKED' ? 'Confermato' : trip.status === 'COMPLETED' ? 'Archiviato' : trip.status}
                                                 </div>
                                                 <button
-                                                    onClick={(e) => handleHideTrip(e, trip.id)}
+                                                    onClick={(e) => handleDeleteTrip(e, trip.id)}
                                                     className="w-10 h-10 rounded-sm bg-muted/10 border border-border-subtle flex items-center justify-center text-subtle hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Elimina viaggio"
+                                                >
+                                                    🗑️
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleHideTrip(e, trip.id)}
+                                                    className="w-10 h-10 rounded-sm bg-muted/10 border border-border-subtle flex items-center justify-center text-subtle hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-500 transition-all opacity-0 group-hover:opacity-100"
                                                     title="Nascondi dalla cronologia"
                                                 >
                                                     ✕

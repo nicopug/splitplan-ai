@@ -1,17 +1,29 @@
 import os
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi_mail import FastMail, MessageSchema, MessageType
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from database import get_session
 from models import DemoLead
 from utils.email_utils import get_smtp_config
 from admin_auth import verify_admin_token
 from email_templates import demo_request_notification_email, demo_request_confirmation_email
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/leads", tags=["leads"])
+
+
+class DemoLeadCreate(BaseModel):
+    """Campi accettati dal client — esclude id e created_at generati dal server."""
+    full_name: str
+    company_name: str
+    work_email: str
+    phone_number: Optional[str] = None
+    team_size: str
+    travel_frequency: str
+    message: Optional[str] = None
 
 async def send_demo_emails(lead: DemoLead):
     """
@@ -64,7 +76,7 @@ async def send_demo_emails(lead: DemoLead):
 
 @router.post("/demo")
 async def create_demo_lead(
-    lead: DemoLead, 
+    body: DemoLeadCreate,
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session)
 ):
@@ -72,18 +84,19 @@ async def create_demo_lead(
     Saves a new demo lead request and triggers email notifications.
     """
     try:
+        lead = DemoLead(**body.model_dump())
         session.add(lead)
         session.commit()
         session.refresh(lead)
-        
+
         # Trigger emails in background to not block the response
         background_tasks.add_task(send_demo_emails, lead)
-        
+
         return {"success": True, "id": lead.id, "message": "Demo request received successfully."}
     except Exception as e:
         session.rollback()
         logger.error(f"[LEADS] Error saving lead: {e}")
-        raise HTTPException(status_code=500, detail=f"Error saving lead: {str(e)}")
+        raise HTTPException(status_code=500, detail="Errore interno del server. Riprova.")
 
 @router.get("/demo", tags=["admin"], dependencies=[Depends(verify_admin_token)])
 async def list_demo_leads(session: Session = Depends(get_session)):

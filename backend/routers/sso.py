@@ -25,8 +25,9 @@ SCOPES = "openid email profile"
 
 
 def _get_callback_url() -> str:
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:8000")
     if os.getenv("VERCEL"):
-        return "https://splitplan-ai.vercel.app/api/auth/google/callback"
+        return f"{frontend_url}/api/auth/google/callback"
     return "http://localhost:8000/auth/google/callback"
 
 

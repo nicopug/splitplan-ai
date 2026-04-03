@@ -39,6 +39,7 @@ from models import (
     ItineraryItem,
     SQLModel,
     Account,
+    Company,
     Expense,
     Photo,
 )
@@ -1381,6 +1382,13 @@ async def generate_proposals(
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
 
+        # B2B budget cap: recupera il limite aziendale se presente
+        company_budget: float | None = None
+        if current_account.company_id:
+            company = session.get(Company, current_account.company_id)
+            if company and company.max_budget_per_trip:
+                company_budget = company.max_budget_per_trip
+
         trip.budget = prefs.budget
         trip.budget_max = prefs.budget_max
         trip.budget_per_person = (prefs.budget_max or prefs.budget) / prefs.num_people
@@ -1428,6 +1436,7 @@ async def generate_proposals(
                 TASK 2: Genera {num_props} {"proposta" if num_props == 1 else "proposte UNICHE"} per: {prefs.destination}. Attribuisci a ciascuna proposta il GIUSTO codice IATA di partenza ("XXX" in JSON) e destinazione.
                 {"Sia che la destinazione sia un Paese o una singola città, le 3 proposte devono avere TEMI DIVERSI (es. uno Artistico, uno Gastronomico, uno Storico)." if num_props > 1 else ""}
                 SE la destinazione è una singola città (es. Parigi), usa titoli creativi e accattivanti (es. 'Parigi Bohemienne') per differenziarle.
+                {f"CRITICAL B2B POLICY: L'utente appartiene a un'azienda che ha imposto un budget MASSIMO RIGOROSO di {company_budget:.0f} EUR per questa trasferta (inclusi voli e hotel). TUTTE le proposte che generi DEVONO rimanere tassativamente sotto questo budget. Ignora le opzioni di lusso se superano il limite." if company_budget else ""}
                 Dati: {f"Budget tra {prefs.budget}€ e {prefs.budget_max if prefs.budget_max > 0 else prefs.budget}€ (totale gruppo), " if prefs.budget > 0 else ""}{prefs.num_people} persone, dal {prefs.start_date} al {prefs.end_date}.
                 Preferenze: {prefs.must_have}, Evitare: {prefs.must_avoid}, Vibe: {prefs.vibe}.
                 {"ORARIO LAVORO: dalle " + prefs.work_start_time + " alle " + prefs.work_end_time + " nei giorni: " + prefs.work_days if prefs.trip_intent == "BUSINESS" else ""}

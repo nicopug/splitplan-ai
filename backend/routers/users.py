@@ -76,6 +76,8 @@ class AccountResponse(BaseModel):
     subscription_expiry: Optional[str]
     auto_renew: bool
     language: str
+    is_manager: bool = False
+    company_id: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +300,8 @@ async def login(req: LoginRequest, session: Session = Depends(get_session)):
             "subscription_expiry": account.subscription_expiry,
             "auto_renew": account.auto_renew,
             "language": account.language,
+            "is_manager": account.is_manager,
+            "company_id": account.company_id,
         },
     }
 

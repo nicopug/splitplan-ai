@@ -179,14 +179,22 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onComplete(formData);
+        onComplete({
+            ...formData,
+            budget: formData.budget === '' ? 0 : formData.budget,
+            budget_max: formData.budget_max === '' ? 0 : formData.budget_max,
+        });
     };
 
     const totalSteps = 7;
 
+    const isBusiness = formData.trip_intent === 'BUSINESS';
+
     const nextStep = () => {
         if (step === 1 && !isGroup) {
             setStep(3);
+        } else if (step === 4 && isBusiness) {
+            setStep(6); // Skip budget step for BUSINESS trips
         } else {
             setStep(prev => Math.min(prev + 1, totalSteps - 1));
         }
@@ -195,6 +203,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     const prevStep = () => {
         if (step === 3 && !isGroup) {
             setStep(1);
+        } else if (step === 6 && isBusiness) {
+            setStep(4); // Skip budget step going back for BUSINESS trips
         } else {
             setStep(prev => Math.max(prev - 1, 0));
         }

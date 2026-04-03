@@ -70,6 +70,30 @@ const Navbar = ({ user: propUser }) => {
         setMobileMenuOpen(false);
     };
 
+    const handleDeleteAccount = async () => {
+        const confirmed = window.confirm(
+            "Sei sicuro di voler eliminare il tuo account? Tutti i tuoi dati verranno cancellati permanentemente. Questa azione non è reversibile."
+        );
+        if (!confirmed) return;
+
+        const doubleConfirm = window.confirm(
+            "Ultima conferma: vuoi davvero procedere con l'eliminazione definitiva del tuo account?"
+        );
+        if (!doubleConfirm) return;
+
+        try {
+            const api = await import('../api');
+            await api.deleteAccount();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+            toast.success("Account eliminato con successo.");
+            navigate('/');
+        } catch (err) {
+            toast.error("Errore durante l'eliminazione: " + err.message);
+        }
+    };
+
     return (
         <nav className="fixed top-0 left-0 right-0 z-[100] bg-[var(--glass-bg)] backdrop-blur-md border-b border-[var(--glass-border)] h-[var(--header-height)] transition-colors duration-300">
             <div className="container h-full">
@@ -157,6 +181,14 @@ const Navbar = ({ user: propUser }) => {
                                             >
                                                 {t('nav.myTrips')}
                                             </Link>
+                                            {user?.is_manager && (
+                                                <Link
+                                                    to="/manager"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] rounded-sm transition-colors uppercase tracking-widest font-bold"
+                                                >
+                                                    Dashboard Aziendale
+                                                </Link>
+                                            )}
                                             <Link
                                                 to="/market"
                                                 className="flex items-center gap-3 px-4 py-2.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] rounded-sm transition-colors uppercase tracking-widest"
@@ -164,12 +196,18 @@ const Navbar = ({ user: propUser }) => {
                                                 {t('nav.market')}
                                             </Link>
                                         </div>
-                                        <div className="p-1.5">
+                                        <div className="p-1.5 space-y-0.5">
                                             <button
                                                 onClick={handleLogout}
-                                                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs text-red-500/80 hover:text-red-400 hover:bg-red-500/5 rounded-sm transition-colors text-left uppercase tracking-widest"
+                                                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] rounded-sm transition-colors text-left uppercase tracking-widest"
                                             >
                                                 {t('nav.logout')}
+                                            </button>
+                                            <button
+                                                onClick={handleDeleteAccount}
+                                                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs text-red-500/80 hover:text-red-400 hover:bg-red-500/5 rounded-sm transition-colors text-left uppercase tracking-widest"
+                                            >
+                                                Elimina Account
                                             </button>
                                         </div>
                                     </div>
@@ -265,6 +303,15 @@ const Navbar = ({ user: propUser }) => {
                                         {t('nav.myTrips')}
                                     </Link>
 
+                                    {user?.is_manager && (
+                                        <Link
+                                            to="/manager"
+                                            className="block text-lg text-amber-400 hover:text-white uppercase tracking-widest transition-colors font-bold"
+                                        >
+                                            Dashboard Aziendale
+                                        </Link>
+                                    )}
+
                                     <Link
                                         to="/market"
                                         className="block text-lg text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
@@ -274,9 +321,16 @@ const Navbar = ({ user: propUser }) => {
 
                                     <button
                                         onClick={handleLogout}
-                                        className="block w-full text-left text-lg text-red-500/80 hover:text-red-400 uppercase tracking-widest transition-colors"
+                                        className="block w-full text-left text-lg text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
                                     >
                                         {t('nav.logout')}
+                                    </button>
+
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        className="block w-full text-left text-lg text-red-500/80 hover:text-red-400 uppercase tracking-widest transition-colors"
+                                    >
+                                        Elimina Account
                                     </button>
                                 </div>
                             ) : (

@@ -23,6 +23,8 @@ class Account(SQLModel, table=True):
     language: str = Field(default="it")
     terms_accepted: bool = Field(default=True)
     privacy_accepted: bool = Field(default=True)
+    is_manager: bool = Field(default=False)
+    company_id: Optional[int] = Field(default=None)
 
 
 class TripBase(SQLModel):

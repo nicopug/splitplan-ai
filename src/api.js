@@ -604,6 +604,31 @@ export const deleteTrip = async (tripId) => {
     return handleResponse(response);
 };
 
+// --- Manager / Business Overview ---
+
+export const getBusinessOverview = async () => {
+    const response = await fetch(`${API_URL}/trips/business-overview`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const approveTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/approve`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const rejectTrip = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/reject`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
 // --- Leads ---
 
 export const submitDemoRequest = async (leadData) => {

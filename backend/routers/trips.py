@@ -1041,6 +1041,60 @@ async def migrate_events_cache(session: Session = Depends(get_session)):
         return {"status": "error", "detail": str(e)}
 
 
+@router.get("/business-overview")
+async def get_business_overview(
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user)
+):
+    if not current_user.is_manager:
+        raise HTTPException(403, "Accesso riservato ai manager aziendali")
+
+    # Filtra per company_id se impostato, altrimenti mostra tutti (utile per demo)
+    if current_user.company_id is not None:
+        company_accounts = session.exec(
+            select(Account.id).where(Account.company_id == current_user.company_id)
+        ).all()
+        company_trip_ids = session.exec(
+            select(Participant.trip_id).where(Participant.account_id.in_(company_accounts))
+        ).all()
+        trips = session.exec(
+            select(Trip).where(Trip.trip_intent == "BUSINESS", Trip.id.in_(company_trip_ids))
+        ).all()
+    else:
+        trips = session.exec(select(Trip).where(Trip.trip_intent == "BUSINESS")).all()
+
+    result = []
+    for trip in trips:
+        organizer = session.exec(
+            select(Participant).where(
+                Participant.trip_id == trip.id,
+                Participant.is_organizer == True
+            )
+        ).first()
+        organizer_name = organizer.name if organizer else "N/A"
+
+        estimated_cost = None
+        if trip.winning_proposal_id:
+            proposal = session.get(Proposal, trip.winning_proposal_id)
+            if proposal:
+                estimated_cost = proposal.price_estimate
+
+        result.append({
+            "id": trip.id,
+            "name": trip.name,
+            "destination": trip.destination or trip.real_destination or "",
+            "start_date": trip.start_date.isoformat() if trip.start_date else None,
+            "end_date": trip.end_date.isoformat() if trip.end_date else None,
+            "status": trip.status,
+            "num_people": trip.num_people,
+            "organizer_name": organizer_name,
+            "estimated_cost": estimated_cost,
+            "transport_mode": trip.transport_mode,
+        })
+
+    return result
+
+
 @router.get("/{trip_id}", response_model=Trip)
 async def read_trip(
     trip_id: int,
@@ -1051,6 +1105,10 @@ async def read_trip(
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    # I manager aziendali possono vedere qualsiasi viaggio BUSINESS
+    if current_account.is_manager and trip.trip_intent == "BUSINESS":
+        return trip
 
     participant = session.exec(
         select(Participant).where(

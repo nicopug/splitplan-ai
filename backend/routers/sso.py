@@ -1,10 +1,12 @@
 import os
 import logging
+from urllib.parse import urlencode
+
 import requests
-from fastapi import APIRouter, HTTPException, Request, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import RedirectResponse
-from google_auth_oauthlib.flow import Flow
 from sqlmodel import Session, select
+
 from database import get_session
 from models import Account
 from auth import create_access_token
@@ -15,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["SSO"])
 
-SCOPES = [
-    "openid",
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-]
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+SCOPES = "openid email profile"
 
 
 def _get_callback_url() -> str:
@@ -28,40 +30,31 @@ def _get_callback_url() -> str:
     return "http://localhost:8000/auth/google/callback"
 
 
-def _create_flow() -> Flow:
+def _get_client_credentials() -> tuple[str, str]:
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
     if not client_id or not client_secret:
         raise HTTPException(status_code=500, detail="Google SSO non configurato sul server")
-
-    client_config = {
-        "web": {
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [_get_callback_url()],
-        }
-    }
-    flow = Flow.from_client_config(client_config, scopes=SCOPES)
-    flow.redirect_uri = _get_callback_url()
-    return flow
+    return client_id, client_secret
 
 
 @router.get("/google/login")
 async def google_login():
-    flow = _create_flow()
-    auth_url, _ = flow.authorization_url(
-        access_type="online",
-        include_granted_scopes="true",
-        prompt="select_account",
-    )
-    return RedirectResponse(url=auth_url)
+    client_id, _ = _get_client_credentials()
+
+    params = {
+        "client_id": client_id,
+        "redirect_uri": _get_callback_url(),
+        "response_type": "code",
+        "scope": SCOPES,
+        "access_type": "online",
+        "prompt": "select_account",
+    }
+    return RedirectResponse(url=f"{GOOGLE_AUTH_URL}?{urlencode(params)}")
 
 
 @router.get("/google/callback")
 async def google_callback(
-    request: Request,
     code: str = Query(None),
     error: str = Query(None),
     session: Session = Depends(get_session),
@@ -75,24 +68,39 @@ async def google_callback(
     if not code:
         raise HTTPException(status_code=400, detail="Codice di autorizzazione mancante")
 
-    flow = _create_flow()
-    try:
-        flow.fetch_token(code=code)
-    except Exception as e:
-        logger.error(f"Errore scambio token Google: {e}")
-        raise HTTPException(status_code=400, detail="Errore durante l'autenticazione con Google")
+    client_id, client_secret = _get_client_credentials()
 
-    # Recupera le info utente da Google
-    credentials = flow.credentials
-    resp = requests.get(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        headers={"Authorization": f"Bearer {credentials.token}"},
+    # Scambia il code per un access token
+    token_resp = requests.post(
+        GOOGLE_TOKEN_URL,
+        data={
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": _get_callback_url(),
+            "grant_type": "authorization_code",
+        },
         timeout=10,
     )
-    if not resp.ok:
+
+    if not token_resp.ok:
+        logger.error(f"Errore scambio token Google: {token_resp.text}")
+        raise HTTPException(status_code=400, detail="Errore durante l'autenticazione con Google")
+
+    access_token = token_resp.json().get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=400, detail="Token non ricevuto da Google")
+
+    # Recupera le info utente da Google
+    userinfo_resp = requests.get(
+        GOOGLE_USERINFO_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=10,
+    )
+    if not userinfo_resp.ok:
         raise HTTPException(status_code=400, detail="Impossibile recuperare le informazioni utente da Google")
 
-    userinfo = resp.json()
+    userinfo = userinfo_resp.json()
     email = userinfo.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="Email non disponibile dall'account Google")
@@ -102,6 +110,7 @@ async def google_callback(
     if not account:
         account = Account(
             email=email,
+            hashed_password="!SSO_GOOGLE_NO_PASSWORD",
             name=userinfo.get("given_name", ""),
             surname=userinfo.get("family_name", ""),
             is_verified=True,
@@ -111,6 +120,6 @@ async def google_callback(
         session.refresh(account)
 
     # Genera JWT SplitPlan
-    access_token = create_access_token(data={"sub": account.email})
+    jwt_token = create_access_token(data={"sub": account.email})
 
-    return RedirectResponse(url=f"{frontend_url}/auth?token={access_token}")
+    return RedirectResponse(url=f"{frontend_url}/auth?token={jwt_token}")

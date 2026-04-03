@@ -12,6 +12,7 @@ from alembic import context
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Importa i tuoi modelli qui per registrarli con SQLModel.metadata
+import models  # noqa: F401 — registra tutte le tabelle in SQLModel.metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

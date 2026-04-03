@@ -3,6 +3,15 @@ from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime
 
 
+class Company(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    max_budget_per_trip: Optional[float] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    accounts: List["Account"] = Relationship(back_populates="company")
+
+
 class Account(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
@@ -24,7 +33,9 @@ class Account(SQLModel, table=True):
     terms_accepted: bool = Field(default=True)
     privacy_accepted: bool = Field(default=True)
     is_manager: bool = Field(default=False)
-    company_id: Optional[int] = Field(default=None)
+    company_id: Optional[int] = Field(default=None, foreign_key="company.id")
+
+    company: Optional[Company] = Relationship(back_populates="accounts")
 
 
 class TripBase(SQLModel):

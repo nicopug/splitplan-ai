@@ -8,15 +8,13 @@ from dotenv import load_dotenv
 base_dir = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(base_dir, "..", ".env"))
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlmodel import text
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database import engine
-from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso
+from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso, companies
 from admin_auth import verify_admin_token
 
 # ---------------------------------------------------------------------------
@@ -73,6 +71,7 @@ app.include_router(calendar.router)
 app.include_router(leads.router)
 app.include_router(flights.router, prefix="/trips", tags=["Flights"])
 app.include_router(sso.router)
+app.include_router(companies.router)
 
 
 # ---------------------------------------------------------------------------
@@ -90,31 +89,7 @@ def init_db():
     }
 
 
-@app.get(
-    "/admin/migrate-calendar",
-    dependencies=[Depends(verify_admin_token)],
-    tags=["admin"],
-)
-def migrate_db_calendar():
-    """Aggiunge le colonne Google Calendar. Richiede header X-Admin-Token."""
-    try:
-        with engine.connect() as conn:
-            conn.execute(
-                text(
-                    "ALTER TABLE account ADD COLUMN IF NOT EXISTS google_calendar_token TEXT;"
-                )
-            )
-            conn.execute(
-                text(
-                    "ALTER TABLE account ADD COLUMN IF NOT EXISTS is_calendar_connected BOOLEAN DEFAULT FALSE;"
-                )
-            )
-            conn.commit()
-        logger.info("[ADMIN] migrate-calendar eseguita.")
-        return {"status": "success", "message": "Colonne calendar aggiunte."}
-    except Exception as e:
-        logger.error(f"[ADMIN] migrate-calendar fallita: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Endpoint /admin/migrate-calendar rimosso: le colonne sono gestite da Alembic.
 
 
 # ---------------------------------------------------------------------------

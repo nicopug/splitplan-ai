@@ -9,18 +9,13 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(base_dir, "..", ".env"))
 
 from fastapi import FastAPI, Depends, Request
-from pydantic import BaseModel
-from typing import Optional
-from sqlmodel import Session, select
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso, companies
+from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso, companies, admin
 from admin_auth import verify_admin_token
-from database import get_session
-from models import Account, Company
 
 # ---------------------------------------------------------------------------
 # LOGGING
@@ -77,6 +72,7 @@ app.include_router(leads.router)
 app.include_router(flights.router, prefix="/trips", tags=["Flights"])
 app.include_router(sso.router)
 app.include_router(companies.router)
+app.include_router(admin.router)
 
 
 # ---------------------------------------------------------------------------
@@ -95,49 +91,6 @@ def init_db():
 
 
 # Endpoint /admin/migrate-calendar rimosso: le colonne sono gestite da Alembic.
-
-
-# ---------------------------------------------------------------------------
-# ADMIN: Approvazione B2B — crea azienda e promuove utente a manager
-# ---------------------------------------------------------------------------
-
-class ApproveB2BRequest(BaseModel):
-    account_email: str
-    company_name: str
-    max_budget: Optional[float] = None
-
-
-@app.post("/admin/approve-b2b", dependencies=[Depends(verify_admin_token)], tags=["admin"])
-def approve_b2b(
-    body: ApproveB2BRequest,
-    session: Session = Depends(get_session),
-):
-    """
-    Sales-Led B2B onboarding:
-    Crea una nuova Company, aggancia l'Account specificato come manager.
-    Richiede header X-Admin-Token.
-    """
-    account = session.exec(select(Account).where(Account.email == body.account_email)).first()
-    if not account:
-        raise HTTPException(status_code=404, detail=f"Nessun account trovato con email: {body.account_email}")
-
-    company = Company(name=body.company_name, max_budget_per_trip=body.max_budget)
-    session.add(company)
-    session.commit()
-    session.refresh(company)
-
-    account.company_id = company.id
-    account.is_manager = True
-    session.add(account)
-    session.commit()
-
-    logger.info(f"[ADMIN] Azienda '{company.name}' creata (id={company.id}), manager: {account.email}")
-    return {
-        "company_id": company.id,
-        "company_name": company.name,
-        "manager_email": account.email,
-        "max_budget": company.max_budget_per_trip,
-    }
 
 
 # ---------------------------------------------------------------------------

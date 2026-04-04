@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBusinessOverview, approveTrip, rejectTrip } from '../api';
+import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken } from '../api';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Clock, Briefcase, Users, MapPin, Calendar, TrendingUp, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Briefcase, Users, MapPin, Calendar, TrendingUp, ExternalLink, Link2, Copy } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 
@@ -26,6 +26,8 @@ const CompanyDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
     const [processingId, setProcessingId] = useState(null);
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [inviteCopied, setInviteCopied] = useState(false);
     const { showToast } = useToast();
     const navigate = useNavigate();
 
@@ -66,6 +68,22 @@ const CompanyDashboard = () => {
         }
     };
 
+    const handleCopyInviteLink = async () => {
+        setInviteLoading(true);
+        try {
+            const data = await getInviteToken();
+            const inviteUrl = `${window.location.origin}/join?token=${data.invite_token}`;
+            await navigator.clipboard.writeText(inviteUrl);
+            setInviteCopied(true);
+            showToast('Link di invito copiato negli appunti!', 'success');
+            setTimeout(() => setInviteCopied(false), 2000);
+        } catch (err) {
+            showToast('Errore nella generazione del link: ' + err.message, 'error');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
     const handleReject = async (tripId) => {
         setProcessingId(tripId);
         try {
@@ -101,10 +119,26 @@ const CompanyDashboard = () => {
             <div className="container py-12 max-w-6xl mx-auto px-4">
 
                 {/* Header */}
-                <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-                    <span className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--text-subtle)] block mb-2">SplitPlan Pro · Manager</span>
-                    <h1 className="text-4xl font-black uppercase tracking-tight mb-2">Dashboard Aziendale</h1>
-                    <p className="text-[var(--text-muted)] text-sm">Gestisci e approva le trasferte del tuo team</p>
+                <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-12 flex flex-col sm:flex-row sm:items-end gap-4">
+                    <div className="flex-1">
+                        <span className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--text-subtle)] block mb-2">SplitPlan Pro · Manager</span>
+                        <h1 className="text-4xl font-black uppercase tracking-tight mb-2">Dashboard Aziendale</h1>
+                        <p className="text-[var(--text-muted)] text-sm">Gestisci e approva le trasferte del tuo team</p>
+                    </div>
+                    <button
+                        onClick={handleCopyInviteLink}
+                        disabled={inviteLoading}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border transition-all shrink-0",
+                            inviteCopied
+                                ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-500"
+                                : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]",
+                            inviteLoading && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        {inviteCopied ? <CheckCircle2 className="w-3.5 h-3.5" /> : inviteLoading ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                        {inviteCopied ? 'Link Copiato!' : 'Genera Link Invito'}
+                    </button>
                 </motion.div>
 
                 {/* Stats */}

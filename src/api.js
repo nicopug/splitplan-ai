@@ -629,6 +629,22 @@ export const rejectTrip = async (tripId) => {
     return handleResponse(response);
 };
 
+export const getInviteToken = async () => {
+    const response = await fetch(`${API_URL}/companies/invite-token`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const joinCompany = async (token) => {
+    const response = await fetch(`${API_URL}/companies/join`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ token })
+    });
+    return handleResponse(response);
+};
+
 // --- Leads ---
 
 export const submitDemoRequest = async (leadData) => {

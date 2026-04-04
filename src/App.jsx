@@ -29,6 +29,7 @@ const Market = lazy(() => import('./pages/Market'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 const DemoRequest = lazy(() => import('./pages/DemoRequest'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
+const JoinCompany = lazy(() => import('./pages/JoinCompany'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -133,6 +134,7 @@ function App() {
                 <Route path="/roi" element={<ROICalculator />} />
                 <Route path="/demo" element={<DemoRequest />} />
                 <Route path="/manager" element={<ErrorBoundary><CompanyDashboard /></ErrorBoundary>} />
+                <Route path="/join" element={<ErrorBoundary><JoinCompany /></ErrorBoundary>} />
 
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

@@ -7,20 +7,23 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
 import { ModalProvider } from './context/ModalContext'
+import PostHogProvider from './providers/PostHogProvider'
 
 const rootElement = document.getElementById('root')
 
 const app = (
   <React.StrictMode>
-    <ThemeProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <ModalProvider>
-            <App />
-          </ModalProvider>
-        </BrowserRouter>
-      </ToastProvider>
-    </ThemeProvider>
+    <PostHogProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <ModalProvider>
+              <App />
+            </ModalProvider>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
+    </PostHogProvider>
   </React.StrictMode>
 )
 

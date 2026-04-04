@@ -2,6 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { initGA, trackPageView } from './services/analytics';
+import posthog from 'posthog-js';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PainPoints from './components/PainPoints';
@@ -66,7 +67,10 @@ function App() {
 
   useEffect(() => { initGA(); }, []);
 
-  useEffect(() => { trackPageView(location.pathname); }, [location.pathname]);
+  useEffect(() => {
+    trackPageView(location.pathname);
+    posthog.capture('$pageview');
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

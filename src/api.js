@@ -342,6 +342,26 @@ export const joinTrip = async (token) => {
     return handleResponse(response);
 };
 
+export const exportNotaSpese = async (tripId) => {
+    const response = await fetch(`${API_URL}/trips/${tripId}/export-nota-spese`, {
+        headers: getAuthHeaders()
+    });
+    if (!response.ok) {
+        let errorMessage = "Errore durante la generazione della Nota Spese";
+        try { const d = await response.json(); errorMessage = d.detail || errorMessage; } catch {}
+        throw new Error(errorMessage);
+    }
+    const blob = await response.blob();
+    const url  = window.URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `NotaSpese_SplitPlan_${tripId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};
+
 export const exportTripPDF = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/export-pdf`, {
         headers: getAuthHeaders()

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { estimateBudget, updateTrip, getExpenses } from '../api';
+import { estimateBudget, updateTrip, getExpenses, exportNotaSpese } from '../api';
 import { useToast } from '../context/ToastContext';
 import { Sparkles, Download, Calculator, TrendingDown, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -22,34 +22,14 @@ const Budget = ({ trip, onUpdate }) => {
     // AI Forecast inclusion
     const [appliedEstimation, setAppliedEstimation] = useState(null);
 
-    // Funzione per l'Export CSV (B2B Feature)
-    const handleExportCSV = async () => {
+    const handleExportNotaSpese = async () => {
         setIsExporting(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses/${trip.id}/export`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Errore nel download');
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `SplitPlan_Report_${trip.name.replace(/\s+/g, '_')}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            showToast(t('budget.toast.exported', "Report scaricato!"), "success");
+            await exportNotaSpese(trip.id);
+            showToast("Nota Spese PDF generata!", "success");
         } catch (error) {
             console.error(error);
-            showToast("Impossibile scaricare il report", "error");
+            showToast("Impossibile generare il PDF: " + error.message, "error");
         } finally {
             setIsExporting(false);
         }
@@ -288,12 +268,12 @@ const Budget = ({ trip, onUpdate }) => {
                         onSuccess={(newExpense) => setRealExpenses(prev => [...prev, newExpense])}
                     />
                     <button
-                        onClick={handleExportCSV}
+                        onClick={handleExportNotaSpese}
                         disabled={isExporting || realExpenses.length === 0}
                         className="h-12 px-6 border border-border-strong text-primary font-black uppercase text-[10px] tracking-widest hover:bg-surface transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
                         <Download size={14} className={isExporting ? "animate-bounce" : ""} />
-                        {isExporting ? t('common.loading') : "Esporta per Contabilità"}
+                        {isExporting ? "Generando PDF..." : "Esporta per Contabilità"}
                     </button>
                 </div>
             </div>
@@ -432,69 +412,122 @@ const Budget = ({ trip, onUpdate }) => {
                         </p>
                     </div>
 
-                    {/* AI Estimation Section */}
-                    <div className="premium-card !p-8 space-y-6 border border-primary-blue/20 bg-primary-blue/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-accent-primary text-base flex items-center justify-center font-bold rounded-sm">
-                                <Sparkles className="w-5 h-5" />
-                            </div>
-                            <div className="space-y-1">
-                                <span className="subtle-heading !mb-0 !text-primary-blue/60">{t('budget.aiSimulation', 'Simulazione AI')}</span>
-                                <h4 className="text-primary text-lg font-semibold uppercase tracking-tight">SplitPlan Forecast</h4>
-                            </div>
-                        </div>
-
-                        {!estimation ? (
-                            <div className="space-y-6">
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    {t('budget.aiSimulationDesc', { destination: trip.destination })}
-                                </p>
-                                <button
-                                    onClick={handleEstimate}
-                                    disabled={isEstimating}
-                                    className="w-full h-14 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
-                                >
-                                    {isEstimating ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                                            {t('budget.calculatingBtn', 'Analizzando...')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="w-4 h-4" />
-                                            {t('budget.calculateBtn', 'Calcola Proiezione')}
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="p-6 bg-muted/30 border border-border-subtle rounded-sm space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-xs uppercase tracking-widest text-muted font-bold">{t('budget.localEst', 'Stima locale / pers:')}</span>
-                                        <span className="text-xl font-black text-primary-blue">€{estimation.total_estimated_per_person}</span>
+                    {/* AI Forecast Section */}
+                    {(() => {
+                        const status = estimation?.budget_status ?? 'ON_TRACK';
+                        const statusStyles = {
+                            ON_TRACK: { border: 'border-green-500/30',  bg: 'bg-green-500/5',  badge: 'bg-green-500/10 text-green-400',  label: 'NEL BUDGET'  },
+                            WARNING:  { border: 'border-amber-500/30',  bg: 'bg-amber-500/5',  badge: 'bg-amber-500/10 text-amber-400',  label: 'ATTENZIONE'  },
+                            CRITICAL: { border: 'border-red-500/30',    bg: 'bg-red-500/5',    badge: 'bg-red-500/10 text-red-400',      label: 'CRITICO'     },
+                        };
+                        const s = statusStyles[status] ?? statusStyles.ON_TRACK;
+                        return (
+                            <div className={cn('premium-card !p-8 space-y-6 border transition-colors', estimation ? s.border : 'border-primary-blue/20', estimation ? s.bg : 'bg-primary-blue/5')}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-accent-primary text-base flex items-center justify-center font-bold rounded-sm">
+                                            <Sparkles className="w-5 h-5" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="subtle-heading !mb-0 !text-primary-blue/60">{t('budget.aiSimulation', 'Simulazione AI')}</span>
+                                            <h4 className="text-primary text-lg font-semibold uppercase tracking-tight">SplitPlan Forecast</h4>
+                                        </div>
                                     </div>
-                                    <p className="text-muted text-xs leading-relaxed italic border-t border-border-subtle pt-4">
-                                        "{estimation.advice}"
-                                    </p>
+                                    {estimation && (
+                                        <span className={cn('text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-sm', s.badge)}>
+                                            {s.label}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleApplyAsExpense}
-                                        className="flex-1 h-12 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-colors"
-                                    >
-                                        {t('budget.applyBtn', 'Applica')}
-                                    </button>
-                                    <button
-                                        onClick={() => { setEstimation(null); setShowSimulation(false); }}
-                                        className="px-6 h-12 bg-white/5 border border-white/10 text-white font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-colors"
-                                    >
-                                        {t('budget.closeBtn', 'Chiudi')}
-                                    </button>
-                                </div>
+
+                                {!estimation ? (
+                                    <div className="space-y-6">
+                                        <p className="text-gray-400 text-sm leading-relaxed">
+                                            {t('budget.aiSimulationDesc', { destination: trip.destination })}
+                                        </p>
+                                        <button
+                                            onClick={handleEstimate}
+                                            disabled={isEstimating}
+                                            className="w-full h-14 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
+                                        >
+                                            {isEstimating ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                                    {t('budget.calculatingBtn', 'Analizzando...')}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles className="w-4 h-4" />
+                                                    {t('budget.calculateBtn', 'Calcola Proiezione')}
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-5 animate-fade-in">
+                                        {/* KPI row */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="p-4 bg-muted/20 border border-border-subtle rounded-sm space-y-1">
+                                                <span className="text-[9px] uppercase tracking-widest text-muted font-bold block">Per persona</span>
+                                                <span className="text-xl font-black text-primary-blue">€{estimation.total_estimated_per_person}</span>
+                                            </div>
+                                            <div className="p-4 bg-muted/20 border border-border-subtle rounded-sm space-y-1">
+                                                <span className="text-[9px] uppercase tracking-widest text-muted font-bold block">Totale proiettato</span>
+                                                <span className="text-xl font-black text-primary">€{estimation.projected_total?.toFixed(2) ?? '—'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Confidence bar */}
+                                        {estimation.confidence_score != null && (
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted">
+                                                    <span>Affidabilità AI</span>
+                                                    <span>{estimation.confidence_score}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-primary-blue transition-all duration-700"
+                                                        style={{ width: `${estimation.confidence_score}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Savings advice */}
+                                        {estimation.savings_advice?.length > 0 && (
+                                            <div className="space-y-2 border-t border-border-subtle pt-4">
+                                                <span className="text-[9px] uppercase tracking-widest text-muted font-black block">Consigli per risparmiare</span>
+                                                <ul className="space-y-1.5">
+                                                    {estimation.savings_advice.slice(0, 3).map((tip, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-xs text-muted leading-relaxed">
+                                                            <span className="text-primary-blue font-black flex-shrink-0 mt-0.5">→</span>
+                                                            {tip}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="flex gap-3 pt-1">
+                                            <button
+                                                onClick={handleApplyAsExpense}
+                                                className="flex-1 h-12 bg-primary-blue text-white font-black uppercase text-[10px] tracking-widest hover:bg-primary-blue-light transition-colors"
+                                            >
+                                                {t('budget.applyBtn', 'Applica')}
+                                            </button>
+                                            <button
+                                                onClick={() => { setEstimation(null); setShowSimulation(false); }}
+                                                className="px-6 h-12 bg-white/5 border border-white/10 text-white font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-colors"
+                                            >
+                                                {t('budget.closeBtn', 'Chiudi')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        );
+                    })()}
 
                     {/* Currency Info Section */}
                     {stats.localCurrency && stats.localCurrency !== 'EUR' && (

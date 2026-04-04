@@ -767,29 +767,51 @@ async def estimate_budget(
                Stima il costo totale A/R per {trip.num_people} persone e dividilo per loro.
             """
 
+        company_ctx = ""
+        if current_account.company_id:
+            company = session.get(Company, current_account.company_id)
+            if company and company.max_budget_per_trip:
+                company_ctx = (
+                    f"La policy aziendale prevede un budget massimo di "
+                    f"{company.max_budget_per_trip:.0f} EUR per trasferta."
+                )
+
+        budget_ref = trip.budget_max or trip.budget or 0
+
         prompt = f"""
-        Analizza i costi di vita locale (esclusi alloggio) per un viaggio a: {trip.destination}.
-        Dati: {trip.num_people} persona/e, durata {days} giorni. Mezzo: {trip.transport_mode}.
-        
+        Sei un esperto analista di viaggi d'affari. Analizza i costi di vita locale
+        (ESCLUSO alloggio) per un viaggio a: {trip.destination}.
+        Dati: {trip.num_people} persona/e, durata {days} giorni, mezzo: {trip.transport_mode}.
+        Budget totale autorizzato: {budget_ref} EUR.
+        {company_ctx}
+
         {car_prompt}
 
-        Fornisci una stima REALISTICA e ONESTA per una persona (viaggiatore medio, non lussuoso):
-        1. Pasti (colazione, pranzo veloce, cena in trattoria): ca. 35-50€/giorno.
-        2. Trasporti locali (se non in auto): ca. 5-10€/giorno.
-        3. Piccole spese: ca. 10-15€/giorno.
-        
-        Importante: Se la città è economica (es. Est Europa), i costi devono rifletterlo. 
-        Note: 'total_estimated_per_person' DEVE essere il totale realistico per {days} giorni.
-        SE IL MEZZO È "CAR", includi OBBLIGATORIAMENTE una stima di carburante e pedaggi nel totale.
-        
-        RESTITUISCI SOLO JSON:
+        Fornisci una stima REALISTICA per un viaggiatore medio (non lussuoso).
+        Valuta il costo della vita specifico di {trip.destination}
+        (es. Est Europa = economico, Scandinavia = caro).
+
+        Determina anche:
+        - "budget_status": confronta (total_estimated_per_person * {trip.num_people})
+          con il budget totale {budget_ref} EUR.
+          Usa "ON_TRACK" se la proiezione e <= 80% del budget,
+          "WARNING" se 80-100%, "CRITICAL" se supera il budget.
+          Se budget_ref = 0, usa sempre "ON_TRACK".
+        - "savings_advice": 3 consigli BREVI e AZIONABILI specifici per {trip.destination}
+          (es. "Usa i mezzi pubblici invece del taxi", "Mangia nei mercati locali").
+        - "confidence_score": da 0 a 100, quanto sei sicuro della previsione
+          (100 = dati certi, 50 = stima ragionevole, 20 = destinazione poco comune).
+
+        RESTITUISCI SOLO JSON valido:
         {{
             "daily_meal_mid": 35.0,
             "daily_meal_cheap": 20.0,
             "daily_transport": 10.0,
             "road_costs_total_per_person": 0.0,
-            "total_estimated_per_person": 0.0, 
-            "advice": "Un consiglio utile..."
+            "total_estimated_per_person": 0.0,
+            "advice": "Un consiglio utile...",
+            "savings_advice": ["consiglio 1", "consiglio 2", "consiglio 3"],
+            "confidence_score": 75
         }}
         LINGUA: {current_account.language.upper()}.
         """
@@ -800,8 +822,36 @@ async def estimate_budget(
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         data = json.loads(response.text)
-
         data["days_count"] = days
+
+        # ── Server-side derived fields ────────────────────────────────────────
+        per_person = float(data.get("total_estimated_per_person") or 0)
+        projected  = round(per_person * (trip.num_people or 1), 2)
+        data["projected_total"] = projected
+
+        # budget_status: override Gemini's value with a deterministic server calc
+        budget_ref = float(trip.budget_max or trip.budget or 0)
+        if budget_ref > 0:
+            ratio = projected / budget_ref
+            if ratio > 1.0:
+                data["budget_status"] = "CRITICAL"
+            elif ratio > 0.80:
+                data["budget_status"] = "WARNING"
+            else:
+                data["budget_status"] = "ON_TRACK"
+        else:
+            data["budget_status"] = data.get("budget_status", "ON_TRACK")
+
+        # Ensure savings_advice is always a list
+        if not isinstance(data.get("savings_advice"), list):
+            advice = data.get("advice", "")
+            data["savings_advice"] = [advice] if advice else []
+
+        # Ensure confidence_score is int 0-100
+        try:
+            data["confidence_score"] = max(0, min(100, int(data.get("confidence_score", 70))))
+        except (TypeError, ValueError):
+            data["confidence_score"] = 70
 
         return data
     except Exception as e:
@@ -2745,6 +2795,51 @@ async def export_trip_pdf(
         headers={
             "Content-Disposition": f"attachment; filename=SplitPlan_{trip_id}.pdf"
         },
+    )
+
+
+@router.get("/{trip_id}/export-nota-spese")
+async def export_nota_spese(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """
+    Genera la Nota Spese Ufficiale in PDF (B2B).
+    Include dati dipendente/azienda, dettagli trasferta, tabella spese,
+    e footer con l'analisi previsionale AI se disponibile.
+    """
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_account.id,
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+
+    company = None
+    if current_account.company_id:
+        company = session.get(Company, current_account.company_id)
+
+    expenses = session.exec(
+        select(Expense)
+        .where(Expense.trip_id == trip_id)
+        .order_by(Expense.date)
+    ).all()
+
+    from services.pdf_service import generate_nota_spese
+    pdf_bytes = generate_nota_spese(trip, current_account, company, expenses)
+
+    filename = f"NotaSpese_SplitPlan_{trip_id}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 

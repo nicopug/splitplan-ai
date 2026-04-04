@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSharedTrip, joinTrip } from '../api';
 import Timeline from '../components/Timeline';
-import Map from '../components/Map';
+import ItineraryMap from '../components/ItineraryMap';
 import Finance from '../components/Finance';
 import Photos from '../components/Photos';
 
@@ -173,7 +173,7 @@ const ShareTrip = ({ isJoinMode = false }) => {
 
                             <div className="space-y-12">
                                 <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                                    <Map
+                                    <ItineraryMap
                                         items={itinerary}
                                         hotelLat={trip?.hotel_latitude}
                                         hotelLon={trip?.hotel_longitude}

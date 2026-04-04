@@ -90,7 +90,7 @@ function ChangeView({ bounds }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false, routePolyline = null }) => {
+const ItineraryMap = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false, routePolyline = null }) => {
     useEffect(() => {
         if (typeof L !== 'undefined' && L.icon) {
             try {
@@ -243,4 +243,4 @@ const Map = ({ items = [], hotelLat, hotelLon, startDate, isPremium = false, rou
     );
 };
 
-export default Map;
+export default ItineraryMap;

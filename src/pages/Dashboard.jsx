@@ -19,7 +19,7 @@ const HotelConfirmation = lazy(() => import('../components/HotelConfirmation'));
 const Photos = lazy(() => import('../components/Photos'));
 const Chatbot = lazy(() => import('../components/Chatbot'));
 const Budget = lazy(() => import('../components/Budget'));
-const Map = lazy(() => import('../components/Map'));
+const ItineraryMap = lazy(() => import('../components/ItineraryMap'));
 const Events = lazy(() => import('../components/Events'));
 
 const ComponentLoader = () => (
@@ -461,7 +461,7 @@ const Dashboard = () => {
                                                                 <Suspense fallback={<ComponentLoader />}><Timeline items={itinerary} /></Suspense>
                                                             </div>
                                                             <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
-                                                                <Suspense fallback={<ComponentLoader />}><Map items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={user?.is_subscribed || trip.is_premium} routePolyline={routePolyline} /></Suspense>
+                                                                <Suspense fallback={<ComponentLoader />}><ItineraryMap items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={user?.is_subscribed || trip.is_premium} routePolyline={routePolyline} /></Suspense>
                                                             </div>
                                                         </div>
                                                     )}

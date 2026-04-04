@@ -47,6 +47,7 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
+from services.itinerary_optimizer import optimize_travel_itinerary
 from admin_auth import verify_admin_token
 
 load_dotenv()
@@ -1827,6 +1828,50 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         data = json.loads(response.text)
+
+        # ── Step B: Validate and fix timings with CP-SAT optimizer ──────────
+        raw_activities = data.get("itinerary", [])
+        if raw_activities:
+            opt_result = await optimize_travel_itinerary(raw_activities)
+
+            if opt_result["dropped"]:
+                dropped_titles = [d["title"] for d in opt_result["dropped"]]
+                logger.warning(
+                    f"[Optimizer] Trip {trip.id}: {len(opt_result['dropped'])} activities "
+                    f"dropped as physically infeasible: {dropped_titles}"
+                )
+
+                if not opt_result["feasible"] and not opt_result["partial"]:
+                    # Completely infeasible (anchor conflict) — ask Gemini to explain
+                    explain_prompt = (
+                        f"L'itinerario generato per il viaggio a {trip.destination} è "
+                        f"matematicamente impossibile. Le seguenti attività non possono "
+                        f"essere inserite nel giorno senza sovrapporre orari fissi o voli: "
+                        f"{', '.join(dropped_titles)}. "
+                        f"Spiega in modo chiaro e breve (massimo 2 frasi) perché e cosa "
+                        f"dovrebbe tagliare l'utente. Lingua: {lang}."
+                    )
+                    try:
+                        explain_resp = await ai_client.aio.models.generate_content(
+                            model=AI_MODEL, contents=explain_prompt
+                        )
+                        logger.info(
+                            f"[Optimizer] Infeasibility explanation: {explain_resp.text}"
+                        )
+                    except Exception as ex:
+                        logger.warning(f"[Optimizer] Could not generate explanation: {ex}")
+
+            # ── Step C: Replace Gemini times with optimizer-validated times ──
+            # Strip internal optimizer metadata before passing to process_item
+            optimized = []
+            for item in opt_result["schedule"]:
+                clean = {k: v for k, v in item.items() if not k.startswith("_")}
+                optimized.append(clean)
+            data["itinerary"] = optimized
+            logger.info(
+                f"[Optimizer] Trip {trip.id}: schedule locked "
+                f"({len(optimized)} activities, {len(opt_result['dropped'])} dropped)."
+            )
 
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
         session.commit()

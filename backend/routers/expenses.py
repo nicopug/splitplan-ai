@@ -1,5 +1,5 @@
 from auth import get_current_user
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ from database import get_session
 from models import Trip, Participant, Account, Expense, SQLModel
 from utils.currency import get_exchange_rates
 from admin_auth import verify_admin_token
+from services.ocr_service import process_receipt_image, SUPPORTED_MIME_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +210,124 @@ async def get_balances(
             j += 1
 
     return settlements
+
+
+MAX_RECEIPT_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+@router.post("/{trip_id}/upload-receipt", response_model=Expense)
+async def upload_receipt(
+    trip_id: int,
+    file: UploadFile = File(...),
+    current_user: Account = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Scansiona una ricevuta con Gemini Vision e crea automaticamente una spesa.
+
+    - Accetta: JPEG, PNG, WEBP, HEIC, HEIF, PDF (max 5 MB)
+    - Gemini estrae: importo, valuta, data, nome esercente, categoria
+    - Se l'importo non è leggibile → 422 con messaggio chiaro per inserimento manuale
+    - La conversione EUR avviene come nel flusso standard
+    """
+    # ── 1. Validazione MIME ───────────────────────────────────────────────────
+    mime_type = file.content_type or ""
+    if mime_type not in SUPPORTED_MIME_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=(
+                f"Formato non supportato: '{mime_type}'. "
+                "Carica un'immagine (JPEG, PNG, WEBP, HEIC, HEIF) o un PDF."
+            ),
+        )
+
+    # ── 2. Validazione dimensione ─────────────────────────────────────────────
+    content = await file.read()
+    if len(content) > MAX_RECEIPT_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File troppo grande. Il limite è di 5 MB.",
+        )
+
+    # ── 3. Verifica partecipazione al viaggio ─────────────────────────────────
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_user.id,
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+
+    # ── 4. OCR via Gemini ─────────────────────────────────────────────────────
+    try:
+        extracted = await process_receipt_image(content, mime_type)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e))
+
+    if not extracted or extracted.get("total_amount") is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Non riesco a leggere l'importo dalla ricevuta. "
+                "La foto potrebbe essere mossa o il testo illeggibile. "
+                "Prova a inserire la spesa manualmente."
+            ),
+        )
+
+    # ── 5. Conversione valuta → EUR ───────────────────────────────────────────
+    original_amount: float = extracted["total_amount"]
+    currency: str = extracted["currency"]
+    amount_eur = original_amount
+    exchange_rate = 1.0
+
+    if currency != "EUR":
+        rates = await get_exchange_rates("EUR")
+        if rates and currency in rates:
+            exchange_rate = rates[currency]
+            amount_eur = round(original_amount / exchange_rate, 2)
+        else:
+            logger.warning(
+                f"[OCR] Tasso di cambio per {currency} non disponibile — "
+                "uso importo originale come EUR"
+            )
+
+    # ── 6. Data spesa ─────────────────────────────────────────────────────────
+    expense_date = extracted.get("date") or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # ── 7. Descrizione dalla ricevuta ─────────────────────────────────────────
+    merchant = extracted.get("merchant_name") or "Ricevuta scansionata"
+
+    # ── 8. Partecipanti coinvolti (tutti per default) ─────────────────────────
+    all_participant_ids = [
+        p.id
+        for p in session.exec(
+            select(Participant).where(Participant.trip_id == trip_id)
+        ).all()
+    ]
+
+    # ── 9. Salvataggio spesa ──────────────────────────────────────────────────
+    db_expense = Expense(
+        trip_id=trip_id,
+        payer_id=participant.id,
+        description=merchant,
+        amount=amount_eur,
+        original_amount=original_amount,
+        currency=currency,
+        exchange_rate=exchange_rate,
+        category=extracted["category"],
+        date=expense_date,
+        involved_ids=json.dumps(all_participant_ids),
+    )
+    session.add(db_expense)
+    session.commit()
+    session.refresh(db_expense)
+
+    logger.info(
+        f"[OCR] Spesa creata | trip={trip_id} | payer={participant.id} | "
+        f"amount={amount_eur} EUR | category={extracted['category']}"
+    )
+    return db_expense
 
 
 @router.delete("/{expense_id}")

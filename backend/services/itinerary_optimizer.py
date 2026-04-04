@@ -26,8 +26,11 @@ import asyncio
 import logging
 from collections import defaultdict
 from math import atan2, cos, radians, sin, sqrt
+from typing import Optional
 
 from ortools.sat.python import cp_model
+
+from services.maps_service import get_travel_time_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +116,11 @@ def _minute_to_iso(date_str: str, minute: int) -> str:
 
 # ── Core CP-SAT model (one day) ───────────────────────────────────────────────
 
-def _optimize_single_day(date_str: str, indexed_activities: list[tuple[int, dict]]) -> dict:
+def _optimize_single_day(
+    date_str: str,
+    indexed_activities: list[tuple[int, dict]],
+    travel_matrix: Optional[dict[tuple[int, int], int]] = None,
+) -> dict:
     """
     Builds and solves a CP-SAT model for a single day's activities.
 
@@ -176,7 +183,13 @@ def _optimize_single_day(date_str: str, indexed_activities: list[tuple[int, dict
 
     # ── Sequencing constraints ─────────────────────────────────────────────────
     for i in range(n - 1):
-        travel = _haversine_minutes(
+        # Use OSRM real-world time when available; fall back to Haversine
+        osrm_time = (
+            travel_matrix.get((meta[i]["orig_index"], meta[i + 1]["orig_index"]))
+            if travel_matrix is not None
+            else None
+        )
+        travel = osrm_time if osrm_time is not None else _haversine_minutes(
             meta[i]["lat"], meta[i]["lon"],
             meta[i + 1]["lat"], meta[i + 1]["lon"],
         )
@@ -236,7 +249,10 @@ def _optimize_single_day(date_str: str, indexed_activities: list[tuple[int, dict
 
 # ── Multi-day orchestrator ─────────────────────────────────────────────────────
 
-def optimize_itinerary_sync(activities: list[dict]) -> dict:
+def optimize_itinerary_sync(
+    activities: list[dict],
+    travel_matrix: Optional[dict[tuple[int, int], int]] = None,
+) -> dict:
     """
     Groups activities by day and runs CP-SAT independently per day.
 
@@ -263,7 +279,7 @@ def optimize_itinerary_sync(activities: list[dict]) -> dict:
 
     for date_str in sorted(days.keys()):
         logger.info(f"[Optimizer] Solving day {date_str} ({len(days[date_str])} activities)")
-        result = _optimize_single_day(date_str, days[date_str])
+        result = _optimize_single_day(date_str, days[date_str], travel_matrix)
         all_schedule.extend(result["schedule"])
         all_dropped.extend(result["dropped"])
 
@@ -283,8 +299,10 @@ def optimize_itinerary_sync(activities: list[dict]) -> dict:
 async def optimize_travel_itinerary(activities: list[dict]) -> dict:
     """
     Async entry point for FastAPI endpoints.
-    Runs the synchronous CP-SAT solver in a thread pool so it never blocks
-    the asyncio event loop.
+
+    Flow:
+      1. Fetch OSRM travel time matrix (async, in event loop, with fallback).
+      2. Run CP-SAT solver in a thread pool (sync C++ code must not block loop).
 
     Args:
         activities: list of activity dicts (Gemini output) with ISO start_time
@@ -295,11 +313,24 @@ async def optimize_travel_itinerary(activities: list[dict]) -> dict:
     if not activities:
         return {"feasible": True, "partial": False, "schedule": [], "dropped": []}
 
-    loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(None, optimize_itinerary_sync, activities)
+    # Step 1: fetch OSRM matrix while still in the async event loop
+    locations = [
+        (float(a.get("lat") or 0.0), float(a.get("lon") or 0.0))
+        for a in activities
+    ]
+    travel_matrix = await get_travel_time_matrix(locations, profile="foot")
+    # travel_matrix is None on any OSRM failure — solver falls back to Haversine
 
+    # Step 2: run synchronous CP-SAT solver in thread pool
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(
+        None, optimize_itinerary_sync, activities, travel_matrix
+    )
+
+    source = "OSRM" if travel_matrix is not None else "Haversine"
     logger.info(
         f"[Optimizer] Result: feasible={result['feasible']}, "
-        f"scheduled={len(result['schedule'])}, dropped={len(result['dropped'])}"
+        f"scheduled={len(result['schedule'])}, dropped={len(result['dropped'])}, "
+        f"travel_times={source}"
     )
     return result

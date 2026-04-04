@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
+import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,6 @@ import { cn } from '../lib/utils';
 const Survey = lazy(() => import('../components/Survey'));
 const Voting = lazy(() => import('../components/Voting'));
 const Timeline = lazy(() => import('../components/Timeline'));
-const Finance = lazy(() => import('../components/Finance'));
 const Logistics = lazy(() => import('../components/Logistics'));
 const HotelConfirmation = lazy(() => import('../components/HotelConfirmation'));
 const Photos = lazy(() => import('../components/Photos'));
@@ -303,7 +302,6 @@ const Dashboard = () => {
                     {[
                         { id: 'TRIP', label: t('dashboard.tabs.trip'), icon: <MapIcon className="w-4 h-4" />, condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' || trip.status === 'APPROVED' || trip.status === 'PENDING_APPROVAL' },
                         { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: trip.status === 'BOOKED' || trip.status === 'APPROVED' },
-                        { id: 'FINANCE', label: t('dashboard.tabs.finance'), icon: <Coins className="w-4 h-4" />, condition: !!user },
                         { id: 'PHOTOS', label: t('dashboard.tabs.photos'), icon: <Camera className="w-4 h-4" /> },
                         { id: 'EVENTS', label: t('dashboard.tabs.events'), icon: <CalendarDays className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && trip.trip_intent !== 'BUSINESS' }
                     ].map(btn => (
@@ -505,7 +503,6 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {view === 'FINANCE' && <Suspense fallback={<ComponentLoader />}><Finance trip={trip} /></Suspense>}
                     {view === 'PHOTOS' && <Suspense fallback={<ComponentLoader />}><Photos trip={trip} /></Suspense>}
                     {view === 'EVENTS' && trip.trip_intent !== 'BUSINESS' && (
                         <Suspense fallback={<ComponentLoader />}><Events trip={trip} /></Suspense>

@@ -525,6 +525,79 @@ const Budget = ({ trip, onUpdate }) => {
                     )}
                 </div>
             </div>
+
+            {/* ── Ultime Spese ─────────────────────────────────────────────────── */}
+            <div className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div className="space-y-1">
+                        <span className="subtle-heading !mb-0 text-[8px] opacity-50">Registro</span>
+                        <h3 className="text-primary text-xl font-semibold uppercase tracking-tight">
+                            Ultime Spese
+                        </h3>
+                    </div>
+                    {realExpenses.length > 0 && (
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-widest">
+                            {realExpenses.length} {realExpenses.length === 1 ? 'voce' : 'voci'} registrate
+                        </span>
+                    )}
+                </div>
+
+                {realExpenses.length === 0 ? (
+                    <div className="premium-card !p-12 text-center space-y-4 opacity-30 bg-card">
+                        <div className="text-4xl">🧾</div>
+                        <p className="text-xs uppercase tracking-widest font-bold">
+                            Nessuna spesa registrata. Scansiona una ricevuta per iniziare.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {[...realExpenses].reverse().map((exp, idx) => {
+                            const emoji = {
+                                FOOD: '🍕', Food: '🍕',
+                                TRANSPORT: '🚌', Transport: '🚌', Travel_Road: '🚗',
+                                ACCOMMODATION: '🏨', Lodging: '🏨',
+                                Activity: '🎡', Shopping: '🛍️',
+                                OTHER: '📦', Other: '📦',
+                            }[exp.category] ?? '💸';
+
+                            const dateStr = exp.date
+                                ? new Date(exp.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+                                : '—';
+
+                            return (
+                                <div
+                                    key={exp.id ?? idx}
+                                    className="premium-card !p-5 flex items-center justify-between group hover:border-primary-blue/30 transition-all bg-card animate-fade-in"
+                                >
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-11 h-11 bg-surface border border-border-subtle rounded-sm flex items-center justify-center text-2xl flex-shrink-0 transition-transform group-hover:scale-110">
+                                            {emoji}
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <div className="text-sm font-bold text-primary tracking-tight leading-none">
+                                                {exp.description || exp.title || '—'}
+                                            </div>
+                                            <div className="text-[10px] uppercase font-bold tracking-widest text-muted">
+                                                {exp.category} · {dateStr}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right space-y-0.5 flex-shrink-0">
+                                        <div className="text-xl font-black text-primary">
+                                            €{exp.amount.toFixed(2)}
+                                        </div>
+                                        {exp.currency && exp.currency !== 'EUR' && (
+                                            <div className="text-[10px] font-bold text-muted uppercase tracking-tighter">
+                                                {exp.original_amount?.toLocaleString()} {exp.currency}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

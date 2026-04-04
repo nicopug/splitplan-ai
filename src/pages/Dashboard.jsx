@@ -302,8 +302,8 @@ const Dashboard = () => {
                 <nav className="flex-1 px-4 space-y-1">
                     {[
                         { id: 'TRIP', label: t('dashboard.tabs.trip'), icon: <MapIcon className="w-4 h-4" />, condition: isOrganizer || trip.status === 'PLANNING' || trip.status === 'VOTING' || trip.status === 'BOOKED' || trip.status === 'APPROVED' || trip.status === 'PENDING_APPROVAL' },
-                        { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && !isBusiness },
-                        { id: 'FINANCE', label: t('dashboard.tabs.finance'), icon: <Coins className="w-4 h-4" />, condition: user && trip.trip_type !== 'SOLO' },
+                        { id: 'BUDGET', label: t('dashboard.tabs.budget'), icon: <Wallet className="w-4 h-4" />, condition: trip.status === 'BOOKED' || trip.status === 'APPROVED' },
+                        { id: 'FINANCE', label: t('dashboard.tabs.finance'), icon: <Coins className="w-4 h-4" />, condition: !!user },
                         { id: 'PHOTOS', label: t('dashboard.tabs.photos'), icon: <Camera className="w-4 h-4" /> },
                         { id: 'EVENTS', label: t('dashboard.tabs.events'), icon: <CalendarDays className="w-4 h-4" />, condition: (trip.status === 'BOOKED' || trip.status === 'APPROVED') && trip.trip_intent !== 'BUSINESS' }
                     ].map(btn => (

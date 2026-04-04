@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { estimateBudget, updateTrip, getExpenses } from '../api';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, Download, Calculator, TrendingDown, Clock } from 'lucide-react'; // Aggiunto Download
+import { Sparkles, Download, Calculator, TrendingDown, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
-
 import { useModal } from '../context/ModalContext';
+import ReceiptScanner from './ReceiptScanner';
 
 const Budget = ({ trip, onUpdate }) => {
     if (!trip) return null;
@@ -282,15 +282,20 @@ const Budget = ({ trip, onUpdate }) => {
                     </h2>
                 </div>
 
-                {/* Tasto Export CSV posizionato strategicamente in alto */}
-                <button
-                    onClick={handleExportCSV}
-                    disabled={isExporting || realExpenses.length === 0}
-                    className="h-12 px-6 border border-border-strong text-primary font-black uppercase text-[10px] tracking-widest hover:bg-surface transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
-                >
-                    <Download size={14} className={isExporting ? "animate-bounce" : ""} />
-                    {isExporting ? t('common.loading') : "Esporta per Contabilità"}
-                </button>
+                <div className="flex items-center gap-3">
+                    <ReceiptScanner
+                        tripId={trip.id}
+                        onSuccess={(newExpense) => setRealExpenses(prev => [...prev, newExpense])}
+                    />
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={isExporting || realExpenses.length === 0}
+                        className="h-12 px-6 border border-border-strong text-primary font-black uppercase text-[10px] tracking-widest hover:bg-surface transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                    >
+                        <Download size={14} className={isExporting ? "animate-bounce" : ""} />
+                        {isExporting ? t('common.loading') : "Esporta per Contabilità"}
+                    </button>
+                </div>
             </div>
 
             {/* Top Cards: Spent vs Remaining */}

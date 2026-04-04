@@ -106,6 +106,10 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             if (parts && parts.length > 0 && !payerId) {
                 setPayerId(parts[0].id);
             }
+            // Solo traveller → always show expense list (no settlements)
+            if (parts && parts.length <= 1) {
+                setTab('list');
+            }
         } catch (e) {
             console.error(e);
             showToast(t('finance.toast.loadError', "Errore nel caricamento: ") + e.message, "error");
@@ -233,36 +237,45 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
         return { total, perPerson, userBalance };
     }, [expenses, participants, currentUser]);
 
+    // Solo traveller: 0 or 1 participant — hide settlements, adapt copy
+    const isSolo = participants.length <= 1;
+
     return (
         <div className="container py-12 space-y-12">
             <div className="space-y-4">
                 <span className="subtle-heading">{t('finance.expenses', 'Finance')}</span>
                 <h2 className="text-primary text-4xl md:text-5xl font-semibold tracking-tight uppercase">
-                    {t('finance.title', 'Gestione Spese')}
+                    {isSolo
+                        ? t('finance.titleSolo', 'Monitoraggio Spese')
+                        : t('finance.title', 'Gestione Spese')}
                 </h2>
             </div>
 
             {/* Global Stats Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={cn("grid gap-6", isSolo ? "grid-cols-1 max-w-sm" : "grid-cols-1 md:grid-cols-2")}>
                 <div className="premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 border-primary-blue/30 bg-surface">
-                    <span className="subtle-heading !mb-0">{t('finance.totalSpent', 'Totale Speso')}</span>
+                    <span className="subtle-heading !mb-0">
+                        {isSolo ? t('finance.totalPersonal', 'Spese Personali') : t('finance.totalSpent', 'Totale Speso')}
+                    </span>
                     <div className="text-5xl font-black text-primary">
                         €{stats.total.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
 
-                <div className={cn(
-                    "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 bg-surface",
-                    stats.userBalance >= 0 ? "border-green-500/30" : "border-red-500/30"
-                )}>
-                    <span className="subtle-heading !mb-0">{t('finance.yourBalance', 'Tuo Bilancio')}</span>
+                {!isSolo && (
                     <div className={cn(
-                        "text-5xl font-black",
-                        stats.userBalance >= 0 ? "text-green-500" : "text-red-500"
+                        "premium-card !p-10 flex flex-col items-center justify-center space-y-2 border-b-2 bg-surface",
+                        stats.userBalance >= 0 ? "border-green-500/30" : "border-red-500/30"
                     )}>
-                        {stats.userBalance > 0 ? '+' : ''}€{stats.userBalance.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                        <span className="subtle-heading !mb-0">{t('finance.yourBalance', 'Tuo Bilancio')}</span>
+                        <div className={cn(
+                            "text-5xl font-black",
+                            stats.userBalance >= 0 ? "text-green-500" : "text-red-500"
+                        )}>
+                            {stats.userBalance > 0 ? '+' : ''}€{stats.userBalance.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {loading ? (
@@ -280,26 +293,29 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
             ) : (
                 <div className="space-y-10">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex bg-muted/30 p-1 rounded-sm border border-border-subtle">
-                            <button
-                                onClick={() => setTab('summary')}
-                                className={cn(
-                                    "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'summary' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
-                                )}
-                            >
-                                {t('finance.tabs.balances', 'Bilanci')}
-                            </button>
-                            <button
-                                onClick={() => setTab('list')}
-                                className={cn(
-                                    "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                    tab === 'list' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
-                                )}
-                            >
-                                {t('finance.tabs.list', 'Lista')}
-                            </button>
-                        </div>
+                        {/* Tab switcher hidden for solo travellers — settlements don't apply */}
+                        {!isSolo && (
+                            <div className="flex bg-muted/30 p-1 rounded-sm border border-border-subtle">
+                                <button
+                                    onClick={() => setTab('summary')}
+                                    className={cn(
+                                        "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
+                                        tab === 'summary' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
+                                    )}
+                                >
+                                    {t('finance.tabs.balances', 'Bilanci')}
+                                </button>
+                                <button
+                                    onClick={() => setTab('list')}
+                                    className={cn(
+                                        "px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
+                                        tab === 'list' ? "bg-accent-primary text-base" : "text-muted hover:text-primary"
+                                    )}
+                                >
+                                    {t('finance.tabs.list', 'Lista')}
+                                </button>
+                            </div>
+                        )}
 
                         {!readOnly && (
                             <div className="flex items-center gap-4">

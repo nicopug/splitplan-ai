@@ -9,7 +9,7 @@ if (POSTHOG_KEY && POSTHOG_HOST) {
     posthog.init(POSTHOG_KEY, {
         api_host:        POSTHOG_HOST,
         autocapture:     true,
-        person_profiles: 'identified_only',
+        person_profiles: 'always',
         capture_pageview: false,  // gestiamo manualmente in App.jsx
     });
 }

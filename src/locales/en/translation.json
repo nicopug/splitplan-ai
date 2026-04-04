@@ -97,7 +97,9 @@
         "hotels_only": "Hotels Only",
         "expenses_only": "Expenses Only",
         "text_only": "Text Only",
-        "all_inclusive": "Everything Included"
+        "all_inclusive": "Everything Included",
+        "tableFeature": "Feature",
+        "tableFooter": "* Analysis based on 2026 market standards."
     },
     "pricing": {
         "title": "Choose your plan",
@@ -259,8 +261,11 @@
     },
     "finance": {
         "title": "Expense Management",
+        "titleSolo": "Expense Tracking",
         "totalSpent": "Total Spent",
+        "totalPersonal": "Personal Total",
         "perPerson": "Per person",
+        "yourBalance": "Your balance",
         "loading": "Financial analysis in progress...",
         "tabs": {
             "balances": "Balances ⚖️",
@@ -388,6 +393,10 @@
         "localEst": "Local estimate / pers:",
         "applyBtn": "Apply",
         "closeBtn": "Close",
+        "confirmApplyDesc": "Confirm adding the AI-calculated projected expense to your current budget.",
+        "analytics": "AI Analytics",
+        "rangeBudget": "Budget Range",
+        "distribution": "Distribution",
         "toast": {
             "applied": "Projection updated!",
             "removed": "Projection removed",
@@ -405,7 +414,8 @@
             "Train": "Train",
             "Road": "Trip",
             "Other": "Other",
-            "Available": "Available"
+            "Available": "Available",
+            "Budget": "Budget"
         }
     },
     "chatbot": {
@@ -456,6 +466,7 @@
     },
     "business": {
         "title": "For Business",
+        "headline": "Enterprise Solutions for Modern Teams",
         "headlinePart1": "AUTOMATE",
         "headlinePart2": "TRAVEL AND BUDGETS",
         "headlinePart3": "IN POLICY.",
@@ -464,11 +475,14 @@
         "demo_note": "A DEDICATED ACCOUNT MANAGER WILL CONTACT YOU FOR A PERSONALIZED DEMO.",
         "cta": "Book a Free Demo",
         "privacy_disclaimer": "BY CLICKING \"BOOK A FREE DEMO\" YOU ACCEPT OUR PRIVACY POLICY AND CONSENT TO BE CONTACTED FOR COMMERCIAL PURPOSES.",
+        "bullet1_title": "Smart Expense Policies",
         "bullet1_desc": "Set budget limits and approved expense categories for every team.",
         "bullet2_title": "Admin Dashboard",
         "bullet2_desc": "Overview of all active trips, real-time costs, and team roadmap.",
         "bullet3_title": "Automated Reporting",
-        "bullet3_desc": "Export detailed, accounting-ready reports with a single click."
+        "bullet3_desc": "Export detailed, accounting-ready reports with a single click.",
+        "smartPolicyTitle": "Smart Expense Policies",
+        "smartPolicyDesc": "Set budget limits and approved expense categories for each team."
     },
     "demo": {
         "success_toast": "Request submitted! We'll contact you shortly.",

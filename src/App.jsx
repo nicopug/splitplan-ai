@@ -1,6 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { initGA, trackPageView } from './services/analytics';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PainPoints from './components/PainPoints';
@@ -62,6 +63,10 @@ function App() {
   const { t } = useTranslation();
   const location = useLocation();
   const isAdminPage = location.pathname === '/system-override';
+
+  useEffect(() => { initGA(); }, []);
+
+  useEffect(() => { trackPageView(location.pathname); }, [location.pathname]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

@@ -96,7 +96,9 @@
         "hotels_only": "Solo Hotel",
         "expenses_only": "Solo Spese",
         "text_only": "Solo Testo",
-        "all_inclusive": "Tutto Incluso"
+        "all_inclusive": "Tutto Incluso",
+        "tableFeature": "Funzionalità",
+        "tableFooter": "* Analisi basata su standard di mercato 2026."
     },
     "pricing": {
         "title": "Scegli il tuo piano",
@@ -258,8 +260,11 @@
     },
     "finance": {
         "title": "Gestione Spese",
+        "titleSolo": "Monitoraggio Spese",
         "totalSpent": "Totale Speso",
+        "totalPersonal": "Totale Personale",
         "perPerson": "A persona",
+        "yourBalance": "Il tuo saldo",
         "loading": "Analisi finanziaria in corso...",
         "tabs": {
             "balances": "Bilanci ⚖️",
@@ -387,6 +392,10 @@
         "localEst": "Stima locale / pers:",
         "applyBtn": "Applica",
         "closeBtn": "Chiudi",
+        "confirmApplyDesc": "Conferma l'aggiunta della spesa prevista calcolata dall'AI al tuo budget attuale.",
+        "analytics": "Analisi AI",
+        "rangeBudget": "Range Budget",
+        "distribution": "Distribuzione",
         "toast": {
             "applied": "Proiezione aggiornata!",
             "removed": "Proiezione rimossa",
@@ -404,7 +413,8 @@
             "Train": "Treno",
             "Road": "Viaggio",
             "Other": "Altro",
-            "Available": "Disponibile"
+            "Available": "Disponibile",
+            "Budget": "Budget"
         }
     },
     "chatbot": {
@@ -455,6 +465,7 @@
     },
     "business": {
         "title": "Per le Aziende",
+        "headline": "Soluzioni Enterprise per Team Moderni",
         "headlinePart1": "AUTOMATIZZA",
         "headlinePart2": "TRASFERTE E BUDGET",
         "headlinePart3": "IN POLICY.",
@@ -468,7 +479,9 @@
         "bullet2_title": "Dashboard Amministratore",
         "bullet2_desc": "Visione d'insieme su tutte le trasferte attive, costi in tempo reale e roadmap del team.",
         "bullet3_title": "Reporting Automatizzato",
-        "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click."
+        "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click.",
+        "smartPolicyTitle": "Policy Spese Intelligenti",
+        "smartPolicyDesc": "Imposta limiti di budget e categorie di spesa approvate per ogni team."
     },
     "footer": {
         "tagline": "Rendiamo i viaggi di gruppo facili, divertenti e senza stress.",

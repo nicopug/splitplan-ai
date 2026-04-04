@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Coins, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
@@ -37,6 +37,7 @@ const Dashboard = () => {
     const [trip, setTrip] = useState(null);
     const [proposals, setProposals] = useState([]);
     const [itinerary, setItinerary] = useState([]);
+    const [routePolyline, setRoutePolyline] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [view, setView] = useState('TRIP');
@@ -127,6 +128,10 @@ const Dashboard = () => {
             if (data.status === 'BOOKED' || data.status === 'APPROVED' || data.status === 'PENDING_APPROVAL') {
                 const items = await getItinerary(id);
                 setItinerary(items);
+                // Fetch OSRM route geometry async — map renders immediately, polyline upgrades when ready
+                if (items.length > 1) {
+                    getRouteGeometry(id).then(r => setRoutePolyline(r?.polyline ?? null)).catch(() => {});
+                }
             }
         } catch (error) {
             console.error("Fetch Trip Error:", error);
@@ -239,6 +244,7 @@ const Dashboard = () => {
             await optimizeItinerary(id);
             const items = await getItinerary(id);
             setItinerary(items);
+            getRouteGeometry(id).then(r => setRoutePolyline(r?.polyline ?? null)).catch(() => {});
             showToast("✨ Itinerario ottimizzato!", "success");
         } catch (e) {
             showToast("Errore ottimizzazione: " + e.message, "error");
@@ -455,7 +461,7 @@ const Dashboard = () => {
                                                                 <Suspense fallback={<ComponentLoader />}><Timeline items={itinerary} /></Suspense>
                                                             </div>
                                                             <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
-                                                                <Suspense fallback={<ComponentLoader />}><Map items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={user?.is_subscribed || trip.is_premium} /></Suspense>
+                                                                <Suspense fallback={<ComponentLoader />}><Map items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={user?.is_subscribed || trip.is_premium} routePolyline={routePolyline} /></Suspense>
                                                             </div>
                                                         </div>
                                                     )}

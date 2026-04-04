@@ -149,3 +149,67 @@ async def get_travel_time_matrix(
     except Exception as e:
         logger.warning(f"[OSRM] Unexpected error: {e} — using Haversine fallback")
         return None
+
+
+async def get_route_geometry(
+    waypoints: list[tuple[float, float]],
+    profile: str = "foot",
+) -> Optional[str]:
+    """
+    Fetches the full route polyline (encoded string) from OSRM /route endpoint.
+
+    OSRM returns the geometry as a Google-encoded polyline string when
+    geometries=polyline is requested. The frontend decodes it client-side.
+
+    Args:
+        waypoints:  Ordered list of (lat, lon) tuples — the final itinerary sequence.
+        profile:    "foot" | "driving" | "cycling"
+
+    Returns:
+        Encoded polyline string, or None on any failure.
+
+    Example log on success:
+        [OSRM] Route geometry OK | profile=foot | waypoints=8 | encoded_len=312
+    """
+    valid = [
+        (lat, lon) for lat, lon in waypoints
+        if lat and lon and not (abs(lat) < 1e-4 and abs(lon) < 1e-4)
+    ]
+    if len(valid) < 2:
+        logger.warning("[OSRM] Not enough valid waypoints for route geometry")
+        return None
+
+    # OSRM /route/v1: coordinates in lon,lat order, semicolon-separated
+    coord_str = ";".join(f"{lon:.6f},{lat:.6f}" for lat, lon in valid)
+    url = (
+        f"https://router.project-osrm.org/route/v1/{profile}/{coord_str}"
+        f"?overview=full&geometries=polyline"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=OSRM_TIMEOUT_SECONDS) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+
+        if data.get("code") != "Ok":
+            logger.warning(f"[OSRM] Route non-OK: {data.get('code')}")
+            return None
+
+        routes = data.get("routes", [])
+        if not routes:
+            return None
+
+        geometry: str = routes[0].get("geometry", "")
+        logger.info(
+            f"[OSRM] Route geometry OK | profile={profile} | "
+            f"waypoints={len(valid)} | encoded_len={len(geometry)}"
+        )
+        return geometry or None
+
+    except httpx.TimeoutException:
+        logger.warning("[OSRM] Route geometry timeout — no polyline")
+        return None
+    except Exception as e:
+        logger.warning(f"[OSRM] Route geometry error: {e} — no polyline")
+        return None

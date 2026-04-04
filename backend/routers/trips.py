@@ -48,6 +48,7 @@ from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
 from services.itinerary_optimizer import optimize_travel_itinerary
+from services.maps_service import get_route_geometry
 from admin_auth import verify_admin_token
 
 load_dotenv()
@@ -2261,6 +2262,32 @@ async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
         .where(ItineraryItem.trip_id == trip_id)
         .order_by(ItineraryItem.start_time)
     ).all()
+
+
+@router.get("/{trip_id}/route-geometry")
+async def get_trip_route_geometry(trip_id: int, session: Session = Depends(get_session)):
+    """
+    Returns the OSRM-encoded polyline for the itinerary route.
+    Called async from the frontend after the itinerary loads — map never blocks.
+    Falls back gracefully: returns {"polyline": null} on any OSRM failure.
+    """
+    items = session.exec(
+        select(ItineraryItem)
+        .where(ItineraryItem.trip_id == trip_id)
+        .order_by(ItineraryItem.start_time)
+    ).all()
+
+    waypoints = [
+        (i.latitude, i.longitude)
+        for i in items
+        if i.latitude and i.longitude
+    ]
+
+    if len(waypoints) < 2:
+        return {"polyline": None}
+
+    polyline_str = await get_route_geometry(waypoints, profile="foot")
+    return {"polyline": polyline_str}
 
 
 @router.get("/{trip_id}/participants")

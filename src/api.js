@@ -173,6 +173,17 @@ export const getItinerary = async (tripId) => {
     }
 };
 
+export const getRouteGeometry = async (tripId) => {
+    try {
+        const response = await fetch(`${API_URL}/trips/${tripId}/route-geometry`, {
+            headers: getAuthHeaders()
+        });
+        return handleAdminResponse(response); // silent — no global toast on failure
+    } catch {
+        return { polyline: null };
+    }
+};
+
 export const optimizeItinerary = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/optimize`, {
         method: "POST",

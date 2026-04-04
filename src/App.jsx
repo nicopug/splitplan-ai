@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PainPoints from './components/PainPoints';
@@ -60,6 +60,8 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { showToast } = useToast();
   const { t } = useTranslation();
+  const location = useLocation();
+  const isAdminPage = location.pathname === '/system-override';
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -112,7 +114,7 @@ function App() {
           <Toaster richColors position="bottom-right" />
           <Toast />
           <Modal />
-          <Navbar user={user} />
+          {!isAdminPage && <Navbar user={user} />}
           <main>
             <Suspense fallback={<PageLoader />}>
               <Routes>

@@ -646,31 +646,45 @@ export const joinCompany = async (token) => {
 };
 
 // --- Admin ---
+// Usa un handler silente: nessun toast globale (la UI admin gestisce i propri errori)
 
 const adminHeaders = (adminToken) => ({
     "Content-Type": "application/json",
     "X-Admin-Token": adminToken,
 });
 
+const handleAdminResponse = async (response) => {
+    if (!response.ok) {
+        let errorMessage = `Errore ${response.status}`;
+        try {
+            const data = await response.json();
+            errorMessage = data.detail || data.message || errorMessage;
+            if (typeof errorMessage !== 'string') errorMessage = JSON.stringify(errorMessage);
+        } catch (_) {}
+        throw new Error(errorMessage);
+    }
+    return response.json();
+};
+
 export const adminVerifyToken = async (adminToken) => {
     const response = await fetch(`${API_URL}/admin/verify-token`, {
         headers: adminHeaders(adminToken),
     });
-    return handleResponse(response);
+    return handleAdminResponse(response);
 };
 
 export const adminGetStats = async (adminToken) => {
     const response = await fetch(`${API_URL}/admin/stats`, {
         headers: adminHeaders(adminToken),
     });
-    return handleResponse(response);
+    return handleAdminResponse(response);
 };
 
 export const adminGetLeads = async (adminToken) => {
     const response = await fetch(`${API_URL}/admin/leads`, {
         headers: adminHeaders(adminToken),
     });
-    return handleResponse(response);
+    return handleAdminResponse(response);
 };
 
 export const adminApproveB2B = async (adminToken, body) => {
@@ -679,7 +693,7 @@ export const adminApproveB2B = async (adminToken, body) => {
         headers: adminHeaders(adminToken),
         body: JSON.stringify(body),
     });
-    return handleResponse(response);
+    return handleAdminResponse(response);
 };
 
 // --- Leads ---

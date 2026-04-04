@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { addExpense, getExpenses, getBalances, getParticipants, deleteExpense, migrateExpenses } from '../api';
+import ReceiptScanner from './ReceiptScanner';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { Trash2, Download } from 'lucide-react'; // Aggiunto Download
@@ -302,7 +303,7 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
 
                         {!readOnly && (
                             <div className="flex items-center gap-4">
-                                {/* Nuovo Bottone Export CSV */}
+                                {/* Export CSV */}
                                 <button
                                     onClick={handleExportCSV}
                                     disabled={exporting || expenses.length === 0}
@@ -311,6 +312,17 @@ const Finance = ({ trip, readOnly = false, sharedExpenses = [], sharedParticipan
                                     <Download size={14} />
                                     {exporting ? '...' : 'Report .CSV'}
                                 </button>
+
+                                {/* AI Receipt Scanner */}
+                                <ReceiptScanner
+                                    tripId={trip.id}
+                                    onSuccess={(newExpense) => {
+                                        // Optimistic update: prepend expense immediately
+                                        setExpenses(prev => [newExpense, ...prev]);
+                                        // Refresh balances to reflect new split
+                                        getBalances(trip.id).then(setBalances).catch(() => {});
+                                    }}
+                                />
 
                                 <button
                                     onClick={() => setShowForm(!showForm)}

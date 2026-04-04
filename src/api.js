@@ -221,6 +221,32 @@ export const extractReceiptData = async (file, type) => {
     return handleResponse(response);
 };
 
+export const uploadReceipt = async (tripId, file) => {
+    // Uses a silent handler (no global toast) so ReceiptScanner can show
+    // context-specific messages for 413 (too large) and 422 (OCR failure).
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/expenses/${tripId}/upload-receipt`, {
+        method: 'POST',
+        // NOTE: Do NOT set Content-Type — browser must set it with the correct
+        //       multipart boundary for FormData to work.
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
+    });
+    if (!response.ok) {
+        let detail = `Errore ${response.status}`;
+        try {
+            const d = await response.json();
+            detail = (typeof d.detail === 'string') ? d.detail : JSON.stringify(d.detail);
+        } catch {}
+        const err = new Error(detail);
+        err.status = response.status;
+        throw err;
+    }
+    return response.json();
+};
+
 export const resetHotel = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/reset-hotel`, {
         method: 'POST',

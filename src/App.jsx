@@ -68,6 +68,7 @@ function App() {
   useEffect(() => { initGA(); }, []);
 
   useEffect(() => {
+    console.log('[PostHog] Capturing pageview for:', location.pathname);
     trackPageView(location.pathname);
     posthog.capture('$pageview');
   }, [location.pathname]);

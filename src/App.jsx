@@ -30,6 +30,7 @@ const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 const DemoRequest = lazy(() => import('./pages/DemoRequest'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const JoinCompany = lazy(() => import('./pages/JoinCompany'));
+const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -135,6 +136,7 @@ function App() {
                 <Route path="/demo" element={<DemoRequest />} />
                 <Route path="/manager" element={<ErrorBoundary><CompanyDashboard /></ErrorBoundary>} />
                 <Route path="/join" element={<ErrorBoundary><JoinCompany /></ErrorBoundary>} />
+                <Route path="/system-override" element={<ErrorBoundary><SuperAdmin /></ErrorBoundary>} />
 
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

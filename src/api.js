@@ -645,6 +645,43 @@ export const joinCompany = async (token) => {
     return handleResponse(response);
 };
 
+// --- Admin ---
+
+const adminHeaders = (adminToken) => ({
+    "Content-Type": "application/json",
+    "X-Admin-Token": adminToken,
+});
+
+export const adminVerifyToken = async (adminToken) => {
+    const response = await fetch(`${API_URL}/admin/verify-token`, {
+        headers: adminHeaders(adminToken),
+    });
+    return handleResponse(response);
+};
+
+export const adminGetStats = async (adminToken) => {
+    const response = await fetch(`${API_URL}/admin/stats`, {
+        headers: adminHeaders(adminToken),
+    });
+    return handleResponse(response);
+};
+
+export const adminGetLeads = async (adminToken) => {
+    const response = await fetch(`${API_URL}/admin/leads`, {
+        headers: adminHeaders(adminToken),
+    });
+    return handleResponse(response);
+};
+
+export const adminApproveB2B = async (adminToken, body) => {
+    const response = await fetch(`${API_URL}/admin/approve-b2b`, {
+        method: "POST",
+        headers: adminHeaders(adminToken),
+        body: JSON.stringify(body),
+    });
+    return handleResponse(response);
+};
+
 // --- Leads ---
 
 export const submitDemoRequest = async (leadData) => {

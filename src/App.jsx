@@ -13,8 +13,10 @@ import Business from './components/Business';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
-const Privacy = lazy(() => import('./pages/Privacy'));
-const Terms = lazy(() => import('./pages/Terms'));
+const Privacy   = lazy(() => import('./pages/Privacy'));
+const PrivacyIt = lazy(() => import('./pages/PrivacyIt'));
+const Terms     = lazy(() => import('./pages/Terms'));
+const TermsIt   = lazy(() => import('./pages/TermsIt'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
@@ -55,6 +57,16 @@ function Landing({ user }) {
       <Footer />
     </>
   );
+}
+
+function PrivacyRoute() {
+  const { i18n } = useTranslation();
+  return i18n.language.startsWith('it') ? <PrivacyIt /> : <Privacy />;
+}
+
+function TermsRoute() {
+  const { i18n } = useTranslation();
+  return i18n.language.startsWith('it') ? <TermsIt /> : <Terms />;
 }
 
 function App() {
@@ -150,8 +162,8 @@ function App() {
                 <Route path="/join" element={<ErrorBoundary><JoinCompany /></ErrorBoundary>} />
                 <Route path="/system-override" element={<ErrorBoundary><SuperAdmin /></ErrorBoundary>} />
 
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<PrivacyRoute />} />
+                <Route path="/terms" element={<TermsRoute />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Suspense>

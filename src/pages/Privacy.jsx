@@ -56,6 +56,98 @@ word-break: break-word !important;
       }
     </style>
       </div>
+      <br>
+
+      <div style="line-height: 1.5;">
+        <strong><span style="font-size: 19px; color: #000000;"><h2>15. THIRD-PARTY ANALYTICS AND TRACKING TOOLS</h2></span></strong>
+      </div>
+      <div style="line-height: 1.5; margin-bottom: 12px;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          We use the following third-party tools to analyse how users interact with our Service, improve user experience, and support our business operations. Each tool is used in accordance with its own privacy policy and applicable data protection law.
+        </span>
+      </div>
+      <div style="line-height: 1.5; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: rgb(89, 89, 89);">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Tool</th>
+              <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Provider</th>
+              <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Purpose</th>
+              <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Data Transferred To</th>
+              <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Privacy Policy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>PostHog</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">PostHog Inc. / PostHog EU</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Product analytics, event tracking, and Session Replay (screen recording of user sessions). All sensitive input fields are automatically masked and never recorded.</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">EU (eu.posthog.com) or USA depending on region</td>
+              <td style="border: 1px solid #ddd; padding: 10px;"><a href="https://posthog.com/privacy" target="_blank" rel="noopener">posthog.com/privacy</a></td>
+            </tr>
+            <tr style="background-color: #f9f9f9;">
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>Google Analytics 4</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Google LLC</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Aggregate website traffic statistics, page views, and conversion tracking. IP addresses are anonymised.</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">USA (Standard Contractual Clauses)</td>
+              <td style="border: 1px solid #ddd; padding: 10px;"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>Google Tag Manager</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Google LLC</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Tag management container for deploying and managing tracking scripts. GTM itself does not collect personal data.</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">USA (Standard Contractual Clauses)</td>
+              <td style="border: 1px solid #ddd; padding: 10px;"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td>
+            </tr>
+            <tr style="background-color: #f9f9f9;">
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>Microsoft Clarity</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Microsoft Corporation</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">Heatmaps and session recordings to understand click patterns and scroll behaviour. Personal and sensitive fields are masked by default.</td>
+              <td style="border: 1px solid #ddd; padding: 10px;">USA (Standard Contractual Clauses)</td>
+              <td style="border: 1px solid #ddd; padding: 10px;"><a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Microsoft Privacy Statement</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="line-height: 1.5; margin-top: 12px;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          <strong>Session Replay and Data Masking.</strong> Session Replay tools (PostHog and Microsoft Clarity) may record mouse movements, clicks, and scrolling behaviour. All form inputs classified as sensitive — including passwords, payment card numbers, and personal identification fields — are masked at the SDK level before any transmission and are never stored or viewable in recordings. You may opt out of session recording at any time by contacting us at <a href="mailto:splitplan.ai@gmail.com">splitplan.ai@gmail.com</a>.
+        </span>
+      </div>
+
+      <br>
+      <div style="line-height: 1.5;">
+        <strong><span style="font-size: 19px; color: #000000;"><h2>16. RIGHT TO ERASURE ("RIGHT TO BE FORGOTTEN")</h2></span></strong>
+      </div>
+      <div style="line-height: 1.5;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          Under Article 17 of the GDPR, you have the right to request the deletion of your personal data. You may exercise this right when: the data is no longer necessary for the purpose it was collected; you withdraw consent and no other legal basis exists; you object to processing and no overriding grounds exist; or the data has been unlawfully processed.
+        </span>
+      </div>
+      <br>
+      <div style="line-height: 1.5;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          <strong>How to submit a deletion request.</strong> Send an email to <a href="mailto:splitplan.ai@gmail.com">splitplan.ai@gmail.com</a> with subject line <em>"Right to Erasure Request"</em>, including your full name, account email address, and a description of the data you wish deleted. We will confirm receipt within 5 business days and complete the deletion within 30 calendar days, unless a legal exemption applies.
+        </span>
+      </div>
+      <br>
+      <div style="line-height: 1.5;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          <strong>Third-party data deletion.</strong> Upon receiving a valid deletion request, we will also forward your request to all third-party analytics providers listed in Section 15 and request deletion of any personal data attributable to you. PostHog users may also submit a direct deletion request at <a href="https://posthog.com/privacy" target="_blank" rel="noopener">posthog.com/privacy</a>. Google Analytics data can be deleted via the <a href="https://support.google.com/analytics/answer/9450800" target="_blank" rel="noopener">GA4 User Deletion API</a>. Microsoft Clarity data can be removed by contacting Microsoft at their privacy portal.
+        </span>
+      </div>
+      <br>
+      <div style="line-height: 1.5;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);">
+          <strong>Exceptions.</strong> The right to erasure does not apply where processing is necessary for compliance with a legal obligation, the establishment or defence of legal claims, or reasons of substantial public interest.
+        </span>
+      </div>
+      <br>
+      <div style="line-height: 1.5;">
+        <span style="font-size: 15px; color: rgb(89, 89, 89);"><em>Sections 15 and 16 added: 2026-04-04</em></span>
+      </div>
+      <br>
+
       <br><div><span data-custom-class='body_text'>This Privacy Policy was created using Termly's </span><a href="https://termly.io/products/privacy-policy-generator/" target="_blank" rel="noopener external" data-custom-class='link'>Privacy Policy Generator</a></div>` }} />
         </div>
     );

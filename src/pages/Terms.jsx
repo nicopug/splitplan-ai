@@ -181,7 +181,27 @@ const Terms = () => {
 
     <h2>30. Contact Information</h2>
     <p>If you have any questions about these Terms, please contact us at <a href="mailto:splitplan.ai@gmail.com">splitplan.ai@gmail.com</a>.</p>
-    <p>Last Updated: 2026-03-22</p>
+
+    <h2>31. AI-Generated Content — Limitation of Liability</h2>
+    <p>SplitPlan AI uses artificial intelligence systems, including Google Gemini 2.5 Flash, to generate itineraries, budget estimates, travel suggestions, and other content ("AI Content"). By using the Service, you acknowledge and agree to the following:</p>
+    <ul>
+        <li><strong>No guarantee of accuracy.</strong> AI Content is generated automatically and may contain errors, omissions, or outdated information. SplitPlan AI makes no representation or warranty, express or implied, regarding the accuracy, completeness, reliability, or suitability of any AI Content.</li>
+        <li><strong>Suggestions only, not contractual commitments.</strong> Budget estimates, projected costs, and travel itineraries produced by the AI are indicative suggestions based on statistical models and publicly available data. They do not constitute a contractual guarantee, a binding offer, or a promise of specific prices or availability.</li>
+        <li><strong>User responsibility.</strong> You are solely responsible for independently verifying any AI Content before relying on it for travel bookings, financial decisions, or any other purpose. SplitPlan AI shall not be liable for any loss, damage, or expense incurred as a result of your reliance on AI Content.</li>
+        <li><strong>Liability cap for AI Content.</strong> To the maximum extent permitted by applicable law, SplitPlan AI's liability arising from or related to AI Content shall not exceed EUR 50.00 or the amount paid by you in the three months preceding the claim, whichever is greater.</li>
+    </ul>
+
+    <h2>32. B2B Accounts — Manager Responsibility and Corporate Governance</h2>
+    <p>This section applies to companies, organisations, and any entity that creates or administers a Business Account ("B2B Account") on behalf of employees or team members ("Managed Users").</p>
+    <ul>
+        <li><strong>Authorised Administrator.</strong> The individual who creates or manages a B2B Account (the "Manager") represents and warrants that they are duly authorised to bind the organisation to these Terms and to our Privacy Policy.</li>
+        <li><strong>Manager responsibilities.</strong> The Manager is responsible for: (i) ensuring that all Managed Users are informed of these Terms and the Privacy Policy; (ii) configuring spending policies, budget limits, and access permissions accurately; (iii) monitoring and approving trip requests and expense reports submitted by Managed Users; and (iv) promptly revoking access for any Managed User who leaves the organisation or is no longer authorised.</li>
+        <li><strong>Liability for Managed Users.</strong> The organisation is jointly and severally liable for any breach of these Terms by its Managed Users. SplitPlan AI reserves the right to suspend or terminate any B2B Account where a Managed User has violated these Terms, without prejudice to any other remedy available.</li>
+        <li><strong>Data accuracy.</strong> The Manager is solely responsible for the accuracy of company data (VAT number, billing address, spending limits) entered into the platform. SplitPlan AI shall not be liable for incorrect expense reports or compliance failures arising from inaccurate configuration.</li>
+        <li><strong>Exported reports.</strong> The "Nota Spese Ufficiale" PDF and any other exported financial reports are generated from the data entered by users. SplitPlan AI does not certify the accuracy of such reports for tax, legal, or accounting purposes. The organisation is responsible for verifying all exported documents before submission to any authority.</li>
+    </ul>
+
+    <p>Last Updated: 2026-04-04</p>
 
     <h2>Regulatory Compliance</h2>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken } from '../api';
+import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken, exportCompanyExpensesCSV, bulkInviteMembers } from '../api';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, Clock, Briefcase, Users, MapPin, Calendar, TrendingUp, ExternalLink, Link2, Copy } from 'lucide-react';
@@ -12,6 +12,7 @@ const STATUS_CONFIG = {
     BOOKED: { label: 'Pianificato', color: 'text-indigo-500', bg: 'bg-indigo-500/10 border-indigo-500/20' },
     PENDING_APPROVAL: { label: 'In Attesa', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
     APPROVED: { label: 'Approvato', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+    REJECTED: { label: 'Rifiutato', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/20' },
     VOTING: { label: 'Votazione', color: 'text-purple-500', bg: 'bg-purple-500/10 border-purple-500/20' },
     COMPLETED: { label: 'Completato', color: 'text-gray-500', bg: 'bg-gray-500/10 border-gray-500/20' },
 };
@@ -23,11 +24,18 @@ const formatDate = (iso) => {
 
 const CompanyDashboard = () => {
     const [trips, setTrips] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
     const [processingId, setProcessingId] = useState(null);
     const [inviteLoading, setInviteLoading] = useState(false);
     const [inviteCopied, setInviteCopied] = useState(false);
+    const [rejectModal, setRejectModal] = useState(null); // { tripId, tripName }
+    const [rejectReason, setRejectReason] = useState('');
+    const [exportLoading, setExportLoading] = useState(false);
+    const [bulkModal, setBulkModal] = useState(false);
+    const [bulkEmails, setBulkEmails] = useState('');
+    const [bulkLoading, setBulkLoading] = useState(false);
     const { showToast } = useToast();
     const navigate = useNavigate();
 
@@ -39,7 +47,12 @@ const CompanyDashboard = () => {
     const fetchData = async () => {
         try {
             const data = await getBusinessOverview();
-            setTrips(data);
+            if (Array.isArray(data)) {
+                setTrips(data);
+            } else {
+                setTrips(data.trips || []);
+                setAnalytics(data.analytics || null);
+            }
         } catch (err) {
             showToast('Errore caricamento trasferte: ' + err.message, 'error');
         } finally {
@@ -84,16 +97,39 @@ const CompanyDashboard = () => {
         }
     };
 
-    const handleReject = async (tripId) => {
-        setProcessingId(tripId);
+    const handleReject = (tripId, tripName) => {
+        setRejectReason('');
+        setRejectModal({ tripId, tripName });
+    };
+
+    const handleConfirmReject = async () => {
+        if (!rejectModal) return;
+        setProcessingId(rejectModal.tripId);
+        setRejectModal(null);
         try {
-            await rejectTrip(tripId);
+            await rejectTrip(rejectModal.tripId, rejectReason || null);
             showToast('Trasferta rifiutata', 'success');
             await fetchData();
         } catch (err) {
             showToast('Errore: ' + err.message, 'error');
         } finally {
             setProcessingId(null);
+        }
+    };
+
+    const handleBulkInvite = async () => {
+        const emails = bulkEmails.split('\n').map(e => e.trim()).filter(Boolean);
+        if (!emails.length) return;
+        setBulkLoading(true);
+        try {
+            const res = await bulkInviteMembers(user?.company_id, emails);
+            showToast(`Inviti inviati: ${res.sent}${res.failed?.length ? `, falliti: ${res.failed.length}` : ''}`, 'success');
+            setBulkModal(false);
+            setBulkEmails('');
+        } catch (err) {
+            showToast('Errore invio inviti: ' + err.message, 'error');
+        } finally {
+            setBulkLoading(false);
         }
     };
 
@@ -125,6 +161,35 @@ const CompanyDashboard = () => {
                         <h1 className="text-4xl font-black uppercase tracking-tight mb-2">Dashboard Aziendale</h1>
                         <p className="text-[var(--text-muted)] text-sm">Gestisci e approva le trasferte del tuo team</p>
                     </div>
+                    <button
+                        onClick={async () => {
+                            if (!user?.company_id) return;
+                            setExportLoading(true);
+                            try {
+                                await exportCompanyExpensesCSV(user.company_id);
+                                showToast('CSV esportato', 'success');
+                            } catch {
+                                showToast('Errore export CSV', 'error');
+                            } finally {
+                                setExportLoading(false);
+                            }
+                        }}
+                        disabled={exportLoading}
+                        className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all shrink-0 disabled:opacity-50"
+                    >
+                        {exportLoading
+                            ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        }
+                        Esporta Spese CSV
+                    </button>
+                    <button
+                        onClick={() => setBulkModal(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all shrink-0"
+                    >
+                        <Users className="w-3.5 h-3.5" />
+                        Invita Team
+                    </button>
                     <button
                         onClick={handleCopyInviteLink}
                         disabled={inviteLoading}
@@ -171,6 +236,120 @@ const CompanyDashboard = () => {
                         </div>
                     ))}
                 </motion.div>
+
+                {/* Analytics Charts */}
+                {analytics && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10"
+                    >
+                        {/* Monthly Spend Bar Chart */}
+                        <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-sm p-5">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4">Spesa Mensile (EUR)</h3>
+                            {(() => {
+                                const months = analytics.monthly_spend || [];
+                                const maxVal = Math.max(...months.map(m => m.total), 1);
+                                return (
+                                    <div className="flex items-end gap-2 h-24">
+                                        {months.map(m => {
+                                            const pct = (m.total / maxVal) * 100;
+                                            const label = m.month.slice(5); // "MM"
+                                            return (
+                                                <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                                                    <span className="text-[8px] text-[var(--text-muted)] font-bold">
+                                                        {m.total > 0 ? `€${Math.round(m.total)}` : ''}
+                                                    </span>
+                                                    <div className="w-full flex flex-col justify-end" style={{ height: '56px' }}>
+                                                        <div
+                                                            className="w-full bg-[var(--accent-primary)] rounded-t-sm transition-all"
+                                                            style={{ height: `${Math.max(pct, m.total > 0 ? 4 : 0)}%`, minHeight: m.total > 0 ? '3px' : '0' }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[8px] text-[var(--text-muted)]">{label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Right column: status breakdown + top destinations */}
+                        <div className="flex flex-col gap-4">
+                            {/* Status Breakdown */}
+                            <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-sm p-5">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">Stato Trasferte</h3>
+                                {Object.entries(analytics.trips_by_status || {}).map(([status, count]) => {
+                                    const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PLANNING;
+                                    const total = Object.values(analytics.trips_by_status).reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                    return (
+                                        <div key={status} className="mb-2">
+                                            <div className="flex justify-between text-[10px] mb-1">
+                                                <span className={cn("font-bold uppercase tracking-wide", cfg.color)}>{cfg.label}</span>
+                                                <span className="text-[var(--text-muted)]">{count}</span>
+                                            </div>
+                                            <div className="h-1.5 bg-[var(--bg-surface)] rounded-full">
+                                                <div className={cn("h-full rounded-full", cfg.color.replace('text-', 'bg-'))} style={{ width: `${pct}%` }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Top Destinations */}
+                            {analytics.top_destinations?.length > 0 && (
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-sm p-5">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">Top Destinazioni</h3>
+                                    {analytics.top_destinations.map((d, i) => (
+                                        <div key={d.destination} className="flex items-center justify-between py-1 border-b border-[var(--border-subtle)] last:border-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-[var(--text-muted)]">#{i + 1}</span>
+                                                <span className="text-[11px] font-semibold truncate max-w-[100px]">{d.destination}</span>
+                                            </div>
+                                            <span className="text-[10px] font-black text-[var(--accent-primary)]">{d.count}x</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Onboarding Checklist — shown only for new admins with no trips */}
+                {trips.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="mb-10 p-6 bg-[var(--bg-card)] border border-[var(--accent-primary)]/30 rounded-sm"
+                    >
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] mb-4">Inizia con SplitPlan</p>
+                        <div className="space-y-3">
+                            {[
+                                { done: true, text: 'Account aziendale creato' },
+                                { done: false, text: 'Invita il tuo team', action: () => setBulkModal(true), actionLabel: 'Invita ora' },
+                                { done: false, text: 'Crea la prima trasferta aziendale', action: () => window.location.href = '/', actionLabel: 'Crea trasferta' },
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${item.done ? 'bg-emerald-500' : 'border-2 border-[var(--border-medium)]'}`}>
+                                            {item.done && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                        </div>
+                                        <span className={`text-sm ${item.done ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text-primary)]'}`}>{item.text}</span>
+                                    </div>
+                                    {!item.done && item.action && (
+                                        <button onClick={item.action} className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] hover:underline shrink-0">
+                                            {item.actionLabel}
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Pending approvals alert */}
                 {pending.length > 0 && (
@@ -274,7 +453,7 @@ const CompanyDashboard = () => {
                                                 <Button
                                                     size="sm"
                                                     disabled={isProcessing}
-                                                    onClick={() => handleReject(trip.id)}
+                                                    onClick={() => handleReject(trip.id, trip.name)}
                                                     variant="outline"
                                                     className="h-8 px-3 text-[10px] font-black uppercase tracking-widest gap-1.5 text-red-500 border-red-500/30 hover:bg-red-500/10"
                                                 >
@@ -300,6 +479,72 @@ const CompanyDashboard = () => {
                 )}
             </div>
         </div>
+
+        {/* Modale bulk invite */}
+        {bulkModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-sm shadow-2xl w-full max-w-md p-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest mb-2">Invita Team</h3>
+                    <p className="text-xs text-[var(--text-muted)] mb-4">
+                        Incolla le email dei tuoi colleghi (una per riga, max 50). Riceveranno un link per unirsi all'azienda.
+                    </p>
+                    <textarea
+                        value={bulkEmails}
+                        onChange={e => setBulkEmails(e.target.value)}
+                        placeholder={"mario@azienda.it\nluca@azienda.it\ngiulia@azienda.it"}
+                        rows={6}
+                        className="w-full text-sm p-3 rounded border border-[var(--border-medium)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none focus:outline-none focus:border-[var(--accent-primary)] font-mono"
+                    />
+                    <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                        {bulkEmails.split('\n').filter(e => e.trim()).length} email inserite
+                    </p>
+                    <div className="flex gap-3 mt-4 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setBulkModal(false)} className="text-[10px] uppercase tracking-widest">
+                            Annulla
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={handleBulkInvite}
+                            disabled={bulkLoading || !bulkEmails.trim()}
+                            className="bg-[var(--accent-primary)] hover:opacity-90 text-[10px] uppercase tracking-widest"
+                        >
+                            {bulkLoading
+                                ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                : 'Invia Inviti'
+                            }
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Modale rifiuto con campo motivazione */}
+        {rejectModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-sm shadow-2xl w-full max-w-md p-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest mb-2">Rifiuta trasferta</h3>
+                    <p className="text-xs text-[var(--text-muted)] mb-4">
+                        Stai rifiutando <span className="font-semibold text-[var(--text-primary)]">"{rejectModal.tripName}"</span>.
+                        Puoi aggiungere una motivazione (opzionale).
+                    </p>
+                    <textarea
+                        value={rejectReason}
+                        onChange={e => setRejectReason(e.target.value)}
+                        placeholder="Es: Il budget supera la policy aziendale..."
+                        rows={3}
+                        className="w-full text-sm p-3 rounded border border-[var(--border-medium)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none focus:outline-none focus:border-[var(--accent-primary)]"
+                    />
+                    <div className="flex gap-3 mt-4 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setRejectModal(null)} className="text-[10px] uppercase tracking-widest">
+                            Annulla
+                        </Button>
+                        <Button size="sm" onClick={handleConfirmReject} className="bg-red-500 hover:bg-red-600 text-white text-[10px] uppercase tracking-widest">
+                            Conferma rifiuto
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
     );
 };
 

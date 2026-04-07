@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso, companies, admin
+from routers import trips, photos, users, expenses, itinerary, payments, calendar, leads, flights, sso, companies, admin, notifications
 from admin_auth import verify_admin_token
 
 # ---------------------------------------------------------------------------
@@ -73,6 +73,7 @@ app.include_router(flights.router, prefix="/trips", tags=["Flights"])
 app.include_router(sso.router)
 app.include_router(companies.router)
 app.include_router(admin.router)
+app.include_router(notifications.router)
 
 
 # ---------------------------------------------------------------------------

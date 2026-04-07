@@ -20,6 +20,7 @@ const TermsIt   = lazy(() => import('./pages/TermsIt'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
+import CookieBanner, { getCookieConsent } from './components/CookieBanner';
 import ROICalculator from './components/ROICalculator';
 
 // Lazy load page components
@@ -77,13 +78,23 @@ function App() {
   const location = useLocation();
   const isAdminPage = location.pathname === '/system-override';
 
-  useEffect(() => { initGA(); }, []);
+  useEffect(() => {
+    if (getCookieConsent() === 'true') {
+      initGA();
+    }
+  }, []);
 
   useEffect(() => {
-    console.log('[PostHog] Capturing pageview for:', location.pathname);
+    if (getCookieConsent() !== 'true') return;
     trackPageView(location.pathname);
     posthog.capture('$pageview');
   }, [location.pathname]);
+
+  const handleConsentChange = (consent) => {
+    if (consent === 'true') {
+      initGA();
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -136,6 +147,7 @@ function App() {
           <Toaster richColors position="bottom-right" />
           <Toast />
           <Modal />
+          <CookieBanner onConsentChange={handleConsentChange} />
           {!isAdminPage && <Navbar user={user} />}
           <main>
             <Suspense fallback={<PageLoader />}>

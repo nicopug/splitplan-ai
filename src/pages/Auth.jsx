@@ -160,6 +160,12 @@ const Auth = ({ onLogin }) => {
                     setTimeout(() => window.location.reload(), 100);
                 }
             } else {
+                if (formData.password.length < 8) {
+                    throw new Error('La password deve essere di almeno 8 caratteri');
+                }
+                if (!/\d/.test(formData.password)) {
+                    throw new Error('La password deve contenere almeno un numero');
+                }
                 if (formData.password !== formData.confirmPassword) {
                     throw new Error('Le password non coincidono');
                 }

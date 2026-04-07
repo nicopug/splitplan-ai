@@ -24,6 +24,7 @@ from datetime import datetime
 from typing import Optional
 
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 
 # ── Palette ───────────────────────────────────────────────────────────────────
@@ -86,9 +87,9 @@ class _NotaSpesePDF(FPDF):
         self.set_font("Helvetica", "B", 15)
         self.set_text_color(*_WHITE)
         self.set_y(5)
-        self.cell(0, 8, "SPLITPLAN AI", align="C", ln=True)
+        self.cell(0, 8, "SPLITPLAN AI", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.set_font("Helvetica", "", 7)
-        self.cell(0, 5, "NOTA SPESE UFFICIALE", align="C", ln=True)
+        self.cell(0, 5, "NOTA SPESE UFFICIALE", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.ln(6)
 
     def footer(self):
@@ -108,17 +109,17 @@ def _section(pdf: _NotaSpesePDF, title: str):
     pdf.set_fill_color(*_LIGHT)
     pdf.set_text_color(*_NAVY)
     pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 9, f"  {title.upper()}", fill=True, ln=True)
+    pdf.cell(0, 9, f"  {title.upper()}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(1)
 
 
 def _kv(pdf: _NotaSpesePDF, label: str, value, bold_value: bool = False):
     pdf.set_text_color(*_GREY)
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(52, 7, _clean(label) + ":", ln=False)
+    pdf.cell(52, 7, _clean(label) + ":", new_x=XPos.RIGHT, new_y=YPos.TOP)
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Helvetica", "B" if bold_value else "", 9)
-    pdf.multi_cell(0, 7, _clean(str(value) if value else "-"))
+    pdf.multi_cell(0, 7, _clean(str(value) if value else "-"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ def generate_nota_spese(
     if not expenses:
         pdf.set_font("Helvetica", "I", 9)
         pdf.set_text_color(*_GREY)
-        pdf.cell(0, 8, "  Nessuna spesa registrata.", ln=True)
+        pdf.cell(0, 8, "  Nessuna spesa registrata.", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     else:
         # Header row
         pdf.set_font("Helvetica", "B", 8)
@@ -184,7 +185,7 @@ def generate_nota_spese(
         pdf.cell(26, 8, "  DATA",               fill=True)
         pdf.cell(74, 8, "  FORNITORE / DESCR.",  fill=True)
         pdf.cell(36, 8, "  CATEGORIA",           fill=True)
-        pdf.cell(0,  8, "  IMPORTO (EUR)",        fill=True, ln=True)
+        pdf.cell(0,  8, "  IMPORTO (EUR)",        fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         # Rows
         pdf.set_font("Helvetica", "", 8)
@@ -208,7 +209,7 @@ def generate_nota_spese(
             pdf.cell(26, 7, f"  {date_str}", fill=True)
             pdf.cell(74, 7, f"  {desc}",     fill=True)
             pdf.cell(36, 7, f"  {cat}",      fill=True)
-            pdf.cell(0,  7, f"  {amt:.2f}",  fill=True, ln=True)
+            pdf.cell(0,  7, f"  {amt:.2f}",  fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             odd = not odd
 
         # Total row
@@ -218,7 +219,7 @@ def generate_nota_spese(
         pdf.set_text_color(*_NAVY)
         pdf.cell(136, 9, "  TOTALE SPESE DOCUMENTATE", fill=True)
         pdf.set_text_color(*_BLUE)
-        pdf.cell(0, 9, f"  EUR {total:.2f}", fill=True, ln=True)
+        pdf.cell(0, 9, f"  EUR {total:.2f}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         # Over-budget warning
         if budget_ref and total > budget_ref:
@@ -226,7 +227,7 @@ def generate_nota_spese(
             pdf.set_font("Helvetica", "B", 8)
             pdf.set_text_color(*_RED)
             overage = total - budget_ref
-            pdf.cell(0, 6, f"  ATTENZIONE: Sforamento budget di EUR {overage:.2f}", ln=True)
+            pdf.cell(0, 6, f"  ATTENZIONE: Sforamento budget di EUR {overage:.2f}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # ── 4. Forecast AI (opzionale) ────────────────────────────────────────────
     if forecast_data:
@@ -246,22 +247,22 @@ def generate_nota_spese(
         # Status badge
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(*_GREY)
-        pdf.cell(52, 7, "Stato Budget:", ln=False)
+        pdf.cell(52, 7, "Stato Budget:", new_x=XPos.RIGHT, new_y=YPos.TOP)
         pdf.set_font("Helvetica", "B", 9)
         pdf.set_text_color(*_STATUS_COLOR.get(status, _GREY))
-        pdf.cell(0, 7, _STATUS_LABEL.get(status, status), ln=True)
+        pdf.cell(0, 7, _STATUS_LABEL.get(status, status), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         # Savings tips
         if advice:
             pdf.ln(1)
             pdf.set_font("Helvetica", "B", 9)
             pdf.set_text_color(*_NAVY)
-            pdf.cell(0, 7, "Consigli per il risparmio:", ln=True)
+            pdf.cell(0, 7, "Consigli per il risparmio:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(60, 60, 60)
             for tip in advice[:3]:
                 pdf.set_x(pdf.l_margin + 6)
-                pdf.multi_cell(0, 6, f"- {_clean(str(tip))}")
+                pdf.multi_cell(0, 6, f"- {_clean(str(tip))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # ── 5. Blocco firme ───────────────────────────────────────────────────────
     if pdf.get_y() > 240:
@@ -275,7 +276,7 @@ def generate_nota_spese(
     pdf.set_font("Helvetica", "", 7)
     pdf.set_text_color(*_GREY)
     pdf.cell(97,  5, "Firma Dipendente",              align="C")
-    pdf.cell(0,   5, "Firma Responsabile / Approvatore", align="C", ln=True)
+    pdf.cell(0,   5, "Firma Responsabile / Approvatore", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     raw = pdf.output()
     return bytes(raw) if isinstance(raw, bytearray) else raw

@@ -1,10 +1,12 @@
 import logging
 import os
+import time
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -32,6 +34,42 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     logger.warning("SMTP Credentials non trovate in .env. L'invio email fallirà.")
+
+
+# ---------------------------------------------------------------------------
+# In-memory rate limiter
+# ---------------------------------------------------------------------------
+
+# Struttura: { endpoint_key: { ip: [timestamp, ...] } }
+_rate_limit_store: dict = defaultdict(lambda: defaultdict(list))
+
+_RATE_LIMITS = {
+    "login":           {"max": 10, "window": 900},   # 10 / 15 min
+    "register":        {"max": 5,  "window": 3600},  # 5  / 1 ora
+    "forgot_password": {"max": 3,  "window": 3600},  # 3  / 1 ora
+}
+
+
+def _check_auth_rate_limit(endpoint: str, ip: str):
+    """Solleva 429 se l'IP ha superato il limite per l'endpoint dato."""
+    cfg = _RATE_LIMITS.get(endpoint)
+    if not cfg:
+        return
+    now = time.monotonic()
+    window = cfg["window"]
+    max_req = cfg["max"]
+
+    # Pulisci i timestamp scaduti
+    history = _rate_limit_store[endpoint][ip]
+    history[:] = [t for t in history if now - t < window]
+
+    if len(history) >= max_req:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Troppi tentativi. Riprova tra {window // 60} minuti.",
+            headers={"Retry-After": str(window)},
+        )
+    history.append(now)
 
 
 # ---------------------------------------------------------------------------
@@ -187,12 +225,20 @@ async def migrate_language_field(session: Session = Depends(get_session)):
 
 
 @router.post("/register")
-async def register(req: RegisterRequest, session: Session = Depends(get_session)):
+async def register(req: RegisterRequest, request: Request, session: Session = Depends(get_session)):
+    ip = request.client.host if request.client else "unknown"
+    _check_auth_rate_limit("register", ip)
     logger.info(f"Registrazione richiesta per {req.email}")
 
     existing = session.exec(select(Account).where(Account.email == req.email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email già registrata")
+
+    # Validazione password
+    if len(req.password) < 8:
+        raise HTTPException(status_code=422, detail="La password deve essere di almeno 8 caratteri")
+    if not any(c.isdigit() for c in req.password):
+        raise HTTPException(status_code=422, detail="La password deve contenere almeno un numero")
 
     new_account = Account(
         email=req.email,
@@ -266,7 +312,9 @@ async def verify_email(token: str, session: Session = Depends(get_session)):
 
 
 @router.post("/login")
-async def login(req: LoginRequest, session: Session = Depends(get_session)):
+async def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)):
+    ip = request.client.host if request.client else "unknown"
+    _check_auth_rate_limit("login", ip)
     account = session.exec(select(Account).where(Account.email == req.email)).first()
 
     if not account or not verify_password(req.password, account.hashed_password):
@@ -331,8 +379,10 @@ async def validate_reset_token(token: str, session: Session = Depends(get_sessio
 
 @router.post("/forgot-password")
 async def forgot_password(
-    req: ForgotPasswordRequest, session: Session = Depends(get_session)
+    req: ForgotPasswordRequest, request: Request, session: Session = Depends(get_session)
 ):
+    ip = request.client.host if request.client else "unknown"
+    _check_auth_rate_limit("forgot_password", ip)
     account = session.exec(select(Account).where(Account.email == req.email)).first()
     if not account:
         # Risposta volutamente ambigua per sicurezza (non rivela se l'email esiste)

@@ -43,13 +43,33 @@ from models import (
     Expense,
     Photo,
 )
+
+
+class RejectTripRequest(SQLModel):
+    rejection_reason: Optional[str] = None
+
+
+def require_manager(current_user: Account = Depends(get_current_user)) -> Account:
+    """Dependency riusabile: verifica che l'utente sia un manager aziendale."""
+    if not current_user.is_manager:
+        raise HTTPException(status_code=403, detail="Accesso riservato ai manager aziendali")
+    return current_user
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
+from utils.access import check_company_limits
+from services.notification_service import (
+    create_notification,
+    notify_managers,
+    send_notification_email,
+    email_approval_requested,
+    email_trip_approved,
+    email_trip_rejected,
+)
 from services.itinerary_optimizer import optimize_travel_itinerary
 from services.maps_service import get_route_geometry
-from admin_auth import verify_admin_token
+
 
 load_dotenv()
 
@@ -323,175 +343,6 @@ async def get_places_from_overpass(lat: float, lon: float, radius: int = 800):
     except Exception as e:
         logger.error(f"[OSM Error] Overpass fallito: {e}")
     return []
-
-
-@router.get("/migrate-db-coords", dependencies=[Depends(verify_admin_token)])
-async def migrate_db_coords(session: Session = Depends(get_session)):
-    """Aggiunge lat/lon alla tabella itineraryitem"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS latitude FLOAT;")
-        )
-        session.execute(
-            text("ALTER TABLE itineraryitem ADD COLUMN IF NOT EXISTS longitude FLOAT;")
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonne coordinate aggiunte."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-share-token", dependencies=[Depends(verify_admin_token)])
-async def migrate_share_token(session: Session = Depends(get_session)):
-    """Aggiunge share_token alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS share_token VARCHAR;")
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonna share_token aggiunte."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-transport-mode", dependencies=[Depends(verify_admin_token)])
-async def migrate_transport_mode(session: Session = Depends(get_session)):
-    """Aggiunge transport_mode alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_mode VARCHAR DEFAULT 'FLIGHT';"
-            )
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonna transport_mode aggiunta."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-transport-cost", dependencies=[Depends(verify_admin_token)])
-async def migrate_transport_cost(session: Session = Depends(get_session)):
-    """Rinomina flight_cost in transport_cost nella tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text("ALTER TABLE trip RENAME COLUMN flight_cost TO transport_cost;")
-        )
-        session.commit()
-        return {
-            "status": "success",
-            "message": "Colonna flight_cost rinominata in transport_cost.",
-        }
-    except Exception:
-        session.rollback()
-        try:
-            session.execute(
-                text(
-                    "ALTER TABLE trip ADD COLUMN IF NOT EXISTS transport_cost FLOAT DEFAULT 0.0;"
-                )
-            )
-            session.commit()
-            return {
-                "status": "partial_success",
-                "message": "Colonna transport_cost assicurata.",
-            }
-        except Exception as e2:
-            return {"status": "error", "message": str(e2)}
-
-
-@router.get("/migrate-trip-intent", dependencies=[Depends(verify_admin_token)])
-async def migrate_trip_intent(session: Session = Depends(get_session)):
-    """Aggiunge trip_intent alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS trip_intent VARCHAR DEFAULT 'LEISURE';"
-            )
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonna trip_intent aggiunta."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-trip-work-hours", dependencies=[Depends(verify_admin_token)])
-async def migrate_trip_work_hours(session: Session = Depends(get_session)):
-    """Aggiunge work_start_time e work_end_time alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_start_time VARCHAR DEFAULT '09:00';"
-            )
-        )
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_end_time VARCHAR DEFAULT '18:00';"
-            )
-        )
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS work_days VARCHAR DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday';"
-            )
-        )
-        session.commit()
-        return {
-            "status": "success",
-            "message": "Colonne work_start/end_time e work_days aggiunte.",
-        }
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-budget-max", dependencies=[Depends(verify_admin_token)])
-async def migrate_budget_max(session: Session = Depends(get_session)):
-    """Aggiunge budget_max alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS budget_max FLOAT DEFAULT 0.0;"
-            )
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonna budget_max aggiunta."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-office-address", dependencies=[Depends(verify_admin_token)])
-async def migrate_office_address(session: Session = Depends(get_session)):
-    """Aggiunge office_address alla tabella trip"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text(
-                "ALTER TABLE trip ADD COLUMN IF NOT EXISTS office_address VARCHAR;"
-            )
-        )
-        session.commit()
-        return {"status": "success", "message": "Colonna office_address aggiunta."}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "message": str(e)}
 
 
 @router.post("/{trip_id}/optimize")
@@ -866,6 +717,12 @@ async def create_trip(
     current_account: Account = Depends(get_current_user),
 ):
     """Crea un nuovo viaggio e assegna l'organizzatore"""
+    # Verifica limiti aziendali per trip BUSINESS
+    if trip_data.trip_intent == "BUSINESS" and current_account.company_id:
+        company = session.get(Company, current_account.company_id)
+        if company:
+            check_company_limits(company, session, "create_trip")
+
     try:
         db_trip = Trip.model_validate(trip_data)
         if trip_data.trip_type == "SOLO":
@@ -1055,46 +912,6 @@ async def hide_trip(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/migrate-participants-active")
-async def migrate_participants_active(session: Session = Depends(get_session)):
-    """Migrazione per aggiungere la colonna is_active alla tabella participant se non esiste"""
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text("ALTER TABLE participant ADD COLUMN is_active BOOLEAN DEFAULT TRUE")
-        )
-        session.commit()
-        return {
-            "status": "success",
-            "message": "Colonna is_active aggiunta correttamente.",
-        }
-    except Exception as e:
-        session.rollback()
-        if "already exists" in str(e) or "duplicate column" in str(e).lower():
-            return {"status": "info", "message": "La colonna is_active esiste già."}
-        logger.error(f"[Migration Error] {e}")
-        return {"status": "error", "message": str(e)}
-
-
-@router.get("/migrate-events-cache", dependencies=[Depends(verify_admin_token)])
-async def migrate_events_cache(session: Session = Depends(get_session)):
-    from sqlalchemy import text
-
-    try:
-        session.execute(
-            text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS events_cache TEXT;")
-        )
-        session.execute(
-            text("ALTER TABLE trip ADD COLUMN IF NOT EXISTS events_cache_date VARCHAR;")
-        )
-        session.commit()
-        return {"status": "success"}
-    except Exception as e:
-        session.rollback()
-        return {"status": "error", "detail": str(e)}
-
-
 @router.get("/business-overview")
 async def get_business_overview(
     session: Session = Depends(get_session),
@@ -1146,7 +963,55 @@ async def get_business_overview(
             "transport_mode": trip.transport_mode,
         })
 
-    return result
+    # ── Analytics ─────────────────────────────────────────────────────────────
+
+    # trips_by_status
+    trips_by_status: dict = {}
+    for trip in trips:
+        trips_by_status[trip.status] = trips_by_status.get(trip.status, 0) + 1
+
+    # top_destinations (top 5 per frequenza)
+    dest_count: dict = {}
+    for trip in trips:
+        dest = trip.destination or trip.real_destination or ""
+        if dest:
+            dest_count[dest] = dest_count.get(dest, 0) + 1
+    top_destinations = [
+        {"destination": d, "count": c}
+        for d, c in sorted(dest_count.items(), key=lambda x: -x[1])[:5]
+    ]
+
+    # monthly_spend: ultimi 6 mesi
+    trip_ids = [t.id for t in trips]
+    monthly_spend_map: dict = {}
+    if trip_ids:
+        all_expenses = session.exec(
+            select(Expense).where(Expense.trip_id.in_(trip_ids))
+        ).all()
+        for exp in all_expenses:
+            if exp.date:
+                month_key = str(exp.date)[:7]  # "YYYY-MM"
+                monthly_spend_map[month_key] = monthly_spend_map.get(month_key, 0.0) + (exp.amount or 0.0)
+
+    # Genera 6 mesi in ordine cronologico
+    from datetime import date
+    now_dt = datetime.now(timezone.utc)
+    monthly_spend = []
+    for i in range(5, -1, -1):
+        # calcola il mese (i mesi fa)
+        month = (now_dt.month - i - 1) % 12 + 1
+        year = now_dt.year + ((now_dt.month - i - 1) // 12)
+        key = f"{year:04d}-{month:02d}"
+        monthly_spend.append({"month": key, "total": round(monthly_spend_map.get(key, 0.0), 2)})
+
+    return {
+        "trips": result,
+        "analytics": {
+            "trips_by_status": trips_by_status,
+            "top_destinations": top_destinations,
+            "monthly_spend": monthly_spend,
+        },
+    }
 
 
 @router.get("/{trip_id}", response_model=Trip)
@@ -1434,12 +1299,14 @@ async def generate_proposals(
         check_rate_limit(current_account, session)
         require_premium(current_account, trip)
 
-        # B2B budget cap: recupera il limite aziendale se presente
+        # B2B budget cap e limiti aziendali
         company_budget: float | None = None
         if current_account.company_id:
             company = session.get(Company, current_account.company_id)
-            if company and company.max_budget_per_trip:
-                company_budget = company.max_budget_per_trip
+            if company:
+                check_company_limits(company, session, "ai_call")
+                if company.max_budget_per_trip:
+                    company_budget = company.max_budget_per_trip
 
         trip.budget = prefs.budget
         trip.budget_max = prefs.budget_max
@@ -2378,6 +2245,10 @@ async def chat_with_ai(
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
         check_rate_limit(current_account, session)
+        if current_account.company_id:
+            _chat_company = session.get(Company, current_account.company_id)
+            if _chat_company:
+                check_company_limits(_chat_company, session, "ai_call")
         require_premium(current_account, trip)
 
         itinerary = session.exec(
@@ -2954,12 +2825,55 @@ async def request_approval(
     current_user: Account = Depends(get_current_user)
 ):
     trip = session.get(Trip, trip_id)
-    if not trip: raise HTTPException(404, "Viaggio non trovato")
-    
-    # Solo chi partecipa può chiedere l'approvazione
+    if not trip:
+        raise HTTPException(404, "Viaggio non trovato")
+    if trip.trip_intent != "BUSINESS":
+        raise HTTPException(400, "L'approvazione è disponibile solo per i viaggi aziendali")
+    participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.account_id == current_user.id,
+            Participant.is_active == True
+        )
+    ).first()
+    if not participant:
+        raise HTTPException(403, "Non sei un partecipante di questo viaggio")
+
     trip.status = "PENDING_APPROVAL"
+    trip.approval_requested_at = datetime.now(timezone.utc)
     session.add(trip)
-    session.commit()
+
+    # Notifica tutti i manager della company
+    if current_user.company_id:
+        managers = notify_managers(
+            session,
+            company_id=current_user.company_id,
+            type="approval_requested",
+            title=f"Approvazione richiesta: {trip.name}",
+            message=f"{current_user.name} {current_user.surname} ha richiesto l'approvazione del viaggio '{trip.name}'.",
+            trip_id=trip_id,
+        )
+        session.commit()
+        # Email ai manager (fire-and-forget, non bloccare la risposta)
+        for manager_notif in managers:
+            manager_account = session.get(Account, manager_notif.account_id)
+            if manager_account:
+                try:
+                    send_notification_email(
+                        manager_account,
+                        subject=f"SplitPlan: Approvazione richiesta per '{trip.name}'",
+                        html_content=email_approval_requested(
+                            manager_name=manager_account.name,
+                            trip_name=trip.name,
+                            trip_id=trip_id,
+                            requester_name=f"{current_user.name} {current_user.surname}",
+                        ),
+                    )
+                except Exception as e:
+                    logger.warning(f"Email manager fallita: {e}")
+    else:
+        session.commit()
+
     return {"status": "pending_approval"}
 
 
@@ -2967,29 +2881,112 @@ async def request_approval(
 async def approve_trip(
     trip_id: int,
     session: Session = Depends(get_session),
-    current_user: Account = Depends(get_current_user)
+    current_user: Account = Depends(require_manager)
 ):
     trip = session.get(Trip, trip_id)
-    if not trip: raise HTTPException(404, "Viaggio non trovato")
-    
-    # In una versione reale controlleremmo se current_user è un "Manager"
-    # Per la demo, permettiamo l'approvazione per mostrare il cambio di UI
+    if not trip:
+        raise HTTPException(404, "Viaggio non trovato")
+
+    organizer_participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.is_organizer == True
+        )
+    ).first()
+    organizer_account = None
+    if organizer_participant and organizer_participant.account_id:
+        organizer_account = session.get(Account, organizer_participant.account_id)
+        if organizer_account and organizer_account.company_id != current_user.company_id:
+            raise HTTPException(403, "Non puoi approvare viaggi di un'altra azienda")
+
     trip.status = "APPROVED"
+    trip.approved_by = current_user.id
     session.add(trip)
+
+    # Notifica organizzatore
+    if organizer_account:
+        create_notification(
+            session,
+            account_id=organizer_account.id,
+            type="trip_approved",
+            title=f"Viaggio approvato: {trip.name}",
+            message=f"Il tuo viaggio '{trip.name}' è stato approvato da {current_user.name} {current_user.surname}.",
+            trip_id=trip_id,
+        )
     session.commit()
+
+    if organizer_account:
+        try:
+            send_notification_email(
+                organizer_account,
+                subject=f"SplitPlan: Il viaggio '{trip.name}' è stato approvato ✅",
+                html_content=email_trip_approved(
+                    organizer_name=organizer_account.name,
+                    trip_name=trip.name,
+                    trip_id=trip_id,
+                    manager_name=f"{current_user.name} {current_user.surname}",
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"Email approvazione fallita: {e}")
+
     return {"status": "approved"}
 
 
 @router.post("/{trip_id}/reject")
 async def reject_trip(
     trip_id: int,
+    body: RejectTripRequest,
     session: Session = Depends(get_session),
-    _: Account = Depends(get_current_user)
+    current_user: Account = Depends(require_manager)
 ):
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(404, "Viaggio non trovato")
-    trip.status = "BOOKED"  # Torna allo stato precedente (BOOKED)
+
+    organizer_participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.is_organizer == True
+        )
+    ).first()
+    organizer_account = None
+    if organizer_participant and organizer_participant.account_id:
+        organizer_account = session.get(Account, organizer_participant.account_id)
+        if organizer_account and organizer_account.company_id != current_user.company_id:
+            raise HTTPException(403, "Non puoi rifiutare viaggi di un'altra azienda")
+
+    trip.status = "REJECTED"
+    trip.rejection_reason = body.rejection_reason
     session.add(trip)
+
+    # Notifica organizzatore
+    if organizer_account:
+        reason_text = f" Motivazione: {body.rejection_reason}" if body.rejection_reason else ""
+        create_notification(
+            session,
+            account_id=organizer_account.id,
+            type="trip_rejected",
+            title=f"Viaggio non approvato: {trip.name}",
+            message=f"Il tuo viaggio '{trip.name}' è stato rifiutato da {current_user.name} {current_user.surname}.{reason_text}",
+            trip_id=trip_id,
+        )
     session.commit()
+
+    if organizer_account:
+        try:
+            send_notification_email(
+                organizer_account,
+                subject=f"SplitPlan: Il viaggio '{trip.name}' non è stato approvato",
+                html_content=email_trip_rejected(
+                    organizer_name=organizer_account.name,
+                    trip_name=trip.name,
+                    trip_id=trip_id,
+                    manager_name=f"{current_user.name} {current_user.surname}",
+                    reason=body.rejection_reason,
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"Email rifiuto fallita: {e}")
+
     return {"status": "rejected"}

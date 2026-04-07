@@ -1,48 +1,69 @@
 ├───backend\
-|    .env
-│    .gitignore
-│    admin_auth.py
-│    alembic.ini
-│    auth.py
-│    database.py
-│    debug_user.py
-│    email_templates.py
-│    fix_db.py
-│    inspect_db.py
-│    main.py
-│    models.py
-│    requirements.txt
-│    test_smtp.py
-│    __init__.py
-│
+│   .env
+│   .gitignore
+│   admin_auth.py
+│   alembic.ini
+│   auth.py
+│   database.py
+│   debug_user.py
+│   email_templates.py
+│   fix_db.py
+│   inspect_db.py
+│   main.py
+│   migrate_consent_fields.py
+│   migrate_leads_table.py
+│   migrate_office_inner.py
+│   models.py
+│   requirements.txt
+│   struttura_backend.txt
+│   test_demo_emails.py
+│   test_duffel_flights.py
+│   test_smtp.py
+│   __init__.py
 │
 ├───alembic
 │   │   env.py
 │   │   README
 │   │   script.py.mako
 │   │
-│   ├───versions
-│            2cab18db85c5_initial.py  
+│   └───versions
+│           2cab18db85c5_initial.py
+│           730eaedc323c_add_company_model.py
+│           a1b2c3d4e5f6_add_is_manager.py
+│           b2c3d4e5f6a7_add_company_id.py
 │
 ├───routers
-│        calendar.py
-│        expenses.py
-│        itinerary.py
-│        payments.py
-│        photos.py
-│        trips.py
-│        users.py
-|	 sso.py
-│        _migration_snippet.py
-│        __init__.py
+│      admin.py
+│       calendar.py
+│       companies.py
+│       expenses.py
+│       flights.py
+│       itinerary.py
+│       leads.py
+│       payments.py
+│       photos.py
+│       sso.py
+│       trips.py
+│       users.py
+│       _migration_snippet.py
+│       __init__.py  
+│
+├───services
+│       itinerary_optimizer.py
+│       maps_service.py
+│       ocr_service.py
+│       pdf_service.py
+│       __init__.py
 │
 ├───tests
-│        conftest.py
-│        test_auth.py
-│        test_expenses.py
-│        test_trips.py
+│       conftest.py
+│       test_auth.py
+│       test_expenses.py
+│       test_trips.py
 │
-├───utils
-│   │    currency.py
-│   ├───email_utils.py
+└───utils
+│       access.py
+│       crypto.py
+│       currency.py
+│       email_utils.py
 

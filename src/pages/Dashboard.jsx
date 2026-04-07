@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry, exportNotaSpese } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
@@ -348,38 +348,57 @@ const Dashboard = () => {
                     {trip.trip_intent === 'BUSINESS' && (
                         <div className="container mt-6">
                             <div className={cn(
-                                "p-6 rounded-sm border flex flex-col md:flex-row items-center justify-between gap-6 transition-all",
+                                "p-6 rounded-sm border flex flex-col md:flex-row items-start justify-between gap-6 transition-all",
                                 (trip.status === 'PLANNING' || trip.status === 'BOOKED') && "bg-blue-500/5 border-blue-500/20",
                                 trip.status === 'PENDING_APPROVAL' && "bg-amber-500/5 border-amber-500/20",
-                                trip.status === 'APPROVED' && "bg-emerald-500/5 border-emerald-500/20"
+                                trip.status === 'APPROVED' && "bg-emerald-500/5 border-emerald-500/20",
+                                trip.status === 'REJECTED' && "bg-red-500/5 border-red-500/20"
                             )}>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-start gap-4 flex-1">
                                     <div className={cn(
-                                        "w-12 h-12 rounded-full flex items-center justify-center font-bold",
+                                        "w-12 h-12 rounded-full flex items-center justify-center font-bold shrink-0",
                                         (trip.status === 'PLANNING' || trip.status === 'BOOKED') && "bg-blue-500/10 text-blue-500",
                                         trip.status === 'PENDING_APPROVAL' && "bg-amber-500/10 text-amber-500 animate-pulse",
-                                        trip.status === 'APPROVED' && "bg-emerald-500/10 text-emerald-500"
+                                        trip.status === 'APPROVED' && "bg-emerald-500/10 text-emerald-500",
+                                        trip.status === 'REJECTED' && "bg-red-500/10 text-red-500"
                                     )}>
                                         {trip.status === 'APPROVED' ? <CheckCircle2 size={24} /> : <Sparkles size={24} />}
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-black uppercase tracking-widest">Stato Approvazione: {trip.status.replace('_', ' ')}</h4>
-                                        <p className="text-xs text-muted font-medium">
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-black uppercase tracking-widest">Stato Approvazione: {trip.status.replace(/_/g, ' ')}</h4>
+                                        <p className="text-xs text-muted font-medium mt-1">
                                             {(trip.status === 'PLANNING' || trip.status === 'BOOKED') && "L'itinerario è pronto. Invia i dettagli al tuo manager per l'approvazione del budget."}
                                             {trip.status === 'PENDING_APPROVAL' && "Richiesta inviata. Il responsabile sta verificando la conformità con la policy aziendale."}
                                             {trip.status === 'APPROVED' && "Il budget è stato confermato. Ora puoi procedere con la prenotazione di voli e hotel."}
+                                            {trip.status === 'REJECTED' && "Il viaggio non è stato approvato."}
                                         </p>
+                                        {trip.status === 'REJECTED' && trip.rejection_reason && (
+                                            <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-xs text-red-700 dark:text-red-300">
+                                                <span className="font-bold uppercase tracking-wider">Motivazione: </span>
+                                                {trip.rejection_reason}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex gap-3">
-                                    {(trip.status === 'PLANNING' || trip.status === 'BOOKED') && isOrganizer && (
+                                <div className="flex gap-3 shrink-0 flex-wrap">
+                                    {(trip.status === 'PLANNING' || trip.status === 'BOOKED' || trip.status === 'REJECTED') && isOrganizer && (
                                         <Button onClick={handleRequestApproval} className="h-12 px-8 uppercase font-black tracking-widest text-[10px]">Invia al Manager</Button>
                                     )}
-                                    {trip.status === 'PENDING_APPROVAL' && isOrganizer && (
-                                        <div className="flex gap-2">
-                                            <Button onClick={() => handleManagerDecision('approve')} className="bg-emerald-500 hover:bg-emerald-600 text-white h-12 px-6 text-[10px] font-black uppercase tracking-widest">Approva (Simula Manager)</Button>
-                                            <Button variant="outline" onClick={() => handleManagerDecision('reject')} className="h-12 px-6 text-[10px] font-black uppercase tracking-widest">Rifiuta</Button>
-                                        </div>
+                                    {trip.status === 'APPROVED' && (
+                                        <Button
+                                            variant="outline"
+                                            className="h-12 px-6 uppercase font-black tracking-widest text-[10px] gap-2"
+                                            onClick={async () => {
+                                                try {
+                                                    await exportNotaSpese(trip.id);
+                                                } catch {
+                                                    showToast('Errore generazione PDF', 'error');
+                                                }
+                                            }}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                            Nota Spese PDF
+                                        </Button>
                                     )}
                                 </div>
                             </div>

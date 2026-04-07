@@ -11,6 +11,8 @@ const MyTrips = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'archived'
+    const [searchQuery, setSearchQuery] = useState('');
+    const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL' | 'BUSINESS' | 'LEISURE'
     const navigate = useNavigate();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
@@ -72,9 +74,24 @@ const MyTrips = () => {
         }
     };
 
+    const applyFilters = (list) => {
+        let filtered = list;
+        if (typeFilter !== 'ALL') {
+            filtered = filtered.filter(t => t.trip_intent === typeFilter);
+        }
+        if (searchQuery.trim()) {
+            const q = searchQuery.trim().toLowerCase();
+            filtered = filtered.filter(t =>
+                (t.name || '').toLowerCase().includes(q) ||
+                (t.destination || '').toLowerCase().includes(q)
+            );
+        }
+        return filtered;
+    };
+
     const activeTrips = trips.filter(t => t.status !== 'COMPLETED');
     const archivedTrips = trips.filter(t => t.status === 'COMPLETED');
-    const currentTrips = activeTab === 'active' ? activeTrips : archivedTrips;
+    const currentTrips = applyFilters(activeTab === 'active' ? activeTrips : archivedTrips);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -171,8 +188,37 @@ const MyTrips = () => {
                     </motion.div>
                 ) : (
                     <div className="max-w-4xl mx-auto">
+                        {/* Search & Filter */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col sm:flex-row gap-3 mb-8"
+                        >
+                            <div className="relative flex-1">
+                                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    placeholder="Cerca per nome o destinazione..."
+                                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-surface border border-border-subtle rounded-sm focus:outline-none focus:border-accent-primary text-primary placeholder-[var(--text-muted)]"
+                                />
+                            </div>
+                            <select
+                                value={typeFilter}
+                                onChange={e => setTypeFilter(e.target.value)}
+                                className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface border border-border-subtle rounded-sm focus:outline-none focus:border-accent-primary text-primary cursor-pointer"
+                            >
+                                <option value="ALL">Tutti i tipi</option>
+                                <option value="BUSINESS">Business</option>
+                                <option value="LEISURE">Leisure</option>
+                            </select>
+                        </motion.div>
+
                         {/* Tabs */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="flex bg-muted/20 p-1 rounded-sm mb-16 border border-border-subtle max-w-md mx-auto shadow-inner-white"
@@ -199,7 +245,9 @@ const MyTrips = () => {
                         >
                             {currentTrips.length === 0 ? (
                                 <div className="text-center py-24 text-muted text-[10px] font-black tracking-widest uppercase italic bg-surface/30 border border-dashed border-border-subtle rounded-sm">
-                                    {activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
+                                    {searchQuery || typeFilter !== 'ALL'
+                                        ? 'Nessun viaggio trovato con i filtri selezionati.'
+                                        : activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
                                 </div>
                             ) : (
                                 currentTrips.slice().reverse().map(trip => (

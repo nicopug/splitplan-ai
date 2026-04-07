@@ -342,6 +342,23 @@ export const joinTrip = async (token) => {
     return handleResponse(response);
 };
 
+export const exportCompanyExpensesCSV = async (companyId, month = null) => {
+    const params = month ? `?month=${month}` : '';
+    const response = await fetch(`${API_URL}/companies/${companyId}/expenses/export${params}`, {
+        headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Errore export CSV');
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SpeseSplitPlan_${companyId}${month ? '_' + month : ''}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};
+
 export const exportNotaSpese = async (tripId) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/export-nota-spese`, {
         headers: getAuthHeaders()
@@ -678,8 +695,39 @@ export const approveTrip = async (tripId) => {
     return handleResponse(response);
 };
 
-export const rejectTrip = async (tripId) => {
+export const rejectTrip = async (tripId, rejectionReason = null) => {
     const response = await fetch(`${API_URL}/trips/${tripId}/reject`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ rejection_reason: rejectionReason }),
+    });
+    return handleResponse(response);
+};
+
+export const getUnreadCount = async () => {
+    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const getNotifications = async () => {
+    const response = await fetch(`${API_URL}/notifications`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const markNotificationRead = async (notificationId) => {
+    const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+export const markAllNotificationsRead = async () => {
+    const response = await fetch(`${API_URL}/notifications/read-all`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -698,6 +746,15 @@ export const joinCompany = async (token) => {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ token })
+    });
+    return handleResponse(response);
+};
+
+export const bulkInviteMembers = async (companyId, emails) => {
+    const response = await fetch(`${API_URL}/companies/${companyId}/invite-bulk`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ emails })
     });
     return handleResponse(response);
 };

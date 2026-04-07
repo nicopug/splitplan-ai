@@ -1,13 +1,20 @@
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, Relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Company(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     max_budget_per_trip: Optional[float] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    # Piano e limiti
+    plan: str = Field(default="starter")
+    plan_expires_at: Optional[datetime] = Field(default=None)
+    max_active_users: int = Field(default=30)
+    max_trips_per_month: int = Field(default=15)
+    max_ai_calls_per_day: int = Field(default=200)
 
     accounts: List["Account"] = Relationship(back_populates="company")
 
@@ -70,6 +77,9 @@ class TripBase(SQLModel):
     work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
 
     status: str = "PLANNING"
+    approved_by: Optional[int] = Field(default=None, foreign_key="account.id")
+    approval_requested_at: Optional[datetime] = Field(default=None)
+    rejection_reason: Optional[str] = Field(default=None)
     winning_proposal_id: Optional[int] = None
     destination_iata: Optional[str] = None
     departure_airport: Optional[str] = None
@@ -175,7 +185,7 @@ class Photo(SQLModel, table=True):
 class ProcessedStripeEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     stripe_event_id: str = Field(unique=True, index=True)
-    processed_at: datetime = Field(default_factory=datetime.utcnow)
+    processed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class DemoLead(SQLModel, table=True):
@@ -187,4 +197,15 @@ class DemoLead(SQLModel, table=True):
     team_size: str
     travel_frequency: str
     message: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Notification(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    account_id: int = Field(foreign_key="account.id", index=True)
+    type: str
+    title: str
+    message: str
+    trip_id: Optional[int] = Field(default=None, foreign_key="trip.id")
+    is_read: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

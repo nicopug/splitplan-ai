@@ -187,7 +187,12 @@ def check_rate_limit(account: Account, session: Session):
 
 
 def require_premium(account: Account, trip: Trip):
-    """Solleva un 403 se l'utente non è abbonato e il viaggio non è sbloccato."""
+    """Solleva un 403 se l'utente non è abbonato e il viaggio non è sbloccato.
+    Gli utenti aziendali (company_id impostato) o i viaggi BUSINESS bypassano il check."""
+    if account.company_id:
+        return  # utenti aziendali usano il piano della company
+    if trip.trip_intent == "BUSINESS":
+        return  # viaggi business non richiedono premium individuale
     if not account.is_subscribed and not trip.is_premium:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -742,9 +747,12 @@ async def create_trip(
         session.commit()
 
         return {"trip_id": db_trip.id, "trip": db_trip}
+    except HTTPException:
+        session.rollback()
+        raise
     except Exception as e:
         session.rollback()
-        logger.error(f"[ERROR] create_trip: {e}")
+        logger.error(f"[ERROR] create_trip: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1555,9 +1563,12 @@ async def generate_proposals(
         session.commit()
         return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
+    except HTTPException:
+        session.rollback()
+        raise
     except Exception as e:
         session.rollback()
-        logger.error(f"[ERROR] generate_proposals: {e}")
+        logger.error(f"[ERROR] generate_proposals: {e}", exc_info=True)
         raise HTTPException(
             status_code=500, detail="Errore interno del server. Riprova."
         )

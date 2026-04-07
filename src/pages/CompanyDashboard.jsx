@@ -151,6 +151,7 @@ const CompanyDashboard = () => {
     }
 
     return (
+        <>
         <div className="min-h-screen bg-[var(--bg-base)] pt-[var(--header-height)]">
             <div className="container py-12 max-w-6xl mx-auto px-4">
 
@@ -545,6 +546,7 @@ const CompanyDashboard = () => {
                 </div>
             </div>
         )}
+        </>
     );
 };
 

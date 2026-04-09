@@ -244,13 +244,22 @@ const Navbar = ({ user: propUser }) => {
                                                 notifications.map(n => (
                                                     <div
                                                         key={n.id}
-                                                        onClick={() => !n.is_read && handleMarkRead(n.id)}
-                                                        className={`px-4 py-3 border-b border-[var(--border-subtle)] cursor-pointer hover:bg-[var(--bg-card-hover)] transition-colors ${!n.is_read ? 'bg-[var(--accent-muted)]' : ''}`}
+                                                        onClick={() => {
+                                                            if (!n.is_read) handleMarkRead(n.id);
+                                                            if (n.trip_id) {
+                                                                setShowNotifications(false);
+                                                                navigate(`/trip/${n.trip_id}`);
+                                                            }
+                                                        }}
+                                                        className={`px-4 py-3 border-b border-[var(--border-subtle)] transition-colors ${n.trip_id ? 'cursor-pointer hover:bg-[var(--bg-card-hover)]' : 'cursor-default'} ${!n.is_read ? 'bg-[var(--accent-muted)]' : ''}`}
                                                     >
                                                         <p className={`text-xs font-semibold ${!n.is_read ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
                                                             {n.title}
                                                         </p>
                                                         <p className="text-[11px] text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
+                                                        {n.trip_id && (
+                                                            <p className="text-[10px] text-[var(--accent-primary)] mt-1 font-bold uppercase tracking-wider">Vai al viaggio →</p>
+                                                        )}
                                                     </div>
                                                 ))
                                             )}

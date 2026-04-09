@@ -43,6 +43,8 @@ const Dashboard = () => {
     const [user, setUser] = useState(null);
     const [isOrganizer, setIsOrganizer] = useState(false);
     const [hasVoted, setHasVoted] = useState(false);
+    const [showRejectInput, setShowRejectInput] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
     const [chatMessages, setChatMessages] = useState([
         { role: 'ai', text: 'Ciao! Sono il tuo assistente AI. Come posso aiutarti con l\'itinerario oggi?' }
     ]);
@@ -184,13 +186,20 @@ const Dashboard = () => {
             const token = localStorage.getItem('token');
             const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:8000' : '/api';
             const endpoint = decision === 'approve' ? 'approve' : 'reject';
+            const body = decision === 'reject' ? JSON.stringify({ rejection_reason: rejectionReason || null }) : '{}';
             const res = await fetch(`${apiUrl}/trips/${id}/${endpoint}`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body
             });
             if (res.ok) {
                 showToast(`Viaggio ${decision === 'approve' ? 'approvato' : 'rifiutato'}`, "success");
+                setShowRejectInput(false);
+                setRejectionReason('');
                 await fetchTrip();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                showToast(err.detail || "Errore nella decisione", "error");
             }
         } catch (e) {
             showToast("Errore nella decisione", "error");
@@ -380,9 +389,45 @@ const Dashboard = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex gap-3 shrink-0 flex-wrap">
+                                <div className="flex flex-col gap-3 shrink-0">
                                     {(trip.status === 'PLANNING' || trip.status === 'BOOKED' || trip.status === 'REJECTED') && isOrganizer && (
                                         <Button onClick={handleRequestApproval} className="h-12 px-8 uppercase font-black tracking-widest text-[10px]">Invia al Manager</Button>
+                                    )}
+                                    {trip.status === 'PENDING_APPROVAL' && user?.is_manager && (
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    onClick={() => handleManagerDecision('approve')}
+                                                    className="h-10 px-6 uppercase font-black tracking-widest text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                >
+                                                    Approva
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setShowRejectInput(prev => !prev)}
+                                                    className="h-10 px-6 uppercase font-black tracking-widest text-[10px] border-red-500/40 text-red-500 hover:bg-red-500/10"
+                                                >
+                                                    Rifiuta
+                                                </Button>
+                                            </div>
+                                            {showRejectInput && (
+                                                <div className="flex gap-2 mt-1">
+                                                    <input
+                                                        type="text"
+                                                        value={rejectionReason}
+                                                        onChange={e => setRejectionReason(e.target.value)}
+                                                        placeholder="Motivazione (opzionale)"
+                                                        className="flex-1 h-9 px-3 text-xs bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm focus:outline-none focus:border-red-500/60"
+                                                    />
+                                                    <Button
+                                                        onClick={() => handleManagerDecision('reject')}
+                                                        className="h-9 px-4 uppercase font-black tracking-widest text-[10px] bg-red-600 hover:bg-red-700 text-white"
+                                                    >
+                                                        Conferma
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                     {trip.status === 'APPROVED' && (
                                         <Button

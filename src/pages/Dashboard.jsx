@@ -353,8 +353,8 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* B2B APPROVAL WORKFLOW BANNER */}
-                    {trip.trip_intent === 'BUSINESS' && (
+                    {/* B2B APPROVAL WORKFLOW BANNER — nascosto quando itinerario già generato */}
+                    {trip.trip_intent === 'BUSINESS' && !(trip.accommodation && itinerary && itinerary.length > 0) && (
                         <div className="container mt-6">
                             <div className={cn(
                                 "p-6 rounded-sm border flex flex-col md:flex-row items-start justify-between gap-6 transition-all",
@@ -506,6 +506,16 @@ const Dashboard = () => {
                                                                 </div>
                                                             </div>
                                                         )
+                                                    )}
+                                                    {trip.accommodation && (!itinerary || itinerary.length === 0) && (
+                                                        <div className="container py-24 text-center">
+                                                            <div className="premium-card bg-card border border-border-medium p-16 max-w-2xl mx-auto shadow-xl">
+                                                                <div className="w-12 h-12 border-4 border-[var(--accent-primary)]/30 border-t-[var(--accent-primary)] rounded-full animate-spin mx-auto mb-8" />
+                                                                <h3 className="text-xl font-black uppercase tracking-tighter mb-3">Generazione Itinerario</h3>
+                                                                <p className="text-muted text-sm leading-relaxed mb-6">L'AI sta elaborando il tuo itinerario personalizzato. Ricarica la pagina tra qualche secondo.</p>
+                                                                <Button variant="outline" size="sm" onClick={fetchTrip} className="uppercase tracking-widest text-[10px] font-black">Aggiorna</Button>
+                                                            </div>
+                                                        </div>
                                                     )}
                                                     {trip.accommodation && itinerary && itinerary.length > 0 && (
                                                         <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-112px)] overflow-hidden">

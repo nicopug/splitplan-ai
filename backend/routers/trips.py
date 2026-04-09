@@ -1885,10 +1885,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
 
     except Exception as e:
         session.rollback()
-        logger.error(f"[AI Error] Generazione itinerario fallita: {e}")
-        import traceback
-
-        traceback.print_exc()
+        logger.error(f"[AI Error] Generazione itinerario fallita: {e}", exc_info=True)
 
 
 @router.post("/{trip_id}/confirm-hotel")
@@ -1904,7 +1901,9 @@ async def confirm_hotel(
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-        check_rate_limit(current_account, session)
+        # Gli utenti aziendali bypassano rate limit individuale (coperto da check_company_limits)
+        if not current_account.company_id:
+            check_rate_limit(current_account, session)
         require_premium(current_account, trip)
 
         trip.accommodation = hotel_data.hotel_name
@@ -1940,9 +1939,12 @@ async def confirm_hotel(
             "status": "success",
             "message": "Logistica confermata. Itinerario generato.",
         }
+    except HTTPException:
+        session.rollback()
+        raise
     except Exception as e:
         session.rollback()
-        logger.error(f"[ERROR] confirm_hotel: {e}")
+        logger.error(f"[ERROR] confirm_hotel: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

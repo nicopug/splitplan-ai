@@ -486,14 +486,14 @@ const Dashboard = () => {
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {(user?.is_subscribed || trip.is_premium) && !trip.accommodation && (
+                                                    {(user?.is_subscribed || trip.is_premium || (isBusiness && trip.status === 'APPROVED')) && !trip.accommodation && (
                                                         <Suspense fallback={<ComponentLoader />}><Logistics trip={trip} onPrefill={setPrefillData} /></Suspense>
                                                     )}
                                                     {!trip.accommodation && (
                                                         isOrganizer ? (
                                                             <div id="hotel-confirmation-form">
                                                                 <Suspense fallback={<ComponentLoader />}>
-                                                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} setIsGenerating={setIsGenerating} setProgress={setItineraryProgress} isPremium={user?.is_subscribed || trip.is_premium} prefillData={prefillData} />
+                                                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} setIsGenerating={setIsGenerating} setProgress={setItineraryProgress} isPremium={user?.is_subscribed || trip.is_premium || (isBusiness && trip.status === 'APPROVED')} prefillData={prefillData} />
                                                                 </Suspense>
                                                             </div>
                                                         ) : (

@@ -1585,19 +1585,29 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         return
 
     try:
+        logger.info(f"[ITI-1] trip_id={trip.id} intent={trip.trip_intent} status={trip.status}")
         try:
-            d1 = datetime.fromisoformat(trip.start_date.replace("Z", ""))
-            d2 = datetime.fromisoformat(trip.end_date.replace("Z", ""))
+            start_raw = trip.start_date
+            end_raw = trip.end_date
+            # start_date può essere datetime o str a seconda di come è stato salvato
+            if hasattr(start_raw, 'strftime'):
+                d1 = start_raw.replace(tzinfo=None) if start_raw.tzinfo else start_raw
+                d2 = end_raw.replace(tzinfo=None) if end_raw.tzinfo else end_raw
+            else:
+                d1 = datetime.fromisoformat(str(start_raw).replace("Z", ""))
+                d2 = datetime.fromisoformat(str(end_raw).replace("Z", ""))
             num_days = abs((d2 - d1).days) + 1
         except Exception as e:
             logger.warning(f"[Warning] Date parsing failed: {e}")
             num_days = 5
+        logger.info(f"[ITI-2] num_days={num_days}")
 
         hotel_lat = trip.hotel_latitude
         hotel_lon = trip.hotel_longitude
         locali_reali = (
             await get_places_from_overpass(hotel_lat, hotel_lon) if hotel_lat else []
         )
+        logger.info(f"[ITI-3] overpass done, places={len(locali_reali)}")
 
         places_prompt = ""
         if locali_reali:
@@ -1627,6 +1637,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             organizer_account = session.get(Account, organizer_part.account_id)
 
         lang = organizer_account.language.upper() if organizer_account else "ITALIANO"
+        logger.info(f"[ITI-4] organizer_found={organizer_account is not None} lang={lang}")
 
         if trip.trip_intent == "BUSINESS" and organizer_account:
             if (
@@ -1751,17 +1762,21 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         LINGUA: {lang}.
         """
 
+        logger.info(f"[ITI-5] calling Gemini for itinerary trip={trip.id}")
         response = await ai_client.aio.models.generate_content(
             model=AI_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
+        logger.info(f"[ITI-6] Gemini responded, text_len={len(response.text) if response.text else 0}")
         data = json.loads(response.text)
 
         # ── Step B: Validate and fix timings with CP-SAT optimizer ──────────
         raw_activities = data.get("itinerary", [])
+        logger.info(f"[ITI-7] raw_activities={len(raw_activities)}")
         if raw_activities:
             opt_result = await optimize_travel_itinerary(raw_activities)
+            logger.info(f"[ITI-8] optimizer done, scheduled={len(opt_result.get('schedule', []))}")
 
             if opt_result["dropped"]:
                 dropped_titles = [d["title"] for d in opt_result["dropped"]]
@@ -1802,6 +1817,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                 f"({len(optimized)} activities, {len(opt_result['dropped'])} dropped)."
             )
 
+        logger.info(f"[ITI-9] saving itinerary items trip={trip.id}")
         session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip.id))
         session.commit()
 
@@ -1881,7 +1897,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                     )
 
         session.commit()
-        logger.info(f"[SUCCESS] Itinerary for Trip {trip.id} generated correctly.")
+        logger.info(f"[ITI-10] DONE. Itinerary for Trip {trip.id} generated correctly.")
 
     except Exception as e:
         session.rollback()

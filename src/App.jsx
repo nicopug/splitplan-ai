@@ -37,6 +37,7 @@ const DemoRequest = lazy(() => import('./pages/DemoRequest'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const JoinCompany = lazy(() => import('./pages/JoinCompany'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
+const PricingBusiness = lazy(() => import('./pages/PricingBusiness'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -175,6 +176,7 @@ function App() {
                 <Route path="/manager" element={<ErrorBoundary><CompanyDashboard /></ErrorBoundary>} />
                 <Route path="/join" element={<ErrorBoundary><JoinCompany /></ErrorBoundary>} />
                 <Route path="/system-override" element={<ErrorBoundary><SuperAdmin /></ErrorBoundary>} />
+                <Route path="/pricing-business" element={<PricingBusiness />} />
 
                 <Route path="/privacy" element={<PrivacyRoute />} />
                 <Route path="/terms" element={<TermsRoute />} />

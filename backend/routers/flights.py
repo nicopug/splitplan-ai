@@ -22,6 +22,19 @@ DUFFEL_BASE_URL = "https://api.duffel.com"
 DUFFEL_VERSION = "v2"
 
 
+def _skyscanner_url(origin: str, dest: str, depart: str, ret: str = None, adults: int = 1) -> str:
+    """Costruisce un deep link Skyscanner con parametri pre-compilati.
+    depart / ret formato YYYY-MM-DD → convertiti in YYMMDD per Skyscanner.
+    """
+    def fmt(d: str) -> str:
+        return d.replace("-", "")[2:]  # "2026-06-15" → "260615"
+
+    base = f"https://www.skyscanner.net/transport/flights/{origin.lower()}/{dest.lower()}/{fmt(depart)}"
+    if ret and ret != depart:
+        base += f"/{fmt(ret)}"
+    return f"{base}/?adults={adults}&currency=EUR"
+
+
 def _parse_duration(iso_duration: str) -> str:
     """Converte 'PT2H30M' → '2h 30m'."""
     try:
@@ -216,7 +229,13 @@ def search_flights(
                 "price": price,
                 "currency": currency,
                 "details": "  ·  ".join(details_parts),
-                "booking_url": "#",
+                "booking_url": _skyscanner_url(
+                    origin=origin_iata,
+                    dest=dest_iata,
+                    depart=departure_date,
+                    ret=return_date if is_round_trip else None,
+                    adults=num_passengers,
+                ),
             })
 
         logger.info(f"[Duffel] Restituisco {len(formatted)} offerte")

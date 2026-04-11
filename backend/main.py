@@ -1,6 +1,7 @@
 import sys
 import os
 import logging
+import traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -23,6 +24,7 @@ from admin_auth import verify_admin_token
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
 
@@ -99,11 +101,16 @@ def init_db():
 # ---------------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Errore non gestito su {request.method} {request.url}: {exc}")
+    tb = traceback.format_exc()
+    logger.error(
+        f"Errore non gestito su {request.method} {request.url.path}\n"
+        f"Tipo: {type(exc).__name__} — {exc}\n"
+        f"Traceback:\n{tb}"
+    )
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "Si è verificato un'errore interno del server. Riprova più tardi."
+            "detail": "Si è verificato un errore interno del server. Riprova più tardi."
         },
     )
 

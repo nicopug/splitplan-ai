@@ -180,6 +180,12 @@ const Navbar = ({ user: propUser }) => {
                                 {t('nav.home', 'HOME')}
                             </Link>
                         )}
+                        <Link
+                            to="/pricing-business"
+                            className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors duration-300"
+                        >
+                            Piani B2B
+                        </Link>
                     </div>
 
 
@@ -397,6 +403,13 @@ const Navbar = ({ user: propUser }) => {
                                     <div className="h-px bg-white/5 my-2"></div>
                                 </>
                             )}
+                            <Link
+                                to="/pricing-business"
+                                className="text-lg font-medium text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Piani B2B
+                            </Link>
 
                             {user ? (
                                 <div className="space-y-6">

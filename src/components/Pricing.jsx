@@ -175,10 +175,10 @@ const Pricing = ({ user }) => {
                             {t('pricing.business_ready')}
                         </p>
                         <button
-                            onClick={() => navigate('/demo')}
+                            onClick={() => navigate('/pricing-business')}
                             className="text-primary-blue font-black uppercase tracking-[0.2em] text-[10px] hover:text-blue-400 transition-colors"
                         >
-                            {t('pricing.business_cta')} {/* <--- Sostituisci il testo fisso con questo */}
+                            {t('pricing.business_cta', 'Vedi piani aziendali →')}
                         </button>
                     </motion.div>
                 </div>

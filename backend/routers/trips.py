@@ -58,11 +58,13 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
-from utils.access import check_company_limits, check_participant
+from utils.access import check_company_limits, check_participant, require_same_company
 from services.notification_service import (
     create_notification,
     notify_managers,
     send_notification_email,
+)
+from email_templates import (
     email_approval_requested,
     email_trip_approved,
     email_trip_rejected,
@@ -572,6 +574,45 @@ async def search_trip_options(
 
         response = await _gemini_call_with_retry(prompt, json_mode=True)
         data = json.loads(response.text)
+
+        # Sostituisci booking_url con deep link parametrici reali
+        dest_enc = quote(trip.destination or trip.real_destination or "")
+        depart_str = (
+            trip.start_date if isinstance(trip.start_date, str) else trip.start_date.strftime("%Y-%m-%d")
+        ).split("T")[0] if trip.start_date else ""
+        return_str = (
+            trip.end_date if isinstance(trip.end_date, str) else trip.end_date.strftime("%Y-%m-%d")
+        ).split("T")[0] if trip.end_date else ""
+
+        for opt in data:
+            if request.type == "hotel":
+                opt["booking_url"] = (
+                    f"https://www.booking.com/searchresults.html"
+                    f"?ss={dest_enc}&checkin={depart_str}&checkout={return_str}"
+                    f"&group_adults={max(1, trip.num_people or 1)}&no_rooms=1"
+                )
+            else:
+                origin = trip.departure_airport or trip.departure_city or ""
+                origin_enc = quote(origin)
+                if len(origin) == 3 and origin.isupper():
+                    # IATA code disponibile → Skyscanner
+                    def _fmt(d: str) -> str:
+                        return d.replace("-", "")[2:]
+                    dest_iata = (trip.destination_iata or "").lower() or dest_enc.lower()
+                    base = (
+                        f"https://www.skyscanner.net/transport/flights"
+                        f"/{origin.lower()}/{dest_iata}/{_fmt(depart_str)}"
+                    )
+                    if return_str and return_str != depart_str:
+                        base += f"/{_fmt(return_str)}"
+                    opt["booking_url"] = f"{base}/?adults={max(1, trip.num_people or 1)}&currency=EUR"
+                else:
+                    # Fallback Kiwi con nome città
+                    opt["booking_url"] = (
+                        f"https://www.kiwi.com/it/search/results/{origin_enc}/{dest_enc}"
+                        f"/{depart_str}/{return_str}?adults={max(1, trip.num_people or 1)}"
+                    )
+
         return {"options": data}
     except Exception as e:
         logger.error(f"[AI Error] Errore simulazione OTA: {e}")
@@ -755,6 +796,10 @@ async def create_trip(
         if trip_data.trip_type == "SOLO":
             db_trip.num_people = 1
 
+        # Auto-eredita company_id dall'organizzatore per query B2B dirette
+        if current_account.company_id and trip_data.trip_intent == "BUSINESS":
+            db_trip.company_id = current_account.company_id
+
         session.add(db_trip)
         session.commit()
         session.refresh(db_trip)
@@ -768,6 +813,18 @@ async def create_trip(
         session.add(organizer)
         session.commit()
 
+        # Notifica manager aziendali alla creazione di un trip BUSINESS
+        if db_trip.trip_intent == "BUSINESS" and current_account.company_id:
+            notify_managers(
+                session=session,
+                company_id=current_account.company_id,
+                type="trip_created",
+                title="Nuovo viaggio aziendale creato",
+                message=f"{current_account.name} ha creato un nuovo viaggio: \"{db_trip.name}\" verso {db_trip.destination or 'destinazione TBD'}.",
+                trip_id=db_trip.id,
+            )
+            session.commit()
+
         return {"trip_id": db_trip.id, "trip": db_trip}
     except HTTPException:
         session.rollback()
@@ -780,10 +837,12 @@ async def create_trip(
 
 @router.get("/my-trips")
 async def get_my_trips(
+    skip: int = 0,
+    limit: int = 20,
     session: Session = Depends(get_session),
     current_account: Account = Depends(get_current_user),
 ):
-    """Ritorna tutti i viaggi a cui partecipa l'utente corrente e che non sono stati nascosti"""
+    """Ritorna i viaggi dell'utente corrente con paginazione (skip/limit)."""
     try:
         participants = session.exec(
             select(Participant).where(
@@ -794,13 +853,23 @@ async def get_my_trips(
 
         trip_ids = [p.trip_id for p in participants]
         if not trip_ids:
-            return []
+            return {"trips": [], "total": 0, "skip": skip, "limit": limit}
 
-        trips = session.exec(select(Trip).where(Trip.id.in_(trip_ids))).all()
+        total = session.exec(
+            select(func.count()).where(Trip.id.in_(trip_ids))
+        ).one()
 
-        return trips
+        trips = session.exec(
+            select(Trip)
+            .where(Trip.id.in_(trip_ids))
+            .order_by(Trip.id.desc())
+            .offset(skip)
+            .limit(limit)
+        ).all()
+
+        return {"trips": trips, "total": total, "skip": skip, "limit": limit}
     except Exception as e:
-        logger.error(f"[ERROR] get_my_trips: {e}")
+        logger.error(f"[ERROR] get_my_trips: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -964,21 +1033,36 @@ async def get_business_overview(
     else:
         trips = session.exec(select(Trip).where(Trip.trip_intent == "BUSINESS")).all()
 
+    trip_ids_all = [t.id for t in trips]
+
+    # Fetch bulk: organizzatori (1 query invece di N)
+    organizers_bulk = {}
+    if trip_ids_all:
+        for p in session.exec(
+            select(Participant).where(
+                Participant.trip_id.in_(trip_ids_all),
+                Participant.is_organizer == True,
+            )
+        ).all():
+            organizers_bulk[p.trip_id] = p
+
+    # Fetch bulk: proposte vincitrici (1 query invece di N)
+    winning_ids = [t.winning_proposal_id for t in trips if t.winning_proposal_id]
+    proposals_bulk = {}
+    if winning_ids:
+        for prop in session.exec(
+            select(Proposal).where(Proposal.id.in_(winning_ids))
+        ).all():
+            proposals_bulk[prop.id] = prop
+
     result = []
     for trip in trips:
-        organizer = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip.id,
-                Participant.is_organizer == True
-            )
-        ).first()
+        organizer = organizers_bulk.get(trip.id)
         organizer_name = organizer.name if organizer else "N/A"
 
         estimated_cost = None
-        if trip.winning_proposal_id:
-            proposal = session.get(Proposal, trip.winning_proposal_id)
-            if proposal:
-                estimated_cost = proposal.price_estimate
+        if trip.winning_proposal_id and trip.winning_proposal_id in proposals_bulk:
+            estimated_cost = proposals_bulk[trip.winning_proposal_id].price_estimate
 
         result.append({
             "id": trip.id,
@@ -1011,9 +1095,13 @@ async def get_business_overview(
         for d, c in sorted(dest_count.items(), key=lambda x: -x[1])[:5]
     ]
 
-    # monthly_spend: ultimi 6 mesi
+    # monthly_spend + employees_traveled: ultimi 6 mesi
     trip_ids = [t.id for t in trips]
     monthly_spend_map: dict = {}
+    employees_per_month: dict = {}  # month_key → set of account_ids
+
+    now_dt = datetime.now(timezone.utc)
+
     if trip_ids:
         all_expenses = session.exec(
             select(Expense).where(Expense.trip_id.in_(trip_ids))
@@ -1023,16 +1111,31 @@ async def get_business_overview(
                 month_key = str(exp.date)[:7]  # "YYYY-MM"
                 monthly_spend_map[month_key] = monthly_spend_map.get(month_key, 0.0) + (exp.amount or 0.0)
 
+        # Partecipanti per trip (per calcolare employees_traveled)
+        all_participants = session.exec(
+            select(Participant).where(Participant.trip_id.in_(trip_ids))
+        ).all()
+        # Mappa trip_id → month_key usando start_date del trip
+        trip_month_map = {}
+        for t in trips:
+            if t.start_date:
+                trip_month_map[t.id] = str(t.start_date)[:7]
+        for p in all_participants:
+            if p.account_id and p.trip_id in trip_month_map:
+                mk = trip_month_map[p.trip_id]
+                employees_per_month.setdefault(mk, set()).add(p.account_id)
+
     # Genera 6 mesi in ordine cronologico
-    from datetime import date
-    now_dt = datetime.now(timezone.utc)
     monthly_spend = []
     for i in range(5, -1, -1):
-        # calcola il mese (i mesi fa)
         month = (now_dt.month - i - 1) % 12 + 1
         year = now_dt.year + ((now_dt.month - i - 1) // 12)
         key = f"{year:04d}-{month:02d}"
-        monthly_spend.append({"month": key, "total": round(monthly_spend_map.get(key, 0.0), 2)})
+        monthly_spend.append({
+            "month": key,
+            "total": round(monthly_spend_map.get(key, 0.0), 2),
+            "employees_traveled": len(employees_per_month.get(key, set())),
+        })
 
     return {
         "trips": result,
@@ -2950,8 +3053,8 @@ async def request_approval(
                         html_content=email_approval_requested(
                             manager_name=manager_account.name,
                             trip_name=trip.name,
-                            trip_id=trip_id,
                             requester_name=f"{current_user.name} {current_user.surname}",
+                            manager_url=f"{os.getenv('FRONTEND_URL', 'https://splitplan-ai.vercel.app')}/manager",
                         ),
                     )
                 except Exception as e:
@@ -2972,6 +3075,8 @@ async def approve_trip(
     if not trip:
         raise HTTPException(404, "Viaggio non trovato")
 
+    require_same_company(trip_id, current_user, session)
+
     organizer_participant = session.exec(
         select(Participant).where(
             Participant.trip_id == trip_id,
@@ -2981,10 +3086,6 @@ async def approve_trip(
     organizer_account = None
     if organizer_participant and organizer_participant.account_id:
         organizer_account = session.get(Account, organizer_participant.account_id)
-    if not organizer_account:
-        raise HTTPException(403, "Impossibile verificare l'azienda del viaggio")
-    if organizer_account.company_id != current_user.company_id:
-        raise HTTPException(403, "Non puoi approvare viaggi di un'altra azienda")
 
     trip.status = "APPROVED"
     trip.approved_by = current_user.id
@@ -3010,8 +3111,8 @@ async def approve_trip(
                 html_content=email_trip_approved(
                     organizer_name=organizer_account.name,
                     trip_name=trip.name,
-                    trip_id=trip_id,
                     manager_name=f"{current_user.name} {current_user.surname}",
+                    trip_url=f"{os.getenv('FRONTEND_URL', 'https://splitplan-ai.vercel.app')}/trip/{trip_id}",
                 ),
             )
         except Exception as e:
@@ -3031,6 +3132,8 @@ async def reject_trip(
     if not trip:
         raise HTTPException(404, "Viaggio non trovato")
 
+    require_same_company(trip_id, current_user, session)
+
     organizer_participant = session.exec(
         select(Participant).where(
             Participant.trip_id == trip_id,
@@ -3040,10 +3143,6 @@ async def reject_trip(
     organizer_account = None
     if organizer_participant and organizer_participant.account_id:
         organizer_account = session.get(Account, organizer_participant.account_id)
-    if not organizer_account:
-        raise HTTPException(403, "Impossibile verificare l'azienda del viaggio")
-    if organizer_account.company_id != current_user.company_id:
-        raise HTTPException(403, "Non puoi rifiutare viaggi di un'altra azienda")
 
     trip.status = "REJECTED"
     trip.rejection_reason = body.rejection_reason
@@ -3070,8 +3169,8 @@ async def reject_trip(
                 html_content=email_trip_rejected(
                     organizer_name=organizer_account.name,
                     trip_name=trip.name,
-                    trip_id=trip_id,
                     manager_name=f"{current_user.name} {current_user.surname}",
+                    trip_url=f"{os.getenv('FRONTEND_URL', 'https://splitplan-ai.vercel.app')}/trip/{trip_id}",
                     reason=body.rejection_reason,
                 ),
             )

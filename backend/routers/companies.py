@@ -14,6 +14,8 @@ from database import get_session
 from auth import get_current_user, create_access_token, decode_token
 from models import Account, Company, Trip, Participant, Expense
 from utils.email_utils import get_smtp_config
+from email_templates import company_invite_email
+from services.notification_service import notify_managers
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/companies", tags=["Companies"])
@@ -161,6 +163,16 @@ async def join_company(
     session.add(current_user)
     session.commit()
 
+    # Notifica i manager della company del nuovo membro
+    notify_managers(
+        session=session,
+        company_id=company_id,
+        type="new_member",
+        title="Nuovo membro nel team",
+        message=f"{current_user.name} {current_user.surname} ({current_user.email}) si è unito all'azienda.",
+    )
+    session.commit()
+
     logger.info(f"[JOIN] {current_user.email} si è unito all'azienda '{company.name}' (id={company_id})")
     return {"message": f"Benvenuto in {company.name}!", "company_id": company_id}
 
@@ -215,15 +227,10 @@ async def invite_bulk(
 
         if smtp_conf:
             try:
-                html = (
-                    f"<p>{current_user.name} ti ha invitato a unirti a <strong>{company.name}</strong> su SplitPlan.</p>"
-                    f"<p><a href='{invite_url}'>Clicca qui per accettare l'invito</a></p>"
-                    f"<p style='color:#888;font-size:12px'>Link valido 7 giorni.</p>"
-                )
                 message = MessageSchema(
                     subject=f"Sei invitato a {company.name} su SplitPlan",
                     recipients=[email],
-                    body=html,
+                    body=company_invite_email(company_name=company.name, invite_url=invite_url),
                     subtype=MessageType.html,
                 )
                 fm = FastMail(smtp_conf)

@@ -14,6 +14,7 @@ from models import Trip, Participant, Account, Expense, SQLModel
 from utils.currency import get_exchange_rates
 from admin_auth import verify_admin_token
 from services.ocr_service import process_receipt_image, SUPPORTED_MIME_TYPES
+from services.notification_service import create_notification, notify_managers
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,49 @@ async def create_expense(
     session.add(db_expense)
     session.commit()
     session.refresh(db_expense)
+
+    # Controlla se il budget del viaggio è stato superato
+    if trip.budget_max and trip.budget_max > 0:
+        total_expenses = sum(
+            e.amount
+            for e in session.exec(select(Expense).where(Expense.trip_id == expense_req.trip_id)).all()
+        )
+        # Notifica solo al momento del superamento (prima della nuova spesa era sotto budget)
+        previous_total = total_expenses - amount_eur
+        if total_expenses > trip.budget_max and previous_total <= trip.budget_max:
+            # Notifica l'organizzatore del viaggio
+            organizer_participant = session.exec(
+                select(Participant).where(
+                    Participant.trip_id == expense_req.trip_id,
+                    Participant.is_organizer == True,
+                )
+            ).first()
+            if organizer_participant and organizer_participant.account_id:
+                create_notification(
+                    session=session,
+                    account_id=organizer_participant.account_id,
+                    type="budget_exceeded",
+                    title="Budget viaggio superato",
+                    message=(
+                        f"Le spese del viaggio \"{trip.name}\" hanno superato il budget: "
+                        f"€{total_expenses:.0f} su €{trip.budget_max:.0f} previsti."
+                    ),
+                    trip_id=expense_req.trip_id,
+                )
+            # Se trip BUSINESS, notifica anche i manager
+            if trip.trip_intent == "BUSINESS" and trip.company_id:
+                notify_managers(
+                    session=session,
+                    company_id=trip.company_id,
+                    type="budget_exceeded",
+                    title="Budget viaggio aziendale superato",
+                    message=(
+                        f"Il viaggio \"{trip.name}\" ha superato il budget: "
+                        f"€{total_expenses:.0f} / €{trip.budget_max:.0f}."
+                    ),
+                    trip_id=expense_req.trip_id,
+                )
+            session.commit()
 
     return db_expense
 

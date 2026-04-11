@@ -2,7 +2,7 @@ import sys
 import os
 import asyncio
 from unittest.mock import AsyncMock, patch
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Aggiungi la root del progetto al path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,7 +20,7 @@ async def test_emails():
         team_size="51-200",
         travel_frequency="Monthly",
         message="Voglio una demo personalizzata.",
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
 
     print("🔍 Testing send_demo_emails logic...")

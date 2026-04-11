@@ -6,8 +6,13 @@ import { useModal } from '../context/ModalContext';
 import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
 
+const PAGE_LIMIT = 20;
+
 const MyTrips = () => {
     const [trips, setTrips] = useState([]);
+    const [totalTrips, setTotalTrips] = useState(0);
+    const [skip, setSkip] = useState(0);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'archived'
@@ -22,16 +27,31 @@ const MyTrips = () => {
         setLoading(true);
         try {
             const [tripsData, statsData] = await Promise.all([
-                getUserTrips(),
+                getUserTrips(0, PAGE_LIMIT),
                 getUserStats()
             ]);
-            setTrips(tripsData);
+            setTrips(tripsData.trips);
+            setTotalTrips(tripsData.total);
+            setSkip(PAGE_LIMIT);
             setStats(statsData);
         } catch (error) {
             console.error("Error fetching data:", error);
             showToast("Errore nel caricamento dei dati", "error");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadMore = async () => {
+        setLoadingMore(true);
+        try {
+            const data = await getUserTrips(skip, PAGE_LIMIT);
+            setTrips(prev => [...prev, ...data.trips]);
+            setSkip(prev => prev + PAGE_LIMIT);
+        } catch (error) {
+            showToast("Errore nel caricamento: " + error.message, "error");
+        } finally {
+            setLoadingMore(false);
         }
     };
 
@@ -188,7 +208,7 @@ const MyTrips = () => {
                         <div className="w-12 h-12 border-4 border-muted/20 border-t-accent-primary rounded-full animate-spin mx-auto"></div>
                         <p className="text-muted tracking-widest uppercase text-[10px] font-black">Recuperando i tuoi ricordi...</p>
                     </div>
-                ) : trips.length === 0 ? (
+                ) : totalTrips === 0 ? (
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -289,7 +309,7 @@ const MyTrips = () => {
                                     )}
                                 </div>
                             ) : (
-                                currentTrips.slice().reverse().map(trip => (
+                                currentTrips.map(trip => (
                                     <motion.div
                                         key={trip.id}
                                         variants={itemVariants}
@@ -343,6 +363,19 @@ const MyTrips = () => {
                                 ))
                             )}
                         </motion.div>
+
+                        {/* Load More */}
+                        {trips.length < totalTrips && !searchQuery && typeFilter === 'ALL' && statusFilter === 'ALL' && (
+                            <div className="mt-10 text-center">
+                                <button
+                                    onClick={loadMore}
+                                    disabled={loadingMore}
+                                    className="px-8 py-3 text-[10px] font-black uppercase tracking-widest border border-border-subtle rounded-sm text-primary hover:bg-accent-primary hover:text-base hover:border-accent-primary transition-all disabled:opacity-50"
+                                >
+                                    {loadingMore ? 'Caricamento...' : `Carica altri (${totalTrips - trips.length} rimanenti)`}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -26,6 +26,9 @@ const CompanyDashboard = () => {
     const [trips, setTrips] = useState([]);
     const [analytics, setAnalytics] = useState(null);
     const [totalMembers, setTotalMembers] = useState(1);
+    const [members, setMembers] = useState([]);
+    const [memberSearch, setMemberSearch] = useState('');
+    const [activeSection, setActiveSection] = useState('trips'); // 'trips' | 'members'
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
     const [processingId, setProcessingId] = useState(null);
@@ -63,6 +66,7 @@ const CompanyDashboard = () => {
                 try {
                     const companyData = await getCompanyDashboardData(currentUser.company_id);
                     setTotalMembers(companyData.total_members ?? 1);
+                    setMembers(companyData.members || []);
                 } catch {
                     // Non-blocking: keep default of 1
                 }
@@ -414,6 +418,100 @@ const CompanyDashboard = () => {
                     </motion.div>
                 )}
 
+                {/* Section switcher: Trasferte / Membri */}
+                <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)] pb-4">
+                    <button
+                        onClick={() => setActiveSection('trips')}
+                        className={cn(
+                            "px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all border",
+                            activeSection === 'trips'
+                                ? "bg-[var(--accent-primary)] text-[var(--bg-base)] border-[var(--accent-primary)]"
+                                : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)]"
+                        )}
+                    >
+                        Trasferte ({trips.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveSection('members')}
+                        className={cn(
+                            "px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all border",
+                            activeSection === 'members'
+                                ? "bg-[var(--accent-primary)] text-[var(--bg-base)] border-[var(--accent-primary)]"
+                                : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)]"
+                        )}
+                    >
+                        Membri ({totalMembers})
+                    </button>
+                </div>
+
+                {activeSection === 'members' ? (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                        {/* Search bar */}
+                        <div className="relative mb-6 max-w-sm">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                value={memberSearch}
+                                onChange={e => setMemberSearch(e.target.value)}
+                                placeholder="Cerca per nome o email..."
+                                className="w-full pl-9 pr-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm focus:outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)]"
+                            />
+                        </div>
+
+                        {members.length === 0 ? (
+                            <div className="text-center py-20 text-[var(--text-muted)]">
+                                <Users className="w-10 h-10 mx-auto mb-4 opacity-30" />
+                                <p className="text-sm font-bold uppercase tracking-widest">Nessun membro trovato</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {members
+                                    .filter(m => {
+                                        const q = memberSearch.trim().toLowerCase();
+                                        if (!q) return true;
+                                        return (
+                                            `${m.name} ${m.surname}`.toLowerCase().includes(q) ||
+                                            m.email.toLowerCase().includes(q)
+                                        );
+                                    })
+                                    .map(m => (
+                                        <div
+                                            key={m.id}
+                                            className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-sm px-5 py-4 flex items-center justify-between hover:border-[var(--border-medium)] transition-all"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-9 h-9 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center text-sm font-black text-[var(--accent-primary)] uppercase">
+                                                    {(m.name?.[0] || '?')}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-[var(--text-primary)]">{m.name} {m.surname}</p>
+                                                    <p className="text-[11px] text-[var(--text-muted)]">{m.email}</p>
+                                                </div>
+                                            </div>
+                                            <span className={cn(
+                                                "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm border",
+                                                m.is_manager
+                                                    ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/20"
+                                                    : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)]"
+                                            )}>
+                                                {m.is_manager ? 'Manager' : 'Dipendente'}
+                                            </span>
+                                        </div>
+                                    ))
+                                }
+                                {memberSearch && members.filter(m => {
+                                    const q = memberSearch.trim().toLowerCase();
+                                    return `${m.name} ${m.surname}`.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+                                }).length === 0 && (
+                                    <p className="text-center text-[var(--text-muted)] text-sm py-10">Nessun membro corrisponde alla ricerca.</p>
+                                )}
+                            </div>
+                        )}
+                    </motion.div>
+                ) : (<>
+
                 {/* Filter tabs */}
                 <div className="flex gap-2 mb-6 flex-wrap">
                     {[
@@ -525,6 +623,8 @@ const CompanyDashboard = () => {
                         })}
                     </div>
                 )}
+                </>)}
+
             </div>
         </div>
 

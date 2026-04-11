@@ -65,25 +65,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ## SEZIONE 2 — DATABASE & MODELLI
 
 ### 2.1 Estensione Modello Company (B2B Core)
-- [ ] 🟠 `[DB]` Aggiungere campi al modello `Company`:
-  ```python
-  # Billing & Identità (⚠️ non ancora aggiunti)
-  vat_number: Optional[str]          # P.IVA per fatturazione
-  billing_email: Optional[str]       # Email fatturazione
-  billing_address: Optional[str]     # Indirizzo sede legale
-  
-  # Piano e Limiti (✅ aggiunti in migrazione c1d2e3f4a5b6)
-  plan: str = "starter"              # "starter" | "growth" | "enterprise"
-  plan_expires_at: Optional[datetime]
-  max_active_users: int = 30         # 30 Starter, 120 Growth, 999999 Enterprise
-  max_trips_per_month: int = 15      # 15 Starter, illimitato Growth/Enterprise
-  max_ai_calls_per_day: int = 200    # 200 Starter, 500 Growth, illimitato Enterprise
-  
-  # Tracking (⚠️ non ancora aggiunti)
-  stripe_customer_id: Optional[str]  # Per fatturazione B2B
-  onboarded_at: Optional[datetime]
-  ```
-- [x] 🟠 `[DB]` Creare migrazione Alembic per i nuovi campi Company (plan/limiti — `c1d2e3f4a5b6`)
+- [x] 🟠 `[DB]` Aggiungere campi al modello `Company`:
+  - ✅ vat_number, billing_email, billing_address, stripe_customer_id, onboarded_at (migrazione `d2e3f4a5b6c7`)
+  - ✅ plan, plan_expires_at, max_active_users, max_trips_per_month, max_ai_calls_per_day (migrazione `c1d2e3f4a5b6`)
+- [x] 🟠 `[DB]` Creare migrazione Alembic per i nuovi campi Company (plan/limiti — `c1d2e3f4a5b6`; billing — `d2e3f4a5b6c7`)
 - [ ] 🟡 `[DB]` Aggiungere tabella `CompanyInvoice` per storico fatture (o usare Stripe Billing direttamente)
 
 ### 2.2 Estensione Modello Trip (Workflow Approvazione)
@@ -109,7 +94,7 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [x] 🟡 `[DB]` Aggiungere indice su `(account_id, is_read)` per query performanti
 
 ### 2.4 Pulizia Modelli Esistenti
-- [ ] 🟡 `[DB]` `datetime.utcnow` è deprecato in Python 3.12+ — sostituire con `datetime.now(timezone.utc)` in tutti i modelli (Company.created_at, ProcessedStripeEvent.processed_at, DemoLead.created_at)
+- [x] 🟡 `[DB]` `datetime.utcnow` è deprecato in Python 3.12+ — unica occorrenza in `test_demo_emails.py`, sostituita con `datetime.now(timezone.utc)`
 - [ ] 🟡 `[DB]` Il campo `Expense.involved_ids` è un JSON string (`"[1, 2, 3]"`) — valutare migrazione a campo JSON nativo PostgreSQL per query più pulite
 - [ ] 🟢 `[DB]` Aggiungere soft delete (`deleted_at: Optional[datetime]`) su Trip e Account per compliance GDPR (attualmente hard delete)
 
@@ -130,9 +115,9 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ### 3.2 Autorizzazione B2B
 - [x] 🔴 `[BE]` Fixare endpoint `approve_trip` — verifica `current_user.is_manager == True` AND stessa company; 403 immediato se organizer_account è None
 - [x] 🟠 `[BE]` `reject_trip` ora setta `status = "REJECTED"` (non più `BOOKED`) con `rejection_reason` nel body
-- [ ] 🟠 `[BE]` Il trip creato da un dipendente aziendale deve ereditare `company_id` — attualmente il Trip non ha un campo company_id, il legame è indiretto tramite Account→Company. Valutare se aggiungere `company_id` a Trip per query dirette
+- [x] 🟠 `[BE]` Il trip creato da un dipendente aziendale eredita `company_id` — aggiunto campo `Trip.company_id` (migrazione `e3f4a5b6c7d8`), auto-popolato in `create_trip` per trip BUSINESS
 - [x] 🟠 `[BE]` Creare middleware/dependency `require_manager()` riutilizzabile per tutti gli endpoint manager-only
-- [ ] 🟡 `[BE]` Creare middleware `require_same_company(trip_id)` che verifica che l'utente appartenga alla stessa company del trip
+- [x] 🟡 `[BE]` Creare middleware `require_same_company(trip_id)` che verifica che l'utente appartenga alla stessa company del trip
 
 ---
 
@@ -158,7 +143,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
   - `create_notification(account_id, type, title, message, trip_id)`
   - `notify_managers(company_id, type, title, message, trip_id)`
   - `send_notification_email(account, notification)`
-- [ ] 🟡 `[BE]` Integrare notifiche negli eventi chiave: trip creato (BUSINESS), budget superato, nota spese generata, nuovo membro company
+- [x] 🟡 `[BE]` Integrare notifiche negli eventi chiave: trip creato (BUSINESS), budget superato, nota spese generata, nuovo membro company
+  - ✅ `trips.py` `create_trip`: `notify_managers()` quando trip_intent=BUSINESS
+  - ✅ `expenses.py` `create_expense`: `create_notification()` + `notify_managers()` al primo superamento di budget_max
+  - ✅ `companies.py` `join_company`: `notify_managers()` quando un nuovo membro si unisce
 
 ### 4.4 Export & Reportistica (Mancante — Critico per B2B)
 - [x] 🟠 `[BE]` Endpoint `GET /companies/{id}/expenses/export?format=csv&month=YYYY-MM` — export CSV spese trip aziendali con filtro mese opzionale
@@ -173,11 +161,11 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟡 `[FE]` UI per upload CSV di dipendenti (colonne: email, nome, cognome) — alternativa più veloce all'invito manuale uno per uno
 
 ### 4.5 Dashboard Manager Arricchita
-- [ ] 🟠 `[BE]` Estendere `GET /business-overview` con analytics:
-  - Spesa totale per mese (somma Expense dei trip BUSINESS della company)
-  - Top 5 destinazioni per frequenza
-  - Numero dipendenti che hanno viaggiato nel mese
-  - Breakdown per stato (pending/approved/completed)
+- [x] 🟠 `[BE]` Estendere `GET /business-overview` con analytics (monthly_spend, top_destinations, trips_by_status — implementati); manca ancora `employees_traveled_per_month`
+  - ✅ Spesa totale per mese (somma Expense dei trip BUSINESS della company)
+  - ✅ Top 5 destinazioni per frequenza
+  - ✅ Breakdown per stato (pending/approved/completed)
+  - [x] Numero dipendenti che hanno viaggiato nel mese (`employees_traveled` per mese in monthly_spend)
 - [ ] 🟡 `[BE]` Creare `GET /companies/{id}/analytics` con dati aggregati:
   - Spesa per dipartimento (richiede campo `department` su Account — futuro)
   - Costo medio per viaggio
@@ -194,7 +182,9 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟡 `[BE]` Implementare fatturazione automatica con Stripe Invoicing (necessario per B2B Italia)
 
 ### 4.7 Voli & Hotel — Deep Link Improvement (No intermediazione)
-- [ ] 🟡 `[BE]` Il `booking_url` nei risultati Duffel è hardcoded `"#"` — sostituire con deep link a Skyscanner/Kiwi con parametri pre-compilati (origin, destination, dates, passengers) come fallback
+- [x] 🟡 `[BE]` Il `booking_url` nei risultati Duffel è hardcoded `"#"` — sostituire con deep link a Skyscanner/Kiwi con parametri pre-compilati (origin, destination, dates, passengers) come fallback
+  - ✅ `flights.py`: `_skyscanner_url()` helper + booking_url parametrico nei risultati Duffel
+  - ✅ `trips.py` `search-options`: post-processing URL AI → Booking.com per hotel, Skyscanner/Kiwi per voli
 - [ ] 🟡 `[BE]` Valutare Skyscanner Affiliate API per link con tracking commissione
 - [ ] 🟢 `[BE]` Ricerca hotel: attualmente solo deep link Booking.com. Valutare Booking.com Affiliate API o Amadeus Hotel Search per risultati in-app
 
@@ -203,7 +193,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ## SEZIONE 5 — BACKEND — QUALITÀ & ROBUSTEZZA
 
 ### 5.1 Error Handling
-- [ ] 🟡 `[BE]` Il global exception handler in `main.py` cattura tutto con 500 generico — aggiungere logging strutturato con traceback completo
+- [x] 🟡 `[BE]` Il global exception handler in `main.py` cattura tutto con 500 generico — aggiungere logging strutturato con traceback completo
+  - ✅ `global_exception_handler`: log tipo eccezione + traceback completo via `traceback.format_exc()`; `basicConfig` ora fa stream su stdout
 - [ ] 🟡 `[BE]` Aggiungere validation esplicita su tutti gli endpoint che accettano input utente (Pydantic models per request body dove mancano)
 - [ ] 🟡 `[BE]` Endpoint `search_flights`: gestire il caso in cui Duffel API key non è valida con messaggio user-friendly
 
@@ -216,21 +207,24 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟢 `[BE]` Setup CI con GitHub Actions: lint + test su ogni push
 
 ### 5.3 Performance
-- [ ] 🟡 `[BE]` `get_business_overview` fa N+1 query (una per trip per trovare l'organizer) — ottimizzare con joinedload
-- [ ] 🟡 `[BE]` `get_my_trips` potenzialmente lenta con molti trip — aggiungere paginazione
+- [x] 🟡 `[BE]` `get_business_overview` fa N+1 query — ottimizzato con fetch bulk organizzatori e proposte (2 query invece di 2N)
+- [x] 🟡 `[BE]` `get_my_trips` potenzialmente lenta con molti trip — aggiungere paginazione
+  - ✅ `trips.py`: `skip`/`limit` query params, risposta `{trips, total, skip, limit}`, ordinamento `Trip.id.desc()`
+  - ✅ `api.js`: `getUserTrips(skip, limit)` con defaults `(0, 20)`
+  - ✅ `MyTrips.jsx`: stato `totalTrips`/`skip`, bottone "Carica altri" con contatore rimanenti
 - [ ] 🟢 `[BE]` Aggiungere caching (in-memory o Redis) per risposte Nominatim/Overpass frequenti
 
 ### 5.3b Email Templates
-- [ ] 🟡 `[BE]` Creare template HTML per le email transazionali principali (attualmente probabilmente testo plain):
-  - Benvenuto nuovo utente
-  - Reset password
-  - Invito a company aziendale
-  - Richiesta approvazione trip (per manager)
-  - Trip approvato / rifiutato (per dipendente)
-- [ ] 🟡 `[BE]` Usare Jinja2 (già disponibile con FastAPI) per parametrizzare i template HTML
+- [x] 🟡 `[BE]` Creare template HTML per le email transazionali principali in `email_templates.py`:
+  - ✅ Benvenuto nuovo utente (`welcome_email`)
+  - ✅ Reset password (`reset_password_email`)
+  - ✅ Invito a company aziendale (`company_invite_email`) — usato in `invite-bulk`
+  - ✅ Richiesta approvazione trip (`email_approval_requested`) — migrato da notification_service
+  - ✅ Trip approvato / rifiutato (`email_trip_approved`, `email_trip_rejected`) — migrati e migliorati
+- [x] 🟡 `[BE]` Template parametrizzati con f-string (Jinja2 non necessario per questo caso d'uso)
 
 ### 5.4 Pulizia Codice
-- [ ] 🟡 `[BE]` Rimuovere tutti gli endpoint `migrate-*` deprecati in `trips.py` (righe 329-480) — le migrazioni ora passano da Alembic
+- [x] 🟡 `[BE]` Rimuovere tutti gli endpoint `migrate-*` deprecati in `trips.py` — già rimossi, le righe 329-480 contengono utility functions valide
 - [ ] 🟡 `[BE]` `trips.py` è un file da 2995 righe — splittare in moduli più piccoli (trip CRUD, proposals, itinerary, budget, business)
 - [ ] 🟢 `[BE]` Standardizzare i response model: alcuni endpoint ritornano dict arbitrari, altri usano Pydantic models
 
@@ -250,9 +244,12 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟡 `[FE]` Aggiungere suono/vibrazione su notifica critica (approvazione richiesta, budget superato)
 
 ### 6.3 CompanyDashboard Enhancement
-- [ ] 🟠 `[FE]` Aggiungere sezione analytics: grafici spesa mensile, breakdown per stato trip
+- [x] 🟠 `[FE]` Aggiungere sezione analytics: grafici spesa mensile, breakdown per stato trip
 - [x] 🟠 `[FE]` Mostrare il motivo del rifiuto quando un trip è REJECTED (banner rosso in Dashboard)
 - [x] 🟠 `[FE]` Tab "Membri" con lista dipendenti + bulk invite via textarea email
+  - ✅ Sezione "Trasferte / Membri" switcher in CompanyDashboard
+  - ✅ Lista membri con avatar, nome, email, badge Manager/Dipendente
+  - ✅ Search bar real-time filtro su nome + email
 - [ ] 🟡 `[FE]` Aggiungere tab "Impostazioni" con configurazione policy (max budget per trip, ecc.)
 - [ ] 🟡 `[FE]` Aggiungere tab "Fatturazione" con link a Stripe Customer Portal
 
@@ -262,8 +259,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [x] 🟠 `[FE]` CompanyDashboard: quick-action approve/reject con campo motivazione per il reject (modal inline)
 
 ### 6.5 Pricing Page B2B
-- [ ] 🟠 `[FE]` Creare pagina `/pricing-business` o sezione dedicata che mostra i 3 piani B2B (Starter, Growth, Enterprise)
-- [ ] 🟠 `[FE]` Aggiornare `Pricing.jsx` per includere link alla pagina B2B oppure i piani B2B direttamente
+- [x] 🟠 `[FE]` Creare pagina `/pricing-business` o sezione dedicata che mostra i 3 piani B2B (Starter, Growth, Enterprise)
+- [x] 🟠 `[FE]` Aggiornare `App.jsx` per includere route `/pricing-business` (CTA → /demo finché Stripe non è live)
 - [ ] 🟡 `[FE]` Sincronizzare prezzi in `llms.txt` con i prezzi reali (attualmente mostra €7.99 B2C)
 
 ### 6.6 UX Polish

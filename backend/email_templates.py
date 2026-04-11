@@ -384,6 +384,228 @@ def demo_request_notification_email(
     return base_template(content)
 
 
+def welcome_email(name: str, login_url: str) -> str:
+    """Email di benvenuto per nuovo utente registrato."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#127881;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Benvenuto su SplitPlan!
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            Il tuo account è attivo. Inizia subito a pianificare viaggi di gruppo con l'AI — proponi destinazioni, vota e organizza tutto in un'unica piattaforma.
+        </p>
+
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 28px; border: 1px solid #eef1f5;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <span style="color: #23599E; font-size: 16px; margin-right: 10px;">&#9989;</span>
+                        <span style="color: #333; font-size: 14px;">Crea il tuo primo viaggio con l'AI</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <span style="color: #23599E; font-size: 16px; margin-right: 10px;">&#9989;</span>
+                        <span style="color: #333; font-size: 14px;">Invita il tuo gruppo e vota la destinazione</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <span style="color: #23599E; font-size: 16px; margin-right: 10px;">&#9989;</span>
+                        <span style="color: #333; font-size: 14px;">Gestisci spese e budget in tempo reale</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{login_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                &#9992;&#65039;&nbsp;&nbsp;Inizia a Pianificare
+            </a>
+        </div>
+    """
+    return base_template(content)
+
+
+def company_invite_email(company_name: str, invite_url: str) -> str:
+    """Email di invito a unirsi a un'azienda su SplitPlan."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #f0f7ff; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#127970;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Sei stato invitato!
+            </h2>
+        </div>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Sei stato invitato a unirti a <strong style="color: #23599E;">{company_name}</strong> su SplitPlan.
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 28px 0;">
+            SplitPlan è la piattaforma che gestisce le trasferte aziendali con l'AI — pianificazione, approvazioni e note spese, tutto in un posto.
+        </p>
+
+        <div style="background-color: #f0f7ff; border-radius: 12px; padding: 18px 20px; margin-bottom: 28px; border: 1px solid #d0e7ff; text-align: center;">
+            <p style="color: #23599E; font-size: 14px; font-weight: 700; margin: 0;">
+                &#127970; Organizzazione: <strong>{company_name}</strong>
+            </p>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{invite_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                Accetta Invito
+            </a>
+        </div>
+
+        <div style="border-top: 1px solid #eef1f5; margin: 30px 0;"></div>
+        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
+            Se il pulsante non funziona, copia e incolla questo link nel browser:<br>
+            <a href="{invite_url}" style="color: #23599E; text-decoration: underline;">{invite_url}</a>
+        </p>
+    """
+    return base_template(content)
+
+
+def email_approval_requested(manager_name: str, trip_name: str, requester_name: str, manager_url: str) -> str:
+    """Email al manager: dipendente ha richiesto approvazione trasferta."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #fffbeb; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#9203;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Nuova Richiesta di Approvazione
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{manager_name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            <strong>{requester_name}</strong> ha richiesto l'approvazione della seguente trasferta aziendale:
+        </p>
+
+        <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 12px 12px 0; padding: 18px 20px; margin-bottom: 28px;">
+            <p style="color: #92400e; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px 0;">Trasferta in attesa</p>
+            <p style="color: #1a1a1a; font-size: 17px; font-weight: 800; margin: 0;">&#128188; {trip_name}</p>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{manager_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                &#9989;&nbsp;&nbsp;Approva o Rifiuta
+            </a>
+        </div>
+
+        <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            Accedi alla dashboard manager per visualizzare i dettagli e prendere una decisione.
+        </p>
+    """
+    return base_template(content)
+
+
+def email_trip_approved(organizer_name: str, trip_name: str, manager_name: str, trip_url: str) -> str:
+    """Email all'organizzatore: trasferta approvata dal manager."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #f0fdf4; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#9989;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Trasferta Approvata!
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{organizer_name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            Ottima notizia! La tua trasferta aziendale è stata approvata.
+        </p>
+
+        <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 0 12px 12px 0; padding: 18px 20px; margin-bottom: 28px;">
+            <p style="color: #14532d; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px 0;">Approvato da {manager_name}</p>
+            <p style="color: #1a1a1a; font-size: 17px; font-weight: 800; margin: 0;">&#128188; {trip_name}</p>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{trip_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #16a34a, #15803d); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);">
+                &#9992;&#65039;&nbsp;&nbsp;Vai alla Trasferta
+            </a>
+        </div>
+    """
+    return base_template(content)
+
+
+def email_trip_rejected(organizer_name: str, trip_name: str, manager_name: str, trip_url: str, reason: str = None) -> str:
+    """Email all'organizzatore: trasferta rifiutata dal manager."""
+    reason_block = f"""
+        <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 0 12px 12px 0; padding: 16px 20px; margin: 20px 0;">
+            <p style="color: #991b1b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin: 0 0 6px 0;">Motivazione</p>
+            <p style="color: #7f1d1d; font-size: 14px; line-height: 1.6; margin: 0;">{reason}</p>
+        </div>
+    """ if reason else ""
+
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #fef2f2; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#10060;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Trasferta Non Approvata
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{organizer_name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+            La tua trasferta aziendale <strong>"{trip_name}"</strong> è stata rifiutata da <strong>{manager_name}</strong>.
+        </p>
+
+        {reason_block}
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{trip_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                Modifica e Richiedi di Nuovo
+            </a>
+        </div>
+
+        <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            Puoi rivedere il piano e richiedere nuovamente l'approvazione.
+        </p>
+    """
+    return base_template(content)
+
+
 def demo_request_confirmation_email(full_name: str, company_name: str) -> str:
     """Template email di conferma/ringraziamento per il cliente che richiede la demo."""
     content = f"""

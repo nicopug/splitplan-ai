@@ -16,6 +16,13 @@ class Company(SQLModel, table=True):
     max_trips_per_month: int = Field(default=15)
     max_ai_calls_per_day: int = Field(default=200)
 
+    # Billing & identità (per fatturazione B2B)
+    vat_number: Optional[str] = Field(default=None)
+    billing_email: Optional[str] = Field(default=None)
+    billing_address: Optional[str] = Field(default=None)
+    stripe_customer_id: Optional[str] = Field(default=None)
+    onboarded_at: Optional[datetime] = Field(default=None)
+
     accounts: List["Account"] = Relationship(back_populates="company")
 
 
@@ -77,6 +84,7 @@ class TripBase(SQLModel):
     work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
 
     status: str = "PLANNING"
+    company_id: Optional[int] = Field(default=None, foreign_key="company.id", index=True)
     approved_by: Optional[int] = Field(default=None, foreign_key="account.id")
     approval_requested_at: Optional[datetime] = Field(default=None)
     rejection_reason: Optional[str] = Field(default=None)

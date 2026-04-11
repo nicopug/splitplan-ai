@@ -424,8 +424,8 @@ export const exportTripPDF = async (tripId) => {
     document.body.removeChild(a);
 };
 
-export const getUserTrips = async () => {
-    const response = await fetch(`${API_URL}/trips/my-trips`, {
+export const getUserTrips = async (skip = 0, limit = 20) => {
+    const response = await fetch(`${API_URL}/trips/my-trips?skip=${skip}&limit=${limit}`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);

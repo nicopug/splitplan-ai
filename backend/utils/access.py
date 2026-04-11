@@ -4,6 +4,33 @@ from sqlmodel import Session, select, func
 from models import Account, Company, Participant, Trip
 
 
+def require_same_company(trip_id: int, current_user: Account, session: Session) -> Account:
+    """
+    Verifica che il manager e l'organizzatore del trip appartengano alla stessa company.
+    Solleva 403 altrimenti. Ritorna current_user per chaining.
+    """
+    organizer_participant = session.exec(
+        select(Participant).where(
+            Participant.trip_id == trip_id,
+            Participant.is_organizer == True,
+        )
+    ).first()
+
+    organizer_account = None
+    if organizer_participant and organizer_participant.account_id:
+        organizer_account = session.get(Account, organizer_participant.account_id)
+
+    if not organizer_account:
+        raise HTTPException(
+            status_code=403, detail="Impossibile verificare l'azienda del viaggio"
+        )
+    if organizer_account.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=403, detail="Non puoi gestire viaggi di un'altra azienda"
+        )
+    return current_user
+
+
 def check_participant(trip_id: int, account: Account, session: Session) -> Participant:
     """Verifica che l'account sia un partecipante del viaggio. Solleva 403 altrimenti."""
     member = session.exec(

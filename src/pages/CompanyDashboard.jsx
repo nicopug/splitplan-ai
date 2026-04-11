@@ -104,10 +104,12 @@ const CompanyDashboard = () => {
 
     const handleConfirmReject = async () => {
         if (!rejectModal) return;
-        setProcessingId(rejectModal.tripId);
-        setRejectModal(null);
+        const { tripId } = rejectModal;
+        const reason = rejectReason || null;
+        setProcessingId(tripId);
         try {
-            await rejectTrip(rejectModal.tripId, rejectReason || null);
+            await rejectTrip(tripId, reason);
+            setRejectModal(null);
             showToast('Trasferta rifiutata', 'success');
             await fetchData();
         } catch (err) {

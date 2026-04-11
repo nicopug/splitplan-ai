@@ -601,7 +601,7 @@ async def confirm_trip_option(
     try:
         if request.type == "hotel":
             trip.hotel_cost = request.price
-            trip.accommodation_location = request.title  # store the name dynamically
+            trip.accommodation_location = request.provider  # store the name dynamically
         else:
             trip.transport_cost = request.price
 
@@ -1252,8 +1252,17 @@ async def update_trip(
         ).first()
         if not check:
             raise HTTPException(status_code=403, detail="Non autorizzato")
+        if not check.is_organizer:
+            raise HTTPException(status_code=403, detail="Solo l'organizzatore può modificare il viaggio")
 
+        # Blocca campi sensibili che non devono essere aggiornati via PATCH libero
+        _BLOCKED_FIELDS = {
+            "status", "is_premium", "approved_by", "winning_proposal_id",
+            "company_id", "trip_intent", "rejection_reason", "approval_requested_at",
+        }
         for key, value in updates.items():
+            if key in _BLOCKED_FIELDS:
+                continue
             if hasattr(trip, key):
                 setattr(trip, key, value)
 
@@ -1491,6 +1500,8 @@ async def generate_proposals(
                     select(Proposal).where(Proposal.trip_id == trip_id)
                 ).all()
 
+            except HTTPException:
+                raise
             except Exception as e:
                 logger.error(f"[AI Error] Generazione fallita: {e}")
 
@@ -1910,10 +1921,12 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
 
         session.commit()
         logger.info(f"[ITI-10] DONE. Itinerary for Trip {trip.id} generated correctly.")
+        return True
 
     except Exception as e:
         session.rollback()
         logger.error(f"[AI Error] Generazione itinerario fallita: {e}", exc_info=True)
+        return False
 
 
 @router.post("/{trip_id}/confirm-hotel")
@@ -1962,10 +1975,11 @@ async def confirm_hotel(
                 description="",
             )
 
-        await generate_itinerary_content(trip, proposal, session)
+        itinerary_ok = await generate_itinerary_content(trip, proposal, session)
         return {
             "status": "success",
-            "message": "Logistica confermata. Itinerario generato.",
+            "itinerary_generated": itinerary_ok,
+            "message": "Logistica confermata. Itinerario generato." if itinerary_ok else "Logistica confermata. Generazione itinerario in corso.",
         }
     except HTTPException:
         session.rollback()
@@ -2384,11 +2398,9 @@ async def chat_with_ai(
             "itinerary": [i.model_dump() for i in updated],
         }
 
-    except Exception as e:
+    except HTTPException:
         session.rollback()
-        logger.error(f"[Chat Error] {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise
     except Exception as e:
         session.rollback()
         logger.error(f"[Chat Error] {e}")
@@ -2933,8 +2945,10 @@ async def approve_trip(
     organizer_account = None
     if organizer_participant and organizer_participant.account_id:
         organizer_account = session.get(Account, organizer_participant.account_id)
-        if organizer_account and organizer_account.company_id != current_user.company_id:
-            raise HTTPException(403, "Non puoi approvare viaggi di un'altra azienda")
+    if not organizer_account:
+        raise HTTPException(403, "Impossibile verificare l'azienda del viaggio")
+    if organizer_account.company_id != current_user.company_id:
+        raise HTTPException(403, "Non puoi approvare viaggi di un'altra azienda")
 
     trip.status = "APPROVED"
     trip.approved_by = current_user.id
@@ -2990,8 +3004,10 @@ async def reject_trip(
     organizer_account = None
     if organizer_participant and organizer_participant.account_id:
         organizer_account = session.get(Account, organizer_participant.account_id)
-        if organizer_account and organizer_account.company_id != current_user.company_id:
-            raise HTTPException(403, "Non puoi rifiutare viaggi di un'altra azienda")
+    if not organizer_account:
+        raise HTTPException(403, "Impossibile verificare l'azienda del viaggio")
+    if organizer_account.company_id != current_user.company_id:
+        raise HTTPException(403, "Non puoi rifiutare viaggi di un'altra azienda")
 
     trip.status = "REJECTED"
     trip.rejection_reason = body.rejection_reason

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken, exportCompanyExpensesCSV, bulkInviteMembers } from '../api';
+import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken, exportCompanyExpensesCSV, bulkInviteMembers, getCompanyDashboardData } from '../api';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, Clock, Briefcase, Users, MapPin, Calendar, TrendingUp, ExternalLink, Link2, Copy } from 'lucide-react';
@@ -25,6 +25,7 @@ const formatDate = (iso) => {
 const CompanyDashboard = () => {
     const [trips, setTrips] = useState([]);
     const [analytics, setAnalytics] = useState(null);
+    const [totalMembers, setTotalMembers] = useState(1);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
     const [processingId, setProcessingId] = useState(null);
@@ -33,6 +34,7 @@ const CompanyDashboard = () => {
     const [rejectModal, setRejectModal] = useState(null); // { tripId, tripName }
     const [rejectReason, setRejectReason] = useState('');
     const [exportLoading, setExportLoading] = useState(false);
+    const [exportMonth, setExportMonth] = useState('');
     const [bulkModal, setBulkModal] = useState(false);
     const [bulkEmails, setBulkEmails] = useState('');
     const [bulkLoading, setBulkLoading] = useState(false);
@@ -52,6 +54,18 @@ const CompanyDashboard = () => {
             } else {
                 setTrips(data.trips || []);
                 setAnalytics(data.analytics || null);
+            }
+            // Fetch member count for onboarding checklist
+            const currentUser = (() => {
+                try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+            })();
+            if (currentUser?.company_id) {
+                try {
+                    const companyData = await getCompanyDashboardData(currentUser.company_id);
+                    setTotalMembers(companyData.total_members ?? 1);
+                } catch {
+                    // Non-blocking: keep default of 1
+                }
             }
         } catch (err) {
             showToast('Errore caricamento trasferte: ' + err.message, 'error');
@@ -164,28 +178,37 @@ const CompanyDashboard = () => {
                         <h1 className="text-4xl font-black uppercase tracking-tight mb-2">Dashboard Aziendale</h1>
                         <p className="text-[var(--text-muted)] text-sm">Gestisci e approva le trasferte del tuo team</p>
                     </div>
-                    <button
-                        onClick={async () => {
-                            if (!user?.company_id) return;
-                            setExportLoading(true);
-                            try {
-                                await exportCompanyExpensesCSV(user.company_id);
-                                showToast('CSV esportato', 'success');
-                            } catch {
-                                showToast('Errore export CSV', 'error');
-                            } finally {
-                                setExportLoading(false);
+                    <div className="flex items-center gap-2 shrink-0">
+                        <input
+                            type="month"
+                            value={exportMonth}
+                            onChange={e => setExportMonth(e.target.value)}
+                            className="h-9 px-2 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)]"
+                            title="Filtra per mese (opzionale)"
+                        />
+                        <button
+                            onClick={async () => {
+                                if (!user?.company_id) return;
+                                setExportLoading(true);
+                                try {
+                                    await exportCompanyExpensesCSV(user.company_id, exportMonth || null);
+                                    showToast('CSV esportato', 'success');
+                                } catch {
+                                    showToast('Errore export CSV', 'error');
+                                } finally {
+                                    setExportLoading(false);
+                                }
+                            }}
+                            disabled={exportLoading}
+                            className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all disabled:opacity-50"
+                        >
+                            {exportLoading
+                                ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                             }
-                        }}
-                        disabled={exportLoading}
-                        className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all shrink-0 disabled:opacity-50"
-                    >
-                        {exportLoading
-                            ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        }
-                        Esporta Spese CSV
-                    </button>
+                            Esporta Spese CSV
+                        </button>
+                    </div>
                     <button
                         onClick={() => setBulkModal(true)}
                         className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm border border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all shrink-0"
@@ -321,36 +344,58 @@ const CompanyDashboard = () => {
                     </motion.div>
                 )}
 
-                {/* Onboarding Checklist — shown only for new admins with no trips */}
+                {/* Onboarding Checklist — shown only for new companies with no trips */}
                 {trips.length === 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="mb-10 p-6 bg-[var(--bg-card)] border border-[var(--accent-primary)]/30 rounded-sm"
+                        className="mb-10 p-6 bg-[var(--bg-card)] border border-[var(--accent-primary)]/30 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
                     >
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] mb-4">Inizia con SplitPlan</p>
-                        <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] mb-1">Benvenuto su SplitPlan</p>
+                        <p className="text-xs text-[var(--text-muted)] mb-5">Completa questi passaggi per iniziare a gestire le trasferte del tuo team.</p>
+                        <div className="space-y-4">
                             {[
-                                { done: true, text: 'Account aziendale creato' },
-                                { done: false, text: 'Invita il tuo team', action: () => setBulkModal(true), actionLabel: 'Invita ora' },
-                                { done: false, text: 'Crea la prima trasferta aziendale', action: () => window.location.href = '/', actionLabel: 'Crea trasferta' },
+                                {
+                                    done: true,
+                                    text: 'Account aziendale creato',
+                                },
+                                {
+                                    done: totalMembers > 1,
+                                    text: 'Invita il tuo team',
+                                    action: () => setBulkModal(true),
+                                    actionLabel: 'Invita ora',
+                                },
+                                {
+                                    done: false,
+                                    text: 'Crea la prima trasferta aziendale',
+                                    action: () => navigate('/'),
+                                    actionLabel: 'Crea trasferta',
+                                },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${item.done ? 'bg-emerald-500' : 'border-2 border-[var(--border-medium)]'}`}>
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${item.done ? 'bg-emerald-500' : 'border-2 border-[var(--border-medium)]'}`}>
                                             {item.done && <CheckCircle2 className="w-3 h-3 text-white" />}
                                         </div>
-                                        <span className={`text-sm ${item.done ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text-primary)]'}`}>{item.text}</span>
+                                        <span className={`text-sm transition-all ${item.done ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text-primary)] font-medium'}`}>{item.text}</span>
                                     </div>
                                     {!item.done && item.action && (
-                                        <button onClick={item.action} className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] hover:underline shrink-0">
-                                            {item.actionLabel}
+                                        <button
+                                            onClick={item.action}
+                                            className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] hover:underline shrink-0 transition-all"
+                                        >
+                                            {item.actionLabel} →
                                         </button>
                                     )}
                                 </div>
                             ))}
                         </div>
+                        {totalMembers > 1 && (
+                            <p className="text-[10px] text-emerald-500 font-bold mt-4">
+                                Team invitato! Ora crea la prima trasferta per iniziare.
+                            </p>
+                        )}
                     </motion.div>
                 )}
 

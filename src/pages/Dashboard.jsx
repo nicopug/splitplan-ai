@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry, exportNotaSpese } from '../api';
+import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry, exportNotaSpese, exportExpenseReportPDF } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
 import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
@@ -429,13 +429,13 @@ const Dashboard = () => {
                                             )}
                                         </div>
                                     )}
-                                    {trip.status === 'APPROVED' && (
+                                    {trip.status === 'APPROVED' && trip.trip_intent === 'BUSINESS' && (
                                         <Button
                                             variant="outline"
                                             className="h-12 px-6 uppercase font-black tracking-widest text-[10px] gap-2"
                                             onClick={async () => {
                                                 try {
-                                                    await exportNotaSpese(trip.id);
+                                                    await exportExpenseReportPDF(trip.id);
                                                 } catch {
                                                     showToast('Errore generazione PDF', 'error');
                                                 }

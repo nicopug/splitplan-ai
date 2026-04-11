@@ -7,7 +7,7 @@ from fastapi import (
     File,
     Form,
 )
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from urllib.parse import quote
 import io
 from fpdf import FPDF
@@ -58,7 +58,7 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
-from utils.access import check_company_limits
+from utils.access import check_company_limits, check_participant
 from services.notification_service import (
     create_notification,
     notify_managers,
@@ -2760,6 +2760,42 @@ async def export_nota_spese(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/{trip_id}/expense-report/pdf")
+async def export_expense_report_pdf(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """
+    Genera la Nota Spese Ufficiale PDF per un viaggio.
+    Accessibile solo dai partecipanti del viaggio.
+    """
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    check_participant(trip_id, current_account, session)
+
+    company = None
+    if current_account.company_id:
+        company = session.get(Company, current_account.company_id)
+
+    expenses = session.exec(
+        select(Expense)
+        .where(Expense.trip_id == trip_id)
+        .order_by(Expense.date)
+    ).all()
+
+    from services.pdf_service import generate_nota_spese
+    pdf_bytes = generate_nota_spese(trip, current_account, company, expenses)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="nota-spese-{trip_id}.pdf"'},
     )
 
 

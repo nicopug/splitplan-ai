@@ -13,6 +13,7 @@ const MyTrips = () => {
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'archived'
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL' | 'BUSINESS' | 'LEISURE'
+    const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'IN_CORSO' | 'APPROVED' | 'COMPLETED'
     const navigate = useNavigate();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
@@ -74,10 +75,19 @@ const MyTrips = () => {
         }
     };
 
+    const IN_CORSO_STATUSES = ['PLANNING', 'VOTING', 'BOOKED', 'PENDING_APPROVAL'];
+
     const applyFilters = (list) => {
         let filtered = list;
         if (typeFilter !== 'ALL') {
             filtered = filtered.filter(t => t.trip_intent === typeFilter);
+        }
+        if (statusFilter === 'IN_CORSO') {
+            filtered = filtered.filter(t => IN_CORSO_STATUSES.includes(t.status));
+        } else if (statusFilter === 'APPROVED') {
+            filtered = filtered.filter(t => t.status === 'APPROVED');
+        } else if (statusFilter === 'COMPLETED') {
+            filtered = filtered.filter(t => t.status === 'COMPLETED');
         }
         if (searchQuery.trim()) {
             const q = searchQuery.trim().toLowerCase();
@@ -87,6 +97,13 @@ const MyTrips = () => {
             );
         }
         return filtered;
+    };
+
+    const hasActiveFilters = searchQuery.trim() || typeFilter !== 'ALL' || statusFilter !== 'ALL';
+    const resetFilters = () => {
+        setSearchQuery('');
+        setTypeFilter('ALL');
+        setStatusFilter('ALL');
     };
 
     const activeTrips = trips.filter(t => t.status !== 'COMPLETED');
@@ -207,6 +224,16 @@ const MyTrips = () => {
                                 />
                             </div>
                             <select
+                                value={statusFilter}
+                                onChange={e => setStatusFilter(e.target.value)}
+                                className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface border border-border-subtle rounded-sm focus:outline-none focus:border-accent-primary text-primary cursor-pointer"
+                            >
+                                <option value="ALL">Tutti gli stati</option>
+                                <option value="IN_CORSO">In corso</option>
+                                <option value="APPROVED">Approvati</option>
+                                <option value="COMPLETED">Completati</option>
+                            </select>
+                            <select
                                 value={typeFilter}
                                 onChange={e => setTypeFilter(e.target.value)}
                                 className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface border border-border-subtle rounded-sm focus:outline-none focus:border-accent-primary text-primary cursor-pointer"
@@ -244,10 +271,22 @@ const MyTrips = () => {
                             className="space-y-6"
                         >
                             {currentTrips.length === 0 ? (
-                                <div className="text-center py-24 text-muted text-[10px] font-black tracking-widest uppercase italic bg-surface/30 border border-dashed border-border-subtle rounded-sm">
-                                    {searchQuery || typeFilter !== 'ALL'
-                                        ? 'Nessun viaggio trovato con i filtri selezionati.'
-                                        : activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
+                                <div className="text-center py-24 bg-surface/30 border border-dashed border-border-subtle rounded-sm flex flex-col items-center gap-4">
+                                    {hasActiveFilters ? (
+                                        <>
+                                            <p className="text-muted text-[10px] font-black tracking-widest uppercase italic">Nessun viaggio trovato con i filtri selezionati.</p>
+                                            <button
+                                                onClick={resetFilters}
+                                                className="px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm border border-border-subtle text-primary hover:bg-accent-primary hover:text-base hover:border-accent-primary transition-all"
+                                            >
+                                                Reimposta filtri
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <p className="text-muted text-[10px] font-black tracking-widest uppercase italic">
+                                            {activeTab === 'active' ? 'Nessun viaggio in corso.' : 'Ancora nessun viaggio archiviato.'}
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
                                 currentTrips.slice().reverse().map(trip => (

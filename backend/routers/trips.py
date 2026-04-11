@@ -80,6 +80,40 @@ ai_client = None
 
 AI_MODEL = "gemini-2.5-flash"
 
+# ── Retry helper per chiamate Gemini (gestisce 503/429 transient) ──────────
+import asyncio as _asyncio
+
+
+async def _gemini_call_with_retry(contents, *, json_mode=False, max_retries=3):
+    """Chiama Gemini con retry esponenziale per errori transient (503, 429)."""
+    config = (
+        types.GenerateContentConfig(response_mime_type="application/json")
+        if json_mode
+        else None
+    )
+    last_exc = None
+    for attempt in range(max_retries):
+        try:
+            response = await ai_client.aio.models.generate_content(
+                model=AI_MODEL,
+                contents=contents,
+                **({"config": config} if config else {}),
+            )
+            return response
+        except Exception as e:
+            last_exc = e
+            err_str = str(e)
+            if "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str:
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                logger.warning(
+                    f"[Gemini Retry] Attempt {attempt + 1}/{max_retries} failed "
+                    f"({err_str[:80]}), retrying in {wait}s..."
+                )
+                await _asyncio.sleep(wait)
+            else:
+                raise  # errore non transient, rilancia subito
+    raise last_exc  # tutti i retry falliti
+
 if GOOGLE_API_KEY:
     logger.info("[OK] System: Google Gemini Client initialized.")
     ai_client = genai.Client(api_key=GOOGLE_API_KEY)
@@ -458,11 +492,7 @@ async def estimate_survey_budget(
             "budget_max": 1500
         }}
         """
-        response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = await _gemini_call_with_retry(prompt, json_mode=True)
         data = json.loads(response.text)
 
         return {
@@ -540,11 +570,7 @@ async def search_trip_options(
             Dai prezzi realistici in EURO per tutto il gruppo ({trip.num_people} persone) e varia le compagnie.
             """
 
-        response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = await _gemini_call_with_retry(prompt, json_mode=True)
         data = json.loads(response.text)
         return {"options": data}
     except Exception as e:
@@ -672,11 +698,7 @@ async def estimate_budget(
         LINGUA: {current_account.language.upper()}.
         """
 
-        response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = await _gemini_call_with_retry(prompt, json_mode=True)
         data = json.loads(response.text)
         data["days_count"] = days
 
@@ -1398,11 +1420,7 @@ async def generate_proposals(
                 LINGUA: {current_account.language.upper()}.
                 """
 
-                response = await ai_client.aio.models.generate_content(
-                    model=AI_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(response_mime_type="application/json"),
-                )
+                response = await _gemini_call_with_retry(prompt, json_mode=True)
                 data = json.loads(response.text)
 
                 if data.get("departure_iata_normalized"):
@@ -1763,11 +1781,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         """
 
         logger.info(f"[ITI-5] calling Gemini for itinerary trip={trip.id}")
-        response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = await _gemini_call_with_retry(prompt, json_mode=True)
         logger.info(f"[ITI-6] Gemini responded, text_len={len(response.text) if response.text else 0}")
         data = json.loads(response.text)
 
@@ -1796,9 +1810,7 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
                         f"dovrebbe tagliare l'utente. Lingua: {lang}."
                     )
                     try:
-                        explain_resp = await ai_client.aio.models.generate_content(
-                            model=AI_MODEL, contents=explain_prompt
-                        )
+                        explain_resp = await _gemini_call_with_retry(explain_prompt)
                         logger.info(
                             f"[Optimizer] Infeasibility explanation: {explain_resp.text}"
                         )
@@ -2329,11 +2341,7 @@ async def chat_with_ai(
                 "itinerary": [i.model_dump() for i in itinerary],
             }
 
-        response = await ai_client.aio.models.generate_content(
-            model=AI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = await _gemini_call_with_retry(prompt, json_mode=True)
         raw_text = response.text.strip()
 
         logger.info(f"[DEBUG] Raw AI Response: {raw_text}")

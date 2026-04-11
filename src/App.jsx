@@ -21,6 +21,7 @@ import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'sonner';
 import CookieBanner, { getCookieConsent } from './components/CookieBanner';
+import { initPostHog } from './providers/PostHogProvider';
 import ROICalculator from './components/ROICalculator';
 
 // Lazy load page components
@@ -93,6 +94,7 @@ function App() {
   const handleConsentChange = (consent) => {
     if (consent === 'true') {
       initGA();
+      initPostHog();
     }
   };
 

@@ -829,6 +829,22 @@ export const bulkInviteMembers = async (companyId, emails) => {
     return handleResponse(response);
 };
 
+export const updateCompanySettings = async (companyId, settings) => {
+    const response = await fetch(`${API_URL}/companies/${companyId}/settings`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(settings),
+    });
+    return handleResponse(response);
+};
+
+export const getCompanyAnalytics = async (companyId) => {
+    const response = await fetch(`${API_URL}/companies/${companyId}/analytics`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
 // --- Admin ---
 // Usa un handler silente: nessun toast globale (la UI admin gestisce i propri errori)
 

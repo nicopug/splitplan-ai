@@ -38,6 +38,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
+def create_access_token_versioned(email: str, token_version: int) -> str:
+    """Access token con token_version incorporato — supporta logout-all."""
+    return create_access_token(data={"sub": email, "tv": token_version})
+
+
 def create_refresh_token(email: str) -> str:
     return create_access_token(
         data={"sub": email, "type": "refresh"},
@@ -100,6 +105,11 @@ async def get_current_user(
     account = session.exec(statement).first()
 
     if account is None:
+        raise credentials_exception
+
+    # Se il token porta token_version, verifica che coincida con quello in DB
+    token_version = payload.get("tv")
+    if token_version is not None and token_version != account.token_version:
         raise credentials_exception
 
     return account

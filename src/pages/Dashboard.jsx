@@ -295,8 +295,26 @@ const Dashboard = () => {
         }
     };
 
-    if (loading) return <div className="section text-center">Caricamento in corso...</div>;
-    if (!trip) return <div className="section text-center">Viaggio non trovato</div>;
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+            <div className="w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+    if (!trip) return (
+        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] p-4">
+            <div className="text-center max-w-sm">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3">404</p>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-[var(--text-primary)] mb-4">Viaggio non trovato</h2>
+                <p className="text-sm text-[var(--text-muted)] mb-8">Il viaggio che cerchi non esiste o non hai i permessi per accedervi.</p>
+                <button
+                    onClick={() => navigate('/my-trips')}
+                    className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm bg-[var(--accent-primary)] text-[var(--bg-base)] hover:opacity-90 transition-all"
+                >
+                    I miei viaggi
+                </button>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex h-screen bg-[var(--bg-base)] transition-colors duration-500 overflow-hidden text-[var(--text-primary)]">

@@ -48,6 +48,7 @@ class Account(SQLModel, table=True):
     privacy_accepted: bool = Field(default=True)
     is_manager: bool = Field(default=False)
     company_id: Optional[int] = Field(default=None, foreign_key="company.id")
+    token_version: int = Field(default=0)  # incrementato da logout-all per invalidare tutti i JWT precedenti
 
     company: Optional[Company] = Relationship(back_populates="accounts")
 

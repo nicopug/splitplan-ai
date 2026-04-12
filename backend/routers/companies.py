@@ -1,4 +1,3 @@
-import asyncio
 import csv
 import io
 import logging
@@ -43,6 +42,9 @@ class CompanyDashboardResponse(BaseModel):
     id: int
     name: str
     max_budget_per_trip: Optional[float]
+    billing_email: Optional[str]
+    vat_number: Optional[str]
+    billing_address: Optional[str]
     total_members: int
     members: list[AccountSummary]
 
@@ -91,6 +93,9 @@ async def get_company_dashboard(
         id=company.id,
         name=company.name,
         max_budget_per_trip=company.max_budget_per_trip,
+        billing_email=company.billing_email,
+        vat_number=company.vat_number,
+        billing_address=company.billing_address,
         total_members=len(members),
         members=[
             AccountSummary(
@@ -257,13 +262,19 @@ async def invite_bulk(
 async def export_company_expenses(
     company_id: int,
     month: Optional[str] = Query(None, description="Filtro mese YYYY-MM"),
+    date_from: Optional[str] = Query(None, description="Data inizio YYYY-MM-DD"),
+    date_to: Optional[str] = Query(None, description="Data fine YYYY-MM-DD"),
+    employee_id: Optional[int] = Query(None, description="ID account dipendente"),
+    status: Optional[str] = Query(None, description="Stato trip: APPROVED, COMPLETED, ecc."),
     session: Session = Depends(get_session),
     current_user: Account = Depends(get_current_user),
 ):
     """
-    Esporta in CSV tutte le spese dei trip aziendali.
-    Colonne: Data, Viaggio, Dipendente, Categoria, Importo (EUR), Valuta.
-    Filtro opzionale per mese (YYYY-MM).
+    Esporta in CSV le spese dei trip aziendali con filtri opzionali:
+    - month: YYYY-MM
+    - date_from / date_to: YYYY-MM-DD
+    - employee_id: filtra per account_id del pagante
+    - status: filtra per stato del trip (APPROVED, COMPLETED, ecc.)
     Solo i manager della stessa company possono accedere.
     """
     company = session.get(Company, company_id)
@@ -272,47 +283,64 @@ async def export_company_expenses(
     if not current_user.is_manager or current_user.company_id != company_id:
         raise HTTPException(403, "Accesso riservato ai manager dell'azienda")
 
-    # Raccoglie tutti i trip BUSINESS della company tramite i partecipanti
-    company_member_ids = [
-        a.id for a in session.exec(
-            select(Account).where(Account.company_id == company_id)
-        ).all()
-    ]
-
-    # Trip in cui almeno un organizzatore è membro della company
-    company_trips = session.exec(
-        select(Trip).join(Participant, Trip.id == Participant.trip_id).where(
-            Participant.account_id.in_(company_member_ids),
-            Participant.is_organizer == True,
+    # Tutti i trip BUSINESS della company
+    company_trips_q = session.exec(
+        select(Trip).where(
+            Trip.company_id == company_id,
             Trip.trip_intent == "BUSINESS",
         )
     ).all()
 
-    # Raccoglie tutte le spese con filtro mese opzionale
+    # Filtra per stato se richiesto
+    if status:
+        company_trips_q = [t for t in company_trips_q if t.status == status.upper()]
+
+    # Mappa account_id → nome per filtro dipendente
+    employee_account: Optional[Account] = None
+    if employee_id:
+        employee_account = session.get(Account, employee_id)
+        if not employee_account or employee_account.company_id != company_id:
+            raise HTTPException(404, "Dipendente non trovato nella company")
+
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Data", "Viaggio", "Destinazione", "Dipendente", "Descrizione", "Categoria", "Importo", "Valuta", "Stato"])
+    writer.writerow([
+        "Data", "Viaggio", "Destinazione", "Dipendente",
+        "Descrizione", "Categoria", "Importo (EUR)", "Valuta Originale",
+        "Importo Originale", "Stato Viaggio",
+    ])
 
-    for trip in company_trips:
+    for trip in company_trips_q:
         expenses = session.exec(
             select(Expense).where(Expense.trip_id == trip.id)
         ).all()
 
         for exp in expenses:
-            # Filtro mese
-            if month and exp.date:
-                if not str(exp.date).startswith(month):
-                    continue
+            date_str = str(exp.date or "")[:10]
 
-            # Nome pagante
+            # Filtro mese
+            if month and not date_str.startswith(month):
+                continue
+            # Filtro range date
+            if date_from and date_str < date_from:
+                continue
+            if date_to and date_str > date_to:
+                continue
+
+            # Nome pagante e filtro dipendente
             payer_name = "—"
+            payer_account_id = None
             if exp.payer_id:
                 payer_part = session.get(Participant, exp.payer_id)
                 if payer_part:
                     payer_name = payer_part.name
+                    payer_account_id = payer_part.account_id
+
+            if employee_id and payer_account_id != employee_id:
+                continue
 
             writer.writerow([
-                exp.date or "—",
+                date_str or "—",
                 trip.name,
                 trip.destination or "—",
                 payer_name,
@@ -320,6 +348,7 @@ async def export_company_expenses(
                 exp.category or "General",
                 f"{exp.amount:.2f}",
                 exp.currency or "EUR",
+                f"{exp.original_amount:.2f}" if exp.original_amount else f"{exp.amount:.2f}",
                 trip.status,
             ])
 
@@ -327,6 +356,8 @@ async def export_company_expenses(
     filename = f"SpeseSplitPlan_{company_id}"
     if month:
         filename += f"_{month}"
+    elif date_from or date_to:
+        filename += f"_{date_from or ''}__{date_to or ''}"
     filename += ".csv"
 
     return StreamingResponse(
@@ -339,6 +370,43 @@ async def export_company_expenses(
 # ---------------------------------------------------------------------------
 # GET /companies/{company_id}/analytics  (solo Manager)
 # ---------------------------------------------------------------------------
+
+class CompanySettingsRequest(BaseModel):
+    max_budget_per_trip: Optional[float] = None
+    billing_email: Optional[str] = None
+    vat_number: Optional[str] = None
+    billing_address: Optional[str] = None
+
+
+@router.patch("/{company_id}/settings")
+async def update_company_settings(
+    company_id: int,
+    body: CompanySettingsRequest,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user),
+):
+    """Aggiorna le impostazioni della company (solo manager)."""
+    company = session.get(Company, company_id)
+    if not company:
+        raise HTTPException(404, "Azienda non trovata")
+    if not current_user.is_manager or current_user.company_id != company_id:
+        raise HTTPException(403, "Accesso riservato ai manager dell'azienda")
+
+    if body.max_budget_per_trip is not None:
+        company.max_budget_per_trip = body.max_budget_per_trip
+    if body.billing_email is not None:
+        company.billing_email = body.billing_email
+    if body.vat_number is not None:
+        company.vat_number = body.vat_number
+    if body.billing_address is not None:
+        company.billing_address = body.billing_address
+
+    session.add(company)
+    session.commit()
+    session.refresh(company)
+    logger.info(f"[SETTINGS] Company {company_id} aggiornata da manager {current_user.id}")
+    return {"message": "Impostazioni aggiornate.", "company": {"id": company.id, "name": company.name, "max_budget_per_trip": company.max_budget_per_trip, "billing_email": company.billing_email, "vat_number": company.vat_number, "billing_address": company.billing_address}}
+
 
 @router.get("/{company_id}/analytics")
 async def get_company_analytics(

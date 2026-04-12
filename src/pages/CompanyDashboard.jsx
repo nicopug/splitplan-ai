@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken, exportCompanyExpensesCSV, bulkInviteMembers, getCompanyDashboardData } from '../api';
+import { getBusinessOverview, approveTrip, rejectTrip, getInviteToken, exportCompanyExpensesCSV, bulkInviteMembers, getCompanyDashboardData, updateCompanySettings } from '../api';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, Clock, Briefcase, Users, MapPin, Calendar, TrendingUp, ExternalLink, Link2, Copy } from 'lucide-react';
@@ -33,7 +33,9 @@ const CompanyDashboard = () => {
     const [totalMembers, setTotalMembers] = useState(1);
     const [members, setMembers] = useState([]);
     const [memberSearch, setMemberSearch] = useState('');
-    const [activeSection, setActiveSection] = useState('trips'); // 'trips' | 'members'
+    const [activeSection, setActiveSection] = useState('trips'); // 'trips' | 'members' | 'settings'
+    const [settingsForm, setSettingsForm] = useState({ max_budget_per_trip: '', billing_email: '', vat_number: '', billing_address: '' });
+    const [settingsSaving, setSettingsSaving] = useState(false);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
     const [processingId, setProcessingId] = useState(null);
@@ -72,6 +74,12 @@ const CompanyDashboard = () => {
                     const companyData = await getCompanyDashboardData(currentUser.company_id);
                     setTotalMembers(companyData.total_members ?? 1);
                     setMembers(companyData.members || []);
+                    setSettingsForm({
+                        max_budget_per_trip: companyData.max_budget_per_trip ?? '',
+                        billing_email: companyData.billing_email ?? '',
+                        vat_number: companyData.vat_number ?? '',
+                        billing_address: companyData.billing_address ?? '',
+                    });
                 } catch {
                     // Non-blocking: keep default of 1
                 }
@@ -142,6 +150,32 @@ const CompanyDashboard = () => {
         }
     };
 
+    const handleCSVUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const text = ev.target.result;
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            // Detect header row by checking if first cell looks like an email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const dataLines = lines[0] && !emailRegex.test(lines[0].split(/[,;]/)[0].trim())
+                ? lines.slice(1)
+                : lines;
+            const emails = dataLines
+                .map(line => line.split(/[,;]/)[0].trim().replace(/^["']|["']$/g, ''))
+                .filter(v => emailRegex.test(v));
+            if (!emails.length) {
+                showToast('Nessuna email valida trovata nel CSV. Assicurati che la prima colonna contenga le email.', 'error');
+                return;
+            }
+            setBulkEmails(emails.join('\n'));
+            showToast(`${emails.length} email caricate dal CSV`, 'success');
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
     const handleBulkInvite = async () => {
         const emails = bulkEmails.split('\n').map(e => e.trim()).filter(Boolean);
         if (!emails.length) return;
@@ -155,6 +189,25 @@ const CompanyDashboard = () => {
             showToast('Errore invio inviti: ' + err.message, 'error');
         } finally {
             setBulkLoading(false);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        if (!user?.company_id) return;
+        setSettingsSaving(true);
+        try {
+            const payload = {
+                max_budget_per_trip: settingsForm.max_budget_per_trip !== '' ? parseFloat(settingsForm.max_budget_per_trip) : null,
+                billing_email: settingsForm.billing_email || null,
+                vat_number: settingsForm.vat_number || null,
+                billing_address: settingsForm.billing_address || null,
+            };
+            await updateCompanySettings(user.company_id, payload);
+            showToast('Impostazioni salvate', 'success');
+        } catch (err) {
+            showToast('Errore salvataggio: ' + err.message, 'error');
+        } finally {
+            setSettingsSaving(false);
         }
     };
 
@@ -423,8 +476,8 @@ const CompanyDashboard = () => {
                     </motion.div>
                 )}
 
-                {/* Section switcher: Trasferte / Membri */}
-                <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)] pb-4">
+                {/* Section switcher: Trasferte / Membri / Impostazioni */}
+                <div className="flex flex-wrap gap-2 mb-6 border-b border-[var(--border-subtle)] pb-4">
                     <button
                         onClick={() => setActiveSection('trips')}
                         className={cn(
@@ -446,6 +499,17 @@ const CompanyDashboard = () => {
                         )}
                     >
                         Membri ({totalMembers})
+                    </button>
+                    <button
+                        onClick={() => setActiveSection('settings')}
+                        className={cn(
+                            "px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all border",
+                            activeSection === 'settings'
+                                ? "bg-[var(--accent-primary)] text-[var(--bg-base)] border-[var(--accent-primary)]"
+                                : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)]"
+                        )}
+                    >
+                        Impostazioni
                     </button>
                 </div>
 
@@ -514,6 +578,74 @@ const CompanyDashboard = () => {
                                 )}
                             </div>
                         )}
+                    </motion.div>
+                ) : activeSection === 'settings' ? (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg">
+                        <h2 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-6">Impostazioni Aziendali</h2>
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                                    Budget massimo per trasferta (€)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    value={settingsForm.max_budget_per_trip}
+                                    onChange={e => setSettingsForm(f => ({ ...f, max_budget_per_trip: e.target.value }))}
+                                    placeholder="Es. 1500"
+                                    className="w-full px-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm focus:outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)]"
+                                />
+                                <p className="text-[10px] text-[var(--text-muted)] mt-1">Lascia vuoto per nessun limite.</p>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                                    Email di fatturazione
+                                </label>
+                                <input
+                                    type="email"
+                                    value={settingsForm.billing_email}
+                                    onChange={e => setSettingsForm(f => ({ ...f, billing_email: e.target.value }))}
+                                    placeholder="fatturazione@azienda.it"
+                                    className="w-full px-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm focus:outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                                    Partita IVA
+                                </label>
+                                <input
+                                    type="text"
+                                    value={settingsForm.vat_number}
+                                    onChange={e => setSettingsForm(f => ({ ...f, vat_number: e.target.value }))}
+                                    placeholder="IT12345678901"
+                                    className="w-full px-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm focus:outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                                    Indirizzo di fatturazione
+                                </label>
+                                <textarea
+                                    value={settingsForm.billing_address}
+                                    onChange={e => setSettingsForm(f => ({ ...f, billing_address: e.target.value }))}
+                                    placeholder="Via Roma 1, 20100 Milano (MI)"
+                                    rows={2}
+                                    className="w-full px-4 py-2.5 text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm focus:outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSaveSettings}
+                                disabled={settingsSaving}
+                                className="flex items-center gap-2 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm bg-[var(--accent-primary)] text-[var(--bg-base)] hover:opacity-90 transition-all disabled:opacity-50"
+                            >
+                                {settingsSaving
+                                    ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    : <CheckCircle2 className="w-3.5 h-3.5" />
+                                }
+                                Salva impostazioni
+                            </button>
+                        </div>
                     </motion.div>
                 ) : (<>
 
@@ -638,9 +770,14 @@ const CompanyDashboard = () => {
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                 <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-sm shadow-2xl w-full max-w-md p-6">
                     <h3 className="text-sm font-black uppercase tracking-widest mb-2">Invita Team</h3>
-                    <p className="text-xs text-[var(--text-muted)] mb-4">
-                        Incolla le email dei tuoi colleghi (una per riga, max 50). Riceveranno un link per unirsi all'azienda.
+                    <p className="text-xs text-[var(--text-muted)] mb-3">
+                        Incolla le email dei tuoi colleghi (una per riga, max 50), oppure carica un file CSV con colonna <span className="font-mono font-bold">email</span>.
                     </p>
+                    <label className="flex items-center gap-2 w-fit mb-4 cursor-pointer px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm border border-dashed border-[var(--border-medium)] text-[var(--text-muted)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        Carica CSV
+                        <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleCSVUpload} />
+                    </label>
                     <textarea
                         value={bulkEmails}
                         onChange={e => setBulkEmails(e.target.value)}

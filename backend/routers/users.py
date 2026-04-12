@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 
 from admin_auth import verify_admin_token
 from auth import (
-    create_access_token,
+    create_access_token_versioned,
     create_refresh_token,
     create_reset_token,
     create_verification_token,
@@ -332,7 +332,7 @@ async def login(req: LoginRequest, request: Request, session: Session = Depends(
             status_code=403, detail="Profilo non verificato. Controlla la tua email."
         )
 
-    access_token = create_access_token(data={"sub": account.email})
+    access_token = create_access_token_versioned(account.email, account.token_version)
     refresh_token = create_refresh_token(account.email)
     logger.info(f"Login effettuato per account {account.id}")
 
@@ -388,13 +388,29 @@ async def refresh_access_token(
     if not account:
         raise HTTPException(status_code=401, detail="Utente non trovato.")
 
-    new_access = create_access_token(data={"sub": email})
-    new_refresh = create_refresh_token(email)
+    new_access = create_access_token_versioned(account.email, account.token_version)
+    new_refresh = create_refresh_token(account.email)
     return {
         "access_token": new_access,
         "refresh_token": new_refresh,
         "token_type": "bearer",
     }
+
+
+@router.post("/logout-all")
+async def logout_all(
+    current_account: Account = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Invalida tutti i JWT attivi dell'utente incrementando token_version.
+    Tutti i dispositivi loggati vengono sloggati immediatamente.
+    """
+    current_account.token_version = (current_account.token_version or 0) + 1
+    session.add(current_account)
+    session.commit()
+    logger.info(f"[LOGOUT-ALL] Account {current_account.id} ha invalidato tutti i token (tv={current_account.token_version})")
+    return {"message": "Tutti i dispositivi sono stati disconnessi.", "token_version": current_account.token_version}
 
 
 @router.get("/validate-reset-token")

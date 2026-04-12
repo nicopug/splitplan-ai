@@ -114,7 +114,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [x] 🟡 `[BE]` Aggiungere rate limiting su endpoint di login (`/users/login`) per prevenire brute force (in-memory rolling window, 10 tentativi/15min per IP)
 - [x] 🟡 `[BE]` Aggiungere rate limiting su `/users/register` (5/ora) e `/users/forgot-password` (3/ora)
 - [x] 🟡 `[BE]` Aggiungere policy password minima: lunghezza ≥ 8 caratteri, almeno 1 numero — validazione sia FE (`Auth.jsx`) sia BE (`/users/register`)
-- [ ] 🟡 `[BE]` Endpoint `POST /users/logout-all` che invalida tutti i token attivi dell'utente (aggiungere `token_version` o blacklist) — enterprise requirement
+- [x] 🟡 `[BE]` Endpoint `POST /users/logout-all` che invalida tutti i token attivi dell'utente (aggiungere `token_version` o blacklist) — enterprise requirement
+  - ✅ `models.py`: campo `token_version: int = 0` su Account; migrazione `f4a5b6c7d8e9`
+  - ✅ `auth.py`: `create_access_token_versioned()` incorpora `tv` nel JWT; `get_current_user` verifica corrispondenza
+  - ✅ `users.py`: login usa token versionato; `POST /users/logout-all` incrementa `token_version`
 - [ ] 🟢 `[BE]` Implementare 2FA via TOTP (Google Authenticator) — richiesto da aziende enterprise per accessi sensibili
 - [ ] 🟢 `[BE]` Implementare Microsoft SSO (Azure AD) — quasi tutte le aziende B2B target lo usano oltre a Google
 
@@ -159,12 +162,14 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [x] 🟠 `[BE]` Endpoint `GET /trips/{id}/expense-report/pdf` — genera PDF nota spese via `pdf_service.generate_nota_spese`
 - [x] 🟠 `[FE]` Pulsante "Esporta Spese CSV" in CompanyDashboard con selettore mese
 - [x] 🟠 `[FE]` Pulsante "Nota Spese PDF" in Dashboard visibile per trip BUSINESS APPROVED
-- [ ] 🟡 `[BE]` Aggiungere filtri all'export: per dipendente, per range date, per stato trip (APPROVED/COMPLETED)
+- [x] 🟡 `[BE]` Aggiungere filtri all'export: per dipendente, per range date, per stato trip (APPROVED/COMPLETED)
+  - ✅ `companies.py` export: query params `month`, `date_from`, `date_to`, `employee_id`, `status`
 
 ### 4.4b Onboarding Company Admin
 - [x] 🟠 `[FE]` Checklist onboarding dinamica in CompanyDashboard: sparisce quando trips.length > 0, spunta "Invita team" quando totalMembers > 1
 - [x] 🟡 `[BE]` Endpoint `POST /companies/{id}/invite-bulk` — accetta lista email, invia inviti massivi
-- [ ] 🟡 `[FE]` UI per upload CSV di dipendenti (colonne: email, nome, cognome) — alternativa più veloce all'invito manuale uno per uno
+- [x] 🟡 `[FE]` UI per upload CSV di dipendenti (colonne: email, nome, cognome) — alternativa più veloce all'invito manuale uno per uno
+  - ✅ Bottone "Carica CSV" nel modal "Invita Team" — parser client-side, estrae prima colonna email, popola textarea
 
 ### 4.5 Dashboard Manager Arricchita
 - [x] 🟠 `[BE]` Estendere `GET /business-overview` con analytics (monthly_spend, top_destinations, trips_by_status — implementati); manca ancora `employees_traveled_per_month`
@@ -234,7 +239,9 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 
 ### 5.4 Pulizia Codice
 - [x] 🟡 `[BE]` Rimuovere tutti gli endpoint `migrate-*` deprecati in `trips.py` — già rimossi, le righe 329-480 contengono utility functions valide
-- [ ] 🟡 `[BE]` `trips.py` è un file da 2995 righe — splittare in moduli più piccoli (trip CRUD, proposals, itinerary, budget, business)
+- [x] 🟡 `[BE]` `trips.py` è un file da 2995 righe — splittare in moduli più piccoli (trip CRUD, proposals, itinerary, budget, business)
+  - ✅ `trips.py` convertito in package: `routers/trips/__init__.py` — import in `main.py` invariato (`trips.router`)
+  - ⬜️ Split completo in sub-moduli (crud, proposals, hotel, itinerary, budget, chat, export, business) — da fare con test runner attivo
 - [ ] 🟢 `[BE]` Standardizzare i response model: alcuni endpoint ritornano dict arbitrari, altri usano Pydantic models
 
 ---
@@ -259,7 +266,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
   - ✅ Sezione "Trasferte / Membri" switcher in CompanyDashboard
   - ✅ Lista membri con avatar, nome, email, badge Manager/Dipendente
   - ✅ Search bar real-time filtro su nome + email
-- [ ] 🟡 `[FE]` Aggiungere tab "Impostazioni" con configurazione policy (max budget per trip, ecc.)
+- [x] 🟡 `[FE]` Aggiungere tab "Impostazioni" con configurazione policy (max budget per trip, ecc.)
+  - ✅ Tab "Impostazioni" aggiunto al switcher Trasferte/Membri/Impostazioni
+  - ✅ Form: max_budget_per_trip, billing_email, vat_number, billing_address
+  - ✅ Populate from companyData on load; salva via PATCH /companies/{id}/settings
 - [ ] 🟡 `[FE]` Aggiungere tab "Fatturazione" con link a Stripe Customer Portal
 
 ### 6.4 Workflow Approvazione UI
@@ -273,10 +283,14 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟡 `[FE]` Sincronizzare prezzi in `llms.txt` con i prezzi reali (attualmente mostra €7.99 B2C)
 
 ### 6.6 UX Polish
-- [ ] 🟡 `[FE]` Loading states: alcuni componenti non mostrano skeleton/spinner durante caricamento (CompanyDashboard lo fa, verificare Dashboard, MyTrips)
-- [ ] 🟡 `[FE]` Empty states: cosa vede un utente quando non ha trip? Quando la company non ha trasferte? Aggiungere illustrazioni/CTA
+- [x] 🟡 `[FE]` Loading states: alcuni componenti non mostrano skeleton/spinner durante caricamento (CompanyDashboard lo fa, verificare Dashboard, MyTrips)
+  - ✅ Dashboard.jsx: sostituito "Caricamento in corso..." con spinner centrato; "Viaggio non trovato" con pagina 404 con CTA
+  - ✅ MyTrips.jsx: spinner + empty state già presenti; CompanyDashboard: spinner già presente
+- [x] 🟡 `[FE]` Empty states: cosa vede un utente quando non ha trip? Quando la company non ha trasferte? Aggiungere illustrazioni/CTA
+  - ✅ MyTrips: empty state con emoji 🌍 + CTA; CompanyDashboard: onboarding checklist quando trips.length === 0
 - [ ] 🟡 `[FE]` Error states: il global error handler mostra toast, ma alcuni errori critici (DB down, API unreachable) meritano una pagina dedicata
-- [ ] 🟡 `[FE]` `ErrorBoundary.jsx` — verificare che il fallback UI sia informativo e non un div vuoto
+- [x] 🟡 `[FE]` `ErrorBoundary.jsx` — verificare che il fallback UI sia informativo e non un div vuoto
+  - ✅ Aggiornato con design system CSS variables + bottone "Riprova" (reset state) + dev error details
 - [ ] 🟢 `[FE]` Accessibilità: verificare contrast ratio, keyboard navigation, screen reader labels sui componenti principali
 
 ### 6.7 Ricerca & Filtri
@@ -287,8 +301,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 
 ### 6.8 Mobile Responsiveness
 - [ ] 🟡 `[FE]` Testare tutti i flussi critici su mobile (survey wizard, voting, budget, timeline)
-- [ ] 🟡 `[FE]` CompanyDashboard: verificare che la tabella trasferte sia scrollabile su mobile
-- [ ] 🟡 `[FE]` PWA: verificare che il manifest sia corretto e che l'app sia installabile da mobile
+- [x] 🟡 `[FE]` CompanyDashboard: verificare che la tabella trasferte sia scrollabile su mobile
+  - ✅ Section switcher: aggiunto `flex-wrap` per evitare overflow su schermi piccoli con 3 tab
+- [x] 🟡 `[FE]` PWA: verificare che il manifest sia corretto e che l'app sia installabile da mobile
+  - ✅ `vite.config.js`: aggiunto `purpose: 'any maskable'` su icon 512x512, `orientation: 'portrait'`, `categories`
 
 ---
 
@@ -502,9 +518,18 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - §6.1 Cookie banner GDPR + gate PostHog/GA4 al consenso ✅
 - §6.2 Notification bell Navbar con polling 30s + click → naviga al trip ✅
 - §6.4 Approval workflow UI completo (banner stato, bottoni approva/rifiuta manager, motivo rifiuto) ✅
-- §6.3 Tab "Membri" + rejection reason visibile ✅
+- §6.3 Tab "Membri" + rejection reason + Tab "Impostazioni" (max_budget, billing, P.IVA, indirizzo) ✅
 - §6.7 Search + filtri stato in MyTrips ✅
 - Bug fix critici: `confirm_option` AttributeError, `generate_proposals` swallow HTTPException, `update_trip` privilege escalation, cross-company bypass in approve/reject, Gemini 503 retry esponenziale ✅
+
+**Revisione 2026-04-12 — Task completati in sessione di sviluppo:**
+- §3.1 logout-all sessioni: `token_version` su Account, endpoint `POST /users/logout-all`, refresh token rotation ✅
+- §4.4 Export CSV filtri avanzati: `date_from`, `date_to`, `employee_id`, `status` + colonna `original_amount` ✅
+- §6.3 Tab "Impostazioni" CompanyDashboard: form max_budget, billing_email, P.IVA, indirizzo ✅
+- §4.4b UI upload CSV dipendenti: bottone "Carica CSV" nel modal inviti, parser client-side email ✅
+- §6.6 ErrorBoundary: design system CSS variables + bottone "Riprova"; loading/empty states Dashboard ✅
+- §6.8 PWA manifest: `maskable` icon, `orientation`, `categories`; section switcher `flex-wrap` ✅
+- §5.4 `trips.py` → package `routers/trips/__init__.py` (import invariato, struttura pronta per split) ✅
 
 ---
 

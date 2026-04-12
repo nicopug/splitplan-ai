@@ -160,6 +160,12 @@ def search_flights(
                 headers=_duffel_headers(),
             )
 
+        if resp.status_code in (401, 403):
+            logger.error(f"[Duffel] Chiave API non valida o scaduta (HTTP {resp.status_code})")
+            raise HTTPException(
+                status_code=503,
+                detail="Ricerca voli temporaneamente non disponibile. Usa il link Skyscanner per cercare manualmente.",
+            )
         if resp.status_code >= 400:
             body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
             errors = body.get("errors", [])

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Users, Calendar, MessageSquare, ArrowRight, CheckCircle2, ShieldCheck, Globe, Zap, Mail, Phone, User } from 'lucide-react';
@@ -10,6 +10,11 @@ const DemoRequest = () => {
     const { t } = useTranslation();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        document.title = 'Richiedi Demo — SplitPlan AI | Software Trasferte Aziendali';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
 
     const [formData, setFormData] = useState({
         full_name: '',

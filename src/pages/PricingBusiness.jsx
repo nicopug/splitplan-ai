@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -118,6 +118,11 @@ const PricingBusiness = () => {
     const navigate = useNavigate();
     const [annual, setAnnual] = useState(false);
     const [openFaq, setOpenFaq] = useState(null);
+
+    useEffect(() => {
+        document.title = 'Piani B2B — SplitPlan AI | Software Gestione Trasferte Aziendali';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
 
     return (
         <div className="min-h-screen bg-[var(--bg-base)] pt-[var(--header-height)]">

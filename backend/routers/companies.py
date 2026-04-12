@@ -2,7 +2,8 @@ import asyncio
 import csv
 import io
 import logging
-from datetime import timedelta
+from collections import defaultdict
+from datetime import timedelta, datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -333,3 +334,97 @@ async def export_company_expenses(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+# ---------------------------------------------------------------------------
+# GET /companies/{company_id}/analytics  (solo Manager)
+# ---------------------------------------------------------------------------
+
+@router.get("/{company_id}/analytics")
+async def get_company_analytics(
+    company_id: int,
+    session: Session = Depends(get_session),
+    current_user: Account = Depends(get_current_user),
+):
+    """
+    Dati aggregati per la company: costo medio per viaggio, trend mensile 6 mesi,
+    top spenders, breakdown trip per stato.
+    """
+    company = session.get(Company, company_id)
+    if not company:
+        raise HTTPException(404, "Azienda non trovata")
+    if not current_user.is_manager or current_user.company_id != company_id:
+        raise HTTPException(403, "Accesso riservato ai manager dell'azienda")
+
+    # --- Trip BUSINESS della company ---
+    company_trips = session.exec(
+        select(Trip).where(
+            Trip.company_id == company_id,
+            Trip.trip_intent == "BUSINESS",
+        )
+    ).all()
+
+    trip_ids = [t.id for t in company_trips]
+
+    # --- Tutte le spese dei trip aziendali ---
+    all_expenses = (
+        session.exec(select(Expense).where(Expense.trip_id.in_(trip_ids))).all()
+        if trip_ids else []
+    )
+
+    # --- Costo medio per viaggio ---
+    trip_totals = defaultdict(float)
+    for exp in all_expenses:
+        trip_totals[exp.trip_id] += exp.amount
+    avg_cost_per_trip = (
+        round(sum(trip_totals.values()) / len(trip_totals), 2) if trip_totals else 0.0
+    )
+
+    # --- Trend mensile ultimi 6 mesi ---
+    now = datetime.now(timezone.utc)
+    monthly: dict[str, float] = {}
+    for i in range(5, -1, -1):
+        month_dt = datetime(now.year, now.month, 1, tzinfo=timezone.utc) - timedelta(days=i * 30)
+        key = month_dt.strftime("%Y-%m")
+        monthly[key] = 0.0
+
+    for exp in all_expenses:
+        if not exp.date:
+            continue
+        month_key = str(exp.date)[:7]  # "YYYY-MM"
+        if month_key in monthly:
+            monthly[month_key] += exp.amount
+
+    monthly_trend = [
+        {"month": k, "total": round(v, 2)} for k, v in sorted(monthly.items())
+    ]
+
+    # --- Top spenders (dipendenti con spesa maggiore, top 5) ---
+    spender_totals: dict[int, float] = defaultdict(float)
+    spender_names: dict[int, str] = {}
+    for exp in all_expenses:
+        if not exp.payer_id:
+            continue
+        payer = session.get(Participant, exp.payer_id)
+        if payer:
+            spender_totals[exp.payer_id] += exp.amount
+            spender_names[exp.payer_id] = payer.name
+
+    top_spenders = sorted(
+        [{"name": spender_names[pid], "total": round(total, 2)} for pid, total in spender_totals.items()],
+        key=lambda x: x["total"],
+        reverse=True,
+    )[:5]
+
+    # --- Breakdown per stato ---
+    status_counts: dict[str, int] = defaultdict(int)
+    for t in company_trips:
+        status_counts[t.status] += 1
+
+    return {
+        "total_trips": len(company_trips),
+        "avg_cost_per_trip": avg_cost_per_trip,
+        "monthly_trend": monthly_trend,
+        "top_spenders": top_spenders,
+        "trips_by_status": dict(status_counts),
+    }

@@ -148,6 +148,7 @@ const Auth = ({ onLogin }) => {
             if (isLogin) {
                 const res = await login({ email: formData.email, password: formData.password });
                 localStorage.setItem('token', res.access_token);
+                if (res.refresh_token) localStorage.setItem('refresh_token', res.refresh_token);
                 localStorage.setItem('user', JSON.stringify(res.user));
 
                 if (onLogin) onLogin(res.user);

@@ -15,6 +15,7 @@ from sqlmodel import Session, select
 from admin_auth import verify_admin_token
 from auth import (
     create_access_token,
+    create_refresh_token,
     create_reset_token,
     create_verification_token,
     decode_token,
@@ -332,10 +333,12 @@ async def login(req: LoginRequest, request: Request, session: Session = Depends(
         )
 
     access_token = create_access_token(data={"sub": account.email})
+    refresh_token = create_refresh_token(account.email)
     logger.info(f"Login effettuato per account {account.id}")
 
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
         "user": {
             "id": account.id,
@@ -358,6 +361,40 @@ async def login(req: LoginRequest, request: Request, session: Session = Depends(
 async def get_me(current_account: Account = Depends(get_current_user)):
     """Restituisce i dati dell'utente autenticato tramite JWT."""
     return current_account
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+@router.post("/refresh")
+async def refresh_access_token(
+    body: RefreshRequest,
+    session: Session = Depends(get_session),
+):
+    """
+    Scambia un refresh token valido con un nuovo access token + refresh token.
+    Il vecchio refresh token viene invalidato (rotation).
+    """
+    payload = decode_token(body.refresh_token)
+    if payload is None or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Refresh token non valido o scaduto.")
+
+    email = payload.get("sub")
+    if not email:
+        raise HTTPException(status_code=401, detail="Refresh token malformato.")
+
+    account = session.exec(select(Account).where(Account.email == email)).first()
+    if not account:
+        raise HTTPException(status_code=401, detail="Utente non trovato.")
+
+    new_access = create_access_token(data={"sub": email})
+    new_refresh = create_refresh_token(email)
+    return {
+        "access_token": new_access,
+        "refresh_token": new_refresh,
+        "token_type": "bearer",
+    }
 
 
 @router.get("/validate-reset-token")

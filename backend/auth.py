@@ -12,6 +12,7 @@ if not SECRET_KEY:
     raise ValueError("SECRET_KEY env variable is not set!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
 def verify_password(plain_password, hashed_password):
@@ -35,6 +36,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token(email: str) -> str:
+    return create_access_token(
+        data={"sub": email, "type": "refresh"},
+        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    )
 
 
 def create_verification_token(email: str):

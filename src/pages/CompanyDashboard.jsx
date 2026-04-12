@@ -23,6 +23,11 @@ const formatDate = (iso) => {
 };
 
 const CompanyDashboard = () => {
+    useEffect(() => {
+        document.title = 'Dashboard Aziendale — SplitPlan AI';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
+
     const [trips, setTrips] = useState([]);
     const [analytics, setAnalytics] = useState(null);
     const [totalMembers, setTotalMembers] = useState(1);

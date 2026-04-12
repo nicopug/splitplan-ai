@@ -12,6 +12,7 @@ load_dotenv(os.path.join(base_dir, "..", ".env"))
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -118,3 +119,31 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/", tags=["root"])
 def root():
     return {"message": "Backend is running correctly!"}
+
+
+# ---------------------------------------------------------------------------
+# HEALTH CHECK
+# ---------------------------------------------------------------------------
+@app.get("/health", tags=["ops"])
+def health_check():
+    """Verifica lo stato del backend e della connessione al database."""
+    from database import engine
+    from sqlalchemy import text
+
+    db_ok = False
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        logger.error(f"[Health] DB check failed: {e}")
+
+    status = "ok" if db_ok else "degraded"
+    return {
+        "status": status,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "services": {
+            "database": "ok" if db_ok else "error",
+            "gemini": "configured" if os.getenv("GOOGLE_API_KEY") else "missing",
+        },
+    }

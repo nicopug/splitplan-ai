@@ -40,7 +40,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [ ] 🟠 `[INFRA]` Monitorare utilizzo storage attuale (limite free: 1GB database + 1GB storage)
 - [ ] 🟠 `[INFRA]` Upgrade a Supabase Pro ($25/mese) prima del pilot aziendale — 8GB DB, 100GB storage
 - [ ] 🟠 `[DB]` Verificare connessioni dirette: free tier ha 2 connessioni dirette — con più utenti concorrenti serve connection pooling (Supavisor, incluso nel Pro)
-- [ ] 🟡 `[BE]` Aggiungere `pool_size` e `max_overflow` alla configurazione `create_engine()` in `database.py`
+- [x] 🟡 `[BE]` Aggiungere `pool_size` e `max_overflow` alla configurazione `create_engine()` in `database.py`
+  - ✅ `database.py`: `pool_size=5`, `max_overflow=10`
 - [ ] 🟡 `[INFRA]` Abilitare Point-in-Time Recovery su Supabase Pro (incluso nel piano) — ripristino DB fino a 7 giorni indietro in caso di errori critici
 
 ### 1.6 Ambiente di Staging
@@ -57,7 +58,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 
 ### 1.5 Monitoring & Error Tracking
 - [ ] 🟠 `[INFRA]` Configurare alerting su errori backend (PostHog error tracking oppure Sentry free tier)
-- [ ] 🟡 `[INFRA]` Aggiungere health check endpoint (`GET /api/health`) che verifica DB + servizi esterni
+- [x] 🟡 `[INFRA]` Aggiungere health check endpoint (`GET /api/health`) che verifica DB + servizi esterni
+  - ✅ `main.py` `GET /health`: verifica connessione DB + presenza GOOGLE_API_KEY, risponde `{status, timestamp, services}`
 - [ ] 🟡 `[INFRA]` Dashboard costi: tracciare mensilmente spese Gemini API, Supabase, Vercel, Duffel
 
 ---
@@ -104,7 +106,11 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 
 ### 3.1 Auth Hardening
 - [ ] 🟠 `[BE]` JWT in localStorage è vulnerabile a XSS — valutare migrazione a httpOnly cookie per token di sessione (non bloccante per MVP, ma critico per enterprise)
-- [ ] 🟡 `[BE]` Aggiungere JWT refresh token mechanism — attualmente se il token scade l'utente deve ri-loggarsi
+- [x] 🟡 `[BE]` Aggiungere JWT refresh token mechanism — attualmente se il token scade l'utente deve ri-loggarsi
+  - ✅ `auth.py`: `create_refresh_token()` (scadenza 7 giorni, type="refresh")
+  - ✅ `users.py` `login`: restituisce anche `refresh_token`; `POST /users/refresh`: rotation automatica
+  - ✅ `api.js`: `_tryRefresh()` silenzioso su 401, `refreshToken()` esportata, store `refresh_token` in localStorage
+  - ✅ `Auth.jsx`: salva `refresh_token` al login
 - [x] 🟡 `[BE]` Aggiungere rate limiting su endpoint di login (`/users/login`) per prevenire brute force (in-memory rolling window, 10 tentativi/15min per IP)
 - [x] 🟡 `[BE]` Aggiungere rate limiting su `/users/register` (5/ora) e `/users/forgot-password` (3/ora)
 - [x] 🟡 `[BE]` Aggiungere policy password minima: lunghezza ≥ 8 caratteri, almeno 1 numero — validazione sia FE (`Auth.jsx`) sia BE (`/users/register`)
@@ -166,10 +172,12 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
   - ✅ Top 5 destinazioni per frequenza
   - ✅ Breakdown per stato (pending/approved/completed)
   - [x] Numero dipendenti che hanno viaggiato nel mese (`employees_traveled` per mese in monthly_spend)
-- [ ] 🟡 `[BE]` Creare `GET /companies/{id}/analytics` con dati aggregati:
-  - Spesa per dipartimento (richiede campo `department` su Account — futuro)
-  - Costo medio per viaggio
-  - Trend mensile spese (ultimi 6 mesi)
+- [x] 🟡 `[BE]` Creare `GET /companies/{id}/analytics` con dati aggregati:
+  - ✅ Costo medio per viaggio
+  - ✅ Trend mensile spese (ultimi 6 mesi)
+  - ✅ Top 5 spender per importo
+  - ✅ Breakdown trip per stato
+  - [ ] Spesa per dipartimento (richiede campo `department` su Account — futuro)
 
 ### 4.6 Stripe B2B
 - [ ] 🟠 `[BE]` Creare prodotti Stripe per piani B2B:
@@ -196,7 +204,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - [x] 🟡 `[BE]` Il global exception handler in `main.py` cattura tutto con 500 generico — aggiungere logging strutturato con traceback completo
   - ✅ `global_exception_handler`: log tipo eccezione + traceback completo via `traceback.format_exc()`; `basicConfig` ora fa stream su stdout
 - [ ] 🟡 `[BE]` Aggiungere validation esplicita su tutti gli endpoint che accettano input utente (Pydantic models per request body dove mancano)
-- [ ] 🟡 `[BE]` Endpoint `search_flights`: gestire il caso in cui Duffel API key non è valida con messaggio user-friendly
+- [x] 🟡 `[BE]` Endpoint `search_flights`: gestire il caso in cui Duffel API key non è valida con messaggio user-friendly
+  - ✅ `flights.py`: HTTP 401/403 da Duffel → 503 con messaggio "Usa il link Skyscanner per cercare manualmente"
 
 ### 5.2 Testing
 - [ ] 🟠 `[BE]` I test esistenti (`test_auth.py`, `test_expenses.py`, `test_trips.py`) — verificare che passino con la codebase corrente
@@ -273,7 +282,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ### 6.7 Ricerca & Filtri
 - [x] 🟡 `[FE]` Barra di ricerca testo in `MyTrips.jsx` — filtra per nome viaggio e destinazione (client-side)
 - [x] 🟡 `[FE]` Dropdown filtro stato (Tutti / In corso / Approvati / Completati) combinato con ricerca testo; empty state con CTA reset
-- [ ] 🟡 `[FE]` Ricerca membri in CompanyDashboard tab "Membri" — per company con molti dipendenti
+- [x] 🟡 `[FE]` Ricerca membri in CompanyDashboard tab "Membri" — per company con molti dipendenti
+  - ✅ Implementato in §6.3 (switcher sezione + search bar real-time su nome + email)
 
 ### 6.8 Mobile Responsiveness
 - [ ] 🟡 `[FE]` Testare tutti i flussi critici su mobile (survey wizard, voting, budget, timeline)
@@ -384,9 +394,13 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 
 ### 10.2 Content & SEO
 - [ ] 🟡 `[MKT]` Creare blog minimo (anche solo 3-5 articoli) su: "come organizzare trasferte aziendali", "costi nascosti della gestione viaggi manuali", "alternativa a Concur per PMI"
-- [ ] 🟡 `[MKT]` Aggiornare `llms.txt` con pricing B2B corretto e feature list aggiornata
-- [ ] 🟡 `[MKT]` Aggiornare `sitemap.xml` con tutte le pagine pubbliche
-- [ ] 🟡 `[MKT]` Verificare meta tags (title, description, og:image) su tutte le pagine pubbliche
+- [x] 🟡 `[MKT]` Aggiornare `llms.txt` con pricing B2B corretto e feature list aggiornata
+  - ✅ Prezzi B2B: Starter €349/mese, Growth €890/mese, Enterprise custom; feature list completa
+- [x] 🟡 `[MKT]` Aggiornare `sitemap.xml` con tutte le pagine pubbliche
+  - ✅ Aggiunto `/pricing-business` (0.8), `/register` (0.7), `/login` (0.6); lastmod 2026-04-12
+- [x] 🟡 `[MKT]` Verificare meta tags (title, description, og:image) su tutte le pagine pubbliche
+  - ✅ `index.html`: title + description B2B-first, keywords travel management, OG/Twitter aggiornati, schema B2B plans
+  - ✅ `document.title` per-pagina: PricingBusiness, DemoRequest, MyTrips, CompanyDashboard
 - [ ] 🟢 `[MKT]` Landing page verticale SEO: `/per-aziende` o `/business` con contenuto dedicato al B2B
 
 ### 10.3 Social Media

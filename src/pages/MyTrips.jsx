@@ -9,6 +9,11 @@ import { motion } from 'framer-motion';
 const PAGE_LIMIT = 20;
 
 const MyTrips = () => {
+    useEffect(() => {
+        document.title = 'I miei Viaggi — SplitPlan AI';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
+
     const [trips, setTrips] = useState([]);
     const [totalTrips, setTotalTrips] = useState(0);
     const [skip, setSkip] = useState(0);

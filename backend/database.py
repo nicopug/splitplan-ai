@@ -13,7 +13,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     logger.info(f"Using PostgreSQL: {DATABASE_URL[:30]}...")
     engine = create_engine(
-        DATABASE_URL, echo=False, pool_pre_ping=True, pool_recycle=300
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        pool_size=5,
+        max_overflow=10,
     )
 else:
     logger.warning("DATABASE_URL not found, using SQLite fallback (IN-MEMORY)")

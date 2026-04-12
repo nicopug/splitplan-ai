@@ -42,6 +42,26 @@ const getAuthHeadersMultipart = () => {
     return token ? { "Authorization": `Bearer ${token}` } : {};
 };
 
+// Tenta di rinnovare il token silenziosamente. Restituisce true se riuscito.
+const _tryRefresh = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return false;
+    try {
+        const res = await fetch(`${API_URL}/users/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        localStorage.setItem('token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 // Gestione errori migliorata
 const handleResponse = async (response) => {
     if (!response.ok) {
@@ -62,7 +82,16 @@ const handleResponse = async (response) => {
 
         // Trigger notifiche toast globali basate sullo status
         if (response.status === 401) {
-            toast.error("Sessione scaduta o non valida. Effettua nuovamente il login.");
+            // Prova a rinnovare silenziosamente
+            const refreshed = await _tryRefresh();
+            if (refreshed) {
+                toast.info("Sessione rinnovata. Riprova l'operazione.");
+            } else {
+                localStorage.removeItem('token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+                toast.error("Sessione scaduta. Effettua nuovamente il login.");
+            }
         } else if (response.status === 403) {
             toast.warning("Questa è una funzione premium. Effettua l'upgrade per sbloccarla.");
         } else if (response.status === 429) {
@@ -595,6 +624,20 @@ export const login = async (credentials) => {
         body: JSON.stringify(credentials),
     });
     return handleResponse(response);
+};
+
+export const refreshToken = async () => {
+    const refreshTok = localStorage.getItem('refresh_token');
+    if (!refreshTok) throw new Error('Nessun refresh token disponibile.');
+    const response = await fetch(`${API_URL}/users/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshTok }),
+    });
+    const data = await handleResponse(response);
+    localStorage.setItem('token', data.access_token);
+    if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+    return data;
 };
 
 export const verifyEmail = async (token) => {

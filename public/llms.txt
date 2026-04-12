@@ -1,36 +1,54 @@
 # SplitPlan AI
 > Piattaforma AI per pianificare viaggi di gruppo e gestire trasferte aziendali.
 
-SplitPlan AI e' una piattaforma SaaS che combina pianificazione AI di viaggi, decisioni di gruppo, divisione spese e gestione trasferte aziendali in un unico strumento. Serve sia gruppi di consumatori (amici, famiglie) che aziende che gestiscono le trasferte dei dipendenti.
+SplitPlan AI è una piattaforma SaaS che combina pianificazione AI di viaggi, decisioni di gruppo, divisione spese e gestione trasferte aziendali in un unico strumento. Serve sia gruppi di consumatori (amici, famiglie) che aziende che gestiscono le trasferte dei dipendenti.
 
-## Funzionalita' Principali
-- Generazione itinerari AI (Google Gemini 2.5 Flash)
+## Funzionalità Principali
+- Generazione itinerari AI con 3 proposte alternative (Google Gemini 2.5 Flash)
 - Votazione di gruppo e mediazione AI per la scelta della destinazione
-- Tracciamento spese in tempo reale e divisione automatica
-- Gestione trasferte aziendali: compliance policy, report di spesa, coordinamento team
-- Mappe interattive con OpenStreetMap/Leaflet
-- Integrazione Google Calendar
-- Link prenotazione voli e hotel (Trainline, Booking)
+- Tracciamento spese in tempo reale, conversione valute, divisione automatica
+- Gestione trasferte aziendali: workflow approvazione manager, compliance policy, report di spesa PDF/CSV
+- Mappe interattive con OpenStreetMap/Leaflet e ottimizzazione percorso
+- Integrazione Google Calendar (sincronizza itinerario)
+- Ricerca voli con deep link Skyscanner/Kiwi e ricerca hotel con deep link Booking.com
 - Chat AI integrata per assistenza durante il viaggio
+- Scansione ricevute OCR per registrazione spese automatica
+- Dashboard analytics aziendale: trend spese mensili, top spender, breakdown per stato
 
-## Caso d'Uso B2B
-SplitPlan sostituisce strumenti frammentati (Booking.com per la logistica, Splitwise per le spese, ChatGPT per la pianificazione) con un'unica piattaforma integrata. Target: HR Manager, Travel Manager, Direttori Finance di aziende italiane con dipendenti in trasferta.
+## Caso d'Uso B2B (Priorità)
+SplitPlan sostituisce strumenti frammentati (Booking.com per la logistica, Splitwise per le spese, ChatGPT per la pianificazione, Excel per i report) con un'unica piattaforma integrata.
+
+Target: HR Manager, Travel Manager, Direttori Finance di aziende italiane con dipendenti in trasferta.
+
+Funzionalità B2B chiave:
+- Workflow approvazione: dipendente crea trasferta → manager approva/rifiuta con notifica email
+- Limiti di piano applicati automaticamente (max trip/mese, max chiamate AI/giorno)
+- Export CSV spese aziendali filtrato per mese
+- PDF nota spese conforme per rimborsi
+- Dashboard manager con analytics: spesa mensile, top destinazioni, trend 6 mesi
+- Invito di massa dipendenti via email (bulk invite)
 
 ## Caso d'Uso B2C
 Gruppi di amici (20-35 anni) che organizzano viaggi di gruppo: weekend, vacanze, eventi. L'AI media i conflitti di preferenze e ottimizza itinerari e budget.
 
-## Pricing
-- Free: pianificazione AI base, chat di gruppo, mappa interattiva
-- Pro Mensile: EUR 7.99/mese - AI illimitata, gestione budget, export PDF, sync Google Calendar
-- Pro Annuale: EUR 76.99/anno (risparmio 50%)
-- Enterprise: contattare per demo personalizzata
+## Pricing B2C
+- Free: pianificazione AI base (3 proposte), chat di gruppo, mappa interattiva
+- Pro Mensile: EUR 7.99/mese — AI illimitata, gestione budget avanzata, export PDF, sync Google Calendar
+- Pro Annuale: EUR 76.99/anno (risparmio ~20%)
+
+## Pricing B2B
+- Corporate Starter: EUR 349/mese (EUR 2.990/anno) — fino a 25 utenti, 10 trip/mese, supporto email
+- Business Growth: EUR 890/mese (EUR 7.990/anno) — fino a 100 utenti, trip illimitati, analytics avanzati, supporto prioritario
+- Enterprise: prezzo su misura — utenti illimitati, SLA dedicato, onboarding guidato, integrazioni custom
 
 ## Tecnologia
-- Frontend: React 19, Vite 7, Tailwind CSS 4
-- Backend: FastAPI, PostgreSQL (Supabase)
+- Frontend: React 19, Vite 7, Tailwind CSS 4, React Router 7, Radix UI
+- Backend: FastAPI, SQLModel, PostgreSQL (Supabase)
 - AI: Google Gemini 2.5 Flash
-- Deployment: Vercel
+- Deployment: Vercel (serverless)
+- Pagamenti: Stripe
 
 ## Contatti e Demo
 - Demo aziendale: https://splitplan-ai.vercel.app/demo
+- Piani B2B: https://splitplan-ai.vercel.app/pricing-business
 - Homepage: https://splitplan-ai.vercel.app

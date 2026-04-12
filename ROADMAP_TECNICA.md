@@ -39,9 +39,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ### 1.3 Supabase — Limiti Free Tier
 - [ ] 🟠 `[INFRA]` Monitorare utilizzo storage attuale (limite free: 1GB database + 1GB storage)
 - [ ] 🟠 `[INFRA]` Upgrade a Supabase Pro ($25/mese) prima del pilot aziendale — 8GB DB, 100GB storage
-- [ ] 🟠 `[DB]` Verificare connessioni dirette: free tier ha 2 connessioni dirette — con più utenti concorrenti serve connection pooling (Supavisor, incluso nel Pro)
+- [ ] 🟠 `[INFRA]` Verificare connessioni dirette: free tier ha 2 connessioni dirette — con più utenti concorrenti serve connection pooling (Supavisor, incluso nel Pro)
 - [x] 🟡 `[BE]` Aggiungere `pool_size` e `max_overflow` alla configurazione `create_engine()` in `database.py`
-  - ✅ `database.py`: `pool_size=5`, `max_overflow=10`
+  - ✅ `database.py`: `pool_size=5`, `max_overflow=10` per connessioni dirette
+  - ✅ Auto-detect URL Supavisor/pgbouncer (`"pooler"` in URL): usa `pool_size=0, max_overflow=-1` per evitare doppio pooling
 - [ ] 🟡 `[INFRA]` Abilitare Point-in-Time Recovery su Supabase Pro (incluso nel piano) — ripristino DB fino a 7 giorni indietro in caso di errori critici
 
 ### 1.6 Ambiente di Staging
@@ -280,7 +281,8 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 ### 6.5 Pricing Page B2B
 - [x] 🟠 `[FE]` Creare pagina `/pricing-business` o sezione dedicata che mostra i 3 piani B2B (Starter, Growth, Enterprise)
 - [x] 🟠 `[FE]` Aggiornare `App.jsx` per includere route `/pricing-business` (CTA → /demo finché Stripe non è live)
-- [ ] 🟡 `[FE]` Sincronizzare prezzi in `llms.txt` con i prezzi reali (attualmente mostra €7.99 B2C)
+- [x] 🟡 `[FE]` Sincronizzare prezzi in `llms.txt` con i prezzi reali (attualmente mostra €7.99 B2C)
+  - ✅ Già fatto: B2C (€7.99/mese, €76.99/anno) e B2B (Starter €349, Growth €890, Enterprise custom) già corretti
 
 ### 6.6 UX Polish
 - [x] 🟡 `[FE]` Loading states: alcuni componenti non mostrano skeleton/spinner durante caricamento (CompanyDashboard lo fa, verificare Dashboard, MyTrips)
@@ -288,7 +290,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
   - ✅ MyTrips.jsx: spinner + empty state già presenti; CompanyDashboard: spinner già presente
 - [x] 🟡 `[FE]` Empty states: cosa vede un utente quando non ha trip? Quando la company non ha trasferte? Aggiungere illustrazioni/CTA
   - ✅ MyTrips: empty state con emoji 🌍 + CTA; CompanyDashboard: onboarding checklist quando trips.length === 0
-- [ ] 🟡 `[FE]` Error states: il global error handler mostra toast, ma alcuni errori critici (DB down, API unreachable) meritano una pagina dedicata
+- [x] 🟡 `[FE]` Error states: il global error handler mostra toast, ma alcuni errori critici (DB down, API unreachable) meritano una pagina dedicata
+  - ✅ `ApiErrorBanner.jsx`: banner rosso sticky in cima, animato, si auto-chiude al recovery
+  - ✅ `api.js`: `safeApiFetch` wrapper su tutti i 77 fetch — emette `splitplan:network-error` su TypeError, `splitplan:api-recovered` su successo
+  - ✅ Montato in `App.jsx` sopra il `<Toaster>`
 - [x] 🟡 `[FE]` `ErrorBoundary.jsx` — verificare che il fallback UI sia informativo e non un div vuoto
   - ✅ Aggiornato con design system CSS variables + bottone "Riprova" (reset state) + dev error details
 - [ ] 🟢 `[FE]` Accessibilità: verificare contrast ratio, keyboard navigation, screen reader labels sui componenti principali

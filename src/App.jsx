@@ -19,6 +19,7 @@ const Terms     = lazy(() => import('./pages/Terms'));
 const TermsIt   = lazy(() => import('./pages/TermsIt'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import ApiErrorBanner from './components/ApiErrorBanner';
 import { Toaster } from 'sonner';
 import CookieBanner, { getCookieConsent } from './components/CookieBanner';
 import { initPostHog } from './providers/PostHogProvider';
@@ -147,6 +148,7 @@ function App() {
               {t('app.offlineBanner', 'Modalità Offline - Stai visualizzando i dati salvati')}
             </div>
           )}
+          <ApiErrorBanner />
           <Toaster richColors position="bottom-right" />
           <Toast />
           <Modal />

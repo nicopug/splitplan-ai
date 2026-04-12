@@ -29,6 +29,22 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 export { API_URL };
 
+// Wrapper attorno a fetch: intercetta i TypeError (rete irraggiungibile) e
+// li notifica via CustomEvent in modo che l'UI possa mostrare un banner critico.
+const safeApiFetch = async (url, options) => {
+    try {
+        const response = await fetch(url, options);
+        // Segnala che la rete è tornata disponibile (in caso era caduta)
+        window.dispatchEvent(new CustomEvent('splitplan:api-recovered'));
+        return response;
+    } catch (err) {
+        if (err instanceof TypeError) {
+            window.dispatchEvent(new CustomEvent('splitplan:network-error'));
+        }
+        throw err;
+    }
+};
+
 const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -110,7 +126,7 @@ const handleResponse = async (response) => {
 // --- Trips ---
 
 export const createTrip = async (tripData) => {
-    const response = await fetch(`${API_URL}/trips/`, {
+    const response = await safeApiFetch(`${API_URL}/trips/`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(tripData),
@@ -120,7 +136,7 @@ export const createTrip = async (tripData) => {
 
 export const getTrip = async (id) => {
     try {
-        const response = await fetch(`${API_URL}/trips/${id}`, {
+        const response = await safeApiFetch(`${API_URL}/trips/${id}`, {
             headers: getAuthHeaders()
         });
 
@@ -145,14 +161,14 @@ export const getTrip = async (id) => {
 };
 
 export const getProposals = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/proposals`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/proposals`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const generateProposals = async (tripId, preferences) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/generate-proposals`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/generate-proposals`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(preferences)
@@ -161,7 +177,7 @@ export const generateProposals = async (tripId, preferences) => {
 };
 
 export const voteProposal = async (proposalId, userId, score) => {
-    const response = await fetch(`${API_URL}/trips/vote/${proposalId}?user_id=${userId}&score=${score}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/vote/${proposalId}?user_id=${userId}&score=${score}`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -169,7 +185,7 @@ export const voteProposal = async (proposalId, userId, score) => {
 };
 
 export const simulateVotes = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/simulate-votes`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/simulate-votes`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -178,7 +194,7 @@ export const simulateVotes = async (tripId) => {
 
 export const getItinerary = async (tripId) => {
     try {
-        const response = await fetch(`${API_URL}/trips/${tripId}/itinerary`, {
+        const response = await safeApiFetch(`${API_URL}/trips/${tripId}/itinerary`, {
             headers: getAuthHeaders()
         });
 
@@ -204,7 +220,7 @@ export const getItinerary = async (tripId) => {
 
 export const getRouteGeometry = async (tripId) => {
     try {
-        const response = await fetch(`${API_URL}/trips/${tripId}/route-geometry`, {
+        const response = await safeApiFetch(`${API_URL}/trips/${tripId}/route-geometry`, {
             headers: getAuthHeaders()
         });
         return handleAdminResponse(response); // silent — no global toast on failure
@@ -214,7 +230,7 @@ export const getRouteGeometry = async (tripId) => {
 };
 
 export const optimizeItinerary = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/optimize`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/optimize`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -222,14 +238,14 @@ export const optimizeItinerary = async (tripId) => {
 };
 
 export const getParticipants = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/participants`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/participants`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const confirmHotel = async (tripId, hotelData) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/confirm-hotel`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/confirm-hotel`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(hotelData),
@@ -242,7 +258,7 @@ export const extractReceiptData = async (file, type) => {
     formData.append("file", file);
     formData.append("type", type);
 
-    const response = await fetch(`${API_URL}/trips/extract-receipt`, {
+    const response = await safeApiFetch(`${API_URL}/trips/extract-receipt`, {
         method: "POST",
         headers: getAuthHeadersMultipart(),
         body: formData
@@ -256,7 +272,7 @@ export const uploadReceipt = async (tripId, file) => {
     const formData = new FormData();
     formData.append('file', file);
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/expenses/${tripId}/upload-receipt`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/${tripId}/upload-receipt`, {
         method: 'POST',
         // NOTE: Do NOT set Content-Type — browser must set it with the correct
         //       multipart boundary for FormData to work.
@@ -277,7 +293,7 @@ export const uploadReceipt = async (tripId, file) => {
 };
 
 export const resetHotel = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/reset-hotel`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/reset-hotel`, {
         method: 'POST',
         headers: getAuthHeaders(),
     });
@@ -285,7 +301,7 @@ export const resetHotel = async (tripId) => {
 };
 
 export const chatWithAI = async (tripId, message, history = []) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/chat`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/chat`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ message, history })
@@ -296,7 +312,7 @@ export const chatWithAI = async (tripId, message, history = []) => {
 
 
 export const estimateBudget = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/estimate-budget`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/estimate-budget`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -304,7 +320,7 @@ export const estimateBudget = async (tripId) => {
 };
 
 export const estimateSurveyBudget = async (data) => {
-    const response = await fetch(`${API_URL}/trips/estimate-survey-budget`, {
+    const response = await safeApiFetch(`${API_URL}/trips/estimate-survey-budget`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(data)
@@ -313,7 +329,7 @@ export const estimateSurveyBudget = async (data) => {
 };
 
 export const searchTripOptions = async (tripId, type) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/search-options`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/search-options`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ type })
@@ -322,7 +338,7 @@ export const searchTripOptions = async (tripId, type) => {
 };
 
 export const searchRealFlights = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/search-flights`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/search-flights`, {
         method: "GET",
         headers: getAuthHeaders()
     });
@@ -330,7 +346,7 @@ export const searchRealFlights = async (tripId) => {
 };
 
 export const confirmTripOption = async (tripId, optionData) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/confirm-option`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/confirm-option`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(optionData)
@@ -339,7 +355,7 @@ export const confirmTripOption = async (tripId, optionData) => {
 };
 
 export const updateTrip = async (tripId, updates) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(updates)
@@ -348,7 +364,7 @@ export const updateTrip = async (tripId, updates) => {
 };
 
 export const generateShareLink = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/share`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/share`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -356,7 +372,7 @@ export const generateShareLink = async (tripId) => {
 };
 
 export const getSharedTrip = async (token) => {
-    const response = await fetch(`${API_URL}/trips/share/${token}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/share/${token}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     });
@@ -364,7 +380,7 @@ export const getSharedTrip = async (token) => {
 };
 
 export const joinTrip = async (token) => {
-    const response = await fetch(`${API_URL}/trips/join/${token}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/join/${token}`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -373,7 +389,7 @@ export const joinTrip = async (token) => {
 
 export const exportCompanyExpensesCSV = async (companyId, month = null) => {
     const params = month ? `?month=${month}` : '';
-    const response = await fetch(`${API_URL}/companies/${companyId}/expenses/export${params}`, {
+    const response = await safeApiFetch(`${API_URL}/companies/${companyId}/expenses/export${params}`, {
         headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Errore export CSV');
@@ -389,7 +405,7 @@ export const exportCompanyExpensesCSV = async (companyId, month = null) => {
 };
 
 export const exportNotaSpese = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/export-nota-spese`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/export-nota-spese`, {
         headers: getAuthHeaders()
     });
     if (!response.ok) {
@@ -409,7 +425,7 @@ export const exportNotaSpese = async (tripId) => {
 };
 
 export const exportExpenseReportPDF = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/expense-report/pdf`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/expense-report/pdf`, {
         headers: getAuthHeaders()
     });
     if (!response.ok) {
@@ -429,7 +445,7 @@ export const exportExpenseReportPDF = async (tripId) => {
 };
 
 export const exportTripPDF = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/export-pdf`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/export-pdf`, {
         headers: getAuthHeaders()
     });
 
@@ -454,14 +470,14 @@ export const exportTripPDF = async (tripId) => {
 };
 
 export const getUserTrips = async (skip = 0, limit = 20) => {
-    const response = await fetch(`${API_URL}/trips/my-trips?skip=${skip}&limit=${limit}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/my-trips?skip=${skip}&limit=${limit}`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const hideTrip = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/hide`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/hide`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -469,7 +485,7 @@ export const hideTrip = async (tripId) => {
 };
 
 export const completeTrip = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/complete`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/complete`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -477,14 +493,14 @@ export const completeTrip = async (tripId) => {
 };
 
 export const getUserStats = async () => {
-    const response = await fetch(`${API_URL}/trips/stats`, {
+    const response = await safeApiFetch(`${API_URL}/trips/stats`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const createCheckout = async (productType) => {
-    const response = await fetch(`${API_URL}/payments/create-checkout`, {
+    const response = await safeApiFetch(`${API_URL}/payments/create-checkout`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ product_type: productType })
@@ -495,7 +511,7 @@ export const createCheckout = async (productType) => {
 };
 
 export const verifyCheckoutSession = async (sessionId) => {
-    const response = await fetch(`${API_URL}/payments/verify-session?session_id=${sessionId}`, {
+    const response = await safeApiFetch(`${API_URL}/payments/verify-session?session_id=${sessionId}`, {
         headers: getAuthHeaders()
     });
     const data = await handleResponse(response);
@@ -512,7 +528,7 @@ export const verifyCheckoutSession = async (sessionId) => {
 };
 
 export const createPortalSession = async () => {
-    const response = await fetch(`${API_URL}/payments/portal`, {
+    const response = await safeApiFetch(`${API_URL}/payments/portal`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -521,7 +537,7 @@ export const createPortalSession = async () => {
 };
 
 export const unlockTrip = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/unlock`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/unlock`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -538,7 +554,7 @@ export const unlockTrip = async (tripId) => {
 // --- Expenses ---
 
 export const addExpense = async (expenseData) => {
-    const response = await fetch(`${API_URL}/expenses/`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(expenseData),
@@ -547,21 +563,21 @@ export const addExpense = async (expenseData) => {
 };
 
 export const getExpenses = async (tripId) => {
-    const response = await fetch(`${API_URL}/expenses/${tripId}`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/${tripId}`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const getBalances = async (tripId) => {
-    const response = await fetch(`${API_URL}/expenses/${tripId}/balances`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/${tripId}/balances`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const deleteExpense = async (expenseId) => {
-    const response = await fetch(`${API_URL}/expenses/${expenseId}`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/${expenseId}`, {
         method: "DELETE",
         headers: getAuthHeaders()
     });
@@ -569,7 +585,7 @@ export const deleteExpense = async (expenseId) => {
 };
 
 export const migrateExpenses = async () => {
-    const response = await fetch(`${API_URL}/expenses/migrate-schema`, {
+    const response = await safeApiFetch(`${API_URL}/expenses/migrate-schema`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -582,7 +598,7 @@ export const uploadPhoto = async (tripId, file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_URL}/trips/${tripId}/photos`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/photos`, {
         method: "POST",
         headers: getAuthHeadersMultipart(),
         body: formData
@@ -591,14 +607,14 @@ export const uploadPhoto = async (tripId, file) => {
 };
 
 export const getPhotos = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/photos`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/photos`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const deletePhoto = async (photoId) => {
-    const response = await fetch(`${API_URL}/trips/photos/${photoId}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/photos/${photoId}`, {
         method: "DELETE",
         headers: getAuthHeaders()
     });
@@ -609,7 +625,7 @@ export const deletePhoto = async (photoId) => {
 
 export const register = async (userData) => {
     // userData must include name, surname, email, password, terms_accepted, privacy_accepted
-    const response = await fetch(`${API_URL}/users/register`, {
+    const response = await safeApiFetch(`${API_URL}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -618,7 +634,7 @@ export const register = async (userData) => {
 };
 
 export const login = async (credentials) => {
-    const response = await fetch(`${API_URL}/users/login`, {
+    const response = await safeApiFetch(`${API_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
@@ -629,7 +645,7 @@ export const login = async (credentials) => {
 export const refreshToken = async () => {
     const refreshTok = localStorage.getItem('refresh_token');
     if (!refreshTok) throw new Error('Nessun refresh token disponibile.');
-    const response = await fetch(`${API_URL}/users/refresh`, {
+    const response = await safeApiFetch(`${API_URL}/users/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshTok }),
@@ -641,12 +657,12 @@ export const refreshToken = async () => {
 };
 
 export const verifyEmail = async (token) => {
-    const response = await fetch(`${API_URL}/users/verify-email?token=${token}`);
+    const response = await safeApiFetch(`${API_URL}/users/verify-email?token=${token}`);
     return handleResponse(response);
 };
 
 export const toggleSubscription = async (plan = null) => {
-    const response = await fetch(`${API_URL}/users/toggle-subscription`, {
+    const response = await safeApiFetch(`${API_URL}/users/toggle-subscription`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ plan }),
@@ -655,7 +671,7 @@ export const toggleSubscription = async (plan = null) => {
 };
 
 export const cancelSubscription = async () => {
-    const response = await fetch(`${API_URL}/users/cancel-subscription`, {
+    const response = await safeApiFetch(`${API_URL}/users/cancel-subscription`, {
         method: "POST",
         headers: getAuthHeaders(),
     });
@@ -663,7 +679,7 @@ export const cancelSubscription = async () => {
 };
 
 export const forgotPassword = async (email) => {
-    const response = await fetch(`${API_URL}/users/forgot-password`, {
+    const response = await safeApiFetch(`${API_URL}/users/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -672,7 +688,7 @@ export const forgotPassword = async (email) => {
 };
 
 export const resetPassword = async (token, new_password) => {
-    const response = await fetch(`${API_URL}/users/reset-password`, {
+    const response = await safeApiFetch(`${API_URL}/users/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, new_password }),
@@ -681,7 +697,7 @@ export const resetPassword = async (token, new_password) => {
 };
 
 export const validateResetToken = async (token) => {
-    const response = await fetch(`${API_URL}/users/validate-reset-token?token=${token}`, {
+    const response = await safeApiFetch(`${API_URL}/users/validate-reset-token?token=${token}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
@@ -689,7 +705,7 @@ export const validateResetToken = async (token) => {
 };
 
 export const exchangeCalendarToken = async (code, state) => {
-    const response = await fetch(`${API_URL}/calendar/exchange-token`, {
+    const response = await safeApiFetch(`${API_URL}/calendar/exchange-token`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -701,7 +717,7 @@ export const exchangeCalendarToken = async (code, state) => {
     return handleResponse(response);
 };
 export const updateLanguage = async (language) => {
-    const response = await fetch(`${API_URL}/users/update-language`, {
+    const response = await safeApiFetch(`${API_URL}/users/update-language`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ language })
@@ -717,7 +733,7 @@ export const updateLanguage = async (language) => {
 };
 
 export const getEvents = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/events`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/events`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
@@ -726,7 +742,7 @@ export const getEvents = async (tripId) => {
 // --- Delete ---
 
 export const deleteAccount = async () => {
-    const response = await fetch(`${API_URL}/users/delete-account`, {
+    const response = await safeApiFetch(`${API_URL}/users/delete-account`, {
         method: "DELETE",
         headers: getAuthHeaders()
     });
@@ -734,7 +750,7 @@ export const deleteAccount = async () => {
 };
 
 export const deleteTrip = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}`, {
         method: "DELETE",
         headers: getAuthHeaders()
     });
@@ -744,14 +760,14 @@ export const deleteTrip = async (tripId) => {
 // --- Manager / Business Overview ---
 
 export const getBusinessOverview = async () => {
-    const response = await fetch(`${API_URL}/trips/business-overview`, {
+    const response = await safeApiFetch(`${API_URL}/trips/business-overview`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const approveTrip = async (tripId) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/approve`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/approve`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -759,7 +775,7 @@ export const approveTrip = async (tripId) => {
 };
 
 export const rejectTrip = async (tripId, rejectionReason = null) => {
-    const response = await fetch(`${API_URL}/trips/${tripId}/reject`, {
+    const response = await safeApiFetch(`${API_URL}/trips/${tripId}/reject`, {
         method: "POST",
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ rejection_reason: rejectionReason }),
@@ -768,21 +784,21 @@ export const rejectTrip = async (tripId, rejectionReason = null) => {
 };
 
 export const getUnreadCount = async () => {
-    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+    const response = await safeApiFetch(`${API_URL}/notifications/unread-count`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const getNotifications = async () => {
-    const response = await fetch(`${API_URL}/notifications`, {
+    const response = await safeApiFetch(`${API_URL}/notifications`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const markNotificationRead = async (notificationId) => {
-    const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+    const response = await safeApiFetch(`${API_URL}/notifications/${notificationId}/read`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -790,7 +806,7 @@ export const markNotificationRead = async (notificationId) => {
 };
 
 export const markAllNotificationsRead = async () => {
-    const response = await fetch(`${API_URL}/notifications/read-all`, {
+    const response = await safeApiFetch(`${API_URL}/notifications/read-all`, {
         method: "POST",
         headers: getAuthHeaders()
     });
@@ -798,21 +814,21 @@ export const markAllNotificationsRead = async () => {
 };
 
 export const getCompanyDashboardData = async (companyId) => {
-    const response = await fetch(`${API_URL}/companies/${companyId}/dashboard`, {
+    const response = await safeApiFetch(`${API_URL}/companies/${companyId}/dashboard`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const getInviteToken = async () => {
-    const response = await fetch(`${API_URL}/companies/invite-token`, {
+    const response = await safeApiFetch(`${API_URL}/companies/invite-token`, {
         headers: getAuthHeaders()
     });
     return handleResponse(response);
 };
 
 export const joinCompany = async (token) => {
-    const response = await fetch(`${API_URL}/companies/join`, {
+    const response = await safeApiFetch(`${API_URL}/companies/join`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ token })
@@ -821,7 +837,7 @@ export const joinCompany = async (token) => {
 };
 
 export const bulkInviteMembers = async (companyId, emails) => {
-    const response = await fetch(`${API_URL}/companies/${companyId}/invite-bulk`, {
+    const response = await safeApiFetch(`${API_URL}/companies/${companyId}/invite-bulk`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ emails })
@@ -830,7 +846,7 @@ export const bulkInviteMembers = async (companyId, emails) => {
 };
 
 export const updateCompanySettings = async (companyId, settings) => {
-    const response = await fetch(`${API_URL}/companies/${companyId}/settings`, {
+    const response = await safeApiFetch(`${API_URL}/companies/${companyId}/settings`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(settings),
@@ -839,7 +855,7 @@ export const updateCompanySettings = async (companyId, settings) => {
 };
 
 export const getCompanyAnalytics = async (companyId) => {
-    const response = await fetch(`${API_URL}/companies/${companyId}/analytics`, {
+    const response = await safeApiFetch(`${API_URL}/companies/${companyId}/analytics`, {
         headers: getAuthHeaders(),
     });
     return handleResponse(response);
@@ -867,28 +883,28 @@ const handleAdminResponse = async (response) => {
 };
 
 export const adminVerifyToken = async (adminToken) => {
-    const response = await fetch(`${API_URL}/admin/verify-token`, {
+    const response = await safeApiFetch(`${API_URL}/admin/verify-token`, {
         headers: adminHeaders(adminToken),
     });
     return handleAdminResponse(response);
 };
 
 export const adminGetStats = async (adminToken) => {
-    const response = await fetch(`${API_URL}/admin/stats`, {
+    const response = await safeApiFetch(`${API_URL}/admin/stats`, {
         headers: adminHeaders(adminToken),
     });
     return handleAdminResponse(response);
 };
 
 export const adminGetLeads = async (adminToken) => {
-    const response = await fetch(`${API_URL}/admin/leads`, {
+    const response = await safeApiFetch(`${API_URL}/admin/leads`, {
         headers: adminHeaders(adminToken),
     });
     return handleAdminResponse(response);
 };
 
 export const adminApproveB2B = async (adminToken, body) => {
-    const response = await fetch(`${API_URL}/admin/approve-b2b`, {
+    const response = await safeApiFetch(`${API_URL}/admin/approve-b2b`, {
         method: "POST",
         headers: adminHeaders(adminToken),
         body: JSON.stringify(body),
@@ -899,7 +915,7 @@ export const adminApproveB2B = async (adminToken, body) => {
 // --- Leads ---
 
 export const submitDemoRequest = async (leadData) => {
-    const response = await fetch(`${API_URL}/leads/demo`, {
+    const response = await safeApiFetch(`${API_URL}/leads/demo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadData)

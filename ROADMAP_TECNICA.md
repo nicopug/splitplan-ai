@@ -535,6 +535,10 @@ Ogni task ha anche un **tag di area**: `[BE]` Backend, `[FE]` Frontend, `[DB]` D
 - §6.6 ErrorBoundary: design system CSS variables + bottone "Riprova"; loading/empty states Dashboard ✅
 - §6.8 PWA manifest: `maskable` icon, `orientation`, `categories`; section switcher `flex-wrap` ✅
 - §5.4 `trips.py` → package `routers/trips/__init__.py` (import invariato, struttura pronta per split) ✅
+- §5.2 GitHub Actions CI: `.github/workflows/ci.yml` — backend (pytest + pip-audit) + frontend (lint + build + npm-audit) ✅
+- §5.1 `TripUpdateRequest` Pydantic model su `PATCH /trips/{id}` (sostituisce `Dict`); whitelist lingua su `update-language` ✅
+- §6.2 Vibrazione + beep Web Audio API su notifiche critiche (`approval_requested`, `budget_exceeded`) ✅
+- §2.4 Indici FK su Participant (trip_id, account_id), Vote (proposal_id, user_id), Expense (trip_id, payer_id), ItineraryItem (trip_id) — migrazione `g5h6i7j8k9l0` ✅
 
 ---
 

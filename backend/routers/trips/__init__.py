@@ -177,6 +177,25 @@ class HotelSelectionRequest(SQLModel):
     return_time: Optional[str] = None
 
 
+class TripUpdateRequest(SQLModel):
+    """Campi modificabili dall'organizzatore via PATCH /trips/{id}.
+    Tutti opzionali: si aggiornano solo i campi presenti nel body."""
+    name: Optional[str] = None
+    destination: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    budget: Optional[float] = None
+    budget_max: Optional[float] = None
+    num_people: Optional[int] = None
+    accommodation: Optional[str] = None
+    transport_mode: Optional[str] = None
+    notes: Optional[str] = None
+    office_address: Optional[str] = None
+    work_start_time: Optional[str] = None
+    work_end_time: Optional[str] = None
+    work_days: Optional[str] = None
+
+
 FREE_LIMIT = 20
 
 
@@ -1337,7 +1356,7 @@ async def join_trip(
 @router.patch("/{trip_id}")
 async def update_trip(
     trip_id: int,
-    updates: Dict,
+    updates: TripUpdateRequest,
     session: Session = Depends(get_session),
     current_account: Account = Depends(get_current_user),
 ):
@@ -1358,16 +1377,8 @@ async def update_trip(
         if not check.is_organizer:
             raise HTTPException(status_code=403, detail="Solo l'organizzatore può modificare il viaggio")
 
-        # Blocca campi sensibili che non devono essere aggiornati via PATCH libero
-        _BLOCKED_FIELDS = {
-            "status", "is_premium", "approved_by", "winning_proposal_id",
-            "company_id", "trip_intent", "rejection_reason", "approval_requested_at",
-        }
-        for key, value in updates.items():
-            if key in _BLOCKED_FIELDS:
-                continue
-            if hasattr(trip, key):
-                setattr(trip, key, value)
+        for key, value in updates.model_dump(exclude_none=True).items():
+            setattr(trip, key, value)
 
         session.add(trip)
         session.commit()

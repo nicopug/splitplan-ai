@@ -119,8 +119,8 @@ class ParticipantBase(SQLModel):
 
 class Participant(ParticipantBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    trip_id: Optional[int] = Field(default=None, foreign_key="trip.id")
-    account_id: Optional[int] = Field(default=None, foreign_key="account.id")
+    trip_id: Optional[int] = Field(default=None, foreign_key="trip.id", index=True)
+    account_id: Optional[int] = Field(default=None, foreign_key="account.id", index=True)
 
     trip: Optional[Trip] = Relationship(back_populates="participants")
     votes: List["Vote"] = Relationship(back_populates="participant")
@@ -143,8 +143,8 @@ class Proposal(SQLModel, table=True):
 
 class Vote(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    proposal_id: int = Field(foreign_key="proposal.id")
-    user_id: int = Field(foreign_key="participant.id")
+    proposal_id: int = Field(foreign_key="proposal.id", index=True)
+    user_id: int = Field(foreign_key="participant.id", index=True)
     score: int = Field(default=1)
 
     proposal: Optional[Proposal] = Relationship(back_populates="votes")
@@ -153,7 +153,7 @@ class Vote(SQLModel, table=True):
 
 class ItineraryItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    trip_id: int = Field(foreign_key="trip.id")
+    trip_id: int = Field(foreign_key="trip.id", index=True)
     title: str
     description: Optional[str] = None
     start_time: str
@@ -167,8 +167,8 @@ class ItineraryItem(SQLModel, table=True):
 
 class Expense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    trip_id: int = Field(foreign_key="trip.id")
-    payer_id: int = Field(foreign_key="participant.id")
+    trip_id: int = Field(foreign_key="trip.id", index=True)
+    payer_id: int = Field(foreign_key="participant.id", index=True)
     description: str
     amount: float
     original_amount: Optional[float] = None

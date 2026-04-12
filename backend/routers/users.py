@@ -587,12 +587,17 @@ async def delete_account(
     return {"message": "Account eliminato con successo."}
 
 
+_ALLOWED_LANGUAGES = {"it", "en", "fr", "de", "es"}
+
+
 @router.post("/update-language")
 async def update_language(
     language: str = Body(..., embed=True),
     current_account: Account = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
+    if language not in _ALLOWED_LANGUAGES:
+        raise HTTPException(status_code=422, detail=f"Lingua non supportata. Valori ammessi: {', '.join(sorted(_ALLOWED_LANGUAGES))}")
     current_account.language = language
     session.add(current_account)
     session.commit()

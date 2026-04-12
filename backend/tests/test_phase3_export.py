@@ -36,10 +36,10 @@ def make_company(session, name="ExportCo"):
     return c
 
 
-def make_business_trip(session, *, name="Trasferta", status="APPROVED"):
+def make_business_trip(session, *, name="Trasferta", status="APPROVED", company_id=None):
     trip = Trip(
         name=name, trip_type="BUSINESS", trip_intent="BUSINESS",
-        destination="Milano", status=status,
+        destination="Milano", status=status, company_id=company_id,
     )
     session.add(trip)
     session.commit()
@@ -69,7 +69,7 @@ def test_csv_export_contains_expense_rows(client, session):
     manager = make_account(session, email="mgr_rows@test.com", is_manager=True, company_id=company.id)
     employee = make_account(session, email="emp_rows@test.com", company_id=company.id)
 
-    trip = make_business_trip(session, name="Roma Trip")
+    trip = make_business_trip(session, name="Roma Trip", company_id=company.id)
     part = Participant(name="Emp", trip_id=trip.id, account_id=employee.id, is_organizer=True)
     session.add(part)
     session.commit()
@@ -96,7 +96,7 @@ def test_csv_export_month_filter(client, session):
     manager = make_account(session, email="mgr_filter@test.com", is_manager=True, company_id=company.id)
     employee = make_account(session, email="emp_filter@test.com", company_id=company.id)
 
-    trip = make_business_trip(session, name="Filter Trip")
+    trip = make_business_trip(session, name="Filter Trip", company_id=company.id)
     part = Participant(name="Emp", trip_id=trip.id, account_id=employee.id, is_organizer=True)
     session.add(part)
     session.commit()

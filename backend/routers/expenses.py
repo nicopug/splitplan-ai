@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime, timezone
-import json
 import logging
 import csv
 import io
@@ -103,7 +102,7 @@ async def create_expense(
         exchange_rate=exchange_rate,
         category=expense_req.category,
         date=str(datetime.now(timezone.utc)),
-        involved_ids=json.dumps(involved),  # <- Salviamo chi è coinvolto
+        involved_ids=involved,
     )
     session.add(db_expense)
     session.commit()
@@ -202,9 +201,7 @@ async def get_balances(
 
         # Recupera chi è coinvolto in questa spesa
         if exp.involved_ids:
-            involved = json.loads(exp.involved_ids)
-            # Filtra solo participant IDs validi (per sicurezza)
-            involved = [pid for pid in involved if pid in balances]
+            involved = [pid for pid in exp.involved_ids if pid in balances]
         else:
             involved = list(balances.keys())  # fallback: tutti
 
@@ -361,7 +358,7 @@ async def upload_receipt(
         exchange_rate=exchange_rate,
         category=extracted["category"],
         date=expense_date,
-        involved_ids=json.dumps(all_participant_ids),
+        involved_ids=all_participant_ids,
     )
     session.add(db_expense)
     session.commit()

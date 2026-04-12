@@ -66,6 +66,10 @@ def test_get_balances(client, session):
     session.add(trip)
     session.commit()
 
+    participant = Participant(name="A", trip_id=trip.id, account_id=account.id)
+    session.add(participant)
+    session.commit()
+
     login_res = client.post(
         "/users/login", json={"email": "bal@example.com", "password": "p"}
     )

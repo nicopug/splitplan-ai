@@ -33,7 +33,7 @@ def test_login_user(client, session):
     session.commit()
 
     response = client.post(
-        "/api/users/login",
+        "/users/login",
         json={"email": "login@example.com", "password": "password123"},
     )
     assert response.status_code == 200
@@ -56,7 +56,7 @@ def test_login_wrong_password(client, session):
     session.commit()
 
     response = client.post(
-        "/api/users/login",
+        "/users/login",
         json={"email": "wrong@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401

@@ -74,5 +74,7 @@ def test_get_trips(client, session):
 
     response = client.get("/trips/my-trips", headers=headers)
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert response.json()[0]["name"] == "Old Trip"
+    data = response.json()
+    assert data["total"] == 1
+    assert len(data["trips"]) == 1
+    assert data["trips"][0]["name"] == "Old Trip"

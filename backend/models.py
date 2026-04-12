@@ -1,5 +1,6 @@
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Column, JSON
 from datetime import datetime, timezone
 
 
@@ -176,7 +177,7 @@ class Expense(SQLModel, table=True):
     exchange_rate: Optional[float] = 1.0
     date: str
     category: str = "General"
-    involved_ids: Optional[str] = Field(default=None)  # ← JSON string es. "[1, 2, 3]"
+    involved_ids: Optional[List[int]] = Field(default=None, sa_column=Column(JSON))
 
     trip: Optional[Trip] = Relationship(back_populates="expenses")
     payer: Optional[Participant] = Relationship(back_populates="expenses")

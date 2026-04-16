@@ -641,3 +641,61 @@ def demo_request_confirmation_email(full_name: str, company_name: str) -> str:
         </p>
     """
     return base_template(content)
+
+
+def duplicate_registration_attempt_email(name: str, login_url: str, reset_url: str) -> str:
+    """
+    Email silenziosa inviata quando qualcuno tenta di registrarsi con un'email
+    già presente nel DB. Previene l'account-enumeration: l'endpoint pubblico
+    ritorna sempre il medesimo messaggio generico, e il proprietario reale
+    dell'account viene avvisato via mail.
+    """
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #fff8f3; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#128274;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Tentativo di registrazione rilevato
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+            Qualcuno (forse tu stesso) ha tentato di registrare un nuovo account
+            su SplitPlan usando questa email, ma <strong>sei già registrato</strong>.
+        </p>
+
+        <div style="background-color: #fff8f3; border-left: 4px solid #E87C3E; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 0 0 28px 0;">
+            <p style="color: #c45a1e; font-size: 13px; font-weight: 600; margin: 0;">
+                &#9888;&#65039; Se non sei stato tu, ti consigliamo di cambiare la password per sicurezza.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin: 0 0 20px 0;">
+            <a href="{login_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 14px 36px;
+                      text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 13px;
+                      letter-spacing: 0.5px; text-transform: uppercase; margin: 0 6px 10px 6px;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                Accedi al tuo account
+            </a>
+            <a href="{reset_url}"
+               style="display: inline-block; background: #ffffff; color: #23599E; border: 2px solid #23599E; padding: 12px 34px;
+                      text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 13px;
+                      letter-spacing: 0.5px; text-transform: uppercase; margin: 0 6px 10px 6px;">
+                Reimposta la password
+            </a>
+        </div>
+
+        <div style="border-top: 1px solid #eef1f5; margin: 30px 0;"></div>
+
+        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
+            Se sei stato tu a tentare la registrazione e non ricordavi di avere
+            un account, nessun problema: puoi accedere o reimpostare la password
+            usando i pulsanti qui sopra. Non \u00e8 necessaria alcuna altra azione.
+        </p>
+    """
+    return base_template(content)

@@ -45,20 +45,42 @@ ROOT_PATH = "/api" if os.getenv("VERCEL") else ""
 app = FastAPI(root_path=ROOT_PATH, lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
-# CORS
+# CORS (P0-8 hardening)
 # ---------------------------------------------------------------------------
-origins = [
+# Origini esplicite: dev locale + produzione.
+# Le URL di preview Vercel (*-git-branch-user.vercel.app, *-nicopug.vercel.app)
+# passano tramite `allow_origin_regex` così non dobbiamo maintenere una
+# whitelist di rami git.
+CORS_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://splitplan-ai.vercel.app",
 ]
 
+# Accetta solo sottodomini vercel.app del nostro account (nicopug).
+# Esempio valido: splitplan-ai-git-main-nicopug.vercel.app
+CORS_ORIGIN_REGEX = r"^https://splitplan-ai(-[a-z0-9-]+)?(-nicopug)?\.vercel\.app$"
+
+# Allowlist esplicita: meglio che `*` con `allow_credentials=True`
+# (combinazione che FastAPI/Starlette comunque rifiuta a runtime).
+CORS_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+CORS_HEADERS = [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "Origin",
+    "X-Requested-With",
+    "X-Admin-Token",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=CORS_ORIGIN_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=CORS_METHODS,
+    allow_headers=CORS_HEADERS,
+    max_age=600,
 )
 
 # ---------------------------------------------------------------------------

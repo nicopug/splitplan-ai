@@ -27,7 +27,7 @@ from email_templates import (
     reset_password_email,
     verification_email,
 )
-from models import Account, Participant, RefreshToken
+from models import Account, Notification, Participant, RefreshToken, Trip
 from services.redis_service import check_rate_limit
 from utils.email_utils import get_smtp_config
 
@@ -657,20 +657,69 @@ async def delete_account(
     current_account: Account = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """Elimina permanentemente l'account dell'utente autenticato e tutti i dati associati."""
+    """
+    Elimina l'account dell'utente e sanitizza i dati storici (fix P0-7).
+
+    Strategia:
+    - `Participant` viene ANONIMIZZATO (name="Utente eliminato", account_id=NULL,
+      is_active=False) invece che cancellato: le Expense e i Vote puntano al
+      participant.id, cancellarlo romperebbe i bilanci storici dei trip di
+      gruppo dove altri utenti hanno ancora interesse legittimo.
+    - `events_cache` sui trip interessati viene invalidato perché può
+      contenere il nome dell'utente in chiaro (rigenerato al prossimo accesso).
+    - `Notification` e `RefreshToken` vengono eliminate (dati personali,
+      nessun valore storico).
+    - L'Account viene cancellato per ultimo, tutto nella stessa transazione.
+    """
     account_id = current_account.id
     email = current_account.email
 
-    # Elimina partecipazioni (e relative votes/expenses tramite cascade DB)
+    # 1. Anonimizza partecipazioni — preserva Expense/Vote dei trip di gruppo
     participants = session.exec(
         select(Participant).where(Participant.account_id == account_id)
     ).all()
+    affected_trip_ids: set[int] = set()
     for p in participants:
-        session.delete(p)
+        p.name = "Utente eliminato"
+        p.account_id = None
+        p.is_active = False
+        if p.trip_id is not None:
+            affected_trip_ids.add(p.trip_id)
+        session.add(p)
 
+    # 2. Invalida events_cache sui trip toccati (può contenere PII Gemini-generated)
+    for trip_id in affected_trip_ids:
+        trip = session.get(Trip, trip_id)
+        if trip is not None:
+            trip.events_cache = None
+            trip.events_cache_date = None
+            session.add(trip)
+
+    # 3. Cancella notifiche (dati personali, nessun valore post-delete)
+    notifications = session.exec(
+        select(Notification).where(Notification.account_id == account_id)
+    ).all()
+    for n in notifications:
+        session.delete(n)
+
+    # 4. Cancella refresh token (rimossi anche via FK ON DELETE CASCADE,
+    #    ma lo facciamo esplicito per coerenza/leggibilità).
+    tokens = session.exec(
+        select(RefreshToken).where(RefreshToken.account_id == account_id)
+    ).all()
+    for t in tokens:
+        session.delete(t)
+
+    # 5. Cancella l'account
     session.delete(current_account)
     session.commit()
-    logger.info(f"Account {account_id} ({email}) eliminato permanentemente.")
+    logger.info(
+        f"[GDPR] Account {account_id} ({email}) eliminato. "
+        f"Participant anonimizzati: {len(participants)}, "
+        f"trip cache invalidate: {len(affected_trip_ids)}, "
+        f"notifiche rimosse: {len(notifications)}, "
+        f"refresh token rimossi: {len(tokens)}."
+    )
     return {"message": "Account eliminato con successo."}
 
 

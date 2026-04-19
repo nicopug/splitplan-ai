@@ -1,7 +1,5 @@
 import logging
 import os
-import time
-from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -24,8 +22,13 @@ from auth import (
     verify_password,
 )
 from database import get_session
-from email_templates import reset_password_email, verification_email
+from email_templates import (
+    account_exists_attempt_email,
+    reset_password_email,
+    verification_email,
+)
 from models import Account, Participant
+from services.redis_service import check_rate_limit
 from utils.email_utils import get_smtp_config
 
 load_dotenv()
@@ -38,11 +41,12 @@ if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
 
 
 # ---------------------------------------------------------------------------
-# In-memory rate limiter
+# Rate limiter (Redis-backed, serverless-safe)
 # ---------------------------------------------------------------------------
-
-# Struttura: { endpoint_key: { ip: [timestamp, ...] } }
-_rate_limit_store: dict = defaultdict(lambda: defaultdict(list))
+# In ambiente serverless (Vercel) un rate limiter in-memory è inutile perché
+# ogni invocazione può girare su un worker diverso. Lo stato viene quindi
+# mantenuto in Redis (Upstash) tramite `services.redis_service`.
+# Fail-open: se Redis è down l'autenticazione resta disponibile.
 
 _RATE_LIMITS = {
     "login":           {"max": 10, "window": 900},   # 10 / 15 min
@@ -51,26 +55,19 @@ _RATE_LIMITS = {
 }
 
 
-def _check_auth_rate_limit(endpoint: str, ip: str):
+async def _check_auth_rate_limit(endpoint: str, ip: str):
     """Solleva 429 se l'IP ha superato il limite per l'endpoint dato."""
     cfg = _RATE_LIMITS.get(endpoint)
     if not cfg:
         return
-    now = time.monotonic()
-    window = cfg["window"]
-    max_req = cfg["max"]
-
-    # Pulisci i timestamp scaduti
-    history = _rate_limit_store[endpoint][ip]
-    history[:] = [t for t in history if now - t < window]
-
-    if len(history) >= max_req:
+    key = f"rate_limit:{endpoint}:{ip}"
+    exceeded = await check_rate_limit(key, cfg["max"], cfg["window"])
+    if exceeded:
         raise HTTPException(
             status_code=429,
-            detail=f"Troppi tentativi. Riprova tra {window // 60} minuti.",
-            headers={"Retry-After": str(window)},
+            detail=f"Troppi tentativi. Riprova tra {cfg['window'] // 60} minuti.",
+            headers={"Retry-After": str(cfg["window"])},
         )
-    history.append(now)
 
 
 # ---------------------------------------------------------------------------
@@ -225,21 +222,57 @@ async def migrate_language_field(session: Session = Depends(get_session)):
 # ---------------------------------------------------------------------------
 
 
+_GENERIC_REGISTER_RESPONSE = {
+    "message": "Se l'email è valida, riceverai a breve un link di conferma."
+}
+
+
 @router.post("/register")
 async def register(req: RegisterRequest, request: Request, session: Session = Depends(get_session)):
     ip = request.client.host if request.client else "unknown"
-    _check_auth_rate_limit("register", ip)
+    await _check_auth_rate_limit("register", ip)
     logger.info(f"Registrazione richiesta per {req.email}")
 
-    existing = session.exec(select(Account).where(Account.email == req.email)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Email già registrata")
-
-    # Validazione password
+    # Validazione password PRIMA del lookup: stessi errori 422 per email
+    # esistenti e non, così non si può distinguere i due casi.
     if len(req.password) < 8:
         raise HTTPException(status_code=422, detail="La password deve essere di almeno 8 caratteri")
     if not any(c.isdigit() for c in req.password):
         raise HTTPException(status_code=422, detail="La password deve contenere almeno un numero")
+
+    smtp_user, smtp_password, smtp_conf = get_smtp_config()
+    frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
+
+    existing = session.exec(select(Account).where(Account.email == req.email)).first()
+    if existing:
+        # Fix P0-3 (account enumeration): non rivelare che l'email esiste.
+        # Inviamo silenziosamente un avviso all'indirizzo già registrato e
+        # rispondiamo con lo stesso 200 generico del flusso nuovo utente.
+        if smtp_user and smtp_password:
+            try:
+                login_url = f"{frontend_url}/login"
+                reset_token = create_reset_token(email=req.email)
+                reset_url = f"{frontend_url}/reset-password?token={reset_token}"
+                message = MessageSchema(
+                    subject="Tentativo di registrazione al tuo account SplitPlan",
+                    recipients=[req.email],
+                    body=account_exists_attempt_email(
+                        name=existing.name or "utente",
+                        login_url=login_url,
+                        reset_url=reset_url,
+                    ),
+                    subtype=MessageType.html,
+                )
+                fm = FastMail(smtp_conf)
+                await fm.send_message(message)
+                logger.info(
+                    f"[AUTH] Notifica silenziosa inviata a {req.email} (account già esistente)."
+                )
+            except Exception as e:
+                logger.error(
+                    f"[AUTH] Errore invio notifica silenziosa a {req.email}: {e}"
+                )
+        return _GENERIC_REGISTER_RESPONSE
 
     new_account = Account(
         email=req.email,
@@ -253,16 +286,12 @@ async def register(req: RegisterRequest, request: Request, session: Session = De
     session.commit()
     session.refresh(new_account)
 
-    smtp_user, smtp_password, smtp_conf = get_smtp_config()
-    is_email_sent = False
-
     if smtp_user and smtp_password:
         try:
             logger.info(
                 f"[AUTH] Tentativo invio email di verifica tramite {smtp_user}..."
             )
             verification_token = create_verification_token(email=req.email)
-            frontend_url = os.getenv("FRONTEND_URL", "https://splitplan-ai.vercel.app")
             verification_url = f"{frontend_url}/verify?token={verification_token}"
             message = MessageSchema(
                 subject="Verifica il tuo account SplitPlan ✈️",
@@ -275,23 +304,12 @@ async def register(req: RegisterRequest, request: Request, session: Session = De
             fm = FastMail(smtp_conf)
             await fm.send_message(message)
             logger.info(f"[AUTH] Email di verifica inviata con successo a {req.email}")
-            is_email_sent = True
         except Exception as e:
             logger.error(f"[AUTH] Fallimento critico invio email a {req.email}: {e}")
     else:
         logger.warning("[AUTH] SMTP non configurato correttamente.")
 
-    if not is_email_sent:
-        logger.error(
-            f"[AUTH] Registrazione completata per {req.email} ma l'email di verifica non è partita."
-        )
-        return {
-            "message": "Registrazione completata, ma non siamo riusciti a inviare l'email di verifica. Contatta l'assistenza o riprova più tardi."
-        }
-
-    return {
-        "message": "Registrazione completata. Controlla la tua email per la verifica."
-    }
+    return _GENERIC_REGISTER_RESPONSE
 
 
 @router.get("/verify-email")
@@ -315,7 +333,7 @@ async def verify_email(token: str, session: Session = Depends(get_session)):
 @router.post("/login")
 async def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)):
     ip = request.client.host if request.client else "unknown"
-    _check_auth_rate_limit("login", ip)
+    await _check_auth_rate_limit("login", ip)
     account = session.exec(select(Account).where(Account.email == req.email)).first()
 
     if not account or not verify_password(req.password, account.hashed_password):
@@ -435,7 +453,7 @@ async def forgot_password(
     req: ForgotPasswordRequest, request: Request, session: Session = Depends(get_session)
 ):
     ip = request.client.host if request.client else "unknown"
-    _check_auth_rate_limit("forgot_password", ip)
+    await _check_auth_rate_limit("forgot_password", ip)
     account = session.exec(select(Account).where(Account.email == req.email)).first()
     if not account:
         # Risposta volutamente ambigua per sicurezza (non rivela se l'email esiste)

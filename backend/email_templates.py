@@ -113,6 +113,58 @@ def verification_email(name: str, verification_url: str) -> str:
     return base_template(content)
 
 
+def account_exists_attempt_email(name: str, login_url: str, reset_url: str) -> str:
+    """
+    Notifica silenziosa: qualcuno ha tentato di registrare un account con
+    un'email già esistente. Serve a non rivelare la presenza dell'account
+    al chiamante (protezione contro l'account enumeration).
+    """
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #fff8f3; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                \u26a0\ufe0f
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Tentativo di registrazione
+            </h2>
+        </div>
+
+        <p style="color: #333; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Ciao <strong style="color: #23599E;">{name}</strong>,
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+            Qualcuno ha provato a registrare un account su SplitPlan con questa email, ma sei <strong>già registrato</strong>. Non abbiamo creato un nuovo account.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 28px 0;">
+            Se sei stato tu, puoi semplicemente effettuare il login. Se non ricordi la password, puoi reimpostarla in pochi secondi.
+        </p>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{login_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 14px 36px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase; margin-right: 8px;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                Accedi
+            </a>
+            <a href="{reset_url}"
+               style="display: inline-block; background-color: #ffffff; color: #23599E; padding: 14px 36px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase; border: 2px solid #23599E;">
+                Reset password
+            </a>
+        </div>
+
+        <div style="background-color: #fff8f3; border-left: 4px solid #E87C3E; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 24px 0;">
+            <p style="color: #c45a1e; font-size: 12px; font-weight: 700; margin: 0;">
+                \U0001f512 Se non sei stato tu, ignora pure questa email: il tuo account resta al sicuro e nessuna modifica è stata effettuata.
+            </p>
+        </div>
+    """
+    return base_template(content)
+
+
 def reset_password_email(name: str, reset_url: str) -> str:
     """Template email per il reset della password."""
     content = f"""

@@ -27,7 +27,7 @@ from email_templates import (
     reset_password_email,
     verification_email,
 )
-from models import Account, Participant
+from models import Account, Participant, RefreshToken
 from services.redis_service import check_rate_limit
 from utils.email_utils import get_smtp_config
 
@@ -351,7 +351,13 @@ async def login(req: LoginRequest, request: Request, session: Session = Depends(
         )
 
     access_token = create_access_token_versioned(account.email, account.token_version)
-    refresh_token = create_refresh_token(account.email)
+    refresh_token, jti, expires_at = create_refresh_token(account.email)
+    session.add(RefreshToken(
+        jti=jti,
+        account_id=account.id,
+        expires_at=expires_at,
+    ))
+    session.commit()
     logger.info(f"Login effettuato per account {account.id}")
 
     return {
@@ -393,21 +399,68 @@ async def refresh_access_token(
     """
     Scambia un refresh token valido con un nuovo access token + refresh token.
     Il vecchio refresh token viene invalidato (rotation).
+
+    Anti-replay (RFC 6819 §5.2.2.3): se un refresh token GIÀ revocato viene
+    ripresentato è un segnale di furto → revochiamo l'intera catena attiva
+    dell'utente (kill di tutte le sessioni).
     """
     payload = decode_token(body.refresh_token)
     if payload is None or payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Refresh token non valido o scaduto.")
 
     email = payload.get("sub")
-    if not email:
+    jti = payload.get("jti")
+    if not email or not jti:
         raise HTTPException(status_code=401, detail="Refresh token malformato.")
 
     account = session.exec(select(Account).where(Account.email == email)).first()
     if not account:
         raise HTTPException(status_code=401, detail="Utente non trovato.")
 
+    record = session.exec(select(RefreshToken).where(RefreshToken.jti == jti)).first()
+    if not record or record.account_id != account.id:
+        raise HTTPException(status_code=401, detail="Refresh token non riconosciuto.")
+
+    now = datetime.now(timezone.utc)
+    if record.revoked_at is not None:
+        # Possibile riuso di un token già consumato: revoca a cascata tutte
+        # le sessioni ancora attive dell'utente per mitigare il furto.
+        active = session.exec(
+            select(RefreshToken).where(
+                RefreshToken.account_id == account.id,
+                RefreshToken.revoked_at.is_(None),  # type: ignore[union-attr]
+            )
+        ).all()
+        for r in active:
+            r.revoked_at = now
+            session.add(r)
+        account.token_version = (account.token_version or 0) + 1
+        session.add(account)
+        session.commit()
+        logger.warning(
+            f"[AUTH] Riuso refresh token jti={jti} per account {account.id}: catena revocata."
+        )
+        raise HTTPException(status_code=401, detail="Refresh token già utilizzato.")
+
+    # Assicura che la scadenza nel DB non sia passata (token legittimo ma scaduto)
+    expires_at = record.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < now:
+        raise HTTPException(status_code=401, detail="Refresh token scaduto.")
+
+    # Rotation: revoca il vecchio, emetti un nuovo jti.
+    record.revoked_at = now
+    session.add(record)
+
     new_access = create_access_token_versioned(account.email, account.token_version)
-    new_refresh = create_refresh_token(account.email)
+    new_refresh, new_jti, new_expires = create_refresh_token(account.email)
+    session.add(RefreshToken(
+        jti=new_jti,
+        account_id=account.id,
+        expires_at=new_expires,
+    ))
+    session.commit()
     return {
         "access_token": new_access,
         "refresh_token": new_refresh,
@@ -426,8 +479,24 @@ async def logout_all(
     """
     current_account.token_version = (current_account.token_version or 0) + 1
     session.add(current_account)
+
+    # Revoca tutti i refresh token ancora attivi dell'utente (P0-4)
+    now = datetime.now(timezone.utc)
+    active = session.exec(
+        select(RefreshToken).where(
+            RefreshToken.account_id == current_account.id,
+            RefreshToken.revoked_at.is_(None),  # type: ignore[union-attr]
+        )
+    ).all()
+    for r in active:
+        r.revoked_at = now
+        session.add(r)
+
     session.commit()
-    logger.info(f"[LOGOUT-ALL] Account {current_account.id} ha invalidato tutti i token (tv={current_account.token_version})")
+    logger.info(
+        f"[LOGOUT-ALL] Account {current_account.id} ha invalidato tutti i token "
+        f"(tv={current_account.token_version}, refresh_revocati={len(active)})"
+    )
     return {"message": "Tutti i dispositivi sono stati disconnessi.", "token_version": current_account.token_version}
 
 

@@ -210,6 +210,24 @@ class DemoLead(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class RefreshToken(SQLModel, table=True):
+    """
+    Registra ogni refresh token emesso per supportare rotation + revocation.
+
+    - `jti`: identificativo univoco inserito nel JWT (claim `jti`).
+    - `revoked_at`: popolato quando il token viene usato (rotation) o
+      invalidato dall'utente (logout-all).
+    - Detection di riuso (RFC 6819 §5.2.2.3): se un jti già revocato viene
+      ripresentato, l'intera catena dell'utente viene revocata a cascata.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    jti: str = Field(unique=True, index=True)
+    account_id: int = Field(foreign_key="account.id", index=True)
+    issued_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: datetime
+    revoked_at: Optional[datetime] = Field(default=None)
+
+
 class Notification(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     account_id: int = Field(foreign_key="account.id", index=True)

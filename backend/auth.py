@@ -1,5 +1,6 @@
+import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Tuple
 from jose import JWTError, jwt
 import os
 from dotenv import load_dotenv
@@ -43,11 +44,21 @@ def create_access_token_versioned(email: str, token_version: int) -> str:
     return create_access_token(data={"sub": email, "tv": token_version})
 
 
-def create_refresh_token(email: str) -> str:
-    return create_access_token(
-        data={"sub": email, "type": "refresh"},
+def create_refresh_token(email: str) -> Tuple[str, str, datetime]:
+    """
+    Emette un refresh token con `jti` univoco.
+
+    Returns:
+        (token_jwt, jti, expires_at) — il chiamante deve registrare il jti
+        nella tabella RefreshToken per abilitare rotation e revocation.
+    """
+    jti = uuid.uuid4().hex
+    expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    token = create_access_token(
+        data={"sub": email, "type": "refresh", "jti": jti},
         expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     )
+    return token, jti, expires_at
 
 
 def create_verification_token(email: str):

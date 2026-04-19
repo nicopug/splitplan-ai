@@ -59,19 +59,18 @@ const getAuthHeadersMultipart = () => {
 };
 
 // Tenta di rinnovare il token silenziosamente. Restituisce true se riuscito.
+// Il refresh token vive in un cookie HttpOnly (P0-5): JS non lo legge mai,
+// il browser lo allega automaticamente grazie a `credentials: 'include'`.
 const _tryRefresh = async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return false;
     try {
         const res = await fetch(`${API_URL}/users/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken }),
+            credentials: 'include',
         });
         if (!res.ok) return false;
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
-        if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
         return true;
     } catch {
         return false;
@@ -104,7 +103,6 @@ const handleResponse = async (response) => {
                 toast.info("Sessione rinnovata. Riprova l'operazione.");
             } else {
                 localStorage.removeItem('token');
-                localStorage.removeItem('refresh_token');
                 localStorage.removeItem('user');
                 toast.error("Sessione scaduta. Effettua nuovamente il login.");
             }
@@ -637,23 +635,34 @@ export const login = async (credentials) => {
     const response = await safeApiFetch(`${API_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(credentials),
     });
     return handleResponse(response);
 };
 
 export const refreshToken = async () => {
-    const refreshTok = localStorage.getItem('refresh_token');
-    if (!refreshTok) throw new Error('Nessun refresh token disponibile.');
     const response = await safeApiFetch(`${API_URL}/users/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshTok }),
+        credentials: 'include',
     });
     const data = await handleResponse(response);
     localStorage.setItem('token', data.access_token);
-    if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
     return data;
+};
+
+export const logout = async () => {
+    try {
+        await safeApiFetch(`${API_URL}/users/logout`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+    } catch (_) {
+        // Fail-silent: il frontend pulisce comunque lo stato locale.
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 };
 
 export const verifyEmail = async (token) => {

@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -38,6 +38,45 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 if not os.getenv("SMTP_USER") or not os.getenv("SMTP_PASSWORD"):
     logger.warning("SMTP Credentials non trovate in .env. L'invio email fallirà.")
+
+
+# ---------------------------------------------------------------------------
+# Refresh-token cookie (P0-5)
+# ---------------------------------------------------------------------------
+# Il refresh token non viaggia più nel body JSON: sta in un cookie
+# HttpOnly, inaccessibile a JavaScript. Questo rimuove il vettore di furto
+# via XSS sul token a vita lunga (7 giorni). L'access token (24h) resta
+# gestito dal frontend come prima.
+REFRESH_COOKIE_NAME = "sp_rt"
+_IS_PROD = bool(os.getenv("VERCEL"))
+# In prod `Secure` è obbligatorio (HTTPS); in dev (http://localhost) il browser
+# rifiuta i cookie Secure, quindi lo lasciamo False.
+_COOKIE_SECURE = _IS_PROD
+# `Lax` bilancia compatibilità e protezione CSRF: i cookie non vengono inviati
+# su POST cross-site ma solo su navigazioni top-level.
+_COOKIE_SAMESITE = "lax"
+_REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 giorni, allineato al JWT
+
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=_COOKIE_SECURE,
+        samesite=_COOKIE_SAMESITE,
+        max_age=_REFRESH_COOKIE_MAX_AGE,
+        path="/",
+    )
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=REFRESH_COOKIE_NAME,
+        path="/",
+        secure=_COOKIE_SECURE,
+        samesite=_COOKIE_SAMESITE,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -331,7 +370,12 @@ async def verify_email(token: str, session: Session = Depends(get_session)):
 
 
 @router.post("/login")
-async def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)):
+async def login(
+    req: LoginRequest,
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_session),
+):
     ip = request.client.host if request.client else "unknown"
     await _check_auth_rate_limit("login", ip)
     account = session.exec(select(Account).where(Account.email == req.email)).first()
@@ -360,9 +404,11 @@ async def login(req: LoginRequest, request: Request, session: Session = Depends(
     session.commit()
     logger.info(f"Login effettuato per account {account.id}")
 
+    # P0-5: refresh token viaggia SOLO via cookie HttpOnly.
+    _set_refresh_cookie(response, refresh_token)
+
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,
         "token_type": "bearer",
         "user": {
             "id": account.id,
@@ -387,38 +433,42 @@ async def get_me(current_account: Account = Depends(get_current_user)):
     return current_account
 
 
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
 @router.post("/refresh")
 async def refresh_access_token(
-    body: RefreshRequest,
+    response: Response,
     session: Session = Depends(get_session),
+    sp_rt: Optional[str] = Cookie(default=None),
 ):
     """
-    Scambia un refresh token valido con un nuovo access token + refresh token.
-    Il vecchio refresh token viene invalidato (rotation).
+    Scambia il refresh token (cookie HttpOnly `sp_rt`) con un nuovo access
+    token + nuovo refresh token (rotato nel cookie).
 
     Anti-replay (RFC 6819 §5.2.2.3): se un refresh token GIÀ revocato viene
     ripresentato è un segnale di furto → revochiamo l'intera catena attiva
     dell'utente (kill di tutte le sessioni).
     """
-    payload = decode_token(body.refresh_token)
+    if not sp_rt:
+        raise HTTPException(status_code=401, detail="Refresh token mancante.")
+
+    payload = decode_token(sp_rt)
     if payload is None or payload.get("type") != "refresh":
+        _clear_refresh_cookie(response)
         raise HTTPException(status_code=401, detail="Refresh token non valido o scaduto.")
 
     email = payload.get("sub")
     jti = payload.get("jti")
     if not email or not jti:
+        _clear_refresh_cookie(response)
         raise HTTPException(status_code=401, detail="Refresh token malformato.")
 
     account = session.exec(select(Account).where(Account.email == email)).first()
     if not account:
+        _clear_refresh_cookie(response)
         raise HTTPException(status_code=401, detail="Utente non trovato.")
 
     record = session.exec(select(RefreshToken).where(RefreshToken.jti == jti)).first()
     if not record or record.account_id != account.id:
+        _clear_refresh_cookie(response)
         raise HTTPException(status_code=401, detail="Refresh token non riconosciuto.")
 
     now = datetime.now(timezone.utc)
@@ -437,6 +487,7 @@ async def refresh_access_token(
         account.token_version = (account.token_version or 0) + 1
         session.add(account)
         session.commit()
+        _clear_refresh_cookie(response)
         logger.warning(
             f"[AUTH] Riuso refresh token jti={jti} per account {account.id}: catena revocata."
         )
@@ -447,6 +498,7 @@ async def refresh_access_token(
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at < now:
+        _clear_refresh_cookie(response)
         raise HTTPException(status_code=401, detail="Refresh token scaduto.")
 
     # Rotation: revoca il vecchio, emetti un nuovo jti.
@@ -461,15 +513,47 @@ async def refresh_access_token(
         expires_at=new_expires,
     ))
     session.commit()
+
+    # Rotation: il nuovo refresh token sostituisce il cookie precedente.
+    _set_refresh_cookie(response, new_refresh)
+
     return {
         "access_token": new_access,
-        "refresh_token": new_refresh,
         "token_type": "bearer",
     }
 
 
+@router.post("/logout")
+async def logout(
+    response: Response,
+    session: Session = Depends(get_session),
+    sp_rt: Optional[str] = Cookie(default=None),
+):
+    """
+    Logout single-device: revoca il refresh token corrente e cancella il
+    cookie. Non richiede access token (se l'utente ha già perso l'access
+    per XSS o rotazione, deve comunque poter terminare la sessione).
+    """
+    if sp_rt:
+        payload = decode_token(sp_rt)
+        if payload and payload.get("type") == "refresh":
+            jti = payload.get("jti")
+            if jti:
+                record = session.exec(
+                    select(RefreshToken).where(RefreshToken.jti == jti)
+                ).first()
+                if record and record.revoked_at is None:
+                    record.revoked_at = datetime.now(timezone.utc)
+                    session.add(record)
+                    session.commit()
+
+    _clear_refresh_cookie(response)
+    return {"message": "Logout effettuato."}
+
+
 @router.post("/logout-all")
 async def logout_all(
+    response: Response,
     current_account: Account = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -493,6 +577,7 @@ async def logout_all(
         session.add(r)
 
     session.commit()
+    _clear_refresh_cookie(response)
     logger.info(
         f"[LOGOUT-ALL] Account {current_account.id} ha invalidato tutti i token "
         f"(tv={current_account.token_version}, refresh_revocati={len(active)})"

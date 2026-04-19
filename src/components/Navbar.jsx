@@ -113,9 +113,14 @@ const Navbar = ({ user: propUser }) => {
         } catch (_) {}
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    const handleLogout = async () => {
+        try {
+            const api = await import('../api');
+            await api.logout();
+        } catch (_) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
         setUser(null);
         navigate('/');
         setMobileMenuOpen(false);

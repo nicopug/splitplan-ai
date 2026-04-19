@@ -14,6 +14,7 @@ from utils.currency import get_exchange_rates
 from admin_auth import verify_admin_token
 from services.ocr_service import process_receipt_image, SUPPORTED_MIME_TYPES
 from services.notification_service import create_notification, notify_managers
+from utils.access import check_participant
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +55,7 @@ async def create_expense(
     if not payer:
         raise HTTPException(status_code=404, detail="Payer not found")
 
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == expense_req.trip_id,
-            Participant.account_id == current_user.id,
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(403, "Non autorizzato")
+    check_participant(expense_req.trip_id, current_user, session)
 
     # 3. Handle Currency Conversion
     amount_eur = expense_req.amount
@@ -160,13 +154,7 @@ async def get_expenses(
     session: Session = Depends(get_session),
     current_user: Account = Depends(get_current_user),
 ):
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id, Participant.account_id == current_user.id
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(403, "Non autorizzato")
+    check_participant(trip_id, current_user, session)
     return session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
 
 
@@ -176,13 +164,7 @@ async def get_balances(
     session: Session = Depends(get_session),
     current_user: Account = Depends(get_current_user),
 ):
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id, Participant.account_id == current_user.id
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(403, "Non autorizzato")
+    check_participant(trip_id, current_user, session)
     # Fetch all expenses and participants
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()
     participants = session.exec(
@@ -291,14 +273,7 @@ async def upload_receipt(
         )
 
     # ── 3. Verifica partecipazione al viaggio ─────────────────────────────────
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id,
-            Participant.account_id == current_user.id,
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(status_code=403, detail="Non autorizzato")
+    participant = check_participant(trip_id, current_user, session)
 
     # ── 4. OCR via Gemini ─────────────────────────────────────────────────────
     try:
@@ -380,14 +355,7 @@ async def delete_expense(
     expense = session.get(Expense, expense_id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == expense.trip_id,
-            Participant.account_id == current_user.id,
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(403, "Non autorizzato")
+    check_participant(expense.trip_id, current_user, session)
     session.delete(expense)
     session.commit()
     return {"status": "ok"}
@@ -399,13 +367,7 @@ async def export_expenses_csv(
     current_user: Account = Depends(get_current_user),
 ):
     # 1. Verifica autorizzazione (l'utente deve far parte del viaggio)
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id, Participant.account_id == current_user.id
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(403, "Non autorizzato a scaricare i dati di questo viaggio")
+    check_participant(trip_id, current_user, session)
 
     # 2. Recupera le spese
     expenses = session.exec(select(Expense).where(Expense.trip_id == trip_id)).all()

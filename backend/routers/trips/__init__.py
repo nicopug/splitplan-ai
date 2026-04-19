@@ -58,7 +58,12 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from email_templates import booking_confirmation_email
 from utils.email_utils import get_smtp_config
 from utils.crypto import decrypt_text
-from utils.access import check_company_limits, check_participant, require_same_company
+from utils.access import (
+    check_company_limits,
+    check_participant,
+    check_tenant_for_trip,
+    require_same_company,
+)
 from services.notification_service import (
     create_notification,
     notify_managers,
@@ -1296,6 +1301,10 @@ async def join_trip(
             raise HTTPException(
                 status_code=404, detail="Link di condivisione non valido o scaduto"
             )
+
+        # P0-6: un utente di un'altra company non può entrare in un trip BUSINESS
+        check_tenant_for_trip(trip, current_account)
+
         existing = session.exec(
             select(Participant).where(
                 Participant.trip_id == trip.id,
@@ -1400,14 +1409,8 @@ async def delete_trip(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    organizer = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id,
-            Participant.account_id == current_account.id,
-            Participant.is_organizer == True,
-        )
-    ).first()
-    if not organizer:
+    member = check_participant(trip_id, current_account, session)
+    if not member.is_organizer:
         raise HTTPException(status_code=403, detail="Solo l'organizzatore può eliminare il viaggio")
 
     # Elimina dati collegati
@@ -1436,14 +1439,7 @@ async def generate_proposals(
 ):
     """Genera 3 proposte e salva tutti i partecipanti nel Database"""
     try:
-        check = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip_id,
-                Participant.account_id == current_account.id,
-            )
-        ).first()
-        if not check:
-            raise HTTPException(status_code=403, detail="Non autorizzato")
+        check_participant(trip_id, current_account, session)
 
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -2116,14 +2112,8 @@ async def reset_hotel(
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-        participant = session.exec(
-            select(Participant).where(
-                Participant.trip_id == trip_id,
-                Participant.account_id == current_account.id,
-            )
-        ).first()
-
-        if not participant or not participant.is_organizer:
+        participant = check_participant(trip_id, current_account, session)
+        if not participant.is_organizer:
             raise HTTPException(
                 status_code=403,
                 detail="Solo l'organizzatore può resettare la logistica",
@@ -2173,9 +2163,17 @@ async def vote_proposal(
         if not proposal:
             raise HTTPException(status_code=404, detail="Proposta non trovata")
 
+        # P0-6: enforcement tenant sul trip prima del voto
+        trip_for_vote = session.get(Trip, proposal.trip_id)
+        if trip_for_vote:
+            check_tenant_for_trip(trip_for_vote, current_account)
+
         participant = None
         if user_id and user_id > 0:
             participant = session.get(Participant, user_id)
+            # Il participant passato deve appartenere al trip della proposal
+            if participant and participant.trip_id != proposal.trip_id:
+                raise HTTPException(status_code=403, detail="Partecipante non valido")
         else:
             participant = session.exec(
                 select(Participant).where(
@@ -2412,6 +2410,9 @@ async def chat_with_ai(
         trip = session.get(Trip, trip_id)
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+        # P0-6: solo i partecipanti (same-tenant su BUSINESS) possono chattare
+        check_participant(trip_id, current_account, session)
 
         check_rate_limit(current_account, session)
         if current_account.company_id:
@@ -2847,14 +2848,7 @@ async def export_nota_spese(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id,
-            Participant.account_id == current_account.id,
-        )
-    ).first()
-    if not participant:
-        raise HTTPException(status_code=403, detail="Non autorizzato")
+    check_participant(trip_id, current_account, session)
 
     company = None
     if current_account.company_id:
@@ -3028,14 +3022,8 @@ async def request_approval(
         raise HTTPException(404, "Viaggio non trovato")
     if trip.trip_intent != "BUSINESS":
         raise HTTPException(400, "L'approvazione è disponibile solo per i viaggi aziendali")
-    participant = session.exec(
-        select(Participant).where(
-            Participant.trip_id == trip_id,
-            Participant.account_id == current_user.id,
-            Participant.is_active == True
-        )
-    ).first()
-    if not participant:
+    participant = check_participant(trip_id, current_user, session)
+    if not participant.is_active:
         raise HTTPException(403, "Non sei un partecipante di questo viaggio")
 
     trip.status = "PENDING_APPROVAL"

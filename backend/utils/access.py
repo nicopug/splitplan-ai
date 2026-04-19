@@ -32,7 +32,27 @@ def require_same_company(trip_id: int, current_user: Account, session: Session) 
 
 
 def check_participant(trip_id: int, account: Account, session: Session) -> Participant:
-    """Verifica che l'account sia un partecipante del viaggio. Solleva 403 altrimenti."""
+    """
+    Verifica che l'account sia un partecipante del viaggio. Solleva 403 altrimenti.
+
+    Per i trip BUSINESS applica anche l'enforcement di tenant: l'account deve
+    appartenere alla stessa company del trip (P0-6 fix). Questo blocca
+    cross-tenant reads/writes anche se — per data drift o bug precedenti —
+    esistono righe Participant con account di altra company.
+    """
+    trip = session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viaggio non trovato.")
+
+    if (
+        trip.trip_intent == "BUSINESS"
+        and trip.company_id is not None
+        and account.company_id != trip.company_id
+    ):
+        raise HTTPException(
+            status_code=403, detail="Non sei un partecipante di questo viaggio."
+        )
+
     member = session.exec(
         select(Participant).where(
             Participant.trip_id == trip_id, Participant.account_id == account.id
@@ -43,6 +63,23 @@ def check_participant(trip_id: int, account: Account, session: Session) -> Parti
             status_code=403, detail="Non sei un partecipante di questo viaggio."
         )
     return member
+
+
+def check_tenant_for_trip(trip: Trip, account: Account) -> None:
+    """
+    Enforcement tenant per operazioni *prima* di creare un Participant
+    (es. `join_trip`, invite). Se il trip è BUSINESS, account.company_id
+    deve combaciare con trip.company_id.
+    """
+    if (
+        trip.trip_intent == "BUSINESS"
+        and trip.company_id is not None
+        and account.company_id != trip.company_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Non puoi unirti a un viaggio aziendale di un'altra azienda.",
+        )
 
 
 def check_company_limits(company: Company, session: Session, action: str):

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Plus, HelpCircle } from 'lucide-react';
 import { JsonLd } from './JsonLd';
 
@@ -52,7 +52,11 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: index * 0.04 }}
-        className="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden hover:bg-white/[0.05] transition-colors"
+        className="rounded-2xl overflow-hidden transition-colors"
+        style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+        }}
     >
         <button
             type="button"
@@ -60,7 +64,10 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
             aria-expanded={isOpen}
             className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
         >
-            <h3 className="text-base md:text-lg font-bold text-primary tracking-tight">
+            <h3
+                className="text-base md:text-lg font-bold tracking-tight m-0"
+                style={{ color: 'var(--text-primary)' }}
+            >
                 {item.q}
             </h3>
             <span
@@ -72,21 +79,22 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
                 <Plus className="w-4 h-4 text-primary-blue" />
             </span>
         </button>
-        <AnimatePresence initial={false}>
-            {isOpen && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="overflow-hidden"
+        {isOpen && (
+            <div
+                className="px-6 pb-5"
+                style={{
+                    borderTop: '1px solid var(--border-subtle)',
+                    paddingTop: '1rem',
+                }}
+            >
+                <p
+                    className="text-sm md:text-base leading-relaxed m-0"
+                    style={{ color: 'var(--text-muted)' }}
                 >
-                    <p className="px-6 pb-5 text-sm md:text-base text-subtle leading-relaxed">
-                        {item.a}
-                    </p>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                    {item.a}
+                </p>
+            </div>
+        )}
     </motion.div>
 );
 
@@ -133,11 +141,11 @@ const FAQ = () => {
                         </div>
                         <h2
                             id="faq-heading"
-                            className="text-4xl md:text-5xl font-black tracking-tight mb-4"
+                            className="text-4xl md:text-5xl font-black tracking-tight text-primary mb-4"
                         >
                             Tutto quello che ti serve sapere
                         </h2>
-                        <p className="text-base md:text-lg text-subtle max-w-xl mx-auto leading-relaxed">
+                        <p className="text-base md:text-lg text-muted max-w-xl mx-auto leading-relaxed">
                             Dalla gestione trasferte aziendali alla pianificazione viaggi di gruppo:
                             le risposte alle domande più comuni.
                         </p>

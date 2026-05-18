@@ -30,25 +30,25 @@ export default function CookieBanner({ onConsentChange }) {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-[var(--bg-secondary)] border-t border-[var(--border-color)] shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <p className="text-sm text-[var(--text-secondary)] flex-1">
+        <p className="text-sm text-gray-700 flex-1">
           Usiamo cookie analitici (Google Analytics, PostHog) per migliorare l'esperienza.
           Puoi accettarli o continuare con i soli cookie necessari.{' '}
-          <a href="/privacy" className="underline text-[var(--accent-primary)]">
+          <a href="/privacy" className="underline text-[var(--accent-primary)] font-medium">
             Privacy Policy
           </a>
         </p>
         <div className="flex gap-3 shrink-0">
           <button
             onClick={decline}
-            className="px-4 py-2 text-sm rounded border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] transition-colors"
+            className="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Solo necessari
           </button>
           <button
             onClick={accept}
-            className="px-4 py-2 text-sm rounded bg-[var(--accent-primary)] text-white hover:opacity-90 transition-opacity"
+            className="px-4 py-2 text-sm rounded bg-[var(--accent-primary)] text-white hover:opacity-90 transition-opacity font-medium"
           >
             Accetta
           </button>

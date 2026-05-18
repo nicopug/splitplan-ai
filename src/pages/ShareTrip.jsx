@@ -16,6 +16,11 @@ const ShareTrip = ({ isJoinMode = false }) => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
+        document.title = 'Viaggio Condiviso — SplitPlan AI';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
+
+    useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {

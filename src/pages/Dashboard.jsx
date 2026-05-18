@@ -105,6 +105,7 @@ const Dashboard = () => {
         try {
             const data = await getTrip(id);
             setTrip(data);
+            document.title = `${data.name} — SplitPlan AI`;
 
             const storedUser = localStorage.getItem('user');
             if (storedUser && storedUser !== 'undefined') {
@@ -143,6 +144,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (id) fetchTrip();
+        return () => { document.title = 'SplitPlan AI'; };
     }, [id]);
 
     useEffect(() => {

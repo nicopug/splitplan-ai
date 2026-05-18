@@ -18,6 +18,11 @@ const ResetPassword = () => {
     const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
     const [showPassword, setShowPassword] = useState(false);
 
+    useEffect(() => {
+        document.title = 'Reimposta Password — SplitPlan AI';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
+
     const validatePassword = (pass) => {
         let score = 0;
         if (pass.length > 8) score++;

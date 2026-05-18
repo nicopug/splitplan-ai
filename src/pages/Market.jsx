@@ -12,6 +12,11 @@ const Market = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        document.title = 'Piani & Crediti — SplitPlan AI';
+        return () => { document.title = 'SplitPlan AI'; };
+    }, []);
+
+    useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));

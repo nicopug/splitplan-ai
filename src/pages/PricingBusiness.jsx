@@ -21,8 +21,8 @@ const PLANS = [
         highlight: false,
         limits: {
             users: '30 utenti',
-            trips: '15 trasferte/mese',
-            ai: '200 chiamate AI/giorno',
+            trips: '50 trasferte/mese',
+            ai: '800 chiamate AI/mese',
             support: 'Email',
         },
         features: [
@@ -50,7 +50,7 @@ const PLANS = [
         limits: {
             users: '120 utenti',
             trips: 'Illimitate',
-            ai: '500 chiamate AI/giorno',
+            ai: '5.000 chiamate AI/mese',
             support: 'Priorità',
         },
         features: [
@@ -230,7 +230,7 @@ const PricingBusiness = () => {
                                     {[
                                         { label: 'Utenti', value: plan.limits.users },
                                         { label: 'Trasferte', value: plan.limits.trips },
-                                        { label: 'AI/giorno', value: plan.limits.ai },
+                                        { label: 'AI/mese', value: plan.limits.ai },
                                         { label: 'Supporto', value: plan.limits.support },
                                     ].map(l => (
                                         <div key={l.label}>

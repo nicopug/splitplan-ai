@@ -15,7 +15,7 @@ class Company(SQLModel, table=True):
     plan_expires_at: Optional[datetime] = Field(default=None)
     max_active_users: int = Field(default=30)
     max_trips_per_month: int = Field(default=15)
-    max_ai_calls_per_day: int = Field(default=200)
+    max_ai_calls_per_month: int = Field(default=200)
 
     # Billing & identità (per fatturazione B2B)
     vat_number: Optional[str] = Field(default=None)
@@ -41,6 +41,8 @@ class Account(SQLModel, table=True):
     credits: int = Field(default=0)
     daily_ai_usage: int = Field(default=0)
     last_usage_reset: Optional[str] = Field(default=None)
+    monthly_ai_usage: int = Field(default=0)
+    last_monthly_reset: Optional[str] = Field(default=None)  # formato YYYY-MM
     subscription_plan: Optional[str] = Field(default=None)
     subscription_expiry: Optional[str] = Field(default=None)
     auto_renew: bool = Field(default=True)

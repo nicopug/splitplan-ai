@@ -206,19 +206,38 @@ FREE_LIMIT = 20
 
 def check_rate_limit(account: Account, session: Session):
     """
-    Verifica e incrementa il limite di utilizzo AI giornaliero.
-    Free: 20 chiamate/giorno. Pro: illimitato.
+    Tracciamento e rate limit AI.
 
-    L'UPDATE atomico gestisce sia il reset giornaliero che l'incremento in
-    una sola query, eliminando la race condition che si aveva con i due step
-    separati (read-then-write).
+    - B2B (account.company_id): incrementa monthly_ai_usage (reset mensile).
+      L'enforcement aggregato avviene in check_company_limits('ai_call').
+    - B2C subscribed (Pro): nessun limite, nessun tracciamento.
+    - B2C free: 20 chiamate/giorno via FREE_LIMIT.
+
+    L'UPDATE atomico evita race condition su reset/incremento.
     """
+    from sqlalchemy import case as sa_case, text as sa_text
+
+    # B2B: tracciamento mensile, nessun cap individuale (cap aggregato a livello company)
+    if account.company_id is not None:
+        current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+        session.execute(
+            update(Account)
+            .where(Account.id == account.id)
+            .values(
+                monthly_ai_usage=sa_case(
+                    (Account.last_monthly_reset != current_month, 1),
+                    else_=Account.monthly_ai_usage + 1,
+                ),
+                last_monthly_reset=current_month,
+            )
+        )
+        session.commit()
+        return
+
     if account.is_subscribed:
         return
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-    from sqlalchemy import case as sa_case, text as sa_text
 
     result = session.execute(
         update(Account)
@@ -2052,9 +2071,8 @@ async def confirm_hotel(
         if not trip:
             raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-        # Gli utenti aziendali bypassano rate limit individuale (coperto da check_company_limits)
-        if not current_account.company_id:
-            check_rate_limit(current_account, session)
+        # check_rate_limit traccia monthly_ai_usage per B2B e applica FREE_LIMIT per B2C
+        check_rate_limit(current_account, session)
         require_premium(current_account, trip)
 
         trip.accommodation = hotel_data.hotel_name

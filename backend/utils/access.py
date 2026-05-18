@@ -131,23 +131,23 @@ def check_company_limits(company: Company, session: Session, action: str):
             )
 
     elif action == "ai_call":
-        # Conta le chiamate AI di oggi per la company (somma daily_ai_usage dei membri)
+        # Conta le chiamate AI di questo mese per la company (somma monthly_ai_usage dei membri)
         company_members = session.exec(
             select(Account).where(Account.company_id == company.id)
         ).all()
 
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        total_today = sum(
-            m.daily_ai_usage
+        current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+        total_this_month = sum(
+            m.monthly_ai_usage
             for m in company_members
-            if m.last_usage_reset == today
+            if m.last_monthly_reset == current_month
         )
 
-        if total_today >= company.max_ai_calls_per_day:
+        if total_this_month >= company.max_ai_calls_per_month:
             raise HTTPException(
                 status_code=429,
                 detail=(
-                    f"Limite giornaliero AI raggiunto: la tua azienda ha eseguito "
-                    f"{total_today}/{company.max_ai_calls_per_day} chiamate AI oggi."
+                    f"Limite mensile AI raggiunto: la tua azienda ha eseguito "
+                    f"{total_this_month}/{company.max_ai_calls_per_month} chiamate AI questo mese."
                 ),
             )

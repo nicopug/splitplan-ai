@@ -20,8 +20,10 @@
       "/demo",
       "/privacy",
       "/terms",
-      "/roi"
+      "/roi",
+      "/pricing-business"
     ],
+    "waitFor": 1500,
     "puppeteerArgs": [
       "--no-sandbox",
       "--disable-setuid-sandbox",

@@ -10,6 +10,7 @@ import Solution from './components/Solution';
 import Features from './components/Features';
 import Pricing from './components/Pricing';
 import Business from './components/Business';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
@@ -58,6 +59,7 @@ function Landing({ user }) {
       <ROICalculator />
       <Pricing user={user} />
       <Business />
+      <FAQ />
       <Footer />
     </>
   );

@@ -1,6 +1,27 @@
+import { JsonLd } from '../components/JsonLd';
+
+const TERMS_IT_SCHEMA = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': 'https://splitplan-ai.vercel.app/terms#webpage',
+    name: 'Termini di Servizio — SplitPlan AI',
+    description: 'Termini di servizio di SplitPlan AI, piattaforma SaaS di gestione trasferte aziendali e viaggi di gruppo con AI.',
+    inLanguage: 'it',
+    isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
+    about: { '@id': 'https://splitplan-ai.vercel.app/#organization' },
+    breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splitplan-ai.vercel.app/' },
+            { '@type': 'ListItem', position: 2, name: 'Termini', item: 'https://splitplan-ai.vercel.app/terms' },
+        ],
+    },
+};
+
 const TermsIt = () => {
     return (
         <div className="container py-24 pt-[var(--header-height)]">
+            <JsonLd id="terms-it-jsonld" schema={TERMS_IT_SCHEMA} />
             <div dangerouslySetInnerHTML={{
                 __html: `
 <style>

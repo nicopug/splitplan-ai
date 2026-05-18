@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
+import { JsonLd } from '../components/JsonLd';
 
 const PLANS = [
     {
@@ -124,8 +125,73 @@ const PricingBusiness = () => {
         return () => { document.title = 'SplitPlan AI'; };
     }, []);
 
+    const pricingSchema = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splitplan-ai.vercel.app/' },
+                    { '@type': 'ListItem', position: 2, name: 'Piani B2B', item: 'https://splitplan-ai.vercel.app/pricing-business' },
+                ],
+            },
+            {
+                '@type': 'ItemList',
+                '@id': 'https://splitplan-ai.vercel.app/pricing-business#plans',
+                name: 'Piani B2B SplitPlan AI',
+                description: 'Software di gestione trasferte aziendali con AI: tre piani SaaS senza commissioni sui booking.',
+                numberOfItems: PLANS.length,
+                itemListElement: PLANS.map((plan, idx) => ({
+                    '@type': 'ListItem',
+                    position: idx + 1,
+                    item: {
+                        '@type': 'Product',
+                        name: `SplitPlan ${plan.name}`,
+                        description: plan.description,
+                        brand: { '@type': 'Brand', name: 'SplitPlan AI' },
+                        category: 'Travel Management Software',
+                        offers: plan.price
+                            ? {
+                                '@type': 'Offer',
+                                name: plan.name,
+                                price: String(plan.price),
+                                priceCurrency: 'EUR',
+                                availability: 'https://schema.org/InStock',
+                                url: 'https://splitplan-ai.vercel.app/pricing-business',
+                                priceSpecification: {
+                                    '@type': 'UnitPriceSpecification',
+                                    price: String(plan.price),
+                                    priceCurrency: 'EUR',
+                                    billingDuration: 'P1M',
+                                    unitText: 'MONTH',
+                                },
+                            }
+                            : {
+                                '@type': 'Offer',
+                                name: plan.name,
+                                priceCurrency: 'EUR',
+                                availability: 'https://schema.org/InStock',
+                                url: 'https://splitplan-ai.vercel.app/demo',
+                                description: 'Prezzo personalizzato su richiesta',
+                            },
+                    },
+                })),
+            },
+            {
+                '@type': 'FAQPage',
+                '@id': 'https://splitplan-ai.vercel.app/pricing-business#faq',
+                mainEntity: FAQ.map(({ q, a }) => ({
+                    '@type': 'Question',
+                    name: q,
+                    acceptedAnswer: { '@type': 'Answer', text: a },
+                })),
+            },
+        ],
+    };
+
     return (
         <div className="min-h-screen bg-[var(--bg-base)] pt-[var(--header-height)]">
+            <JsonLd id="pricing-b2b-jsonld" schema={pricingSchema} />
             <div className="max-w-6xl mx-auto px-4 py-16">
 
                 {/* Hero */}

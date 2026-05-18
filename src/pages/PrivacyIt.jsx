@@ -1,6 +1,27 @@
+import { JsonLd } from '../components/JsonLd';
+
+const PRIVACY_IT_SCHEMA = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': 'https://splitplan-ai.vercel.app/privacy#webpage',
+    name: 'Informativa Privacy — SplitPlan AI',
+    description: 'Informativa privacy di SplitPlan AI, software di gestione trasferte aziendali conforme al GDPR.',
+    inLanguage: 'it',
+    isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
+    about: { '@id': 'https://splitplan-ai.vercel.app/#organization' },
+    breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splitplan-ai.vercel.app/' },
+            { '@type': 'ListItem', position: 2, name: 'Privacy', item: 'https://splitplan-ai.vercel.app/privacy' },
+        ],
+    },
+};
+
 const PrivacyIt = () => {
     return (
         <div className="container py-24 pt-[var(--header-height)]">
+            <JsonLd id="privacy-it-jsonld" schema={PRIVACY_IT_SCHEMA} />
             <div dangerouslySetInnerHTML={{
                 __html: `
 <style>

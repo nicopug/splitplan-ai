@@ -1,6 +1,27 @@
+import { JsonLd } from '../components/JsonLd';
+
+const PRIVACY_EN_SCHEMA = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': 'https://splitplan-ai.vercel.app/privacy#webpage',
+    name: 'Privacy Policy — SplitPlan AI',
+    description: 'Privacy policy of SplitPlan AI, GDPR-compliant travel management software.',
+    inLanguage: 'en',
+    isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
+    about: { '@id': 'https://splitplan-ai.vercel.app/#organization' },
+    breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splitplan-ai.vercel.app/' },
+            { '@type': 'ListItem', position: 2, name: 'Privacy Policy', item: 'https://splitplan-ai.vercel.app/privacy' },
+        ],
+    },
+};
+
 const Privacy = () => {
     return (
         <div className="container py-24 pt-[var(--header-height)]">
+            <JsonLd id="privacy-en-jsonld" schema={PRIVACY_EN_SCHEMA} />
             <div dangerouslySetInnerHTML={{
                 __html: `<style>
   [data-custom-class='body'], [data-custom-class='body'] * {

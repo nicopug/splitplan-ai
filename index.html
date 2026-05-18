@@ -75,63 +75,127 @@
         "@type": "WebSite",
         "@id": "https://splitplan-ai.vercel.app/#website",
         "name": "SplitPlan AI",
+        "alternateName": "SplitPlan",
         "url": "https://splitplan-ai.vercel.app",
-        "inLanguage": ["it", "en"]
+        "inLanguage": ["it", "en"],
+        "publisher": { "@id": "https://splitplan-ai.vercel.app/#organization" }
       },
       {
         "@type": "Organization",
         "@id": "https://splitplan-ai.vercel.app/#organization",
         "name": "SplitPlan",
+        "legalName": "SplitPlan AI",
         "url": "https://splitplan-ai.vercel.app",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://splitplan-ai.vercel.app/logo.png"
+          "url": "https://splitplan-ai.vercel.app/logo.png",
+          "width": "512",
+          "height": "512"
+        },
+        "image": "https://splitplan-ai.vercel.app/app-preview.png",
+        "email": "splitplan.ai@gmail.com",
+        "description": "SplitPlan è una piattaforma SaaS italiana che unifica pianificazione viaggi con intelligenza artificiale, gestione trasferte aziendali e nota spese in un'unica soluzione.",
+        "areaServed": ["IT", "EU"],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "splitplan.ai@gmail.com",
+          "contactType": "customer support",
+          "availableLanguage": ["Italian", "English"]
         }
       },
       {
         "@type": "SoftwareApplication",
+        "@id": "https://splitplan-ai.vercel.app/#software",
         "name": "SplitPlan AI",
         "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web",
-        "description": "Software all-in-one per gestire trasferte aziendali: workflow approvazione, report spese PDF/CSV, analytics manager, AI planning. Sostituisce Booking, Splitwise e ChatGPT.",
+        "applicationSubCategory": "Travel Management Software",
+        "operatingSystem": "Web, iOS, Android",
+        "description": "Software all-in-one per gestire trasferte aziendali: workflow approvazione, nota spese PDF/CSV, analytics manager, AI planning, voting di gruppo. Sostituisce Booking, Splitwise e ChatGPT in un'unica piattaforma SaaS.",
         "url": "https://splitplan-ai.vercel.app",
+        "image": "https://splitplan-ai.vercel.app/app-preview.png",
+        "screenshot": "https://splitplan-ai.vercel.app/app-preview.png",
         "inLanguage": ["it", "en"],
+        "publisher": { "@id": "https://splitplan-ai.vercel.app/#organization" },
+        "featureList": [
+          "Pianificazione viaggi con Intelligenza Artificiale (Gemini 2.5 Flash)",
+          "Workflow di approvazione trasferte aziendali",
+          "Gestione spese di trasferta e nota spese in PDF/CSV",
+          "Votazione di gruppo per decisioni multi-attendee",
+          "Dashboard manager con analytics avanzate",
+          "Sincronizzazione con Google Calendar",
+          "Mappa interattiva e itinerario ottimizzato",
+          "Multi-tenant con isolamento dei dati per azienda",
+          "Export contabile per la fatturazione"
+        ],
         "offers": [
           {
             "@type": "Offer",
             "name": "Free",
             "price": "0",
-            "priceCurrency": "EUR"
+            "priceCurrency": "EUR",
+            "description": "Pianificazione AI base, itinerario visuale, chat di gruppo, mappa interattiva. Per esplorazioni occasionali."
           },
           {
             "@type": "Offer",
             "name": "Pro Mensile",
             "price": "7.99",
             "priceCurrency": "EUR",
-            "billingIncrement": "P1M"
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "7.99",
+              "priceCurrency": "EUR",
+              "billingDuration": "P1M",
+              "unitText": "MONTH"
+            },
+            "description": "AI Co-Pilot avanzato, gestione budget e spese, export PDF premium, sync Google Calendar."
           },
           {
             "@type": "Offer",
             "name": "Pro Annuale",
             "price": "76.99",
             "priceCurrency": "EUR",
-            "billingIncrement": "P1Y"
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "76.99",
+              "priceCurrency": "EUR",
+              "billingDuration": "P1Y",
+              "unitText": "YEAR"
+            },
+            "description": "Tutto il piano Pro con fatturazione annuale, ~19% di sconto rispetto al mensile."
           },
           {
             "@type": "Offer",
             "name": "Corporate Starter",
             "price": "349",
             "priceCurrency": "EUR",
-            "billingIncrement": "P1M",
-            "description": "Fino a 25 utenti aziendali, 10 trasferte/mese, supporto email"
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "349",
+              "priceCurrency": "EUR",
+              "billingDuration": "P1M",
+              "unitText": "MONTH"
+            },
+            "description": "Fino a 30 utenti aziendali, 50 trasferte/mese, 800 chiamate AI/mese, workflow approvazione, supporto email."
           },
           {
             "@type": "Offer",
             "name": "Business Growth",
             "price": "890",
             "priceCurrency": "EUR",
-            "billingIncrement": "P1M",
-            "description": "Fino a 100 utenti, trasferte illimitate, analytics avanzati, supporto prioritario"
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "890",
+              "priceCurrency": "EUR",
+              "billingDuration": "P1M",
+              "unitText": "MONTH"
+            },
+            "description": "Fino a 120 utenti, trasferte illimitate, 5.000 chiamate AI/mese, analytics avanzate, API access, supporto prioritario."
+          },
+          {
+            "@type": "Offer",
+            "name": "Enterprise",
+            "priceCurrency": "EUR",
+            "description": "Utenti e trasferte illimitate, AI illimitato, SLA dedicato, account manager. Prezzo personalizzato su richiesta."
           }
         ]
       }

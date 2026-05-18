@@ -5,6 +5,7 @@ import { Building2, Users, Calendar, MessageSquare, ArrowRight, CheckCircle2, Sh
 import { Button } from '../components/ui/button';
 import { submitDemoRequest } from '../api';
 import { toast } from 'sonner';
+import { JsonLd } from '../components/JsonLd';
 
 const DemoRequest = () => {
     const { t } = useTranslation();
@@ -15,6 +16,32 @@ const DemoRequest = () => {
         document.title = 'Richiedi Demo — SplitPlan AI | Software Trasferte Aziendali';
         return () => { document.title = 'SplitPlan AI'; };
     }, []);
+
+    const demoSchema = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splitplan-ai.vercel.app/' },
+                    { '@type': 'ListItem', position: 2, name: 'Richiedi Demo', item: 'https://splitplan-ai.vercel.app/demo' },
+                ],
+            },
+            {
+                '@type': 'ContactPage',
+                '@id': 'https://splitplan-ai.vercel.app/demo#contactpage',
+                name: 'Richiedi una demo di SplitPlan AI',
+                description: 'Form di contatto per ricevere una demo personalizzata del software di gestione trasferte aziendali SplitPlan AI. Pilot gratuito di 60 giorni per aziende selezionate.',
+                inLanguage: 'it',
+                isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
+                about: { '@id': 'https://splitplan-ai.vercel.app/#software' },
+                mainEntity: {
+                    '@type': 'Organization',
+                    '@id': 'https://splitplan-ai.vercel.app/#organization',
+                },
+            },
+        ],
+    };
 
     const [formData, setFormData] = useState({
         full_name: '',
@@ -307,6 +334,7 @@ const DemoRequest = () => {
                     </motion.div>
                 </div>
             </div>
+            <JsonLd id="demo-request-jsonld" schema={demoSchema} />
         </div>
     );
 };

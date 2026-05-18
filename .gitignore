@@ -12,6 +12,8 @@ dist/
 build/
 .DS_Store
 .vscode/
+postman/
+.postman/
 backend/client_secret.json
 backend/.env
 APPUNTI.MD
@@ -26,3 +28,12 @@ REPORT_SPLITPLAN.md
 ALGORITMO_ITINERARI.txt
 CONTESTO.md
 FULL-AUDIT-REPORT.md
+
+# Personal working docs (fundraising, audit, asset privati)
+risposte.txt
+framework_richieste_vc.pdf
+visione_futura.png
+struttura_root.txt
+src/struttura_frontend.txt
+backend/struttura_backend.txt
+docs/OPUS_47_TECH_AUDIT.md

@@ -30,7 +30,7 @@ const FAQS = [
     },
     {
         q: "I dati aziendali sono al sicuro? Siete GDPR compliant?",
-        a: "Sì. Il database PostgreSQL è ospitato su Supabase con crittografia at-rest e in-transit, server in Europa. L'isolamento multi-tenant è enforced a livello di foreign key (audit di sicurezza P0-6 completato). Siamo pienamente conformi al GDPR e firmiamo Data Processing Agreement per i clienti B2B.",
+        a: "Sì. Il database PostgreSQL è ospitato su Supabase con crittografia at-rest e in-transit, server in Europa. L'isolamento multi-tenant è enforced a livello di foreign key. Siamo pienamente conformi al GDPR e firmiamo Data Processing Agreement per i clienti B2B.",
     },
     {
         q: "C'è una prova gratuita per le aziende?",
@@ -71,9 +71,8 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
                 {item.q}
             </h3>
             <span
-                className={`shrink-0 w-8 h-8 rounded-full bg-primary-blue/10 flex items-center justify-center transition-transform duration-300 ${
-                    isOpen ? 'rotate-45' : ''
-                }`}
+                className={`shrink-0 w-8 h-8 rounded-full bg-primary-blue/10 flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-45' : ''
+                    }`}
                 aria-hidden="true"
             >
                 <Plus className="w-4 h-4 text-primary-blue" />

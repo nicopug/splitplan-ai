@@ -506,5 +506,52 @@
         "hours_saved": "Work hours recovered",
         "money_saved": "Net annual savings",
         "assumption": "*Estimate based on an average recovery of 2 hours (research, booking, expensing, and approval) for each single trip."
+    },
+    "faq": {
+        "badge": "Frequently Asked Questions",
+        "title": "Everything you need to know",
+        "subtitle": "From business travel management to group trip planning: answers to the most common questions.",
+        "items": [
+            {
+                "q": "What is SplitPlan AI and who is it for?",
+                "a": "SplitPlan AI is a SaaS platform that unifies AI-powered trip planning, business travel management, and expense reporting in a single tool. It is built both for companies that want to optimize employee business travel (B2B), and for groups of friends planning trips together (B2C)."
+            },
+            {
+                "q": "How does business travel management with SplitPlan work?",
+                "a": "The manager creates a trip, the AI proposes three itineraries optimized for company budget and policies, and the employee confirms or votes. Expenses are tracked in real time by participants and at the end of the trip SplitPlan automatically generates the expense report in PDF and CSV, ready for accounting."
+            },
+            {
+                "q": "How much does SplitPlan cost for a company?",
+                "a": "B2B plans start at €349/month (Corporate Starter, up to 30 users) and €890/month (Business Growth, up to 120 users). Larger organizations can choose a tailored Enterprise plan. Unlike many competitors, we do not charge booking commissions or hidden fees."
+            },
+            {
+                "q": "Is SplitPlan an alternative to SAP Concur, TravelPerk or Navan?",
+                "a": "Yes. SplitPlan is a corporate travel management software that additionally integrates AI planning, group voting for multi-attendee trips (offsites, events, board meetings), and expense reporting, all in a single platform. Pure SaaS pricing: no percentage commissions on bookings, no hidden surcharges."
+            },
+            {
+                "q": "How long does it take to implement SplitPlan in a company?",
+                "a": "Onboarding is self-service: in less than 30 minutes a manager can invite the team via bulk import, configure travel approval workflows, set budget caps, and enable accounting exports. No mandatory integrations and no upfront training required."
+            },
+            {
+                "q": "How are employee travel expenses managed?",
+                "a": "Each participant logs expenses (receipts, amounts, categories) directly in the app during the trip. SplitPlan aggregates them by trip or by employee, automatically calculates reimbursements, and at the end of the cycle exports the expense report in PDF (for employees) and CSV (for accounting)."
+            },
+            {
+                "q": "Is corporate data secure? Are you GDPR compliant?",
+                "a": "Yes. The PostgreSQL database is hosted on Supabase with at-rest and in-transit encryption, with servers in Europe. Multi-tenant isolation is enforced at the foreign key level (security audit P0-6 completed). We are fully GDPR compliant and sign Data Processing Agreements for B2B customers."
+            },
+            {
+                "q": "Is there a free trial for companies?",
+                "a": "Yes. We offer a free 60-day pilot for selected companies, with no credit card required. At the end of the pilot the company can choose to activate a paid plan or leave at no cost."
+            },
+            {
+                "q": "Does SplitPlan also work for personal trips with friends?",
+                "a": "Yes. The Free plan lets you plan a trip with basic AI and an interactive map. The Pro plan at €7.99/month (or €76.99/year) unlocks the advanced AI Co-Pilot, group budget and expense management, premium PDF export, and Google Calendar sync."
+            },
+            {
+                "q": "What integrations are available?",
+                "a": "Automatic Google Calendar sync, PDF/CSV exports for accounting, API access for the Business Growth and Enterprise plans, and SSO (Single Sign-On) for Enterprise organizations. More integrations with HR and accounting systems are on the roadmap."
+            }
+        ]
     }
 }

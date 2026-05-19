@@ -500,5 +500,52 @@
         "hours_saved": "Ore di lavoro recuperate",
         "money_saved": "Risparmio annuo netto",
         "assumption": "*Stima basata su un recupero medio di 2 ore (ricerca, prenotazione, note spese e approvazione) per ogni singola trasferta."
+    },
+    "faq": {
+        "badge": "Domande Frequenti",
+        "title": "Tutto quello che ti serve sapere",
+        "subtitle": "Dalla gestione trasferte aziendali alla pianificazione viaggi di gruppo: le risposte alle domande più comuni.",
+        "items": [
+            {
+                "q": "Cos'è SplitPlan AI e a chi serve?",
+                "a": "SplitPlan AI è una piattaforma SaaS che unifica pianificazione viaggi con intelligenza artificiale, gestione trasferte aziendali e nota spese in un unico strumento. È pensata sia per aziende che vogliono ottimizzare le trasferte dei dipendenti (B2B), sia per gruppi di amici che pianificano viaggi insieme (B2C)."
+            },
+            {
+                "q": "Come funziona la gestione delle trasferte aziendali con SplitPlan?",
+                "a": "Il manager crea la trasferta, l'AI propone tre itinerari ottimizzati su budget e policy aziendali, il dipendente conferma o vota. Le spese vengono tracciate in tempo reale dai partecipanti e a fine trasferta SplitPlan genera automaticamente la nota spese in PDF e CSV pronta per la contabilità."
+            },
+            {
+                "q": "Quanto costa SplitPlan per un'azienda?",
+                "a": "I piani B2B partono da €349/mese (Corporate Starter, fino a 30 utenti) e €890/mese (Business Growth, fino a 120 utenti). Per organizzazioni più grandi è disponibile il piano Enterprise su misura. Non addebitiamo commissioni sui booking né costi nascosti, a differenza di molti competitor."
+            },
+            {
+                "q": "SplitPlan è un'alternativa a SAP Concur, TravelPerk o Navan?",
+                "a": "Sì. SplitPlan è un software di travel management per aziende che integra in più la pianificazione AI, la votazione di gruppo per trasferte multi-attendee (offsite, eventi, board) e la nota spese, tutto in un'unica piattaforma. Tariffa SaaS pura: nessuna commissione percentuale sui booking, nessun surcharge nascosto."
+            },
+            {
+                "q": "Quanto tempo serve per implementare SplitPlan in azienda?",
+                "a": "L'onboarding è self-service: in meno di 30 minuti il manager può invitare il team via bulk import, configurare il workflow di approvazione delle trasferte, impostare budget cap e attivare l'export contabile. Nessuna integrazione obbligatoria, nessuna formazione preliminare richiesta."
+            },
+            {
+                "q": "Come si gestiscono le spese di trasferta dei dipendenti?",
+                "a": "Ogni partecipante registra le spese (ricevute, importi, categorie) direttamente in app durante la trasferta. SplitPlan le aggrega per trasferta o per dipendente, calcola automaticamente i rimborsi e a fine ciclo esporta la nota spese in PDF (per i dipendenti) e CSV (per la contabilità)."
+            },
+            {
+                "q": "I dati aziendali sono al sicuro? Siete GDPR compliant?",
+                "a": "Sì. Il database PostgreSQL è ospitato su Supabase con crittografia at-rest e in-transit, server in Europa. L'isolamento multi-tenant è enforced a livello di foreign key (audit di sicurezza P0-6 completato). Siamo pienamente conformi al GDPR e firmiamo Data Processing Agreement per i clienti B2B."
+            },
+            {
+                "q": "C'è una prova gratuita per le aziende?",
+                "a": "Sì. Offriamo un pilot gratuito di 60 giorni per aziende selezionate, senza carta di credito richiesta. Al termine del pilot l'azienda può decidere se attivare un piano o uscire senza vincoli."
+            },
+            {
+                "q": "SplitPlan funziona anche per viaggi personali con amici?",
+                "a": "Sì. Il piano Free permette di pianificare un viaggio con AI base e mappa interattiva. Il piano Pro a €7,99/mese (o €76,99/anno) sblocca AI Co-Pilot avanzato, gestione budget e spese di gruppo, export PDF premium e sincronizzazione con Google Calendar."
+            },
+            {
+                "q": "Quali integrazioni sono disponibili?",
+                "a": "Sincronizzazione automatica con Google Calendar, export PDF/CSV per la contabilità, API access per i piani Business Growth ed Enterprise, e SSO (Single Sign-On) per le organizzazioni Enterprise. Altre integrazioni con sistemi HR e contabili sono in roadmap."
+            }
+        ]
     }
 }

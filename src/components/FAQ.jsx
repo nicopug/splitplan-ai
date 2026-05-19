@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Plus, HelpCircle } from 'lucide-react';
 import { JsonLd } from './JsonLd';
 
-const FAQS = [
+// Fallback usato solo se le translation non sono caricate
+const FAQS_FALLBACK = [
     {
         q: "Cos'è SplitPlan AI e a chi serve?",
         a: "SplitPlan AI è una piattaforma SaaS che unifica pianificazione viaggi con intelligenza artificiale, gestione trasferte aziendali e nota spese in un unico strumento. È pensata sia per aziende che vogliono ottimizzare le trasferte dei dipendenti (B2B), sia per gruppi di amici che pianificano viaggi insieme (B2C).",
@@ -97,22 +99,28 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
     </motion.div>
 );
 
-const FAQ_SCHEMA = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    '@id': 'https://splitplan-ai.vercel.app/#faq',
-    inLanguage: 'it',
-    isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
-    about: { '@id': 'https://splitplan-ai.vercel.app/#software' },
-    mainEntity: FAQS.map(({ q, a }) => ({
-        '@type': 'Question',
-        name: q,
-        acceptedAnswer: { '@type': 'Answer', text: a },
-    })),
-};
-
 const FAQ = () => {
+    const { t, i18n } = useTranslation();
     const [openIndex, setOpenIndex] = useState(0);
+
+    // returnObjects:true → array di {q,a}; fallback se i18n non ancora pronto
+    const items = t('faq.items', { returnObjects: true, defaultValue: FAQS_FALLBACK });
+    const faqs = Array.isArray(items) && items.length > 0 ? items : FAQS_FALLBACK;
+    const lang = i18n.language?.startsWith('en') ? 'en' : 'it';
+
+    const faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        '@id': 'https://splitplan-ai.vercel.app/#faq',
+        inLanguage: lang,
+        isPartOf: { '@id': 'https://splitplan-ai.vercel.app/#website' },
+        about: { '@id': 'https://splitplan-ai.vercel.app/#software' },
+        mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+    };
 
     return (
         <section
@@ -120,7 +128,7 @@ const FAQ = () => {
             aria-labelledby="faq-heading"
             className="py-24 relative overflow-hidden"
         >
-            <JsonLd id="faq-schema-jsonld" schema={FAQ_SCHEMA} />
+            <JsonLd id="faq-schema-jsonld" schema={faqSchema} />
             <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[400px] h-[400px] bg-primary-blue/10 blur-[120px] rounded-full pointer-events-none opacity-30" />
 
             <div className="container relative z-10">
@@ -135,23 +143,22 @@ const FAQ = () => {
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-blue/10 border border-primary-blue/20 mb-4">
                             <HelpCircle className="w-3.5 h-3.5 text-primary-blue" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-primary-blue">
-                                Domande Frequenti
+                                {t('faq.badge', 'Domande Frequenti')}
                             </span>
                         </div>
                         <h2
                             id="faq-heading"
                             className="text-4xl md:text-5xl font-black tracking-tight text-primary mb-4"
                         >
-                            Tutto quello che ti serve sapere
+                            {t('faq.title', 'Tutto quello che ti serve sapere')}
                         </h2>
                         <p className="text-base md:text-lg text-muted max-w-xl mx-auto leading-relaxed">
-                            Dalla gestione trasferte aziendali alla pianificazione viaggi di gruppo:
-                            le risposte alle domande più comuni.
+                            {t('faq.subtitle', 'Dalla gestione trasferte aziendali alla pianificazione viaggi di gruppo: le risposte alle domande più comuni.')}
                         </p>
                     </motion.div>
 
                     <div className="space-y-3">
-                        {FAQS.map((item, i) => (
+                        {faqs.map((item, i) => (
                             <FAQItem
                                 key={item.q}
                                 item={item}

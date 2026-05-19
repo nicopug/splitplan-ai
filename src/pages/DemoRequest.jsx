@@ -73,11 +73,33 @@ const DemoRequest = () => {
         }
     };
 
-    const benefits = [
-        { icon: Zap, title: "Automazione Totale", desc: "Dimentica fogli Excel e prenotazioni manuali." },
-        { icon: ShieldCheck, title: "Policy Compliance", desc: "Applica automaticamente le politiche di spesa aziendali." },
-        { icon: Globe, title: "Copertura Globale", desc: "Accesso a inventario esclusivo per voli e hotel in tutto il mondo." }
+    const BENEFITS_FALLBACK = [
+        { title: "Automazione Totale", desc: "Dimentica fogli Excel e prenotazioni manuali." },
+        { title: "Policy Compliance", desc: "Applica automaticamente le politiche di spesa aziendali." },
+        { title: "Copertura Globale", desc: "Accesso a inventario esclusivo per voli e hotel in tutto il mondo." }
     ];
+    const benefitsRaw = t('business.benefits', { returnObjects: true, defaultValue: BENEFITS_FALLBACK });
+    const benefitsData = Array.isArray(benefitsRaw) && benefitsRaw.length > 0 ? benefitsRaw : BENEFITS_FALLBACK;
+    const benefitsIcons = [Zap, ShieldCheck, Globe];
+    const benefits = benefitsData.map((b, i) => ({ ...b, icon: benefitsIcons[i] || Zap }));
+
+    // Fallback se le translation non sono ancora caricate al primo render
+    const TEAM_SIZE_FALLBACK = [
+        { value: "1-10", label: "1-10 dipendenti" },
+        { value: "11-50", label: "11-50 dipendenti" },
+        { value: "51-200", label: "51-200 dipendenti" },
+        { value: "200+", label: "200+ dipendenti" },
+    ];
+    const FREQUENCY_FALLBACK = [
+        { value: "Weekly", label: "Settimanale" },
+        { value: "Monthly", label: "Mensile" },
+        { value: "Quarterly", label: "Trimestrale" },
+        { value: "Occasional", label: "Occasionale" },
+    ];
+    const teamSizeRaw = t('demoForm.team_size_options', { returnObjects: true, defaultValue: TEAM_SIZE_FALLBACK });
+    const teamSizeOptions = Array.isArray(teamSizeRaw) && teamSizeRaw.length > 0 ? teamSizeRaw : TEAM_SIZE_FALLBACK;
+    const frequencyRaw = t('demoForm.frequency_options', { returnObjects: true, defaultValue: FREQUENCY_FALLBACK });
+    const frequencyOptions = Array.isArray(frequencyRaw) && frequencyRaw.length > 0 ? frequencyRaw : FREQUENCY_FALLBACK;
 
     if (isSubmitted) {
         return (
@@ -195,7 +217,7 @@ const DemoRequest = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <User size={12} className="text-primary-blue" />
-                                        Nome Completo
+                                        {t('demoForm.full_name_label', 'Nome Completo')}
                                     </label>
                                     <input
                                         required
@@ -203,14 +225,14 @@ const DemoRequest = () => {
                                         name="full_name"
                                         value={formData.full_name}
                                         onChange={handleChange}
-                                        placeholder="Mario Rossi"
+                                        placeholder={t('demoForm.full_name_placeholder', 'Mario Rossi')}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue focus:ring-1 focus:ring-primary-blue outline-none transition-all placeholder:text-muted/30"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <Building2 size={12} className="text-primary-blue" />
-                                        Azienda
+                                        {t('demoForm.company_label', 'Azienda')}
                                     </label>
                                     <input
                                         required
@@ -218,7 +240,7 @@ const DemoRequest = () => {
                                         name="company_name"
                                         value={formData.company_name}
                                         onChange={handleChange}
-                                        placeholder="Esempio S.r.l."
+                                        placeholder={t('demoForm.company_placeholder', 'Esempio S.r.l.')}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue focus:ring-1 focus:ring-primary-blue outline-none transition-all placeholder:text-muted/30"
                                     />
                                 </div>
@@ -228,7 +250,7 @@ const DemoRequest = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <Mail size={12} className="text-primary-blue" />
-                                        Email di Lavoro
+                                        {t('demoForm.email_label', 'Email di Lavoro')}
                                     </label>
                                     <input
                                         required
@@ -236,21 +258,21 @@ const DemoRequest = () => {
                                         name="work_email"
                                         value={formData.work_email}
                                         onChange={handleChange}
-                                        placeholder="mario@azienda.com"
+                                        placeholder={t('demoForm.email_placeholder', 'mario@azienda.com')}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue focus:ring-1 focus:ring-primary-blue outline-none transition-all placeholder:text-muted/30"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <Phone size={12} className="text-primary-blue" />
-                                        Telefono (Opzionale)
+                                        {t('demoForm.phone_label', 'Telefono (Opzionale)')}
                                     </label>
                                     <input
                                         type="tel"
                                         name="phone_number"
                                         value={formData.phone_number}
                                         onChange={handleChange}
-                                        placeholder="+39 012 3456789"
+                                        placeholder={t('demoForm.phone_placeholder', '+39 012 3456789')}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue focus:ring-1 focus:ring-primary-blue outline-none transition-all placeholder:text-muted/30"
                                     />
                                 </div>
@@ -260,7 +282,7 @@ const DemoRequest = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <Users size={12} className="text-primary-blue" />
-                                        Dimensione Team
+                                        {t('demoForm.team_size_label', 'Dimensione Team')}
                                     </label>
                                     <select
                                         name="team_size"
@@ -268,16 +290,15 @@ const DemoRequest = () => {
                                         onChange={handleChange}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue outline-none appearance-none"
                                     >
-                                        <option value="1-10">1-10 dipendenti</option>
-                                        <option value="11-50">11-50 dipendenti</option>
-                                        <option value="51-200">51-200 dipendenti</option>
-                                        <option value="200+">200+ dipendenti</option>
+                                        {teamSizeOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                         <Calendar size={12} className="text-primary-blue" />
-                                        Frequenza Viaggi
+                                        {t('demoForm.frequency_label', 'Frequenza Viaggi')}
                                     </label>
                                     <select
                                         name="travel_frequency"
@@ -285,10 +306,9 @@ const DemoRequest = () => {
                                         onChange={handleChange}
                                         className="w-full h-14 px-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue outline-none appearance-none"
                                     >
-                                        <option value="Weekly">Settimanale</option>
-                                        <option value="Monthly">Mensile</option>
-                                        <option value="Quarterly">Trimestrale</option>
-                                        <option value="Occasional">Occasionale</option>
+                                        {frequencyOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -296,14 +316,14 @@ const DemoRequest = () => {
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-subtle flex items-center gap-2">
                                     <MessageSquare size={12} className="text-primary-blue" />
-                                    Esigenze Specifiche
+                                    {t('demoForm.message_label', 'Esigenze Specifiche')}
                                 </label>
                                 <textarea
                                     name="message"
                                     value={formData.message}
                                     onChange={handleChange}
                                     rows="3"
-                                    placeholder="Raccontaci brevemente di cosa avete bisogno..."
+                                    placeholder={t('demoForm.message_placeholder', 'Raccontaci brevemente di cosa avete bisogno...')}
                                     className="w-full p-5 bg-base border border-border-subtle rounded-sm focus:border-primary-blue outline-none transition-all placeholder:text-muted/30 resize-none"
                                 />
                             </div>

@@ -65,12 +65,32 @@ const PricingCard = ({ title, price, period, description, features, buttonText, 
     );
 };
 
+const FREE_FEATURES_FALLBACK = [
+    "Pianificazione con AI base",
+    "Itinerario visuale",
+    "Chat di gruppo",
+    "Mappa interattiva",
+];
+const PRO_FEATURES_FALLBACK = [
+    "Tutto quello che c'è in Free",
+    "AI Co-Pilot Avanzato ✨",
+    "Gestione Budget & Spese",
+    "Export PDF Premium",
+    "Sync Calendario Google",
+    "Precedenza su nuove feature",
+];
+
 const Pricing = ({ user }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'annual'
     const isPremium = user?.is_subscribed;
     const isLoggedIn = !!user;
+
+    const freeFeaturesRaw = t('pricing.card_free_features', { returnObjects: true, defaultValue: FREE_FEATURES_FALLBACK });
+    const freeFeatures = Array.isArray(freeFeaturesRaw) && freeFeaturesRaw.length > 0 ? freeFeaturesRaw : FREE_FEATURES_FALLBACK;
+    const proFeaturesRaw = t('pricing.card_pro_features', { returnObjects: true, defaultValue: PRO_FEATURES_FALLBACK });
+    const proFeatures = Array.isArray(proFeaturesRaw) && proFeaturesRaw.length > 0 ? proFeaturesRaw : PRO_FEATURES_FALLBACK;
 
     return (
         <section id="pricing" className="section bg-base py-32">
@@ -133,15 +153,12 @@ const Pricing = ({ user }) => {
                         <PricingCard
                             title="Free"
                             price="€0"
-                            period="/sempre"
-                            description="Perfetto per esplorazioni occasionali."
-                            features={[
-                                "Pianificazione con AI base",
-                                "Itinerario visuale",
-                                "Chat di gruppo",
-                                "Mappa interattiva"
-                            ]}
-                            buttonText={isLoggedIn && !isPremium ? "Tuo Piano" : "Inizia Ora"}
+                            period={t('pricing.card_free_period', '/sempre')}
+                            description={t('pricing.card_free_description', 'Perfetto per esplorazioni occasionali.')}
+                            features={freeFeatures}
+                            buttonText={isLoggedIn && !isPremium
+                                ? t('pricing.btn_current_plan', 'Tuo Piano')
+                                : t('pricing.btn_start', 'Inizia Ora')}
                         />
                     </motion.div>
 
@@ -152,18 +169,15 @@ const Pricing = ({ user }) => {
                         <PricingCard
                             title="Pro"
                             price={billingCycle === 'monthly' ? "€7.99" : "€76.99"}
-                            period={billingCycle === 'monthly' ? "/mese" : "/anno"}
-                            description="Per i viaggiatori che non si fermano mai."
-                            features={[
-                                "Tutto quello che c'è in Free",
-                                "AI Co-Pilot Avanzato ✨",
-                                "Gestione Budget & Spese",
-                                "Export PDF Premium",
-                                "Sync Calendario Google",
-                                "Precedenza su nuove feature"
-                            ]}
+                            period={billingCycle === 'monthly'
+                                ? t('pricing.card_pro_period_monthly', '/mese')
+                                : t('pricing.card_pro_period_annual', '/anno')}
+                            description={t('pricing.card_pro_description', 'Per i viaggiatori che non si fermano mai.')}
+                            features={proFeatures}
                             highlighted={true}
-                            buttonText={isLoggedIn && isPremium ? "Tuo Piano" : "Passa a Pro"}
+                            buttonText={isLoggedIn && isPremium
+                                ? t('pricing.btn_current_plan', 'Tuo Piano')
+                                : t('pricing.btn_upgrade_pro', 'Passa a Pro')}
                         />
                     </motion.div>
                     <motion.div

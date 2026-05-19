@@ -189,7 +189,7 @@ const Navbar = ({ user: propUser }) => {
                             to="/pricing-business"
                             className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors duration-300"
                         >
-                            Piani B2B
+                            {t('nav.b2bPlans', 'Piani B2B')}
                         </Link>
                     </div>
 
@@ -413,7 +413,7 @@ const Navbar = ({ user: propUser }) => {
                                 className="text-lg font-medium text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Piani B2B
+                                {t('nav.b2bPlans', 'Piani B2B')}
                             </Link>
 
                             {user ? (

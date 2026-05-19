@@ -8,7 +8,10 @@
         "logout": "Esci",
         "login": "Accedi",
         "shop": "Negozio Crediti",
-        "credits": "Crediti"
+        "credits": "Crediti",
+        "getStarted": "Inizia Ora",
+        "b2bPlans": "Piani B2B",
+        "home": "Home"
     },
     "common": {
         "loading": "Caricamento...",
@@ -38,7 +41,16 @@
         "createGroupTitle": "Nuovo Viaggio di Gruppo",
         "createGroupMessage": "Che nome diamo a questo viaggio?",
         "createGroupPlaceholder": "Es: Weekend a Parigi",
-        "successMessage": "Viaggio creato con successo!"
+        "successMessage": "Viaggio creato con successo!",
+        "chat": {
+            "placeholder": "Scrivi un messaggio...",
+            "script": [
+                { "role": "user", "text": "Organizzami 3 giorni a Parigi per 4 persone, budget 500€ a testa. Musei sì, trappole per turisti no." },
+                { "role": "ai", "text": "Parigi in arrivo! ✨ Voli a 120€. Hotel a Montmartre trovato. Ho inserito il Louvre giovedì (meno folla). Genero itinerario e spese..." },
+                { "role": "user", "text": "Perfetto! Aggiungi un ristorante di pesce per sabato sera." },
+                { "role": "ai", "text": "Certo! Ho trovato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
+            ]
+        }
     },
     "painPoints": {
         "badge": "Il Problema",
@@ -131,7 +143,29 @@
         "section_title_part1": "Scegli la tua",
         "section_title_part2": "avventura.",
         "billing_monthly": "Mensile",
-        "billing_annual": "Annuale"
+        "billing_annual": "Annuale",
+        "card_free_period": "/sempre",
+        "card_free_description": "Perfetto per esplorazioni occasionali.",
+        "card_pro_period_monthly": "/mese",
+        "card_pro_period_annual": "/anno",
+        "card_pro_description": "Per i viaggiatori che non si fermano mai.",
+        "card_free_features": [
+            "Pianificazione con AI base",
+            "Itinerario visuale",
+            "Chat di gruppo",
+            "Mappa interattiva"
+        ],
+        "card_pro_features": [
+            "Tutto quello che c'è in Free",
+            "AI Co-Pilot Avanzato ✨",
+            "Gestione Budget & Spese",
+            "Export PDF Premium",
+            "Sync Calendario Google",
+            "Precedenza su nuove feature"
+        ],
+        "btn_start": "Inizia Ora",
+        "btn_upgrade_pro": "Passa a Pro",
+        "btn_current_plan": "Tuo Piano"
     },
     "dashboard": {
         "title": "Dashboard Viaggio",
@@ -481,7 +515,12 @@
         "bullet3_title": "Reporting Automatizzato",
         "bullet3_desc": "Esporta report dettagliati pronti per la contabilità con un solo click.",
         "smartPolicyTitle": "Policy Spese Intelligenti",
-        "smartPolicyDesc": "Imposta limiti di budget e categorie di spesa approvate per ogni team."
+        "smartPolicyDesc": "Imposta limiti di budget e categorie di spesa approvate per ogni team.",
+        "benefits": [
+            { "title": "Automazione Totale", "desc": "Dimentica fogli Excel e prenotazioni manuali." },
+            { "title": "Policy Compliance", "desc": "Applica automaticamente le politiche di spesa aziendali." },
+            { "title": "Copertura Globale", "desc": "Accesso a inventario esclusivo per voli e hotel in tutto il mondo." }
+        ]
     },
     "footer": {
         "tagline": "Rendiamo i viaggi di gruppo facili, divertenti e senza stress.",
@@ -500,6 +539,38 @@
         "hours_saved": "Ore di lavoro recuperate",
         "money_saved": "Risparmio annuo netto",
         "assumption": "*Stima basata su un recupero medio di 2 ore (ricerca, prenotazione, note spese e approvazione) per ogni singola trasferta."
+    },
+    "cookies": {
+        "message": "Usiamo cookie analitici (Google Analytics, PostHog) per migliorare l'esperienza. Puoi accettarli o continuare con i soli cookie necessari.",
+        "privacy_link": "Privacy Policy",
+        "necessary_only": "Solo necessari",
+        "accept": "Accetta"
+    },
+    "demoForm": {
+        "full_name_label": "Nome Completo",
+        "full_name_placeholder": "Mario Rossi",
+        "company_label": "Azienda",
+        "company_placeholder": "Esempio S.r.l.",
+        "email_label": "Email di Lavoro",
+        "email_placeholder": "mario@azienda.com",
+        "phone_label": "Telefono (Opzionale)",
+        "phone_placeholder": "+39 012 3456789",
+        "team_size_label": "Dimensione Team",
+        "team_size_options": [
+            { "value": "1-10", "label": "1-10 dipendenti" },
+            { "value": "11-50", "label": "11-50 dipendenti" },
+            { "value": "51-200", "label": "51-200 dipendenti" },
+            { "value": "200+", "label": "200+ dipendenti" }
+        ],
+        "frequency_label": "Frequenza Viaggi",
+        "frequency_options": [
+            { "value": "Weekly", "label": "Settimanale" },
+            { "value": "Monthly", "label": "Mensile" },
+            { "value": "Quarterly", "label": "Trimestrale" },
+            { "value": "Occasional", "label": "Occasionale" }
+        ],
+        "message_label": "Esigenze Specifiche",
+        "message_placeholder": "Raccontaci brevemente di cosa avete bisogno..."
     },
     "faq": {
         "badge": "Domande Frequenti",

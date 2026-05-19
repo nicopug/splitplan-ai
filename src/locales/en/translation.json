@@ -8,7 +8,10 @@
         "logout": "Logout",
         "login": "Login",
         "shop": "Credits Shop",
-        "credits": "Credits"
+        "credits": "Credits",
+        "getStarted": "Get Started",
+        "b2bPlans": "B2B Plans",
+        "home": "Home"
     },
     "common": {
         "loading": "Loading...",
@@ -38,7 +41,16 @@
         "createGroupTitle": "New Group Trip",
         "createGroupMessage": "What name shall we give to this trip?",
         "createGroupPlaceholder": "e.g., Weekend in Paris",
-        "successMessage": "Trip created successfully!"
+        "successMessage": "Trip created successfully!",
+        "chat": {
+            "placeholder": "Write a message...",
+            "script": [
+                { "role": "user", "text": "Plan me 3 days in Paris for 4 people, €500 budget each. Museums yes, tourist traps no." },
+                { "role": "ai", "text": "Paris coming up! ✨ Flights at €120. Hotel in Montmartre found. I scheduled the Louvre on Thursday (smaller crowds). Generating itinerary and expenses..." },
+                { "role": "user", "text": "Perfect! Add a seafood restaurant for Saturday night." },
+                { "role": "ai", "text": "Of course! I found 'Le Comptoir du Relais'. Table for 4 at 8:30 PM. 🍷" }
+            ]
+        }
     },
     "painPoints": {
         "badge": "The Problem",
@@ -132,7 +144,29 @@
         "section_title_part1": "Choose your",
         "section_title_part2": "adventure.",
         "billing_monthly": "Monthly",
-        "billing_annual": "Annual"
+        "billing_annual": "Annual",
+        "card_free_period": "/forever",
+        "card_free_description": "Perfect for occasional explorations.",
+        "card_pro_period_monthly": "/month",
+        "card_pro_period_annual": "/year",
+        "card_pro_description": "For travelers who never stop.",
+        "card_free_features": [
+            "Basic AI planning",
+            "Visual itinerary",
+            "Group chat",
+            "Interactive map"
+        ],
+        "card_pro_features": [
+            "Everything in Free",
+            "Advanced AI Co-Pilot ✨",
+            "Budget & Expense Management",
+            "Premium PDF Export",
+            "Google Calendar Sync",
+            "Early access to new features"
+        ],
+        "btn_start": "Get Started",
+        "btn_upgrade_pro": "Upgrade to Pro",
+        "btn_current_plan": "Your Plan"
     },
     "dashboard": {
         "title": "Trip Dashboard",
@@ -482,7 +516,12 @@
         "bullet3_title": "Automated Reporting",
         "bullet3_desc": "Export detailed, accounting-ready reports with a single click.",
         "smartPolicyTitle": "Smart Expense Policies",
-        "smartPolicyDesc": "Set budget limits and approved expense categories for each team."
+        "smartPolicyDesc": "Set budget limits and approved expense categories for each team.",
+        "benefits": [
+            { "title": "Full Automation", "desc": "Forget spreadsheets and manual bookings." },
+            { "title": "Policy Compliance", "desc": "Automatically enforce corporate spending policies." },
+            { "title": "Global Coverage", "desc": "Access exclusive inventory for flights and hotels worldwide." }
+        ]
     },
     "demo": {
         "success_toast": "Request submitted! We'll contact you shortly.",
@@ -506,6 +545,38 @@
         "hours_saved": "Work hours recovered",
         "money_saved": "Net annual savings",
         "assumption": "*Estimate based on an average recovery of 2 hours (research, booking, expensing, and approval) for each single trip."
+    },
+    "cookies": {
+        "message": "We use analytics cookies (Google Analytics, PostHog) to improve your experience. You can accept them or continue with only the necessary ones.",
+        "privacy_link": "Privacy Policy",
+        "necessary_only": "Necessary only",
+        "accept": "Accept"
+    },
+    "demoForm": {
+        "full_name_label": "Full Name",
+        "full_name_placeholder": "John Doe",
+        "company_label": "Company",
+        "company_placeholder": "Example Inc.",
+        "email_label": "Work Email",
+        "email_placeholder": "john@company.com",
+        "phone_label": "Phone (Optional)",
+        "phone_placeholder": "+1 555 123 4567",
+        "team_size_label": "Team Size",
+        "team_size_options": [
+            { "value": "1-10", "label": "1-10 employees" },
+            { "value": "11-50", "label": "11-50 employees" },
+            { "value": "51-200", "label": "51-200 employees" },
+            { "value": "200+", "label": "200+ employees" }
+        ],
+        "frequency_label": "Travel Frequency",
+        "frequency_options": [
+            { "value": "Weekly", "label": "Weekly" },
+            { "value": "Monthly", "label": "Monthly" },
+            { "value": "Quarterly", "label": "Quarterly" },
+            { "value": "Occasional", "label": "Occasional" }
+        ],
+        "message_label": "Specific Needs",
+        "message_placeholder": "Tell us briefly what you need..."
     },
     "faq": {
         "badge": "Frequently Asked Questions",

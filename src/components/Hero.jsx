@@ -9,19 +9,30 @@ import { Button } from './ui/button';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { useSpotlight } from '../hooks/useSpotlight';
 
+const DEMO_SCRIPT_FALLBACK = [
+    { role: 'user', text: "Organizzami 3 giorni a Parigi per 4 persone, budget 500€ a testa. Musei sì, trappole per turisti no." },
+    { role: 'ai', text: "Parigi in arrivo! ✨ Voli a 120€. Hotel a Montmartre trovato. Ho inserito il Louvre giovedì (meno folla). Genero itinerario e spese..." },
+    { role: 'user', text: "Perfetto! Aggiungi un ristorante di pesce per sabato sera." },
+    { role: 'ai', text: "Certo! Ho trovato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
+];
+
 const AIDemo = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { ref, onMouseMove } = useSpotlight();
     const [messages, setMessages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTyping, setIsTyping] = useState(false);
 
-    const demoScript = [
-        { role: 'user', text: "Organizzami 3 giorni a Parigi per 4 persone, budget 500€ a testa. Musei sì, trappole per turisti no." },
-        { role: 'ai', text: "Parigi in arrivo! ✨ Voli a 120€. Hotel a Montmartre trovato. Ho inserito il Louvre giovedì (meno folla). Genero itinerario e spese..." },
-        { role: 'user', text: "Perfetto! Aggiungi un ristorante di pesce per sabato sera." },
-        { role: 'ai', text: "Certo! Ho trovato 'Le Comptoir du Relais'. Tavolo per 4 alle 20:30. 🍷" }
-    ];
+    const scriptRaw = t('hero.chat.script', { returnObjects: true, defaultValue: DEMO_SCRIPT_FALLBACK });
+    const demoScript = Array.isArray(scriptRaw) && scriptRaw.length > 0 ? scriptRaw : DEMO_SCRIPT_FALLBACK;
+    const placeholder = t('hero.chat.placeholder', 'Scrivi un messaggio...');
+
+    // Reset della chat quando cambia la lingua (riparte da capo nella nuova lingua)
+    useEffect(() => {
+        setMessages([]);
+        setCurrentIndex(0);
+        setIsTyping(false);
+    }, [i18n.language]);
 
     useEffect(() => {
         if (currentIndex >= demoScript.length) {
@@ -40,7 +51,7 @@ const AIDemo = () => {
         }, currentIndex % 2 === 0 ? 1000 : 2500);
 
         return () => clearTimeout(timeout);
-    }, [currentIndex]);
+    }, [currentIndex, demoScript]);
 
     return (
         <div
@@ -90,7 +101,7 @@ const AIDemo = () => {
 
             <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
                 <div className="flex-1 h-10 bg-white/5 rounded-full border border-white/10 flex items-center px-4 text-xs text-muted font-medium">
-                    Scrivi un messaggio...
+                    {placeholder}
                 </div>
                 <div className="w-10 h-10 bg-primary-blue rounded-full flex items-center justify-center text-white">
                     <ChevronRight className="w-5 h-5" />

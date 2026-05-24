@@ -5,7 +5,7 @@ import { Check, Zap } from 'lucide-react';
 import { useSpotlight } from '../hooks/useSpotlight';
 import { useNavigate } from 'react-router-dom';
 
-const PricingCard = ({ title, price, period, description, features, buttonText, highlighted = false }) => {
+const PricingCard = ({ title, price, period, description, features, buttonText, highlighted = false, onButtonClick }) => {
     const { ref, onMouseMove } = useSpotlight();
 
     return (
@@ -52,7 +52,7 @@ const PricingCard = ({ title, price, period, description, features, buttonText, 
             </div>
 
             <button
-                onClick={() => window.location.href = '/market'}
+                onClick={onButtonClick}
                 className={`w-full h-14 rounded-xl text-[11px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 ${highlighted
                     ? 'bg-primary-blue text-white shadow-xl shadow-primary-blue/20 hover:scale-[1.02]'
                     : 'border border-white/10 text-primary hover:bg-white/5'
@@ -91,6 +91,19 @@ const Pricing = ({ user }) => {
     const freeFeatures = Array.isArray(freeFeaturesRaw) && freeFeaturesRaw.length > 0 ? freeFeaturesRaw : FREE_FEATURES_FALLBACK;
     const proFeaturesRaw = t('pricing.card_pro_features', { returnObjects: true, defaultValue: PRO_FEATURES_FALLBACK });
     const proFeatures = Array.isArray(proFeaturesRaw) && proFeaturesRaw.length > 0 ? proFeaturesRaw : PRO_FEATURES_FALLBACK;
+
+    const handleFreeClick = () => {
+        if (!isLoggedIn) {
+            navigate('/auth');
+        }
+    };
+    const handleProClick = () => {
+        if (!isLoggedIn) {
+            navigate('/auth');
+        } else if (!isPremium) {
+            window.location.href = '/market';
+        }
+    };
 
     return (
         <section id="pricing" className="section bg-base py-32">
@@ -159,6 +172,7 @@ const Pricing = ({ user }) => {
                             buttonText={isLoggedIn && !isPremium
                                 ? t('pricing.btn_current_plan', 'Tuo Piano')
                                 : t('pricing.btn_start', 'Inizia Ora')}
+                            onButtonClick={handleFreeClick}
                         />
                     </motion.div>
 
@@ -178,6 +192,7 @@ const Pricing = ({ user }) => {
                             buttonText={isLoggedIn && isPremium
                                 ? t('pricing.btn_current_plan', 'Tuo Piano')
                                 : t('pricing.btn_upgrade_pro', 'Passa a Pro')}
+                            onButtonClick={handleProClick}
                         />
                     </motion.div>
                     <motion.div

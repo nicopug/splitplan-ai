@@ -331,9 +331,10 @@ const PricingBusiness = () => {
                                 className={cn(
                                     "w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all flex items-center justify-center gap-2",
                                     plan.highlight
-                                        ? "bg-[var(--accent-primary)] text-white hover:opacity-90"
+                                        ? "text-white hover:opacity-90"
                                         : "border border-[var(--border-medium)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
                                 )}
+                                style={plan.highlight ? { backgroundColor: '#0066ff' } : undefined}
                             >
                                 {plan.id === 'enterprise' ? 'Contattaci' : 'Richiedi Demo'}
                                 <ArrowRight className="w-3.5 h-3.5" />
@@ -422,7 +423,8 @@ const PricingBusiness = () => {
                     </p>
                     <button
                         onClick={() => navigate('/demo')}
-                        className="inline-flex items-center gap-2 bg-[var(--accent-primary)] text-white px-8 py-3.5 text-[10px] font-black uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
+                        className="inline-flex items-center gap-2 text-white px-8 py-3.5 text-[10px] font-black uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
+                        style={{ backgroundColor: '#0066ff' }}
                     >
                         Inizia il Pilot Gratuito
                         <ArrowRight className="w-3.5 h-3.5" />

@@ -91,7 +91,8 @@ const Business = () => {
                                 transition={{ delay: 0.3 }}
                                 className="flex flex-wrap gap-4"
                             >
-                                <Button 
+                                <Button
+                                    variant="accent"
                                     onClick={() => navigate('/demo')}
                                     className="h-14 px-8 text-xs font-black tracking-[0.2em] uppercase group"
                                 >

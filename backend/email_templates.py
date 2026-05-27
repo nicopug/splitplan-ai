@@ -535,6 +535,52 @@ def company_invite_email(company_name: str, invite_url: str) -> str:
     return base_template(content)
 
 
+def b2b_manager_welcome_email(company_name: str, register_url: str) -> str:
+    """Email al referente B2B dopo l'approvazione: crea l'account per diventare manager."""
+    content = f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background-color: #f0f7ff; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 16px;">
+                &#127881;
+            </div>
+            <h2 style="margin: 0; color: #1a1a1a; font-size: 22px; font-weight: 800;">
+                Il tuo spazio aziendale è pronto!
+            </h2>
+        </div>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+            Abbiamo attivato <strong style="color: #23599E;">{company_name}</strong> su SplitPlan Business.
+        </p>
+        <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 28px 0;">
+            Crea il tuo account con <strong>questo stesso indirizzo email</strong>: diventerai automaticamente
+            il manager dell'azienda, con accesso alla dashboard, alle approvazioni trasferte e ai report spese.
+        </p>
+
+        <div style="background-color: #f0f7ff; border-radius: 12px; padding: 18px 20px; margin-bottom: 28px; border: 1px solid #d0e7ff; text-align: center;">
+            <p style="color: #23599E; font-size: 14px; font-weight: 700; margin: 0;">
+                &#127970; Azienda: <strong>{company_name}</strong>
+            </p>
+        </div>
+
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{register_url}"
+               style="display: inline-block; background: linear-gradient(135deg, #23599E, #1a6fd1); color: #ffffff; padding: 16px 48px;
+                      text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px;
+                      letter-spacing: 0.5px; text-transform: uppercase;
+                      box-shadow: 0 4px 15px rgba(35, 89, 158, 0.35);">
+                Crea il tuo account
+            </a>
+        </div>
+
+        <div style="border-top: 1px solid #eef1f5; margin: 30px 0;"></div>
+        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
+            Importante: usa esattamente l'indirizzo a cui hai ricevuto questa email, altrimenti l'account
+            non verrà collegato all'azienda. Se il pulsante non funziona, copia e incolla questo link:<br>
+            <a href="{register_url}" style="color: #23599E; text-decoration: underline;">{register_url}</a>
+        </p>
+    """
+    return base_template(content)
+
+
 def email_approval_requested(manager_name: str, trip_name: str, requester_name: str, manager_url: str) -> str:
     """Email al manager: dipendente ha richiesto approvazione trasferta."""
     content = f"""

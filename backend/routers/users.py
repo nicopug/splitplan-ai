@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlmodel import Session, select
 
 from admin_auth import verify_admin_token
@@ -27,7 +27,7 @@ from email_templates import (
     reset_password_email,
     verification_email,
 )
-from models import Account, Notification, Participant, RefreshToken, Trip
+from models import Account, Company, Notification, Participant, RefreshToken, Trip
 from services.redis_service import check_rate_limit
 from utils.email_utils import get_smtp_config
 
@@ -321,9 +321,31 @@ async def register(req: RegisterRequest, request: Request, session: Session = De
         terms_accepted=req.terms_accepted,
         privacy_accepted=req.privacy_accepted,
     )
+
+    # Onboarding B2B sales-led: se l'admin ha approvato un'azienda con questa
+    # email come "manager in attesa", colleghiamo subito l'account e lo
+    # promuoviamo a manager. (vedi POST /admin/approve-b2b)
+    pending_company = session.exec(
+        select(Company).where(
+            func.lower(Company.pending_manager_email) == req.email.strip().lower()
+        )
+    ).first()
+    if pending_company:
+        new_account.company_id = pending_company.id
+        new_account.is_manager = True
+
     session.add(new_account)
     session.commit()
     session.refresh(new_account)
+
+    if pending_company:
+        pending_company.pending_manager_email = None
+        session.add(pending_company)
+        session.commit()
+        logger.info(
+            f"[AUTH] {req.email} registrato e promosso a manager di "
+            f"'{pending_company.name}' (id={pending_company.id})."
+        )
 
     if smtp_user and smtp_password:
         try:

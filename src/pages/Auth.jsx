@@ -66,6 +66,17 @@ const Auth = ({ onLogin }) => {
         }
     }, [searchParams, navigate, onLogin]);
 
+    // Invito manager B2B: /auth?mode=register&email=... → apre la registrazione con email precompilata
+    useEffect(() => {
+        if (searchParams.get('mode') === 'register') {
+            setIsLogin(false);
+        }
+        const prefillEmail = searchParams.get('email');
+        if (prefillEmail) {
+            setFormData(prev => ({ ...prev, email: prefillEmail }));
+        }
+    }, [searchParams]);
+
     const handleGoogleLogin = (e) => {
         e.preventDefault();
         e.stopPropagation();

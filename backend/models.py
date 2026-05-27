@@ -24,6 +24,10 @@ class Company(SQLModel, table=True):
     stripe_customer_id: Optional[str] = Field(default=None)
     onboarded_at: Optional[datetime] = Field(default=None)
 
+    # Onboarding sales-led: email del manager invitato che non ha ancora un account.
+    # Quando quell'email si registra, viene promossa a manager di questa azienda.
+    pending_manager_email: Optional[str] = Field(default=None, index=True)
+
     accounts: List["Account"] = Relationship(back_populates="company")
 
 

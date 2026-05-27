@@ -177,7 +177,10 @@ function AdminDashboard({ adminToken, onLogout }) {
                 max_budget: form.max_budget ? parseFloat(form.max_budget) : null,
             };
             const res = await adminApproveB2B(adminToken, body);
-            setFormMsg({ type: 'ok', text: `✓ Azienda "${res.company_name}" creata (id=${res.company_id}). Manager: ${res.manager_email}` });
+            const msg = res.pending_manager
+                ? `✓ Azienda "${res.company_name}" creata (id=${res.company_id}). Invito inviato a ${res.manager_email}: diventerà manager appena si registra con questa email.`
+                : `✓ Azienda "${res.company_name}" creata (id=${res.company_id}). Manager: ${res.manager_email}`;
+            setFormMsg({ type: 'ok', text: msg });
             setForm({ account_email: '', company_name: '', max_budget: '' });
             fetchAll();
         } catch (err) {

@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 
@@ -11,7 +12,17 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
-    logger.info(f"Using PostgreSQL: {DATABASE_URL[:30]}...")
+    # Impronta della connection string, per capire se il valore configurato
+    # nell'ambiente e' quello atteso senza mai stamparne il contenuto.
+    # Un fallimento di autenticazione non distingue "password sbagliata" da
+    # "variabile con uno spazio in fondo" o "troncata": questi tre numeri si'.
+    logger.info(
+        "Using PostgreSQL: %s... (len=%d fp=%s pulita=%s)",
+        DATABASE_URL[:30],
+        len(DATABASE_URL),
+        hashlib.sha256(DATABASE_URL.encode()).hexdigest()[:8],
+        DATABASE_URL == DATABASE_URL.strip(),
+    )
 
     # Supabase Supavisor/pgbouncer (URL contiene "pooler"): usa transaction-mode pooling.
     # In questo caso SQLAlchemy non deve gestire il pool — ci pensa pgbouncer.

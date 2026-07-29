@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createCheckout, toggleSubscription, cancelSubscription } from '../api';
+import { createCheckout, cancelSubscription } from '../api';
 import { useToast } from '../context/ToastContext';
 import { Sparkles, Zap, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -211,7 +211,7 @@ const Market = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">€<span className="text-xs text-muted font-medium ml-1">/anno</span></div>
+                                    <div className="text-4xl font-black text-primary mb-8 tracking-tighter">76,99€<span className="text-xs text-muted font-medium ml-1">/anno</span></div>
                                     <button
                                         onClick={() => handleCheckout('sub_annual')}
                                         disabled={loading}

@@ -20,6 +20,7 @@ const Terms     = lazy(() => import('./pages/Terms'));
 const TermsIt   = lazy(() => import('./pages/TermsIt'));
 import { useToast } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import RequireAuth from './components/RequireAuth';
 import ApiErrorBanner from './components/ApiErrorBanner';
 import { Toaster } from 'sonner';
 import CookieBanner, { getCookieConsent } from './components/CookieBanner';
@@ -163,12 +164,14 @@ function App() {
                 <Route path="/auth" element={<Auth onLogin={(u) => setUser(u)} />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify" element={<Auth onLogin={(u) => setUser(u)} />} />
-                <Route path="/trip/:id" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+                <Route path="/trip/:id" element={<RequireAuth><ErrorBoundary><Dashboard /></ErrorBoundary></RequireAuth>} />
                 <Route path="/calendar-callback" element={<CalendarCallback />} />
-                <Route path="/my-trips" element={<ErrorBoundary><MyTrips /></ErrorBoundary>} />
+                <Route path="/my-trips" element={<RequireAuth><ErrorBoundary><MyTrips /></ErrorBoundary></RequireAuth>} />
+                {/* /share e /trip/join restano pubblici: sono i link di condivisione
+                    per gli ospiti non registrati */}
                 <Route path="/trip/join/:token" element={<ShareTrip isJoinMode={true} />} />
                 <Route path="/share/:token" element={<ShareTrip />} />
-                <Route path="/market" element={<Market />} />
+                <Route path="/market" element={<RequireAuth><Market /></RequireAuth>} />
                 <Route path="/checkout-success" element={<CheckoutSuccess onUserUpdate={(u) => {
                   const stored = JSON.parse(localStorage.getItem('user') || '{}');
                   const newUser = { ...stored, ...u };
@@ -177,7 +180,7 @@ function App() {
                 }} />} />
                 <Route path="/roi" element={<ROICalculator />} />
                 <Route path="/demo" element={<DemoRequest />} />
-                <Route path="/manager" element={<ErrorBoundary><CompanyDashboard /></ErrorBoundary>} />
+                <Route path="/manager" element={<RequireAuth><ErrorBoundary><CompanyDashboard /></ErrorBoundary></RequireAuth>} />
                 <Route path="/join" element={<ErrorBoundary><JoinCompany /></ErrorBoundary>} />
                 <Route path="/system-override" element={<ErrorBoundary><SuperAdmin /></ErrorBoundary>} />
                 <Route path="/pricing-business" element={<PricingBusiness />} />

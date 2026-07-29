@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { register, login, verifyEmail, toggleSubscription, forgotPassword, API_URL } from '../api';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { register, login, verifyEmail, createCheckout, forgotPassword, API_URL } from '../api';
 import { Button } from '../components/ui/button';
 import { useTheme } from '../context/ThemeContext';
 
@@ -25,12 +25,24 @@ const Auth = ({ onLogin }) => {
 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const location = useLocation();
     const { theme } = useTheme();
+
+    // Destinazione impostata da RequireAuth o da ShareTrip (link di invito).
+    // Prima non veniva mai letta: chi si registrava da un link condiviso finiva
+    // sulla home senza unirsi al viaggio e doveva ricliccare il link.
+    const redirectTo = location.state?.redirectTo || '/';
+    const stateMessage = location.state?.message;
 
     useEffect(() => {
         document.title = 'Accedi — SplitPlan AI';
         return () => { document.title = 'SplitPlan AI'; };
     }, []);
+
+    // Messaggio contestuale di chi ci ha mandati qui (es. "Accedi per unirti al viaggio")
+    useEffect(() => {
+        if (stateMessage) setMessage(stateMessage);
+    }, [stateMessage]);
 
     // ----------------------------------------------------------------
     // GESTIONE OAUTH2 (GOOGLE)
@@ -57,14 +69,14 @@ const Auth = ({ onLogin }) => {
                     if (onLogin) onLogin(userData);
 
                     // 4. Reindirizza pulendo l'URL dal token
-                    navigate('/', { replace: true });
+                    navigate(redirectTo, { replace: true });
                 })
                 .catch(err => {
                     setError("Errore durante l'autenticazione con Google.");
                     setLoading(false);
                 });
         }
-    }, [searchParams, navigate, onLogin]);
+    }, [searchParams, navigate, onLogin, redirectTo]);
 
     // Invito manager B2B: /auth?mode=register&email=... → apre la registrazione con email precompilata
     useEffect(() => {
@@ -125,14 +137,14 @@ const Auth = ({ onLogin }) => {
 
     const handlePlanChoice = async (planType) => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
             if (planType) {
-                const res = await toggleSubscription(planType);
-                user.is_subscribed = res.is_subscribed;
-                user.subscription_plan = res.subscription_plan;
-                localStorage.setItem('user', JSON.stringify(user));
+                // I piani a pagamento passano da Stripe Checkout: createCheckout
+                // reindirizza a Stripe e l'abbonamento viene attivato dal webhook
+                // dopo il pagamento verificato.
+                await createCheckout(planType === 'ANNUAL' ? 'sub_annual' : 'sub_monthly');
+                return;
             }
-            navigate('/');
+            navigate(redirectTo);
             setTimeout(() => window.location.reload(), 100);
         } catch (err) {
             setError("Errore durante l'attivazione: " + err.message);
@@ -172,7 +184,7 @@ const Auth = ({ onLogin }) => {
                     localStorage.removeItem('pending_plan_selection');
                     setShowPlanSelection(true);
                 } else {
-                    navigate('/');
+                    navigate(redirectTo);
                     setTimeout(() => window.location.reload(), 100);
                 }
             } else {
@@ -261,7 +273,7 @@ const Auth = ({ onLogin }) => {
                         {/* Pro Annual */}
                         <div className="premium-card flex flex-col bg-[#050505] border-white/5 hover:border-white/20 p-10 transition-all duration-500 shadow-2xl group">
                             <div className="flex-1">
-                                <span className="subtle-heading text-emerald-500 group-hover:text-emerald-400 transition-colors">SAVE 50%</span>
+                                <span className="subtle-heading text-emerald-500 group-hover:text-emerald-400 transition-colors">RISPARMIA 20%</span>
                                 <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro Annuale</h3>
                                 <div className="text-5xl font-black text-white mb-8 tracking-tighter">€76.99<span className="text-sm text-white/30 font-bold ml-1">/anno</span></div>
                                 <p className="text-sm text-white/50 mb-10 leading-relaxed font-medium">Il miglior valore per veri esploratori che viaggiano spesso.</p>

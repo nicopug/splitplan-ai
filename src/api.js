@@ -29,13 +29,48 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 export { API_URL };
 
+// Endpoint di autenticazione: un 401 qui significa "credenziali sbagliate",
+// non "sessione scaduta". Non vanno mai sottoposti a refresh/retry, altrimenti
+// una password errata cancella la sessione valida di un altro account e mostra
+// "Sessione scaduta" al posto di "Email o password non corretti".
+const AUTH_ENDPOINTS = [
+    '/users/login',
+    '/users/register',
+    '/users/refresh',
+    '/users/forgot-password',
+    '/users/reset-password',
+    '/users/verify-email',
+    '/users/validate-reset-token',
+    // Il pannello admin si autentica con X-Admin-Token, non con il JWT utente:
+    // un suo 401 non ha nulla a che vedere con la sessione.
+    '/admin/',
+];
+
+const _isAuthEndpoint = (url) => AUTH_ENDPOINTS.some(p => String(url).includes(p));
+
+// Riscrive l'header Authorization con il token appena rinnovato.
+const _withFreshToken = (options = {}) => {
+    const token = localStorage.getItem('token');
+    if (!token || !options.headers) return options;
+    return { ...options, headers: { ...options.headers, Authorization: `Bearer ${token}` } };
+};
+
 // Wrapper attorno a fetch: intercetta i TypeError (rete irraggiungibile) e
 // li notifica via CustomEvent in modo che l'UI possa mostrare un banner critico.
-const safeApiFetch = async (url, options) => {
+// Su 401 rinnova il token e ripete la richiesta una sola volta, in modo che la
+// scadenza del token sia trasparente per l'utente.
+const safeApiFetch = async (url, options, _isRetry = false) => {
     try {
         const response = await fetch(url, options);
         // Segnala che la rete è tornata disponibile (in caso era caduta)
         window.dispatchEvent(new CustomEvent('splitplan:api-recovered'));
+
+        if (response.status === 401 && !_isRetry && !_isAuthEndpoint(url)) {
+            const refreshed = await _tryRefresh();
+            if (refreshed) {
+                return safeApiFetch(url, _withFreshToken(options), true);
+            }
+        }
         return response;
     } catch (err) {
         if (err instanceof TypeError) {
@@ -43,6 +78,19 @@ const safeApiFetch = async (url, options) => {
         }
         throw err;
     }
+};
+
+// Rimuove OGNI traccia locale dell'utente. Non basta togliere token e user:
+// getTrip/getItinerary scrivono `cached_trip_*` e `cached_itinerary_*` in
+// localStorage e li riusano come fallback offline, quindi su un dispositivo
+// condiviso l'utente successivo poteva vedere i viaggi del precedente.
+export const clearLocalSession = () => {
+    const prefissi = ['cached_', 'splitplan_', 'pending_'];
+    Object.keys(localStorage)
+        .filter(k => prefissi.some(p => k.startsWith(p)))
+        .forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 };
 
 const getAuthHeaders = () => {
@@ -61,20 +109,35 @@ const getAuthHeadersMultipart = () => {
 // Tenta di rinnovare il token silenziosamente. Restituisce true se riuscito.
 // Il refresh token vive in un cookie HttpOnly (P0-5): JS non lo legge mai,
 // il browser lo allega automaticamente grazie a `credentials: 'include'`.
-const _tryRefresh = async () => {
-    try {
-        const res = await fetch(`${API_URL}/users/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        });
-        if (!res.ok) return false;
-        const data = await res.json();
-        localStorage.setItem('token', data.access_token);
-        return true;
-    } catch {
-        return false;
-    }
+// Single-flight: il backend ruota i refresh token con anti-replay, quindi due
+// refresh concorrenti con lo stesso cookie vengono letti come furto di token e
+// fanno revocare TUTTE le sessioni dell'utente. La Dashboard lancia piu' chiamate
+// in parallelo, per cui alla scadenza del token partivano 3-4 refresh insieme e
+// l'utente veniva disconnesso da ogni dispositivo. Qui la richiesta di rinnovo
+// e' una sola, condivisa da tutti i chiamanti in attesa.
+let _refreshPromise = null;
+
+const _tryRefresh = () => {
+    if (_refreshPromise) return _refreshPromise;
+
+    _refreshPromise = (async () => {
+        try {
+            const res = await fetch(`${API_URL}/users/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+            if (!res.ok) return false;
+            const data = await res.json();
+            localStorage.setItem('token', data.access_token);
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+
+    _refreshPromise.finally(() => { _refreshPromise = null; });
+    return _refreshPromise;
 };
 
 // Gestione errori migliorata
@@ -97,13 +160,12 @@ const handleResponse = async (response) => {
 
         // Trigger notifiche toast globali basate sullo status
         if (response.status === 401) {
-            // Prova a rinnovare silenziosamente
-            const refreshed = await _tryRefresh();
-            if (refreshed) {
-                toast.info("Sessione rinnovata. Riprova l'operazione.");
+            // safeApiFetch ha gia' tentato refresh + retry: se siamo qui il
+            // rinnovo e' fallito davvero, oppure e' un errore di credenziali.
+            if (_isAuthEndpoint(response.url)) {
+                toast.error(errorMessage);
             } else {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                clearLocalSession();
                 toast.error("Sessione scaduta. Effettua nuovamente il login.");
             }
         } else if (response.status === 403) {
@@ -661,8 +723,7 @@ export const logout = async () => {
     } catch (_) {
         // Fail-silent: il frontend pulisce comunque lo stato locale.
     }
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearLocalSession();
 };
 
 export const verifyEmail = async (token) => {
@@ -670,14 +731,9 @@ export const verifyEmail = async (token) => {
     return handleResponse(response);
 };
 
-export const toggleSubscription = async (plan = null) => {
-    const response = await safeApiFetch(`${API_URL}/users/toggle-subscription`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ plan }),
-    });
-    return handleResponse(response);
-};
+// toggleSubscription() rimossa: l'endpoint backend /users/toggle-subscription
+// attivava Pro senza pagamento. Per abbonarsi usare createCheckout('sub_monthly'
+// | 'sub_annual'), che passa da Stripe Checkout.
 
 export const cancelSubscription = async () => {
     const response = await safeApiFetch(`${API_URL}/users/cancel-subscription`, {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { register, login, verifyEmail, createCheckout, forgotPassword, API_URL } from '../api';
 import { Button } from '../components/ui/button';
@@ -24,7 +24,7 @@ const Auth = ({ onLogin }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     const { theme } = useTheme();
 
@@ -45,10 +45,41 @@ const Auth = ({ onLogin }) => {
     }, [stateMessage]);
 
     // ----------------------------------------------------------------
-    // GESTIONE OAUTH2 (GOOGLE)
+    // TOKEN NELL'URL
+    //
+    // Due flussi diversi arrivano qui con ?token=, e vanno distinti dal path:
+    //   /verify?token=...  link di conferma inviato per email (type="verification")
+    //   /auth?token=...    ritorno da Google SSO (access token vero e proprio)
+    //
+    // Prima venivano trattati allo stesso modo: il token di verifica finiva in
+    // localStorage e veniva usato su /users/me, ma auth.py rifiuta i token di
+    // tipo "verification" -> 401 -> l'utente vedeva "Errore durante
+    // l'autenticazione con Google" su una pagina aperta dalla mail di conferma,
+    // restava is_verified=False e il login gli rispondeva per sempre
+    // "Profilo non verificato".
     // ----------------------------------------------------------------
+    const handleVerification = useCallback(async (verifyToken) => {
+        try {
+            setLoading(true);
+            const res = await verifyEmail(verifyToken);
+            setMessage(res.message);
+            setIsLogin(true);
+            // Toglie il token dall'URL (e dalla cronologia) lasciando la pagina montata
+            setSearchParams({}, { replace: true });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [setSearchParams]);
+
     useEffect(() => {
         const urlToken = searchParams.get('token');
+
+        if (urlToken && location.pathname === '/verify') {
+            handleVerification(urlToken);
+            return;
+        }
 
         if (urlToken) {
             setLoading(true);
@@ -71,12 +102,12 @@ const Auth = ({ onLogin }) => {
                     // 4. Reindirizza pulendo l'URL dal token
                     navigate(redirectTo, { replace: true });
                 })
-                .catch(err => {
+                .catch(() => {
                     setError("Errore durante l'autenticazione con Google.");
                     setLoading(false);
                 });
         }
-    }, [searchParams, navigate, onLogin, redirectTo]);
+    }, [searchParams, navigate, onLogin, redirectTo, location.pathname, handleVerification]);
 
     // Invito manager B2B: /auth?mode=register&email=... → apre la registrazione con email precompilata
     useEffect(() => {
@@ -95,19 +126,6 @@ const Auth = ({ onLogin }) => {
         window.location.href = `${API_URL}/auth/google/login`;
     };
     // ----------------------------------------------------------------
-
-    const handleVerification = async (verifyToken) => {
-        try {
-            setLoading(true);
-            const res = await verifyEmail(verifyToken);
-            setMessage(res.message);
-            setIsLogin(true);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const validatePassword = (pass) => {
         let score = 0;

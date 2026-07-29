@@ -55,6 +55,18 @@ const Dashboard = () => {
 
     const isBusiness = trip?.trip_intent === 'BUSINESS';
 
+    // Rispecchia require_premium() del backend (trips/__init__.py:305), che concede
+    // l'accesso a chi ha una company o a un viaggio BUSINESS. Il frontend era piu'
+    // restrittivo e mostrava il paywall "Passa a Pro" ai dipendenti aziendali su
+    // spese, chat AI e calendario: cioe' proprio a chi il piano lo sta gia' pagando.
+    const hasPremiumAccess = Boolean(
+        user?.company_id || isBusiness || user?.is_subscribed || trip?.is_premium
+    );
+
+    // La logistica delle trasferte resta bloccata finche' il manager non approva:
+    // e' un vincolo di processo, non un paywall, e va mantenuto.
+    const canUseLogistics = isBusiness ? trip?.status === 'APPROVED' : hasPremiumAccess;
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -506,14 +518,14 @@ const Dashboard = () => {
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {(user?.is_subscribed || trip.is_premium || (isBusiness && trip.status === 'APPROVED')) && !trip.accommodation && (
+                                                    {canUseLogistics && !trip.accommodation && (
                                                         <Suspense fallback={<ComponentLoader />}><Logistics trip={trip} onPrefill={setPrefillData} /></Suspense>
                                                     )}
                                                     {!trip.accommodation && (
                                                         isOrganizer ? (
                                                             <div id="hotel-confirmation-form">
                                                                 <Suspense fallback={<ComponentLoader />}>
-                                                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} setIsGenerating={setIsGenerating} setProgress={setItineraryProgress} isPremium={user?.is_subscribed || trip.is_premium || (isBusiness && trip.status === 'APPROVED')} prefillData={prefillData} />
+                                                                    <HotelConfirmation trip={trip} onConfirm={fetchTrip} setIsGenerating={setIsGenerating} setProgress={setItineraryProgress} isPremium={canUseLogistics} prefillData={prefillData} />
                                                                 </Suspense>
                                                             </div>
                                                         ) : (
@@ -544,7 +556,7 @@ const Dashboard = () => {
                                                                     <h2 className="text-3xl font-semibold tracking-tight uppercase">Il tuo Itinerario</h2>
                                                                     <div className="flex items-center gap-2 flex-wrap">
                                                                         <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-9 gap-2 px-4"><FileDown className="w-3.5 h-3.5" /><span className="text-[10px] font-bold uppercase tracking-widest">PDF</span></Button>
-                                                                        {(user?.is_subscribed || trip.is_premium) && (
+                                                                        {hasPremiumAccess && (
                                                                             <Button variant={isCalendarConnected ? "secondary" : "outline"} size="sm" onClick={handleConnectCalendar} className="h-9 gap-2 px-4"><CalendarDays className={cn("w-3.5 h-3.5", isCalendarConnected && "text-emerald-500")} /><span className="text-[10px] font-bold uppercase tracking-widest">{isCalendarConnected ? 'Calendar' : 'Collega'}</span></Button>
                                                                         )}
                                                                         {isOrganizer && <Button variant="outline" size="sm" onClick={handleResetHotel} className="h-9 px-4"><span className="text-[10px] font-bold uppercase tracking-widest">Logistica</span></Button>}
@@ -553,7 +565,7 @@ const Dashboard = () => {
                                                                 <Suspense fallback={<ComponentLoader />}><Timeline items={itinerary} /></Suspense>
                                                             </div>
                                                             <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
-                                                                <Suspense fallback={<ComponentLoader />}><ItineraryMap items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={user?.is_subscribed || trip.is_premium} routePolyline={routePolyline} /></Suspense>
+                                                                <Suspense fallback={<ComponentLoader />}><ItineraryMap items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={hasPremiumAccess} routePolyline={routePolyline} /></Suspense>
                                                             </div>
                                                         </div>
                                                     )}
@@ -566,7 +578,7 @@ const Dashboard = () => {
                         </motion.div>
                     )}
 
-                    {user && user.is_subscribed && (trip.status === 'BOOKED' || trip.status === 'APPROVED') && (
+                    {user && hasPremiumAccess && (trip.status === 'BOOKED' || trip.status === 'APPROVED') && (
                         <button onClick={() => setIsChatOpen(true)} className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-base rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100] group overflow-hidden"><div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" /><Sparkles className="w-6 h-6 relative z-10" /></button>
                     )}
 
@@ -589,7 +601,7 @@ const Dashboard = () => {
                         <div className="flex justify-center w-full">
                             {!user ? (
                                 <div className="container mt-8"><div className="premium-card bg-[var(--bg-card)] border border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-lg)]"><div className="text-5xl mb-6">💰</div><h2 className="text-2xl font-semibold mb-3 uppercase tracking-tight">Budget</h2><p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10">Accedi per gestire le tue spese in modo professionale.</p><div className="flex justify-center gap-4"><Button onClick={() => navigate('/auth')}>Registrati Gratis</Button><Button variant="outline" onClick={() => navigate('/auth')}>Accedi</Button></div></div></div>
-                            ) : user?.is_subscribed ? (
+                            ) : hasPremiumAccess ? (
                                 <Suspense fallback={<ComponentLoader />}><Budget trip={trip} onUpdate={fetchTrip} /></Suspense>
                             ) : (
                                 <div className="container mt-8"><div className="premium-card bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-medium)] p-12 text-center shadow-[var(--shadow-md)]"><div className="text-5xl mb-6">✨</div><h2 className="text-2xl font-semibold mb-3 uppercase tracking-tight">Budget Premium</h2><p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-10 leading-relaxed">Passa a Pro per monitorare budget e risparmi in tempo reale.</p><Button onClick={() => navigate('/auth')}>Scopri Premium</Button></div></div>

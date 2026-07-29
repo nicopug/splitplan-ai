@@ -1561,6 +1561,14 @@ async def generate_proposals(
         trip.work_days = prefs.work_days
         trip.office_address = prefs.office_address
 
+        # Il viaggio diventa BUSINESS qui, non alla creazione: il frontend crea
+        # il trip con solo nome e tipo, e l'intent arriva dal survey. Senza
+        # questa riga company_id restava NULL su TUTTE le trasferte, e le query
+        # aziendali che filtrano su Trip.company_id (export contabile, analytics,
+        # corsia di lettura del manager) non trovavano mai niente.
+        if trip.trip_intent == "BUSINESS" and current_account.company_id:
+            trip.company_id = current_account.company_id
+
         if prefs.transport_mode:
             trip.transport_mode = prefs.transport_mode
 

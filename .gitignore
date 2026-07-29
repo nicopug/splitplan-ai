@@ -29,8 +29,15 @@ ALGORITMO_ITINERARI.txt
 CONTESTO.md
 FULL-AUDIT-REPORT.md
 
+# Screenshot di lavoro: spesso contengono credenziali (variabili d'ambiente,
+# dashboard). Il repo e' pubblico, quindi vanno tenuti fuori per sicurezza.
+image.png
+screenshot*.png
+Screenshot*.png
+
 # Personal working docs (fundraising, audit, asset privati)
 risposte.txt
+STRATEGIC_GTM_REPORT.md
 framework_richieste_vc.pdf
 visione_futura.png
 struttura_root.txt

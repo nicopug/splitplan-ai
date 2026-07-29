@@ -31,9 +31,10 @@ FULL-AUDIT-REPORT.md
 
 # Screenshot di lavoro: spesso contengono credenziali (variabili d'ambiente,
 # dashboard). Il repo e' pubblico, quindi vanno tenuti fuori per sicurezza.
-image.png
-screenshot*.png
-Screenshot*.png
+# Solo nella root: src/pages/images/image.png e' un asset vero del progetto
+/image.png
+/screenshot*.png
+/Screenshot*.png
 
 # Personal working docs (fundraising, audit, asset privati)
 risposte.txt

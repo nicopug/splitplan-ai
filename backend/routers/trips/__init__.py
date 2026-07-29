@@ -302,6 +302,31 @@ def check_rate_limit(account: Account, session: Session):
         )
 
 
+def auto_approva_se_manager(trip: Trip, account: Account) -> bool:
+    """Approva la trasferta se a organizzarla e' il manager stesso.
+
+    Il workflow di approvazione esiste perche' un dipendente non decida da solo
+    su budget e policy. Quando la trasferta la crea il manager dell'azienda,
+    quel controllo non ha senso: gli veniva chiesto di inviare una richiesta a
+    se stesso, e finche' non la approvava il flusso restava bloccato.
+    """
+    if trip.trip_intent != "BUSINESS":
+        return False
+    if not account.is_manager or not account.company_id:
+        return False
+    if trip.company_id and trip.company_id != account.company_id:
+        return False
+
+    trip.status = "APPROVED"
+    trip.approved_by = account.id
+    trip.approval_requested_at = datetime.now(timezone.utc)
+    logger.info(
+        f"Trip {trip.id} approvato automaticamente: l'organizzatore {account.id} "
+        f"e' manager della company {account.company_id}"
+    )
+    return True
+
+
 def require_premium(account: Account, trip: Trip):
     """Solleva un 403 se l'utente non è abbonato e il viaggio non è sbloccato.
     Gli utenti aziendali (company_id impostato) o i viaggi BUSINESS bypassano il check."""
@@ -1723,6 +1748,7 @@ async def generate_proposals(
                     # Assicuriamoci che la destinazione del viaggio coincida con la proposta scelta
                     trip.destination = new_proposals[0].real_destination or new_proposals[0].destination
                     trip.destination_iata = new_proposals[0].destination_iata
+                    auto_approva_se_manager(trip, current_account)
                 else:
                     trip.status = "VOTING"
 
@@ -1817,6 +1843,7 @@ async def generate_proposals(
             if final_props:
                 trip.winning_proposal_id = final_props[0].id
                 trip.destination = final_props[0].real_destination or final_props[0].destination
+            auto_approva_se_manager(trip, current_account)
         else:
             trip.status = "VOTING"
 

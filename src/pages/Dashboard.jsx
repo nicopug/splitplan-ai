@@ -407,7 +407,16 @@ const Dashboard = () => {
                     )}
 
                     {/* B2B APPROVAL WORKFLOW BANNER — nascosto quando itinerario già generato */}
-                    {trip.trip_intent === 'BUSINESS' && !(trip.accommodation && itinerary && itinerary.length > 0) && (
+                    {/* Il riquadro dell'approvazione ha senso solo se un'approvazione
+                        serve davvero. A un manager che organizza la propria trasferta
+                        veniva chiesto di mandare una richiesta a se stesso, e finche'
+                        non la accettava il flusso restava fermo: ora quelle trasferte
+                        nascono gia' approvate e il riquadro sparisce. Resta visibile
+                        quando c'e' un rifiuto da spiegare. */}
+                    {trip.trip_intent === 'BUSINESS'
+                        && !(trip.accommodation && itinerary && itinerary.length > 0)
+                        && !(user?.is_manager && trip.status === 'APPROVED')
+                        && (
                         <div className="container mt-6">
                             <div className={cn(
                                 "p-6 rounded-sm border flex flex-col md:flex-row items-start justify-between gap-6 transition-all",
@@ -540,7 +549,7 @@ const Dashboard = () => {
                                             ) : (
                                                 <>
                                                     {canUseLogistics && !trip.accommodation && (
-                                                        <Suspense fallback={<ComponentLoader />}><Logistics trip={trip} onPrefill={setPrefillData} /></Suspense>
+                                                        <Suspense fallback={<ComponentLoader />}><Logistics trip={trip} /></Suspense>
                                                     )}
                                                     {!trip.accommodation && (
                                                         isOrganizer ? (

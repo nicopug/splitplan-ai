@@ -1,31 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { searchStation, generateTrainlineURL } from '../utils/trainline';
-import { searchRealFlights } from '../api';
 import { Button } from './ui/button';
-import { Plane, Train, Car, Home, Sparkles, CheckCircle, ExternalLink, ChevronDown, ChevronUp, Clock, Users } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plane, Train, Car, Home, ExternalLink } from 'lucide-react';
 
-const Logistics = ({ trip, onPrefill }) => {
+const Logistics = ({ trip }) => {
     const { t } = useTranslation();
     const [trainUrl, setTrainUrl] = useState("https://www.thetrainline.com/it");
 
-    // State per voli Duffel inline
-    const [flightResults, setFlightResults] = useState([]);
-    const [isLoadingFlights, setIsLoadingFlights] = useState(false);
-    const [flightsSearched, setFlightsSearched] = useState(false);
-
-    // State per hotel modal (IA)
-
     const origin = trip.departure_airport || trip.departure_city || "Partenza";
-    const destName = trip.real_destination || trip.destination || t('logistics.destinationFallback', 'Destinazione');
-    const dest = trip.destination_iata || destName;
+    const destinazioneReale = trip.real_destination || trip.destination || '';
+    const haDestinazione = Boolean(destinazioneReale);
+    const destName = destinazioneReale || t('logistics.destinationFallback', 'Destinazione');
     const numPeople = trip.num_people || 1;
 
+    // Booking e Google Flights vogliono date in formato YYYY-MM-DD. Passando
+    // trip.start_date intero (che e' un ISO con orario, "2026-08-02T00:00:00")
+    // la data veniva ignorata e i siti proponevano un periodo a caso: chi
+    // cercava il 2-7 agosto si ritrovava con il 22-29.
+    const soloData = (valore) => (valore ? String(valore).split('T')[0] : '');
+    const checkin = soloData(trip.start_date);
+    const checkout = soloData(trip.end_date);
+
     const fallbackHotelLink = (() => {
-        try {
-            return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destName)}&checkin=${trip.start_date}&checkout=${trip.end_date}&group_adults=${numPeople}`;
-        } catch { return "#"; }
+        if (!haDestinazione) return '#';
+        const p = new URLSearchParams({ ss: destinazioneReale, group_adults: String(numPeople) });
+        if (checkin) p.set('checkin', checkin);
+        if (checkout) p.set('checkout', checkout);
+        return `https://www.booking.com/searchresults.html?${p.toString()}`;
+    })();
+
+    const linkVoli = (() => {
+        if (!haDestinazione) return '#';
+        const partenza = trip.departure_city || trip.departure_airport || '';
+        const query = [
+            'Voli',
+            partenza ? `da ${partenza}` : '',
+            `a ${destinazioneReale}`,
+            checkin ? `il ${checkin}` : '',
+            checkout ? `ritorno ${checkout}` : '',
+        ].filter(Boolean).join(' ');
+        return `https://www.google.com/travel/flights?q=${encodeURIComponent(query)}`;
     })();
 
     useEffect(() => {
@@ -52,46 +67,6 @@ const Logistics = ({ trip, onPrefill }) => {
             }
         }
     }, [trip]);
-
-    // ── Ricerca voli Duffel ──────────────────────────
-    const handleSearchFlights = async () => {
-        setIsLoadingFlights(true);
-        setFlightsSearched(true);
-        setFlightResults([]);
-        try {
-            const data = await searchRealFlights(trip.id);
-            if (data && data.options && data.options.length > 0) {
-                setFlightResults(data.options);
-            } else {
-                toast.error("Nessun volo trovato per questa tratta/date.");
-            }
-        } catch (e) {
-            toast.error(e.message || "Errore durante la ricerca voli.");
-        } finally {
-            setIsLoadingFlights(false);
-        }
-    };
-
-    // ── Selezione volo: prefill transport cost ───────
-    const handleSelectFlight = (option) => {
-        if (typeof onPrefill === 'function') {
-            onPrefill({
-                type: 'flight',
-                price: option.price,
-                provider: option.provider,
-                title: option.title,
-                details: option.details,
-                booking_url: option.booking_url
-            });
-            toast.success(`✅ Volo "${option.title}" copiato nel form!`);
-            setTimeout(() => {
-                const formSection = document.getElementById('hotel-confirmation-form');
-                if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 300);
-        } else {
-            toast.info(`Volo selezionato: ${option.title} — ${option.price}€`);
-        }
-    };
 
 
     return (
@@ -141,42 +116,23 @@ const Logistics = ({ trip, onPrefill }) => {
                                 </div>
                             </>
                         ) : (
-                            // ── VOLI ── box Duffel
+                            // La ricerca voli via Duffel e' stata rimossa: richiede un
+                            // account commerciale attivo, e senza codici IATA validi sul
+                            // viaggio rispondeva comunque con un errore. Come per gli
+                            // hotel, si rimanda a un motore di ricerca esterno finche'
+                            // l'integrazione non sara' attivabile davvero.
                             <>
-                                <div className="space-y-1">
-                                    <h3 className="text-primary text-2xl font-black uppercase tracking-tight flex items-center gap-2 justify-center flex-wrap">
-                                        Voli
-                                        <span className="text-[11px] font-bold normal-case bg-blue-500/10 text-blue-400 border border-blue-500/25 px-2 py-0.5 rounded-full tracking-normal">
-                                            Powered by Duffel
-                                        </span>
-                                    </h3>
-                                    <p className="text-muted text-sm leading-relaxed font-medium">
-                                        <strong className="text-primary">{origin}</strong>
-                                        <span className="mx-2 text-subtle">→</span>
-                                        <strong className="text-primary">{dest}</strong>
-                                        <span className="ml-2 inline-flex items-center gap-1 text-subtle">
-                                            <Users className="w-3.5 h-3.5" />{numPeople}
-                                        </span>
-                                    </p>
-                                </div>
-
+                                <h3 className="text-primary text-2xl font-black uppercase tracking-tight">Voli</h3>
+                                <p className="text-muted text-base leading-relaxed font-medium">
+                                    Cerca il volo da <strong className="text-primary">{origin}</strong> a <strong className="text-primary">{destName}</strong>, poi inserisci i dati qui sotto.
+                                </p>
                                 <Button
-                                    onClick={handleSearchFlights}
-                                    disabled={isLoadingFlights}
+                                    onClick={() => window.open(linkVoli, '_blank')}
+                                    disabled={!haDestinazione}
                                     fullWidth
-                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-none shadow-lg shadow-blue-500/20 disabled:opacity-60"
+                                    className="btn-magic disabled:opacity-50"
                                 >
-                                    {isLoadingFlights ? (
-                                        <>
-                                            <span className="w-4 h-4 mr-2 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />
-                                            Ricerca in corso...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Plane className="w-4 h-4 mr-2" />
-                                            {flightsSearched && flightResults.length > 0 ? 'Aggiorna Ricerca' : 'Cerca Voli'}
-                                        </>
-                                    )}
+                                    Cerca su Google Flights →
                                 </Button>
                             </>
                         )}
@@ -189,115 +145,20 @@ const Logistics = ({ trip, onPrefill }) => {
                         </div>
                         <h3 className="text-primary text-2xl font-black uppercase tracking-tight">Hotel & Alloggi</h3>
                         <p className="text-muted text-base leading-relaxed font-medium">
-                            Cerca dove dormire a <strong className="text-primary">{destName}</strong>, poi inserisci i dati qui sotto.
+                            {haDestinazione
+                                ? <>Cerca dove dormire a <strong className="text-primary">{destName}</strong>, poi inserisci i dati qui sotto.</>
+                                : <>Indica prima la destinazione del viaggio: senza, la ricerca partirebbe a vuoto.</>}
                         </p>
                         {/* La ricerca "con l'IA" e' stata rimossa: restituiva strutture e
                             prezzi inventati dal modello, non disponibilita' reali. Le
                             prenotazioni passeranno da Duffel Stays, come per i voli. */}
-                        <Button onClick={() => window.open(fallbackHotelLink, '_blank')} fullWidth className="btn-magic">
+                        <Button onClick={() => window.open(fallbackHotelLink, '_blank')} disabled={!haDestinazione} fullWidth className="btn-magic disabled:opacity-50">
                             Cerca su Booking.com →
                         </Button>
                     </div>
                 </div>
 
                 {/* ── RISULTATI VOLI DUFFEL (inline, full-width) ── */}
-                {flightsSearched && (
-                    <div className="w-full animate-fade-in">
-                        {/* Header risultati */}
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h3 className="text-primary text-xl font-black uppercase tracking-tight">
-                                    Risultati Voli
-                                    {!isLoadingFlights && flightResults.length > 0 && (
-                                        <span className="ml-2 text-sm font-medium text-blue-400 normal-case tracking-normal">
-                                            {flightResults.length} disponibili
-                                        </span>
-                                    )}
-                                </h3>
-                                <p className="text-muted text-sm mt-0.5">
-                                    Tariffe reali in tempo reale via Duffel · {origin} → {dest} · {numPeople} pax
-                                </p>
-                            </div>
-                            {!isLoadingFlights && flightResults.length > 0 && (
-                                <button
-                                    onClick={() => { setFlightsSearched(false); setFlightResults([]); }}
-                                    className="text-[10px] text-subtle hover:text-primary transition-colors uppercase font-black tracking-widest"
-                                >
-                                    Chiudi ×
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Loading skeleton */}
-                        {isLoadingFlights && (
-                            <div className="space-y-3">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-24 bg-surface border border-border-subtle rounded-lg animate-pulse" />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Nessun risultato */}
-                        {!isLoadingFlights && flightResults.length === 0 && (
-                            <div className="p-10 border border-border-subtle rounded-lg bg-surface text-center">
-                                <p className="text-muted text-sm">Nessun volo trovato per questa tratta. Verifica che i codici IATA siano corretti.</p>
-                            </div>
-                        )}
-
-                        {/* Lista voli */}
-                        {!isLoadingFlights && flightResults.length > 0 && (
-                            <div className="space-y-3">
-                                {flightResults.map((opt, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex items-center justify-between p-5 border border-border-medium rounded-xl bg-card hover:border-blue-500/40 hover:bg-blue-500/[0.03] transition-all duration-200 group/row"
-                                    >
-                                        {/* Left: airline + details */}
-                                        <div className="flex items-center gap-4 min-w-0">
-                                            {/* Airline icon placeholder */}
-                                            <div className="w-12 h-12 shrink-0 rounded-lg bg-surface border border-border-subtle flex items-center justify-center text-blue-400 group-hover/row:border-blue-500/30 transition-colors">
-                                                <Plane className="w-5 h-5" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-primary font-bold text-base truncate">{opt.title}</p>
-                                                <p className="text-muted text-xs mt-0.5 truncate">{opt.details}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Center: badge */}
-                                        <div className="hidden sm:flex items-center gap-2 mx-4">
-                                            <span className="text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-full whitespace-nowrap">
-                                                Duffel
-                                            </span>
-                                        </div>
-
-                                        {/* Right: price + CTA */}
-                                        <div className="flex items-center gap-4 shrink-0">
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 leading-none">
-                                                    {Number(opt.price).toFixed(2)}€
-                                                </p>
-                                                <p className="text-[10px] text-subtle uppercase tracking-wide mt-0.5">totale</p>
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleSelectFlight(opt)}
-                                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-none shadow-md shadow-blue-500/20 shrink-0"
-                                            >
-                                                Seleziona
-                                                <CheckCircle className="w-3.5 h-3.5 ml-1.5" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <p className="text-center text-[11px] text-subtle pt-2">
-                                    I dati sono forniti in tempo reale da Duffel. Seleziona un volo per pre-compilare il form di conferma.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
 
             {/* ── HOTEL MODAL (IA) ── */}

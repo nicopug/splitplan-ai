@@ -183,3 +183,57 @@ def test_export_contabile_del_manager_trova_la_trasferta(client, session: Sessio
         select(Trip).where(Trip.company_id == azienda.id, Trip.trip_intent == "BUSINESS")
     ).all()
     assert trip_id in [t.id for t in trovati]
+
+
+# --- Approvazione: il manager non chiede il permesso a se stesso -----------
+
+
+def test_auto_approvazione_del_manager():
+    """Una trasferta organizzata dal manager nasce gia' approvata."""
+    from routers.trips import auto_approva_se_manager
+
+    azienda_id = 7
+    trip = Trip(name="Trasferta del manager", trip_type="GROUP",
+                trip_intent="BUSINESS", company_id=azienda_id, status="BOOKED")
+    manager = Account(name="M", surname="R", email="m@x.it", hashed_password="x",
+                      is_manager=True, company_id=azienda_id)
+    manager.id = 42
+
+    assert auto_approva_se_manager(trip, manager) is True
+    assert trip.status == "APPROVED"
+    assert trip.approved_by == 42
+
+
+def test_dipendente_passa_comunque_dall_approvazione():
+    from routers.trips import auto_approva_se_manager
+
+    trip = Trip(name="Trasferta", trip_type="GROUP", trip_intent="BUSINESS",
+                company_id=7, status="BOOKED")
+    dipendente = Account(name="D", surname="R", email="d@x.it", hashed_password="x",
+                         is_manager=False, company_id=7)
+
+    assert auto_approva_se_manager(trip, dipendente) is False
+    assert trip.status == "BOOKED", "il dipendente non puo' auto-approvarsi"
+
+
+def test_manager_di_altra_azienda_non_approva():
+    from routers.trips import auto_approva_se_manager
+
+    trip = Trip(name="Trasferta", trip_type="GROUP", trip_intent="BUSINESS",
+                company_id=7, status="BOOKED")
+    estraneo = Account(name="X", surname="R", email="x@y.it", hashed_password="x",
+                       is_manager=True, company_id=99)
+
+    assert auto_approva_se_manager(trip, estraneo) is False
+    assert trip.status == "BOOKED"
+
+
+def test_viaggio_di_piacere_non_viene_toccato():
+    from routers.trips import auto_approva_se_manager
+
+    trip = Trip(name="Vacanza", trip_type="GROUP", trip_intent="LEISURE", status="VOTING")
+    manager = Account(name="M", surname="R", email="m2@x.it", hashed_password="x",
+                      is_manager=True, company_id=7)
+
+    assert auto_approva_se_manager(trip, manager) is False
+    assert trip.status == "VOTING"

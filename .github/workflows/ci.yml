@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push che ne segue un altro sullo stesso branch annulla il run precedente.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (build + audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build di produzione
+        run: npm run build
+        env:
+          # react-snap e' disattivato su Vercel tramite questa variabile:
+          # la impostiamo anche qui perche' in CI non c'e' un browser headless.
+          VERCEL: '1'
+
+      - name: Verifica che non tornino pagine pre-renderizzate in public/
+        # Gli snapshot committati in public/ vincono sul routing SPA e servono
+        # HTML che punta ad asset con hash ormai inesistenti: pagine bianche.
+        run: |
+          if ls -d public/demo public/privacy public/terms public/roi 2>/dev/null; then
+            echo "::error::Trovati snapshot pre-renderizzati in public/. Vanno generati al build, non committati."
+            exit 1
+          fi
+          echo "OK: nessuno snapshot statico in public/"
+
+      - name: Audit dipendenze di produzione
+        # Blocca solo sulle critiche: l'unica "high" residua riguarda la modalita'
+        # RSC di react-router, che questa SPA non usa, e il suo unico "fix"
+        # sarebbe un downgrade che reintroduce due open redirect.
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Lint (informativo)
+        run: npm run lint
+        continue-on-error: true
+
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r backend/requirements.txt
+
+      - name: Test
+        working-directory: backend
+        env:
+          # I test girano su SQLite in memoria (vedi tests/conftest.py).
+          # SECRET_KEY e' l'unica variabile richiesta all'import di auth.py.
+          SECRET_KEY: chiave-solo-per-la-ci
+        run: python -m pytest tests/ -q

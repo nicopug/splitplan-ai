@@ -41,12 +41,20 @@ def auth(account):
     return {"Authorization": f"Bearer {create_access_token({'sub': account.email})}"}
 
 
-def make_business_trip_with_participant(session, account, *, name="Biz Trip", start_year=2026, start_month=4):
-    """Crea un trip BUSINESS con start_date nel mese indicato e aggiunge l'account come organizzatore."""
+def make_business_trip_with_participant(session, account, *, name="Biz Trip", start_year=None, start_month=None):
+    """Crea un trip BUSINESS con start_date nel mese indicato e aggiunge l'account come organizzatore.
+
+    Di default usa il mese CORRENTE: check_company_limits conta solo i viaggi con
+    start_date nel mese in corso, quindi una data fissa faceva passare il test
+    solo finche' quel mese non era trascorso.
+    """
+    oggi = datetime.now(timezone.utc)
     trip = Trip(
         name=name, trip_type="BUSINESS", trip_intent="BUSINESS",
         destination="Roma", status="APPROVED",
-        start_date=datetime(start_year, start_month, 10, tzinfo=timezone.utc),
+        start_date=datetime(
+            start_year or oggi.year, start_month or oggi.month, 10, tzinfo=timezone.utc
+        ),
     )
     session.add(trip)
     session.commit()
@@ -86,7 +94,7 @@ def test_create_business_trip_over_limit_gets_429(client, session):
     res = client.post("/trips/", json={
         "name": "Trip 3 Blocked", "trip_type": "BUSINESS",
         "trip_intent": "BUSINESS", "destination": "Napoli",
-        "start_date": datetime(2026, 4, 15, tzinfo=timezone.utc).isoformat(),
+        "start_date": datetime.now(timezone.utc).replace(day=15).isoformat(),
     }, headers=auth(employee))
     assert res.status_code == 429
 

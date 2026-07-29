@@ -65,7 +65,9 @@ export default defineConfig({
     },
   },
   build: {
-    sourcemap: true,
+    // Le sourcemap non vanno pubblicate: rendevano scaricabile l'intero
+    // sorgente del frontend (commenti inclusi) da chiunque visitasse il sito.
+    sourcemap: false,
     target: 'es2019',
     rollupOptions: {
       output: {

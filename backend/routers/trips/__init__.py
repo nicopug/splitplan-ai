@@ -1430,10 +1430,37 @@ async def join_trip(
                 "trip_id": trip.id,
             }
 
-        raise HTTPException(
-            status_code=403,
-            detail=f"Non è stato trovato un partecipante che corrisponda al tuo nome ({current_account.name}) in questo viaggio. Assicurati che l'organizzatore ti abbia aggiunto con il nome corretto.",
+        # Nessun segnaposto con un nome compatibile: si entra comunque.
+        # Prima qui c'era un 403 e chi aveva il link restava fuori se
+        # l'organizzatore non aveva digitato il suo nome *esattamente* durante il
+        # survey. Per le trasferte aziendali significava che un collega non
+        # poteva proprio essere aggiunto, rendendo impossibile la trasferta di
+        # gruppo; per i viaggi fra amici era il punto in cui si perdeva l'invitato.
+        # Chi possiede il link di condivisione e' gia' autorizzato, e per i trip
+        # BUSINESS check_tenant_for_trip sopra ha gia' verificato l'azienda.
+        nuovo_partecipante = Participant(
+            name=f"{current_account.name} {current_account.surname}".strip(),
+            trip_id=trip.id,
+            account_id=current_account.id,
+            is_organizer=False,
         )
+        session.add(nuovo_partecipante)
+
+        # num_people guida la chiusura della votazione: va tenuto allineato ai
+        # partecipanti reali, altrimenti il consenso non si raggiunge mai.
+        conteggio = session.exec(
+            select(func.count(Participant.id)).where(Participant.trip_id == trip.id)
+        ).one()
+        if (trip.num_people or 0) < conteggio + 1:
+            trip.num_people = conteggio + 1
+            session.add(trip)
+
+        session.commit()
+        return {
+            "status": "success",
+            "message": f"Benvenuto a bordo, {current_account.name}!",
+            "trip_id": trip.id,
+        }
 
     except HTTPException:
         raise

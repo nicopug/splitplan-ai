@@ -120,6 +120,9 @@ const Hero = () => {
     const [showTypeSelection, setShowTypeSelection] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // L'opzione "trasferta di lavoro" ha senso solo per chi appartiene a un'azienda
+    const isCompanyMember = Boolean(user?.company_id);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser && storedUser !== 'undefined') {
@@ -139,18 +142,25 @@ const Hero = () => {
         }
     };
 
-    const handleCreateTrip = async (type) => {
+    const handleCreateTrip = async (type, intent = 'LEISURE') => {
         setShowTypeSelection(false);
-        const title = type === 'SOLO' ? t('hero.createSoloTitle') : t('hero.createGroupTitle');
-        const message = type === 'SOLO' ? t('hero.createSoloMessage') : t('hero.createGroupMessage');
-        const placeholder = type === 'SOLO' ? t('hero.createSoloPlaceholder') : t('hero.createGroupPlaceholder');
+        const isBusiness = intent === 'BUSINESS';
+        const title = isBusiness
+            ? t('hero.createBusinessTitle', 'Nuova Trasferta Aziendale')
+            : type === 'SOLO' ? t('hero.createSoloTitle') : t('hero.createGroupTitle');
+        const message = isBusiness
+            ? t('hero.createBusinessMessage', 'Come vuoi chiamare questa trasferta?')
+            : type === 'SOLO' ? t('hero.createSoloMessage') : t('hero.createGroupMessage');
+        const placeholder = isBusiness
+            ? t('hero.createBusinessPlaceholder', 'Es: Fiera di Bologna')
+            : type === 'SOLO' ? t('hero.createSoloPlaceholder') : t('hero.createGroupPlaceholder');
 
         const tripName = await showPrompt(title, message, placeholder);
         if (!tripName) return;
 
         setLoading(true);
         try {
-            const data = await createTrip({ name: tripName, trip_type: type });
+            const data = await createTrip({ name: tripName, trip_type: type, trip_intent: intent });
             showToast(t('hero.successMessage'), 'success');
             navigate(`/trip/${data.trip_id}`);
         } catch (error) {
@@ -273,6 +283,22 @@ const Hero = () => {
                                     <span className="font-bold text-sm uppercase tracking-widest text-primary">{t('hero.soloTitle')}</span>
                                 </button>
                             </div>
+
+                            {/* Solo per chi appartiene a un'azienda: crea direttamente una
+                                trasferta BUSINESS. Senza questa scelta il trip_intent non
+                                veniva mai inviato alla creazione e ogni trasferta nasceva
+                                come viaggio di piacere. */}
+                            {isCompanyMember && (
+                                <button
+                                    onClick={() => handleCreateTrip('GROUP', 'BUSINESS')}
+                                    className="w-full mt-6 flex items-center justify-center gap-4 p-6 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all rounded-2xl group"
+                                >
+                                    <span className="text-3xl group-hover:scale-110 transition-transform">💼</span>
+                                    <span className="font-bold text-sm uppercase tracking-widest text-primary">
+                                        {t('hero.businessTripTitle', 'Trasferta di lavoro')}
+                                    </span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => setShowTypeSelection(false)}
                                 className="w-full mt-10 text-muted hover:text-primary transition-colors text-xs font-black tracking-[0.2em] uppercase"

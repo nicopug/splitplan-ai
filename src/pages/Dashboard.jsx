@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getTrip, generateProposals, getItinerary, optimizeItinerary, generateShareLink, getProposals, getParticipants, resetHotel, unlockTrip, exportTripPDF, completeTrip, getRouteGeometry, exportNotaSpese, exportExpenseReportPDF } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useModal } from '../context/ModalContext';
-import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Camera, X, CalendarDays, Share2, ChevronRight } from 'lucide-react';
+import { Sparkles, Lock, CheckCircle2, FileDown, Map as MapIcon, Wallet, Camera, X, CalendarDays, Share2, ChevronRight, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -273,16 +273,25 @@ const Dashboard = () => {
         }
     };
 
-    const handleShare = async () => {
+    // Due link diversi, con scopi diversi:
+    //   /trip/join/<token>  invita a FAR PARTE del viaggio (vota, spese, foto)
+    //   /share/<token>      mostra il viaggio in sola lettura, senza adesione
+    // Il bottone della sidebar generava sempre il secondo, e il primo esisteva
+    // solo dentro Voting, che sulle trasferte BUSINESS non viene mai montato:
+    // di fatto non c'era modo di aggiungere un collega a una trasferta.
+    const copiaLink = async (percorso, messaggio) => {
         try {
             const res = await generateShareLink(id);
-            const shareUrl = `${window.location.origin}/share/${res.share_token}`;
-            await navigator.clipboard.writeText(shareUrl);
-            showToast("🔗 Link di condivisione copiato!", "success");
+            const url = `${window.location.origin}${percorso}/${res.share_token}`;
+            await navigator.clipboard.writeText(url);
+            showToast(messaggio, "success");
         } catch (e) {
             showToast("Errore condivisione: " + e.message, "error");
         }
     };
+
+    const handleInvite = () => copiaLink('/trip/join', "🔗 Link di invito copiato! Chi lo apre entra nel viaggio.");
+    const handleShare = () => copiaLink('/share', "🔗 Link di sola lettura copiato.");
 
     const handleResetHotel = async () => {
         const confirmed = await showConfirm("Modifica Logistica", "Vuoi davvero resettare la logistica? L'itinerario attuale verrà eliminato.");
@@ -362,7 +371,15 @@ const Dashboard = () => {
                     ))}
                 </nav>
 
-                <div className="p-6 border-t border-[var(--border-subtle)]">
+                <div className="p-6 border-t border-[var(--border-subtle)] space-y-3">
+                    {isOrganizer && (
+                        <button onClick={handleInvite} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--accent-primary)] text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all">
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>{isBusiness
+                                ? t('dashboard.inviteColleagueBtn', 'Invita un collega')
+                                : t('dashboard.inviteBtn', 'Invita al viaggio')}</span>
+                        </button>
+                    )}
                     <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--text-primary)] hover:text-[var(--bg-base)] transition-all">
                         <Share2 className="w-3.5 h-3.5" />
                         <span>{t('dashboard.shareBtn')}</span>

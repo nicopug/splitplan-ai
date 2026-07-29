@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { estimateSurveyBudget } from '../api';
 import { Button } from './ui/button';
@@ -17,10 +17,21 @@ import {
     Briefcase,
     TreePalm,
     Train,
-    Car
+    Car,
+    Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+const GIORNI_SETTIMANA = [
+    { id: 'Monday', label: 'Lun' },
+    { id: 'Tuesday', label: 'Mar' },
+    { id: 'Wednesday', label: 'Mer' },
+    { id: 'Thursday', label: 'Gio' },
+    { id: 'Friday', label: 'Ven' },
+    { id: 'Saturday', label: 'Sab' },
+    { id: 'Sunday', label: 'Dom' },
+];
+
 const ProgressIndicator = ({ step, totalSteps, t }) => (
     <div className="w-full max-w-4xl mx-auto mb-12 px-4">
         <div className="flex justify-between items-center mb-4">
@@ -96,7 +107,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         departure_airport: '',
         budget: '',
         budget_max: '',
-        num_people: isGroup ? 2 : 1,
+        num_people: 1,   // cresce quando i partecipanti entrano dal link di invito
         start_date: '',
         end_date: '',
         must_have: '',
@@ -122,7 +133,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 departure_airport: trip.departure_airport || prev.departure_airport,
                 budget: trip.budget || (trip.budget_per_person * (trip.num_people || 1)) || prev.budget,
                 budget_max: trip.budget_max || prev.budget_max,
-                num_people: isGroup ? Math.max(2, trip.num_people || prev.num_people) : 1,
+                num_people: trip.num_people || prev.num_people,
                 start_date: trip.start_date || prev.start_date,
                 end_date: trip.end_date || prev.end_date,
                 must_have: trip.must_have || prev.must_have,
@@ -130,7 +141,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                 trip_intent: trip.trip_intent || prev.trip_intent,
                 work_start_time: trip.work_start_time || prev.work_start_time,
                 work_end_time: trip.work_end_time || prev.work_end_time,
-                work_days: trip.work_days || prev.work_days
+                work_days: trip.work_days || prev.work_days,
+                office_address: trip.office_address || prev.office_address
             }));
         }
     }, [trip]);
@@ -186,36 +198,60 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
         });
     };
 
-    const totalSteps = 7;
-
     const isBusiness = formData.trip_intent === 'BUSINESS';
 
+    // La sequenza degli step viene calcolata, non piu' saltata con condizioni
+    // sparse dentro nextStep/prevStep. Cosi' il percorso e' leggibile in un
+    // colpo d'occhio e il contatore "step X di Y" indica il numero reale di
+    // passaggi, invece di 7 fissi da cui se ne saltavano alcuni.
+    //
+    //   0 scopo        chiesto solo se non e' gia' deciso alla creazione
+    //   1 trasporto
+    //   2 partecipanti niente per le trasferte: i colleghi entrano dal link
+    //   3 date
+    //   4 destinazione (+ indirizzo ufficio e orari di lavoro se trasferta)
+    //   5 budget       non chiesto per le trasferte: lo governa l'azienda
+    //   6 preferenze   "cosa includere/evitare": non ha senso in trasferta
+    const sequenzaStep = useMemo(() => {
+        if (isBusiness) return [1, 3, 4];
+        return isGroup ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 3, 4, 5, 6];
+    }, [isBusiness, isGroup]);
+
+    const posizione = sequenzaStep.indexOf(step);
+    const totalSteps = sequenzaStep.length;
+
     const nextStep = () => {
-        if (step === 1 && !isGroup) {
-            setStep(3);
-        } else if (step === 4 && isBusiness) {
-            setStep(6); // Skip budget step for BUSINESS trips
-        } else {
-            setStep(prev => Math.min(prev + 1, totalSteps - 1));
-        }
+        const succ = sequenzaStep[posizione + 1];
+        if (succ !== undefined) setStep(succ);
     };
 
     const prevStep = () => {
-        if (step === 3 && !isGroup) {
-            setStep(1);
-        } else if (step === 6 && isBusiness) {
-            setStep(4); // Skip budget step going back for BUSINESS trips
-        } else {
-            setStep(prev => Math.max(prev - 1, 0));
-        }
+        const prec = sequenzaStep[posizione - 1];
+        if (prec !== undefined) setStep(prec);
+    };
+
+    // Se lo scopo e' gia' deciso alla creazione (pulsante "Trasferta di lavoro"),
+    // lo step 0 non ha senso: si parte direttamente dal primo step utile.
+    useEffect(() => {
+        if (!sequenzaStep.includes(step)) setStep(sequenzaStep[0]);
+    }, [sequenzaStep, step]);
+
+    const isUltimoStep = posizione === totalSteps - 1;
+
+    // Ogni step puo' essere l'ultimo del percorso: se lo e', "Avanti" genera.
+    const avanti = (valido = true) => {
+        if (!valido) return;
+        if (isUltimoStep) handleSubmit();
+        else nextStep();
     };
 
     if (step === 0) {
         return (
             <StepWrapper
                 title={t('survey.step0.title', 'Qual è lo scopo del tuo viaggio?')}
-                onNext={() => formData.trip_intent && nextStep()}
-                step={step}
+                onNext={() => avanti(Boolean(formData.trip_intent))}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -253,8 +289,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <StepWrapper
                 title={t('survey.step1.title', 'Come ti sposti?')}
                 onBack={prevStep}
-                onNext={() => formData.transport_mode && nextStep()}
-                step={step}
+                onNext={() => avanti(Boolean(formData.transport_mode))}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -292,8 +329,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <StepWrapper
                 title={t('survey.step2.title', 'Con chi viaggi?')}
                 onBack={prevStep}
-                onNext={nextStep}
-                step={step}
+                onNext={() => avanti()}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -306,8 +344,8 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                         <div className="flex items-center gap-6 bg-surface p-4 rounded-sm border border-border-subtle">
                             <Button 
                                 variant="outline" 
-                                onClick={() => setFormData({ ...formData, num_people: Math.max(isGroup ? 2 : 1, Number(formData.num_people) - 1) })}
-                                disabled={isGroup ? Number(formData.num_people) <= 2 : Number(formData.num_people) <= 1}
+                                onClick={() => setFormData({ ...formData, num_people: Math.max(1, Number(formData.num_people) - 1) })}
+                                disabled={Number(formData.num_people) <= 1}
                             >
                                 -
                             </Button>
@@ -347,8 +385,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <StepWrapper
                 title={t('survey.step3.title', 'Quando partiamo?')}
                 onBack={prevStep}
-                onNext={() => formData.start_date && formData.end_date && nextStep()}
-                step={step}
+                onNext={() => avanti(Boolean(formData.start_date && formData.end_date))}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -388,8 +427,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <StepWrapper
                 title={t('survey.step4.title', 'Dove andiamo?')}
                 onBack={prevStep}
-                onNext={() => formData.destination && nextStep()}
-                step={step}
+                onNext={() => avanti(Boolean(formData.destination))}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -437,6 +477,71 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
                             <p className="text-[10px] text-muted font-medium italic">
                                 * L'IA userà questo indirizzo per consigliarti hotel vicini e ottimizzare gli spostamenti casa-ufficio.
                             </p>
+
+                            {/* Fasce orarie di lavoro. I campi esistevano nel modello ma non
+                                erano mai chiesti: partivano sempre dai default 09:00-18:00,
+                                e l'AI pianificava attivita' sopra le ore di lavoro. */}
+                            <div className="pt-6 space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                    <Clock className="w-3 h-3" /> Orario di lavoro
+                                </Label>
+                                <div className="grid grid-cols-2 gap-4 max-w-md">
+                                    <div className="space-y-2">
+                                        <label htmlFor="orario-inizio" className="text-[10px] font-bold uppercase tracking-widest text-muted">Dalle</label>
+                                        <Input
+                                            id="orario-inizio"
+                                            type="time"
+                                            value={formData.work_start_time}
+                                            onChange={(e) => setFormData({ ...formData, work_start_time: e.target.value })}
+                                            className="h-14 text-lg font-bold bg-surface border-border-subtle focus:border-primary"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label htmlFor="orario-fine" className="text-[10px] font-bold uppercase tracking-widest text-muted">Alle</label>
+                                        <Input
+                                            id="orario-fine"
+                                            type="time"
+                                            value={formData.work_end_time}
+                                            onChange={(e) => setFormData({ ...formData, work_end_time: e.target.value })}
+                                            className="h-14 text-lg font-bold bg-surface border-border-subtle focus:border-primary"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted block">Giorni lavorativi</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {GIORNI_SETTIMANA.map(giorno => {
+                                            const selezionati = (formData.work_days || '').split(',').filter(Boolean);
+                                            const attivo = selezionati.includes(giorno.id);
+                                            return (
+                                                <button
+                                                    key={giorno.id}
+                                                    type="button"
+                                                    aria-pressed={attivo}
+                                                    onClick={() => {
+                                                        const nuovi = attivo
+                                                            ? selezionati.filter(g => g !== giorno.id)
+                                                            : [...selezionati, giorno.id];
+                                                        setFormData({ ...formData, work_days: nuovi.join(',') });
+                                                    }}
+                                                    className={cn(
+                                                        "w-14 h-12 rounded-sm border text-[11px] font-black uppercase tracking-tight transition-all",
+                                                        attivo
+                                                            ? "bg-primary text-base border-primary"
+                                                            : "bg-surface border-border-subtle text-muted hover:text-primary hover:border-border-strong"
+                                                    )}
+                                                >
+                                                    {giorno.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-[10px] text-muted font-medium italic">
+                                        Nelle fasce di lavoro l'itinerario non inserirà altre attività.
+                                    </p>
+                                </div>
+                            </div>
                         </motion.div>
                     )}
                 </div>
@@ -449,8 +554,9 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             <StepWrapper
                 title={t('survey.step5.title', 'Qual è il tuo budget?')}
                 onBack={prevStep}
-                onNext={() => formData.budget && nextStep()}
-                step={step}
+                onNext={() => avanti(Boolean(formData.budget))}
+                isLast={isUltimoStep}
+                step={posizione}
                 totalSteps={totalSteps}
                 t={t}
                 isGenerating={isGenerating}
@@ -541,7 +647,7 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
             onNext={handleSubmit}
             showSkip={true}
             isLast={true}
-            step={step}
+            step={posizione}
             totalSteps={totalSteps}
             t={t}
             isGenerating={isGenerating}

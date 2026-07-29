@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { searchStation, generateTrainlineURL } from '../utils/trainline';
-import { searchTripOptions, searchRealFlights } from '../api';
+import { searchRealFlights } from '../api';
 import { Button } from './ui/button';
 import { Plane, Train, Car, Home, Sparkles, CheckCircle, ExternalLink, ChevronDown, ChevronUp, Clock, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,9 +16,6 @@ const Logistics = ({ trip, onPrefill }) => {
     const [flightsSearched, setFlightsSearched] = useState(false);
 
     // State per hotel modal (IA)
-    const [isHotelModalOpen, setIsHotelModalOpen] = useState(false);
-    const [hotelOptions, setHotelOptions] = useState([]);
-    const [isLoadingHotels, setIsLoadingHotels] = useState(false);
 
     const origin = trip.departure_airport || trip.departure_city || "Partenza";
     const destName = trip.real_destination || trip.destination || t('logistics.destinationFallback', 'Destinazione');
@@ -96,47 +93,6 @@ const Logistics = ({ trip, onPrefill }) => {
         }
     };
 
-    // ── Hotel modal (IA) ────────────────────────────
-    const handleSearchHotels = async () => {
-        setIsHotelModalOpen(true);
-        setIsLoadingHotels(true);
-        setHotelOptions([]);
-        try {
-            const data = await searchTripOptions(trip.id, 'hotel');
-            if (data && data.options) {
-                setHotelOptions(data.options);
-            } else {
-                toast.error("Nessuna opzione trovata dall'IA.");
-            }
-        } catch (e) {
-            toast.error(e.message || "Errore ricerca hotel.");
-        } finally {
-            setIsLoadingHotels(false);
-        }
-    };
-
-    const handleSelectHotel = (option) => {
-        setIsHotelModalOpen(false);
-        if (typeof onPrefill === 'function') {
-            onPrefill({
-                type: 'hotel',
-                price: option.price,
-                provider: option.provider,
-                title: option.title,
-                details: option.details,
-                booking_url: option.booking_url
-            });
-            toast.success(`✅ Hotel "${option.title}" copiato nel form!`);
-            setTimeout(() => {
-                const formSection = document.getElementById('hotel-confirmation-form');
-                if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                else window.open(option.booking_url, '_blank');
-            }, 300);
-        } else {
-            toast.info(`Apertura ${option.provider}...`);
-            window.open(option.booking_url, '_blank');
-        }
-    };
 
     return (
         <div className="container py-12 relative">
@@ -174,10 +130,14 @@ const Logistics = ({ trip, onPrefill }) => {
                             <>
                                 <h3 className="text-primary text-2xl font-black uppercase tracking-tight">Viaggio in Auto</h3>
                                 <p className="text-muted text-base leading-relaxed font-medium">
-                                    Stima carburante e pedaggi verso <strong className="text-primary">{destName}</strong> inclusa nel budget.
+                                    Il viaggio verso <strong className="text-primary">{destName}</strong> è in auto.
                                 </p>
-                                <div className="w-full p-5 bg-surface border border-border-subtle rounded-md text-[11px] font-black text-subtle tracking-widest uppercase">
-                                    Stima di carburante inclusa nel budget.
+                                {/* La stima automatica di carburante e pedaggi e' stata rimossa:
+                                    era una previsione del modello che finiva mescolata alle
+                                    spese reali. I costi auto si registrano come spesa, con la
+                                    ricevuta, dalla sezione Budget. */}
+                                <div className="w-full p-5 bg-surface border border-border-subtle rounded-md text-[11px] font-medium text-muted leading-relaxed">
+                                    Registra carburante e pedaggi come spesa dalla sezione Budget, allegando la ricevuta.
                                 </div>
                             </>
                         ) : (
@@ -229,15 +189,14 @@ const Logistics = ({ trip, onPrefill }) => {
                         </div>
                         <h3 className="text-primary text-2xl font-black uppercase tracking-tight">Hotel & Alloggi</h3>
                         <p className="text-muted text-base leading-relaxed font-medium">
-                            Trova le migliori offerte a <strong className="text-primary">{destName}</strong> con prezzi reali.
+                            Cerca dove dormire a <strong className="text-primary">{destName}</strong>, poi inserisci i dati qui sotto.
                         </p>
-                        <Button onClick={handleSearchHotels} fullWidth className="btn-magic">
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Cerca con l'IA
+                        {/* La ricerca "con l'IA" e' stata rimossa: restituiva strutture e
+                            prezzi inventati dal modello, non disponibilita' reali. Le
+                            prenotazioni passeranno da Duffel Stays, come per i voli. */}
+                        <Button onClick={() => window.open(fallbackHotelLink, '_blank')} fullWidth className="btn-magic">
+                            Cerca su Booking.com →
                         </Button>
-                        <button onClick={() => window.open(fallbackHotelLink, '_blank')} className="text-[10px] text-muted hover:text-primary transition-colors uppercase font-black tracking-widest">
-                            O vai su Booking.com →
-                        </button>
                     </div>
                 </div>
 
@@ -342,52 +301,6 @@ const Logistics = ({ trip, onPrefill }) => {
             </div>
 
             {/* ── HOTEL MODAL (IA) ── */}
-            {isHotelModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-base border border-border-strong rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-fade-in">
-                        <div className="p-6 border-b border-border-medium flex justify-between items-center bg-surface">
-                            <div>
-                                <h2 className="text-xl font-black uppercase text-primary tracking-tight">Scelta Alloggio</h2>
-                                <p className="text-sm text-muted font-medium mt-1">Le migliori opzioni selezionate dall'IA per il tuo budget.</p>
-                            </div>
-                            <button onClick={() => setIsHotelModalOpen(false)} className="text-muted hover:text-primary p-2 bg-base rounded-md border border-border-subtle hover:border-border-strong transition-all">
-                                ✕
-                            </button>
-                        </div>
-                        <div className="p-6 overflow-y-auto space-y-4">
-                            {isLoadingHotels ? (
-                                <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                                    <div className="animate-spin text-blue-500"><Sparkles className="w-10 h-10" /></div>
-                                    <p className="text-muted font-medium animate-pulse">L'IA sta cercando le migliori tariffe...</p>
-                                </div>
-                            ) : hotelOptions.length > 0 ? (
-                                hotelOptions.map((opt, i) => (
-                                    <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border border-border-medium rounded-lg bg-surface hover:border-blue-500/50 hover:bg-blue-500/5 transition-all">
-                                        <div className="flex-1 space-y-1 mb-4 sm:mb-0 pr-4">
-                                            <span className="text-[10px] font-black uppercase tracking-widest bg-primary text-base px-2 py-0.5 rounded-sm">{opt.provider}</span>
-                                            <h4 className="text-lg font-bold text-primary">{opt.title || opt.details}</h4>
-                                            <p className="text-sm text-muted">{opt.details}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end shrink-0 pl-4 sm:border-l border-border-medium">
-                                            <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-2">
-                                                {opt.price}€
-                                            </span>
-                                            <Button size="sm" onClick={() => handleSelectHotel(opt)} className="bg-primary text-base hover:bg-primary/80">
-                                                Seleziona <CheckCircle className="w-4 h-4 ml-2" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-8 text-muted">Nessuna opzione trovata. Riprova più tardi.</div>
-                            )}
-                        </div>
-                        <div className="p-4 bg-surface border-t border-border-medium text-xs text-muted text-center">
-                            I dati verranno pre-compilati nel form sottostante. <span className="text-primary font-bold">Puoi modificarli e confermare!</span>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

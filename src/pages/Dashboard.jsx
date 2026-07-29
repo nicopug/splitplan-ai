@@ -340,7 +340,11 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="flex h-screen bg-[var(--bg-base)] transition-colors duration-500 overflow-hidden text-[var(--text-primary)]">
+        // La Navbar e' fixed in cima: senza questo margine il contenuto parte da
+        // y=0 e finisce sotto la barra (si vedeva soprattutto sul banner di
+        // approvazione manager). L'altezza si riduce di conseguenza, altrimenti
+        // h-screen sforerebbe in fondo.
+        <div className="flex h-[calc(100vh-var(--header-height))] mt-[var(--header-height)] bg-[var(--bg-base)] transition-colors duration-500 overflow-hidden text-[var(--text-primary)]">
             {/* Sidebar Navigation */}
             <div className="w-68 bg-[var(--bg-card)] border-r border-[var(--border-subtle)] flex flex-col pt-8 hidden lg:flex">
                 <div className="px-8 mb-10">
@@ -581,7 +585,10 @@ const Dashboard = () => {
                                                                 </div>
                                                                 <Suspense fallback={<ComponentLoader />}><Timeline items={itinerary} /></Suspense>
                                                             </div>
-                                                            <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)]">
+                                                            {/* isolate crea un contesto di impilamento: i pannelli interni di
+                                                                Leaflet arrivano a z-index 400-1000 e senza questo si
+                                                                sovrapponevano alla Navbar (z-100), mappa sopra la barra. */}
+                                                            <div className="w-full lg:w-1/2 h-[400px] lg:h-full bg-[var(--bg-surface)] isolate relative z-0 overflow-hidden">
                                                                 <Suspense fallback={<ComponentLoader />}><ItineraryMap items={itinerary} hotelLat={trip.hotel_latitude} hotelLon={trip.hotel_longitude} startDate={trip.start_date} isPremium={hasPremiumAccess} routePolyline={routePolyline} /></Suspense>
                                                             </div>
                                                         </div>

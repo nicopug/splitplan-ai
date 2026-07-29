@@ -1984,7 +1984,10 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
         {"- PRIORITÀ ASSOLUTA: Efficienza e produttività." if trip.trip_intent == "BUSINESS" else ""}
         {"- LUOGO DI LAVORO: Tutte le sessioni di lavoro si svolgono all'indirizzo " + trip.office_address + ". NON scrivere mai che l'utente lavora dall'hotel (NO 'lavoro dall'hotel')." if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
         {"- COMMUTING: Includi esplicitamente gli spostamenti (tipo TRANSPORT) tra l'hotel e l'ufficio all'inizio e alla fine di ogni sessione lavorativa." if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
-        {"- ORARIO DI LAVORO: Rispetta tassativamente " + (trip.work_start_time or '09:00') + " - " + (trip.work_end_time or '18:00') + " nei giorni " + (trip.work_days or 'Lun-Ven') + "." if trip.trip_intent == "BUSINESS" else ""}
+        {"- ORARIO DI LAVORO: Rispetta tassativamente " + (trip.work_start_time or '09:00') + " - " + (trip.work_end_time or '18:00') + " nei giorni " + (trip.work_days or 'Lun-Ven') + ". Dentro questa fascia NON inserire nulla che non sia lavoro o la pausa pranzo." if trip.trip_intent == "BUSINESS" else ""}
+        {"- NIENTE TURISMO: non inserire musei, monumenti, visite guidate, shopping o attrazioni. Questa e' una trasferta di lavoro: l'itinerario contiene solo spostamenti, sessioni di lavoro e pasti. Anche la sera non proporre attivita' turistiche." if trip.trip_intent == "BUSINESS" else ""}
+        {"- COERENZA DEI NOMI: se un'attivita' si chiama 'Lavoro Mattutino' deve stare al mattino, 'Lavoro Pomeridiano' al pomeriggio. Il titolo deve corrispondere alla fascia oraria in cui la collochi." if trip.trip_intent == "BUSINESS" else ""}
+        {"- ORDINE DEGLI SPOSTAMENTI: il tragitto hotel->ufficio precede SEMPRE la sessione di lavoro, quello ufficio->hotel la segue. Mai il contrario." if trip.trip_intent == "BUSINESS" and trip.office_address else ""}
 
         {"" if trip.trip_intent == "BUSINESS" else "Se il viaggio è LEISURE, bilancia relax e scoperta. Includi esperienze locali autentiche, tempo libero e varietà di attività."}
 
@@ -2122,34 +2125,19 @@ async def generate_itinerary_content(trip: Trip, proposal: Proposal, session: Se
             if db_item:
                 session.add(db_item)
 
-        costs = data.get("estimated_road_costs", {})
-        if trip.transport_mode == "CAR":
-            total_road = float(costs.get("fuel", 0.0)) + float(costs.get("tolls", 0.0))
-            if total_road > 0:
-                session.exec(
-                    delete(Expense).where(
-                        Expense.trip_id == trip.id,
-                        Expense.category == "Travel_Road",
-                        Expense.description.like("Stima%"),
-                    )
-                )
-
-                organizer = session.exec(
-                    select(Participant).where(
-                        Participant.trip_id == trip.id, Participant.is_organizer == True
-                    )
-                ).first()
-                if organizer:
-                    session.add(
-                        Expense(
-                            trip_id=trip.id,
-                            payer_id=organizer.id,
-                            amount=total_road,
-                            description="Stima Carburante e Pedaggi (AI)",
-                            category="Travel_Road",
-                            date=str(datetime.now(timezone.utc)),
-                        )
-                    )
+        # La stima di carburante e pedaggi non viene piu' inserita come spesa.
+        # Era una previsione generata dal modello che finiva mescolata alle spese
+        # reali: nessuno la verificava e in nota spese i costi auto vanno
+        # rendicontati con le ricevute, non con una stima. La categoria
+        # Travel_Road resta disponibile per le spese vere, inserite a mano o
+        # lette da ricevuta.
+        session.exec(
+            delete(Expense).where(
+                Expense.trip_id == trip.id,
+                Expense.category == "Travel_Road",
+                Expense.description.like("Stima%"),
+            )
+        )
 
         session.commit()
         logger.info(f"[ITI-10] DONE. Itinerary for Trip {trip.id} generated correctly.")

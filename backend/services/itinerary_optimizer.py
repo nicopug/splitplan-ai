@@ -41,6 +41,9 @@ DEFAULT_TRAVEL_MINUTES = 10   # used when coordinates are unavailable (0,0)
 SOLVER_TIMEOUT_SECONDS = 3.0  # hard per-day timeout
 DAY_START_MINUTE = 360        # 06:00 — earliest any activity can start
 DAY_END_MINUTE = 1380         # 23:00 — latest any activity can end
+# Quanto un'attivita' puo' scostarsi dall'orario pianificato dal modello.
+# 90 minuti bastano a compattare gli spostamenti senza stravolgere la giornata.
+FLESSIBILITA_MINUTI = 90
 
 # Default durations when Gemini doesn't provide explicit end_time
 _DEFAULT_DURATION: dict[str, int] = {
@@ -149,6 +152,9 @@ def _optimize_single_day(
             "duration": max(1, _duration_minutes(act)),
             "is_anchor": is_anc,
             "anchor_min": anchor_min,
+            # Orario pianificato dal modello: serve a tenere l'attivita' vicino
+            # al momento della giornata per cui era pensata.
+            "start_previsto": _parse_minute(act.get("start_time", "")),
             "lat": float(act.get("lat") or 0.0),
             "lon": float(act.get("lon") or 0.0),
             "original": act,
@@ -169,9 +175,23 @@ def _optimize_single_day(
             s = model.NewIntVar(anc, anc, f"s_{m['orig_index']}")
             model.Add(p == 1)  # anchors are always performed
         else:
-            s = model.NewIntVar(DAY_START_MINUTE, DAY_END_MINUTE, f"s_{m['orig_index']}")
-            # Enforce day bounds only when activity is performed
-            model.Add(s >= DAY_START_MINUTE).OnlyEnforceIf(p)
+            # L'attivita' resta in una finestra attorno all'orario previsto dal
+            # modello, invece di poter essere collocata ovunque fra le 06:00 e le
+            # 23:00. Senza questo vincolo il solver spostava liberamente le
+            # attivita' per ridurre gli spostamenti, producendo assurdita' come
+            # "Lavoro Pomeridiano" pianificato alle 06:00 e il tragitto verso
+            # l'ufficio a seguire. L'ottimizzatore puo' ancora riordinare e
+            # compattare, ma dentro il momento della giornata previsto.
+            previsto = m.get("start_previsto")
+            if previsto is not None:
+                minimo = max(DAY_START_MINUTE, previsto - FLESSIBILITA_MINUTI)
+                massimo = min(DAY_END_MINUTE - dur, previsto + FLESSIBILITA_MINUTI)
+                if massimo < minimo:
+                    massimo = minimo
+            else:
+                minimo, massimo = DAY_START_MINUTE, max(DAY_START_MINUTE, DAY_END_MINUTE - dur)
+
+            s = model.NewIntVar(minimo, massimo, f"s_{m['orig_index']}")
             model.Add(s + dur <= DAY_END_MINUTE).OnlyEnforceIf(p)
 
         e = model.NewIntVar(DAY_START_MINUTE, DAY_END_MINUTE + 120, f"e_{m['orig_index']}")

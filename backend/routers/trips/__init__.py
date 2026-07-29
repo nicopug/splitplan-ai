@@ -86,44 +86,69 @@ logger = logging.getLogger(__name__)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
-# gemini-2.5-flash risponde 404 ("no longer available to new users"):
-# ogni chiamata AI cadeva sul fallback mock, producendo proposte e
-# itinerari senza alcun rapporto con i dati inseriti dall'utente.
-AI_MODEL = "gemini-3.5-flash"
+# I nomi dei modelli vengono ritirati o vanno in sovraccarico senza preavviso:
+# gemini-2.5-flash risponde 404 ("no longer available to new users") e
+# gemini-3.5-flash risponde 503 ("currently overloaded"). Insistere su un solo
+# nome significava ritentarlo con backoff per minuti e poi fallire con un 500.
+# Si prova quindi una catena: al primo errore transient si passa al successivo.
+# Ordine scelto misurando latenza e affidabilita' con la chiave del progetto.
+AI_MODELS = ["gemini-3.1-flash-lite", "gemini-3-flash-preview"]
+AI_MODEL = AI_MODELS[0]   # usato dalle chiamate diverse da _gemini_call_with_retry
 
 # ── Retry helper per chiamate Gemini (gestisce 503/429 transient) ──────────
 import asyncio as _asyncio
 
 
-async def _gemini_call_with_retry(contents, *, json_mode=False, max_retries=3):
-    """Chiama Gemini con retry esponenziale per errori transient (503, 429)."""
+def _e_transient(errore: str) -> bool:
+    """Errore temporaneo o modello non disponibile: conviene cambiare modello."""
+    return any(
+        segnale in errore
+        for segnale in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED", "404", "NOT_FOUND")
+    )
+
+
+async def _gemini_call_with_retry(contents, *, json_mode=False, max_retries=2):
+    """Chiama Gemini provando i modelli in ordine, con un breve retry ciascuno.
+
+    Prima si ritentava sempre lo stesso modello con backoff esponenziale: con un
+    modello in sovraccarico l'utente restava ad aspettare minuti per poi vedere
+    comunque un errore, e su Vercel la funzione veniva uccisa prima ancora di
+    rispondere. Ora al secondo fallimento si passa al modello successivo.
+    """
     config = (
         types.GenerateContentConfig(response_mime_type="application/json")
         if json_mode
         else None
     )
     last_exc = None
-    for attempt in range(max_retries):
-        try:
-            response = await ai_client.aio.models.generate_content(
-                model=AI_MODEL,
-                contents=contents,
-                **({"config": config} if config else {}),
-            )
-            return response
-        except Exception as e:
-            last_exc = e
-            err_str = str(e)
-            if "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str:
-                wait = 2 ** attempt  # 1s, 2s, 4s
-                logger.warning(
-                    f"[Gemini Retry] Attempt {attempt + 1}/{max_retries} failed "
-                    f"({err_str[:80]}), retrying in {wait}s..."
+
+    for modello in AI_MODELS:
+        for attempt in range(max_retries):
+            try:
+                response = await ai_client.aio.models.generate_content(
+                    model=modello,
+                    contents=contents,
+                    **({"config": config} if config else {}),
                 )
-                await _asyncio.sleep(wait)
-            else:
-                raise  # errore non transient, rilancia subito
-    raise last_exc  # tutti i retry falliti
+                if modello != AI_MODELS[0]:
+                    logger.info(f"[Gemini] Risposta ottenuta dal modello di riserva {modello}")
+                return response
+            except Exception as e:
+                last_exc = e
+                err_str = str(e)
+                if not _e_transient(err_str):
+                    raise  # errore vero (prompt, auth): inutile insistere
+                ultimo_tentativo = attempt == max_retries - 1
+                logger.warning(
+                    f"[Gemini] {modello} tentativo {attempt + 1}/{max_retries} "
+                    f"fallito ({err_str[:70]})"
+                    + ("; passo al modello successivo" if ultimo_tentativo else "; ritento fra 1s")
+                )
+                if not ultimo_tentativo:
+                    await _asyncio.sleep(1)
+
+    logger.error("[Gemini] Nessun modello disponibile ha risposto.")
+    raise last_exc
 
 if GOOGLE_API_KEY:
     logger.info("[OK] System: Google Gemini Client initialized.")

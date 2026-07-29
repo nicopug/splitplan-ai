@@ -90,7 +90,7 @@ def search_flights(
                 prompt = f"Trova i codici aeroportuali IATA ufficiali di 3 lettere. Partenza: '{origin_iata}' (es. Bologna è BLQ). Destinazione: '{dest_iata}'. Rispondi RIGOROSAMENTE E SOLO con i due codici separati da virgola (es. BLQ,JFK). Attenzione ai codici corretti!"
                 
                 resp = ai_client.models.generate_content(
-                    model='gemini-3.5-flash',
+                    model='gemini-3.1-flash-lite',
                     contents=prompt,
                 )
                 parts = [p.strip().upper()[:3] for p in resp.text.split(',')]

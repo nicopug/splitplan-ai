@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 # gemini-2.5-flash risponde 404 ("no longer available to new users"):
 # ogni chiamata AI cadeva sul fallback mock, producendo proposte e
 # itinerari senza alcun rapporto con i dati inseriti dall'utente.
-_AI_MODEL = "gemini-3.5-flash"
+_AI_MODEL = "gemini-3.1-flash-lite"
 
 SUPPORTED_MIME_TYPES: frozenset[str] = frozenset({
     "image/jpeg",

@@ -86,7 +86,10 @@ logger = logging.getLogger(__name__)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ai_client = None
 
-AI_MODEL = "gemini-2.5-flash"
+# gemini-2.5-flash risponde 404 ("no longer available to new users"):
+# ogni chiamata AI cadeva sul fallback mock, producendo proposte e
+# itinerari senza alcun rapporto con i dati inseriti dall'utente.
+AI_MODEL = "gemini-3.5-flash"
 
 # ── Retry helper per chiamate Gemini (gestisce 503/429 transient) ──────────
 import asyncio as _asyncio
@@ -300,6 +303,25 @@ def check_rate_limit(account: Account, session: Session):
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Hai raggiunto il limite giornaliero di {FREE_LIMIT} chiamate AI per utenti Free. Passa a Pro per navigare senza limiti!",
         )
+
+
+def _a_datetime(valore):
+    """Converte in datetime una data che puo' arrivare come stringa ISO.
+
+    Le richieste del client dichiarano start_date/end_date come str, mentre sul
+    modello sono datetime. Assegnare la stringa direttamente lasciava il campo
+    come str finche' l'oggetto non veniva ricaricato dal DB: da qui gli
+    `trip.start_date.replace("Z", "")` sparsi nel codice, che funzionano su una
+    stringa e sollevano TypeError su un datetime (e viceversa). Postgres accetta
+    la stringa in scrittura e maschera il problema; SQLite no.
+    """
+    if valore is None or isinstance(valore, datetime):
+        return valore
+    try:
+        return datetime.fromisoformat(str(valore).replace("Z", "+00:00"))
+    except ValueError:
+        logger.warning(f"Data non interpretabile: {valore!r}")
+        return None
 
 
 def auto_approva_se_manager(trip: Trip, account: Account) -> bool:
@@ -1600,8 +1622,8 @@ async def generate_proposals(
         trip.budget_max = prefs.budget_max
         trip.budget_per_person = (prefs.budget_max or prefs.budget) / prefs.num_people
         trip.num_people = prefs.num_people
-        trip.start_date = prefs.start_date
-        trip.end_date = prefs.end_date
+        trip.start_date = _a_datetime(prefs.start_date)
+        trip.end_date = _a_datetime(prefs.end_date)
         trip.departure_airport = prefs.departure_airport
         trip.departure_city = prefs.departure_airport
         trip.destination = prefs.destination

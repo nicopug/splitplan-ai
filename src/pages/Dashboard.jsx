@@ -243,8 +243,20 @@ const Dashboard = () => {
                 transport_mode: surveyData.transport_mode,
                 destination: surveyData.destination,
                 departure_airport: surveyData.departure_airport,
-                trip_intent: surveyData.trip_intent
+                departure_city: surveyData.departure_airport,
+                trip_intent: surveyData.trip_intent,
+                // Questi campi mancavano: Logistics viene montato subito dopo e
+                // leggeva date e indirizzo dallo stato locale ancora vuoto, per
+                // questo i link di prenotazione partivano senza destinazione.
+                start_date: surveyData.start_date,
+                end_date: surveyData.end_date,
+                office_address: surveyData.office_address,
+                work_start_time: surveyData.work_start_time,
+                work_end_time: surveyData.work_end_time,
+                work_days: surveyData.work_days,
             }));
+            // Riallinea comunque con quello che il server ha davvero salvato.
+            await fetchTrip();
             setTimeout(() => fetchTrip(), 1000);
         } catch (e) {
             clearInterval(progressInterval);

@@ -190,7 +190,10 @@ const Survey = ({ trip, onComplete, isGenerating }) => {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        // L'evento puo' non esserci: handleSubmit viene invocato sia dal click
+        // sul pulsante finale sia da avanti(), che lo chiama senza argomenti
+        // quando lo step corrente e' l'ultimo del percorso.
+        e?.preventDefault();
         onComplete({
             ...formData,
             budget: formData.budget === '' ? 0 : formData.budget,

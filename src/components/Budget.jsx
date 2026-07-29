@@ -1,14 +1,36 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { estimateBudget, updateTrip, getExpenses, exportNotaSpese } from '../api';
+import { estimateBudget, updateTrip, getExpenses, exportNotaSpese, addExpense, getParticipants } from '../api';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, Download, Calculator, TrendingDown, Clock } from 'lucide-react';
+import { Sparkles, Download, Calculator, TrendingDown, Clock, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useModal } from '../context/ModalContext';
 import ReceiptScanner from './ReceiptScanner';
 
+const CATEGORIE_SPESA = [
+    { id: 'Food', label: 'Cibo & Drink', icon: '🍕' },
+    { id: 'Transport', label: 'Movimenti Locali', icon: '🚌' },
+    { id: 'Travel_Road', label: 'Auto/Pedaggi', icon: '🚗' },
+    { id: 'Lodging', label: 'Alloggio', icon: '🏨' },
+    { id: 'Activity', label: 'Attività', icon: '🎡' },
+    { id: 'Shopping', label: 'Shopping', icon: '🛍️' },
+    { id: 'Other', label: 'Altro', icon: '📦' },
+];
+
+const VALUTE = [
+    { code: 'EUR', symbol: '€' },
+    { code: 'USD', symbol: '$' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'CHF', symbol: 'CHF' },
+    { code: 'AED', symbol: 'د.إ' },
+];
+
+// NB: nessun return anticipato prima degli hook. `if (!trip) return null` stava
+// sopra le useState/useEffect/useMemo: al primo render con trip valorizzato
+// React trovava piu' hook del render precedente e l'app andava in pagina bianca
+// con "Rendered more hooks than during the previous render".
 const Budget = ({ trip, onUpdate }) => {
-    if (!trip) return null;
     const { t } = useTranslation();
     const { showToast } = useToast();
     const { showConfirm } = useModal();
@@ -18,6 +40,17 @@ const Budget = ({ trip, onUpdate }) => {
     const [realExpenses, setRealExpenses] = useState([]);
     const [loadingExpenses, setLoadingExpenses] = useState(true);
     const [isExporting, setIsExporting] = useState(false); // Stato per il download CSV
+
+    // Inserimento manuale di una spesa. Prima esisteva solo lo scanner di
+    // ricevute: quando l'OCR falliva, il messaggio d'errore diceva "inserisci la
+    // spesa a mano" ma non c'era alcun modo di farlo. Il form viveva in
+    // Finance.jsx, importato ma mai renderizzato da nessuna parte.
+    const [mostraForm, setMostraForm] = useState(false);
+    const [partecipanti, setPartecipanti] = useState([]);
+    const [salvataggio, setSalvataggio] = useState(false);
+    const [nuovaSpesa, setNuovaSpesa] = useState({
+        title: '', amount: '', currency: 'EUR', category: 'Food', payer_id: '',
+    });
 
     // AI Forecast inclusion
     const [appliedEstimation, setAppliedEstimation] = useState(null);
@@ -50,6 +83,59 @@ const Budget = ({ trip, onUpdate }) => {
         };
         fetchExpenses();
     }, [trip?.id]);
+
+    // I partecipanti servono a scegliere chi ha pagato
+    useEffect(() => {
+        if (!trip?.id) return;
+        let annullato = false;
+        getParticipants(trip.id)
+            .then(elenco => {
+                if (annullato) return;
+                setPartecipanti(elenco || []);
+                // Preseleziona il primo, cosi' il campo non parte vuoto
+                setNuovaSpesa(prec => prec.payer_id || !elenco?.length
+                    ? prec
+                    : { ...prec, payer_id: String(elenco[0].id) });
+            })
+            .catch(() => { /* il form resta usabile, la select sara' vuota */ });
+        return () => { annullato = true; };
+    }, [trip?.id]);
+
+    const handleAggiungiSpesa = async (e) => {
+        e.preventDefault();
+        if (salvataggio) return;   // niente doppio invio
+
+        const importo = parseFloat(nuovaSpesa.amount);
+        if (!Number.isFinite(importo) || importo <= 0) {
+            showToast("Inserisci un importo valido maggiore di zero.", "error");
+            return;
+        }
+        if (!nuovaSpesa.payer_id) {
+            showToast("Seleziona chi ha pagato.", "error");
+            return;
+        }
+
+        setSalvataggio(true);
+        try {
+            const creata = await addExpense({
+                trip_id: trip.id,
+                title: nuovaSpesa.title,
+                amount: importo,
+                currency: nuovaSpesa.currency,
+                category: nuovaSpesa.category,
+                payer_id: parseInt(nuovaSpesa.payer_id, 10),
+            });
+            setRealExpenses(prec => [...prec, creata]);
+            setNuovaSpesa(prec => ({ ...prec, title: '', amount: '' }));
+            setMostraForm(false);
+            showToast("Spesa aggiunta.", "success");
+            if (onUpdate) onUpdate();
+        } catch (error) {
+            showToast("Impossibile salvare la spesa: " + error.message, "error");
+        } finally {
+            setSalvataggio(false);
+        }
+    };
 
     const handleApplyAsExpense = async () => {
         if (!estimation) return;
@@ -93,6 +179,7 @@ const Budget = ({ trip, onUpdate }) => {
 
     // Calculate analytics
     const stats = useMemo(() => {
+        if (!trip) return null;   // il render viene comunque interrotto piu' sotto
         const numPeople = trip.num_people || 1;
         const totalBudgetMin = Number(trip.budget) || 0;
         const totalBudgetMax = Number(trip.budget_max) || 0;
@@ -100,7 +187,9 @@ const Budget = ({ trip, onUpdate }) => {
         const flightCost = Number(trip.transport_cost) || 0;
         const hotelCost = Number(trip.hotel_cost) || 0;
 
-        const realTotal = realExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+        // Number(...) || 0: un importo null dal backend faceva diventare NaN
+        // l'intero totale, e da li' in poi ogni cifra a schermo era "NaN".
+        const realTotal = realExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
 
         // Calculate days for AI mapping
         let tripDays = 1;
@@ -114,7 +203,7 @@ const Budget = ({ trip, onUpdate }) => {
         // Group by category for chart
         const categoryMap = realExpenses.reduce((acc, exp) => {
             const cat = exp.category || 'Other';
-            acc[cat] = (acc[cat] || 0) + exp.amount;
+            acc[cat] = (acc[cat] || 0) + (Number(exp.amount) || 0);
             return acc;
         }, {});
 
@@ -252,6 +341,8 @@ const Budget = ({ trip, onUpdate }) => {
         );
     };
 
+    if (!trip || !stats) return null;
+
     return (
         <div className="container py-12 space-y-12">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -263,6 +354,13 @@ const Budget = ({ trip, onUpdate }) => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setMostraForm(v => !v)}
+                        className="h-12 px-6 bg-[var(--accent-primary)] text-white font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <Plus size={14} />
+                        {mostraForm ? 'Annulla' : 'Aggiungi spesa'}
+                    </button>
                     <ReceiptScanner
                         tripId={trip.id}
                         onSuccess={(newExpense) => setRealExpenses(prev => [...prev, newExpense])}
@@ -277,6 +375,98 @@ const Budget = ({ trip, onUpdate }) => {
                     </button>
                 </div>
             </div>
+
+            {mostraForm && (
+                <form onSubmit={handleAggiungiSpesa} className="premium-card !p-8 space-y-6 bg-surface">
+                    <div className="space-y-2">
+                        <label htmlFor="spesa-titolo" className="text-[10px] font-bold uppercase tracking-widest text-muted">Cosa</label>
+                        <input
+                            id="spesa-titolo"
+                            value={nuovaSpesa.title}
+                            onChange={e => setNuovaSpesa(p => ({ ...p, title: e.target.value }))}
+                            required
+                            placeholder="es. Cena con il cliente"
+                            className="w-full h-14 bg-[var(--bg-base)] border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <label htmlFor="spesa-importo" className="text-[10px] font-bold uppercase tracking-widest text-muted">Importo</label>
+                            <input
+                                id="spesa-importo"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={nuovaSpesa.amount}
+                                onChange={e => setNuovaSpesa(p => ({ ...p, amount: e.target.value }))}
+                                required
+                                placeholder="0.00"
+                                className="w-full h-14 bg-[var(--bg-base)] border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="spesa-valuta" className="text-[10px] font-bold uppercase tracking-widest text-muted">Valuta</label>
+                            <select
+                                id="spesa-valuta"
+                                value={nuovaSpesa.currency}
+                                onChange={e => setNuovaSpesa(p => ({ ...p, currency: e.target.value }))}
+                                className="w-full h-14 bg-[var(--bg-base)] border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all"
+                            >
+                                {VALUTE.map(v => (
+                                    <option key={v.code} value={v.code}>{v.symbol} {v.code}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="spesa-pagante" className="text-[10px] font-bold uppercase tracking-widest text-muted">Chi ha pagato</label>
+                            <select
+                                id="spesa-pagante"
+                                value={nuovaSpesa.payer_id}
+                                onChange={e => setNuovaSpesa(p => ({ ...p, payer_id: e.target.value }))}
+                                required
+                                className="w-full h-14 bg-[var(--bg-base)] border border-border-subtle rounded-sm px-4 text-primary focus:border-primary outline-none transition-all"
+                            >
+                                <option value="" disabled>Seleziona…</option>
+                                {partecipanti.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted block">Categoria</span>
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                            {CATEGORIE_SPESA.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    aria-pressed={nuovaSpesa.category === cat.id}
+                                    onClick={() => setNuovaSpesa(p => ({ ...p, category: cat.id }))}
+                                    className={cn(
+                                        "p-3 rounded-sm border transition-all flex flex-col items-center gap-1",
+                                        nuovaSpesa.category === cat.id
+                                            ? "bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]"
+                                            : "bg-[var(--bg-base)] border-border-subtle text-muted hover:border-border-strong hover:text-primary"
+                                    )}
+                                >
+                                    <span className="text-lg">{cat.icon}</span>
+                                    <span className="text-[8px] font-black uppercase tracking-tighter text-center leading-tight">{cat.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={salvataggio}
+                        className="w-full h-14 bg-[var(--accent-primary)] text-white font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                    >
+                        {salvataggio ? 'Salvataggio…' : 'Salva spesa'}
+                    </button>
+                </form>
+            )}
 
             {/* Top Cards: Spent vs Remaining */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

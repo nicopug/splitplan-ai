@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSharedTrip, joinTrip } from '../api';
 import Timeline from '../components/Timeline';
 import ItineraryMap from '../components/ItineraryMap';
-import Finance from '../components/Finance';
 import Photos from '../components/Photos';
 
 const ShareTrip = ({ isJoinMode = false }) => {
@@ -112,7 +111,10 @@ const ShareTrip = ({ isJoinMode = false }) => {
     );
 
     try {
-        const { trip = {}, itinerary = [], expenses = [], photos = [], participants = [] } = data;
+        // `expenses` non viene estratto: era destinato a <Finance />, che era
+        // importato ma mai renderizzato. La pagina condivisa resta di sola
+        // lettura su itinerario, mappa e foto.
+        const { trip = {}, itinerary = [], photos = [], participants = [] } = data;
         const organizerName = (participants && participants.length > 0) ? participants[0].name : 'un utente';
 
         return (

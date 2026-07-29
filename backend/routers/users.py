@@ -695,46 +695,12 @@ async def reset_password(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/toggle-subscription")
-async def toggle_subscription(
-    plan: Optional[str] = Body(None, embed=True),
-    current_account: Account = Depends(get_current_user),
-    session: Session = Depends(get_session),
-):
-    """Attiva/disattiva o cambia piano abbonamento. Richiede autenticazione JWT."""
-    if not current_account.is_subscribed:
-        current_account.is_subscribed = True
-        current_account.subscription_plan = plan or "MONTHLY"
-        days = 365 if current_account.subscription_plan == "ANNUAL" else 30
-        current_account.subscription_expiry = (
-            datetime.now(timezone.utc) + timedelta(days=days)
-        ).strftime("%Y-%m-%d")
-        current_account.auto_renew = True
-    else:
-        if plan and current_account.subscription_plan != plan:
-            current_account.subscription_plan = plan
-            days = 365 if plan == "ANNUAL" else 30
-            current_account.subscription_expiry = (
-                datetime.now(timezone.utc) + timedelta(days=days)
-            ).strftime("%Y-%m-%d")
-        else:
-            current_account.is_subscribed = False
-            current_account.subscription_plan = None
-            current_account.subscription_expiry = None
-
-    session.add(current_account)
-    session.commit()
-    session.refresh(current_account)
-    logger.info(
-        f"Subscription aggiornata per account {current_account.id}: subscribed={current_account.is_subscribed}"
-    )
-
-    return {
-        "is_subscribed": current_account.is_subscribed,
-        "subscription_plan": current_account.subscription_plan,
-        "subscription_expiry": current_account.subscription_expiry,
-        "auto_renew": current_account.auto_renew,
-    }
+# NOTA: l'endpoint POST /toggle-subscription e' stato rimosso.
+# Attivava is_subscribed=True (fino a un anno di Pro) per qualunque utente
+# autenticato, senza alcun pagamento: era un bypass completo del funnel di
+# monetizzazione. L'attivazione di un abbonamento deve passare esclusivamente da
+# Stripe Checkout (POST /payments/create-checkout) e dal relativo webhook.
+# La disdetta resta disponibile qui sotto tramite /cancel-subscription.
 
 
 @router.post("/cancel-subscription")

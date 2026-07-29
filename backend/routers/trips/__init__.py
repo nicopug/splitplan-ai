@@ -12,8 +12,8 @@ from urllib.parse import quote
 import io
 from fpdf import FPDF
 
-from sqlmodel import Session, select, func, delete
-from typing import List, Dict, Optional
+from sqlmodel import Session, select, func, delete, Field
+from typing import List, Dict, Optional, Literal
 
 import logging
 import os
@@ -42,6 +42,7 @@ from models import (
     Company,
     Expense,
     Photo,
+    Notification,
 )
 
 
@@ -180,6 +181,42 @@ class HotelSelectionRequest(SQLModel):
     hotel_cost: Optional[float] = 0.0
     arrival_time: Optional[str] = None
     return_time: Optional[str] = None
+
+
+class TripCreateRequest(SQLModel):
+    """Campi che il client puo' impostare creando un viaggio via POST /trips/.
+
+    NON usare TripBase come body: e' il modello della tabella e include campi
+    controllati dal server (is_premium, status, company_id, approved_by,
+    share_token, ...). Accettarli dal client permetteva di sbloccare il premium
+    senza pagare, di auto-approvare una trasferta scavalcando il manager e di
+    attribuire un viaggio all'azienda di un altro tenant.
+    """
+
+    name: str
+    trip_type: str
+    trip_intent: Literal["LEISURE", "BUSINESS"] = "LEISURE"
+    destination: str = ""
+    description: Optional[str] = None
+
+    budget: float = Field(default=0.0, ge=0)
+    budget_max: float = Field(default=0.0, ge=0)
+    num_people: int = Field(default=1, ge=1, le=50)
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+    must_have: Optional[str] = ""
+    must_avoid: Optional[str] = ""
+    vibe: Optional[str] = ""
+    transport_mode: str = "FLIGHT"
+    departure_city: Optional[str] = None
+    accommodation: Optional[str] = None
+    accommodation_location: Optional[str] = None
+
+    office_address: Optional[str] = None
+    work_start_time: Optional[str] = "09:00"
+    work_end_time: Optional[str] = "18:00"
+    work_days: Optional[str] = "Monday,Tuesday,Wednesday,Thursday,Friday"
 
 
 class TripUpdateRequest(SQLModel):
@@ -436,6 +473,7 @@ async def optimize_itinerary(
     current_account: Account = Depends(get_current_user),
 ):
     """Ottimizza l'ordine delle attività per ridurre gli spostamenti (TSP semplice)"""
+    check_participant(trip_id, current_account, session)
     try:
         trip = session.get(Trip, trip_id)
         items = session.exec(
@@ -557,6 +595,9 @@ async def search_trip_options(
     current_account: Account = Depends(get_current_user),
 ):
     """Simula una ricerca OTA (Voli o Hotel) tramite AI restituendo 6 opzioni"""
+    # Il controllo di partecipazione precede il consumo di quota AI: altrimenti
+    # un estraneo brucia le chiamate AI leggendo i dati di un viaggio altrui.
+    check_participant(trip_id, current_account, session)
     check_rate_limit(current_account, session)
     trip = session.get(Trip, trip_id)
     if not trip:
@@ -705,6 +746,7 @@ async def estimate_budget(
     current_account: Account = Depends(get_current_user),
 ):
     """Stima i costi della vita locale tramite AI"""
+    check_participant(trip_id, current_account, session)
     check_rate_limit(current_account, session)
     try:
         trip = session.get(Trip, trip_id)
@@ -823,7 +865,7 @@ async def estimate_budget(
 
 @router.post("/", response_model=Dict)
 async def create_trip(
-    trip_data: TripBase,
+    trip_data: TripCreateRequest,
     session: Session = Depends(get_session),
     current_account: Account = Depends(get_current_user),
 ):
@@ -835,11 +877,15 @@ async def create_trip(
             check_company_limits(company, session, "create_trip")
 
     try:
-        db_trip = Trip.model_validate(trip_data)
+        # I campi privilegiati non arrivano dal client: TripCreateRequest non li
+        # espone e il Trip parte sempre dai default del modello
+        # (status=PLANNING, is_premium=False, approved_by=None, share_token=None).
+        db_trip = Trip(**trip_data.model_dump())
         if trip_data.trip_type == "SOLO":
             db_trip.num_people = 1
 
-        # Auto-eredita company_id dall'organizzatore per query B2B dirette
+        # Il company_id e' sempre quello dell'organizzatore, mai un valore scelto
+        # dal client: e' cio' che tiene separati i tenant B2B.
         if current_account.company_id and trip_data.trip_intent == "BUSINESS":
             db_trip.company_id = current_account.company_id
 
@@ -1201,8 +1247,15 @@ async def read_trip(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
-    # I manager aziendali possono vedere qualsiasi viaggio BUSINESS
-    if current_account.is_manager and trip.trip_intent == "BUSINESS":
+    # I manager possono vedere i viaggi BUSINESS *della propria azienda*.
+    # Senza il confronto su company_id un manager qualsiasi leggeva le trasferte
+    # di tutti i clienti B2B. Il manager senza company non ha alcun privilegio.
+    if (
+        current_account.is_manager
+        and trip.trip_intent == "BUSINESS"
+        and current_account.company_id is not None
+        and trip.company_id == current_account.company_id
+    ):
         return trip
 
     participant = session.exec(
@@ -1217,12 +1270,23 @@ async def read_trip(
 
 
 @router.get("/{trip_id}/proposals", response_model=List[Proposal])
-async def get_proposals(trip_id: int, session: Session = Depends(get_session)):
-    """Recupera le proposte generate per un viaggio (Accessibile pubblicamente per votazioni)"""
+async def get_proposals(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """Recupera le proposte generate per un viaggio. Solo per i partecipanti.
+
+    Era pubblico "per le votazioni", ma gli ospiti non registrati passano da
+    GET /trips/share/{token}, che restituisce gia' tutti i dati necessari.
+    Con gli id sequenziali, l'accesso libero permetteva di enumerare le
+    proposte di qualunque viaggio, incluse le trasferte aziendali.
+    """
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
+    check_participant(trip_id, current_account, session)
     return session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all()
 
 
@@ -1436,6 +1500,10 @@ async def delete_trip(
     session.exec(delete(Photo).where(Photo.trip_id == trip_id))
     session.exec(delete(ItineraryItem).where(ItineraryItem.trip_id == trip_id))
     session.exec(delete(Expense).where(Expense.trip_id == trip_id))
+    # Notification.trip_id e' una FK verso trip.id senza ON DELETE: senza questa
+    # riga ogni viaggio con almeno una notifica (tutti i BUSINESS, che notificano
+    # i manager alla creazione) e' ineliminabile con un IntegrityError.
+    session.exec(delete(Notification).where(Notification.trip_id == trip_id))
 
     for proposal in session.exec(select(Proposal).where(Proposal.trip_id == trip_id)).all():
         session.exec(delete(Vote).where(Vote.proposal_id == proposal.id))
@@ -2066,6 +2134,9 @@ async def confirm_hotel(
     current_account: Account = Depends(get_current_user),
 ):
     """Conferma i dati logistici finali e genera l'itinerario"""
+    # Endpoint distruttivo: sovrascrive hotel/costi e RIGENERA l'itinerario da
+    # zero. Senza questo controllo chiunque poteva azzerare il viaggio altrui.
+    check_participant(trip_id, current_account, session)
     try:
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -2328,6 +2399,14 @@ async def simulate_votes(
     current_account: Account = Depends(get_current_user),
 ):
     """Simula i voti mancanti per chiudere il viaggio in DEMO"""
+    # Vota al posto di tutti i partecipanti e puo' chiudere la votazione
+    # decidendo la destinazione: riservato all'organizzatore del viaggio.
+    member = check_participant(trip_id, current_account, session)
+    if not member.is_organizer:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo l'organizzatore può simulare i voti mancanti.",
+        )
     try:
         trip = session.get(Trip, trip_id)
         proposals = session.exec(
@@ -2358,7 +2437,14 @@ async def simulate_votes(
 
 
 @router.get("/{trip_id}/itinerary", response_model=List[ItineraryItem])
-async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
+async def get_itinerary(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """Itinerario del viaggio. Solo per i partecipanti: esponeva tappe con
+    coordinate e orari di qualunque viaggio a chiunque conoscesse l'id."""
+    check_participant(trip_id, current_account, session)
     return session.exec(
         select(ItineraryItem)
         .where(ItineraryItem.trip_id == trip_id)
@@ -2367,12 +2453,17 @@ async def get_itinerary(trip_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/{trip_id}/route-geometry")
-async def get_trip_route_geometry(trip_id: int, session: Session = Depends(get_session)):
+async def get_trip_route_geometry(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
     """
     Returns the OSRM-encoded polyline for the itinerary route.
     Called async from the frontend after the itinerary loads — map never blocks.
     Falls back gracefully: returns {"polyline": null} on any OSRM failure.
     """
+    check_participant(trip_id, current_account, session)
     items = session.exec(
         select(ItineraryItem)
         .where(ItineraryItem.trip_id == trip_id)
@@ -2393,12 +2484,19 @@ async def get_trip_route_geometry(trip_id: int, session: Session = Depends(get_s
 
 
 @router.get("/{trip_id}/participants")
-async def get_participants(trip_id: int, session: Session = Depends(get_session)):
-    """Restituisce i partecipanti al viaggio (Accessibile pubblicamente per votazioni)"""
+async def get_participants(
+    trip_id: int,
+    session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_user),
+):
+    """Partecipanti al viaggio. Solo per i partecipanti stessi: l'accesso libero
+    esponeva i nomi dei membri di qualunque viaggio, trasferte aziendali incluse.
+    Gli ospiti con link di condivisione li ricevono da GET /trips/share/{token}."""
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
+    check_participant(trip_id, current_account, session)
     results = session.exec(
         select(Participant).where(Participant.trip_id == trip_id)
     ).all()
@@ -2542,22 +2640,13 @@ async def chat_with_ai(
         )
 
 
-@router.post("/buy-credits")
-async def buy_credits(
-    amount: int,
-    session: Session = Depends(get_session),
-    current_account: Account = Depends(get_current_user),
-):
-    """Simula l'acquisto di crediti"""
-    try:
-        current_account.credits += amount
-        session.add(current_account)
-        session.commit()
-        session.refresh(current_account)
-        return {"status": "success", "credits": current_account.credits}
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+# NOTA: l'endpoint POST /buy-credits e' stato rimosso.
+# Era un residuo della fase demo ("Simula l'acquisto di crediti"): accettava un
+# `amount` arbitrario e lo sommava ai crediti dell'account senza alcun passaggio
+# da Stripe, permettendo a qualunque utente autenticato di ottenere crediti
+# illimitati. L'unico percorso valido per accreditare crediti e'
+# process_successful_checkout() in backend/routers/payments.py, invocato dal
+# webhook Stripe dopo un pagamento verificato.
 
 
 @router.post("/{trip_id}/unlock")
@@ -2567,6 +2656,7 @@ async def unlock_trip(
     current_account: Account = Depends(get_current_user),
 ):
     """Sblocca un viaggio usando 1 credito"""
+    check_participant(trip_id, current_account, session)
     try:
         trip = session.get(Trip, trip_id)
         if not trip:
@@ -2611,6 +2701,10 @@ async def export_trip_pdf(
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
 
+    # require_premium e' un paywall, NON un controllo di ownership: per i trip
+    # BUSINESS fa return immediato, quindi da solo lasciava scaricare il PDF
+    # completo (itinerario, spese, partecipanti) di qualunque trasferta aziendale.
+    check_participant(trip_id, current_account, session)
     require_premium(current_account, trip)
 
     def format_pdf_datetime(dt_str):

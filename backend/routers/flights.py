@@ -6,6 +6,7 @@ from sqlmodel import Session
 from database import get_session
 from models import Trip, Account
 from routers.users import get_current_user
+from utils.access import check_participant
 from google import genai
 from google.genai import types
 
@@ -73,6 +74,10 @@ def search_flights(
     trip = session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Viaggio non trovato")
+
+    # L'endpoint legge date/destinazione del viaggio, SCRIVE departure_airport e
+    # destination_iata e consuma quota Duffel + Gemini: va riservato ai partecipanti.
+    check_participant(trip_id, current_account, session)
 
     origin_iata = (trip.departure_airport or trip.departure_city or "").strip()
     dest_iata = (trip.destination_iata or trip.real_destination or trip.destination or "").strip()

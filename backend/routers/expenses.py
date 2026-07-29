@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
 import logging
 import csv
 import io
@@ -19,6 +20,15 @@ from utils.access import check_participant
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
+
+
+def _money(value) -> Decimal:
+    """Porta un importo a 2 decimali esatti, con arrotondamento commerciale.
+
+    Gli importi sono salvati come float in DB (Expense.amount): la conversione
+    passa da str per non trascinarsi dentro l'errore binario del float.
+    """
+    return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 class CreateExpenseRequest(SQLModel):
@@ -55,6 +65,15 @@ async def create_expense(
     if not payer:
         raise HTTPException(status_code=404, detail="Payer not found")
 
+    # Il payer deve appartenere a QUESTO viaggio. Senza il controllo, in
+    # get_balances il credito non veniva mai accreditato (payer_id assente da
+    # `balances`) mentre le quote venivano comunque sottratte agli altri: la
+    # somma dei saldi non faceva zero e l'importo spariva senza errori.
+    if payer.trip_id != expense_req.trip_id:
+        raise HTTPException(
+            status_code=400, detail="Chi ha pagato non partecipa a questo viaggio."
+        )
+
     check_participant(expense_req.trip_id, current_user, session)
 
     # 3. Handle Currency Conversion
@@ -63,13 +82,26 @@ async def create_expense(
 
     if expense_req.currency.upper() != "EUR":
         rates = await get_exchange_rates("EUR")
-        if rates and expense_req.currency.upper() in rates:
-            exchange_rate = rates[expense_req.currency.upper()]
-            amount_eur = round(expense_req.amount / exchange_rate, 2)
-        else:
-            logger.warning(
-                f"[Warning] Rates for {expense_req.currency} not found. Using original amount."
+        if not rates or expense_req.currency.upper() not in rates:
+            # Meglio rifiutare che salvare un importo estero come se fosse in
+            # euro: con il fallback precedente 15.000 JPY finivano nei saldi e
+            # nella nota spese come 15.000 EUR, in modo permanente.
+            logger.error(
+                f"[Currency] Tasso {expense_req.currency} non disponibile: spesa rifiutata."
             )
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"Impossibile convertire da {expense_req.currency.upper()}: "
+                    "servizio cambi non disponibile. Riprova tra poco."
+                ),
+            )
+        exchange_rate = rates[expense_req.currency.upper()]
+        if not exchange_rate or exchange_rate <= 0:
+            raise HTTPException(
+                status_code=503, detail="Tasso di cambio non valido. Riprova tra poco."
+            )
+        amount_eur = round(expense_req.amount / exchange_rate, 2)
 
     # 4. Create Expense
     all_participant_ids = [
@@ -79,12 +111,21 @@ async def create_expense(
         ).all()
     ]
 
-    # Se involved_user_ids è vuoto, coinvolge tutti
-    involved = (
-        expense_req.involved_user_ids
-        if expense_req.involved_user_ids
-        else all_participant_ids
-    )
+    # Se involved_user_ids è vuoto, coinvolge tutti.
+    # Gli id estranei al viaggio vengono scartati: altrimenti get_balances li
+    # filtrava a valle, si ritrovava la lista vuota e ripartiva le spese su
+    # TUTTI i partecipanti, cambiando in silenzio la divisione scelta dall'utente.
+    if expense_req.involved_user_ids:
+        involved = [
+            pid for pid in expense_req.involved_user_ids if pid in all_participant_ids
+        ]
+        if not involved:
+            raise HTTPException(
+                status_code=400,
+                detail="Nessuno dei partecipanti indicati appartiene a questo viaggio.",
+            )
+    else:
+        involved = all_participant_ids
 
     db_expense = Expense(
         trip_id=expense_req.trip_id,
@@ -174,12 +215,15 @@ async def get_balances(
     if not expenses or not participants:
         return []
 
-    balances = {p.id: 0.0 for p in participants}
+    # I saldi si calcolano in Decimal a 2 cifre. Con i float, una spesa di 10,00
+    # divisa fra 3 produceva quote da 3,3333...: i settlement sommavano 6,66
+    # contro 6,67 dovuti e il "chi deve cosa a chi" non tornava mai al centesimo.
+    balances = {p.id: Decimal("0.00") for p in participants}
     user_map = {p.id: p.name for p in participants}
 
     for exp in expenses:
         payer_id = exp.payer_id
-        amount = exp.amount
+        amount = _money(exp.amount)
 
         # Recupera chi è coinvolto in questa spesa
         if exp.involved_ids:
@@ -193,17 +237,22 @@ async def get_balances(
         if payer_id in balances:
             balances[payer_id] += amount
 
-        split_amount = amount / len(involved)
-        for pid in involved:
-            balances[pid] -= split_amount
+        # La divisione non e' quasi mai esatta: si assegna la quota arrotondata a
+        # tutti e il resto (max pochi centesimi) al primo coinvolto, cosi' la
+        # somma delle quote coincide sempre con l'importo speso.
+        quota = _money(amount / Decimal(len(involved)))
+        resto = amount - quota * len(involved)
+        for pos, pid in enumerate(involved):
+            balances[pid] -= quota + (resto if pos == 0 else Decimal("0.00"))
 
     debtors = []
     creditors = []
+    soglia = Decimal("0.01")
     for uid, bal in balances.items():
-        bal = round(bal, 2)
-        if bal < -0.01:
+        bal = _money(bal)
+        if bal <= -soglia:
             debtors.append({"id": uid, "amount": -bal})
-        elif bal > 0.01:
+        elif bal >= soglia:
             creditors.append({"id": uid, "amount": bal})
 
     debtors.sort(key=lambda x: x["amount"], reverse=True)
@@ -227,9 +276,9 @@ async def get_balances(
             )
         debtor["amount"] -= amount
         creditor["amount"] -= amount
-        if debtor["amount"] < 0.01:
+        if debtor["amount"] < soglia:
             i += 1
-        if creditor["amount"] < 0.01:
+        if creditor["amount"] < soglia:
             j += 1
 
     return settlements
@@ -299,14 +348,19 @@ async def upload_receipt(
 
     if currency != "EUR":
         rates = await get_exchange_rates("EUR")
-        if rates and currency in rates:
-            exchange_rate = rates[currency]
-            amount_eur = round(original_amount / exchange_rate, 2)
-        else:
-            logger.warning(
-                f"[OCR] Tasso di cambio per {currency} non disponibile — "
-                "uso importo originale come EUR"
+        if not rates or currency not in rates or not rates[currency]:
+            # Vale lo stesso ragionamento di create_expense: registrare una
+            # ricevuta estera come se fosse in euro falsa la nota spese.
+            logger.error(f"[OCR] Tasso {currency} non disponibile: ricevuta rifiutata.")
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"Impossibile convertire da {currency}: servizio cambi non "
+                    "disponibile. Riprova tra poco."
+                ),
             )
+        exchange_rate = rates[currency]
+        amount_eur = round(original_amount / exchange_rate, 2)
 
     # ── 6. Data spesa ─────────────────────────────────────────────────────────
     expense_date = extracted.get("date") or datetime.now(timezone.utc).strftime("%Y-%m-%d")

@@ -6,6 +6,7 @@ import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from auth import get_current_user
@@ -36,14 +37,14 @@ PRODUCTS = {
     },
     "sub_monthly": {
         "name": "SplitPlan Pro - Mensile",
-        "amount": 499,
+        "amount": 799,
         "plan": "MONTHLY",
         "mode": "subscription",
         "interval": "month",
     },
     "sub_annual": {
         "name": "SplitPlan Pro - Annuale",
-        "amount": 2999,
+        "amount": 7699,
         "plan": "ANNUAL",
         "mode": "subscription",
         "interval": "year",
@@ -58,21 +59,68 @@ class CheckoutRequest(BaseModel):
 # ---- IDEMPOTENCY ----
 
 
-def _is_already_processed(stripe_event_id: str, session: Session) -> bool:
-    return (
-        session.exec(
-            select(ProcessedStripeEvent).where(
-                ProcessedStripeEvent.stripe_event_id == stripe_event_id
-            )
-        ).first()
-        is not None
-    )
+def _claim_payment(idempotency_key: str, session: Session) -> bool:
+    """Prova a "prenotare" un pagamento. Ritorna True se e' la prima volta.
+
+    L'INSERT del marker avviene PRIMA dell'accredito e nella stessa transazione:
+    e' il vincolo UNIQUE su stripe_event_id a decidere chi vince, quindi due
+    consegne concorrenti dello stesso evento non possono accreditare due volte.
+    Il vecchio schema (SELECT, accredita, poi INSERT con commit separati) lasciava
+    aperta una finestra in cui entrambe le richieste passavano il controllo.
+    """
+    try:
+        session.add(ProcessedStripeEvent(stripe_event_id=idempotency_key))
+        session.flush()
+        return True
+    except IntegrityError:
+        session.rollback()
+        logger.info(f"[Idempotency] {idempotency_key} gia' processato. Skip.")
+        return False
 
 
-def _mark_as_processed(stripe_event_id: str, session: Session) -> None:
-    session.add(ProcessedStripeEvent(stripe_event_id=stripe_event_id))
+def _account_from_stripe_customer(customer_id, session: Session):
+    """Risale all'Account partendo dall'id cliente Stripe (cus_...).
+
+    Il checkout usa `customer_email`, quindi Stripe crea il Customer con
+    l'email dell'account: la recuperiamo dall'oggetto Customer.
+    """
+    if not customer_id:
+        return None
+    try:
+        customer = stripe.Customer.retrieve(customer_id)
+        email = getattr(customer, "email", None)
+    except stripe.error.StripeError as e:
+        logger.error(f"[Webhook] Customer {customer_id} non recuperabile: {e}")
+        return None
+
+    if not email:
+        logger.warning(f"[Webhook] Customer {customer_id} senza email.")
+        return None
+    return session.exec(select(Account).where(Account.email == email)).first()
+
+
+def _revoke_subscription(account: Account, session: Session, reason: str) -> None:
+    """Revoca l'accesso Pro (disdetta, rimborso, insoluto)."""
+    if not account.is_subscribed:
+        return
+    account.is_subscribed = False
+    account.subscription_plan = None
+    account.subscription_expiry = None
+    account.auto_renew = False
+    session.add(account)
     session.commit()
-    logger.info(f"[Idempotency] Evento {stripe_event_id} marcato come processato.")
+    logger.info(f"[Webhook] Abbonamento revocato per account {account.id} ({reason})")
+
+
+def _checkout_idempotency_key(checkout_session_id: str) -> str:
+    """Chiave unica per pagamento, condivisa da webhook e verify-session.
+
+    Prima i due percorsi usavano chiavi diverse (l'event id `evt_...` e
+    `verify_<session_id>`): il guard non scattava mai fra l'uno e l'altro e
+    ogni acquisto veniva accreditato due volte, visto che il frontend chiama
+    verify-session subito dopo il redirect mentre Stripe invia il webhook.
+    """
+    return f"checkout:{checkout_session_id}"
 
 
 # ---- CHECKOUT ----
@@ -142,19 +190,19 @@ async def create_checkout(
 
 
 async def process_successful_checkout(
-    account: Account, product_type: str, stripe_event_id: str, session: Session
+    account: Account, product_type: str, idempotency_key: str, session: Session
 ):
     """
-    Attiva crediti/abbonamento. Idempotente: usa stripe_event_id per
-    garantire che webhook e verify-session non processino due volte lo stesso pagamento.
+    Attiva crediti/abbonamento. Idempotente: la chiave e' derivata dall'id della
+    sessione di checkout, quindi webhook e verify-session convergono sulla stessa
+    e lo stesso pagamento non puo' essere accreditato due volte.
     """
-    if _is_already_processed(stripe_event_id, session):
-        logger.info(f"[Idempotency] Evento {stripe_event_id} gia processato. Skip.")
-        return
-
     product = PRODUCTS.get(product_type)
     if not product:
         logger.warning(f"Prodotto sconosciuto: {product_type}")
+        return
+
+    if not _claim_payment(idempotency_key, session):
         return
 
     if product["mode"] == "payment":
@@ -174,10 +222,11 @@ async def process_successful_checkout(
             f"[Activation] Abbonamento {product['plan']} attivato per account {account.id}"
         )
 
+    # Marker e accredito vengono resi persistenti insieme: o entrambi o nessuno.
     session.add(account)
     session.commit()
     session.refresh(account)
-    _mark_as_processed(stripe_event_id, session)
+    logger.info(f"[Idempotency] {idempotency_key} completato.")
 
     # Email ricevuta
     try:
@@ -214,14 +263,19 @@ async def process_successful_checkout(
 async def stripe_webhook(request: Request, session: Session = Depends(get_session)):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
-    try:
-        if WEBHOOK_SECRET:
-            event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
-        else:
-            import json
+    # Fail-closed: senza segreto non si puo' distinguere un evento Stripe da uno
+    # inventato da un attaccante. Il vecchio ramo `else: json.loads(payload)`
+    # permetteva a chiunque di accreditarsi crediti e abbonamenti con una POST.
+    if not WEBHOOK_SECRET:
+        logger.error(
+            "[Webhook] STRIPE_WEBHOOK_SECRET non configurato: webhook rifiutato."
+        )
+        raise HTTPException(
+            status_code=500, detail="Webhook non configurato correttamente"
+        )
 
-            event = json.loads(payload)
-            logger.warning("[Webhook] STRIPE_WEBHOOK_SECRET non configurato.")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
     except (ValueError, stripe.error.SignatureVerificationError) as e:
         logger.error(f"[Webhook] Firma non valida: {e}")
         raise HTTPException(status_code=400, detail="Firma webhook non valida")
@@ -232,6 +286,15 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
 
     if event_type == "checkout.session.completed":
         cs = event["data"]["object"]
+        # Con i metodi asincroni o i coupon al 100% l'evento puo' arrivare non
+        # pagato: senza questo controllo si accreditava comunque.
+        if cs.get("payment_status") != "paid":
+            logger.info(
+                f"[Webhook] checkout {cs.get('id')} non pagato "
+                f"(payment_status={cs.get('payment_status')}). Ignorato."
+            )
+            return {"status": "ignored_unpaid"}
+
         meta = cs.get("metadata", {})
         account_id, product_type = meta.get("account_id"), meta.get("product_type")
         if not account_id or not product_type:
@@ -239,23 +302,35 @@ async def stripe_webhook(request: Request, session: Session = Depends(get_sessio
         account = session.get(Account, int(account_id))
         if not account:
             return {"status": "account_not_found"}
-        await process_successful_checkout(account, product_type, event_id, session)
+        await process_successful_checkout(
+            account, product_type, _checkout_idempotency_key(cs["id"]), session
+        )
 
-    elif event_type == "customer.subscription.deleted":
+    elif event_type in (
+        "customer.subscription.deleted",
+        "customer.subscription.updated",
+    ):
         sub = event["data"]["object"]
-        email = sub.get("customer_email") or ""
-        if email:
-            account = session.exec(
-                select(Account).where(Account.email == email)
-            ).first()
-            if account:
-                account.is_subscribed = False
-                account.subscription_plan = None
-                account.subscription_expiry = None
-                account.auto_renew = False
-                session.add(account)
-                session.commit()
-                logger.info(f"[Webhook] Abbonamento cancellato per {email}")
+        # L'oggetto Subscription NON espone customer_email: contiene `customer`
+        # (id cus_...). Leggendo customer_email l'email era sempre vuota e la
+        # revoca non veniva MAI eseguita, quindi chi disdiceva restava Pro a vita.
+        account = _account_from_stripe_customer(sub.get("customer"), session)
+        if account:
+            status = sub.get("status")
+            # `updated` revoca solo se l'abbonamento non e' piu' attivo
+            # (es. unpaid/canceled): un semplice cambio di piano non tocca nulla.
+            if event_type == "customer.subscription.deleted" or status in (
+                "canceled",
+                "unpaid",
+                "incomplete_expired",
+            ):
+                _revoke_subscription(account, session, reason=event_type)
+
+    elif event_type in ("invoice.payment_failed", "charge.refunded"):
+        obj = event["data"]["object"]
+        account = _account_from_stripe_customer(obj.get("customer"), session)
+        if account:
+            _revoke_subscription(account, session, reason=event_type)
 
     return {"status": "success"}
 
@@ -278,9 +353,12 @@ async def verify_session(
                 raise HTTPException(status_code=403, detail="Sessione non autorizzata")
             if not PRODUCTS.get(product_type):
                 return {"status": "paid", "credits": current_account.credits}
-            # Prefix "verify_" distingue dal webhook ma rimane idempotente su chiamate multiple
+            # Stessa chiave usata dal webhook: chi arriva secondo non accredita.
             await process_successful_checkout(
-                current_account, product_type, f"verify_{session_id}", session
+                current_account,
+                product_type,
+                _checkout_idempotency_key(session_id),
+                session,
             )
             return {
                 "status": "paid",

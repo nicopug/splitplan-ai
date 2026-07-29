@@ -415,7 +415,7 @@ const PricingBusiness = () => {
                         Pilot Gratuito
                     </span>
                     <h2 className="text-3xl font-black uppercase tracking-tight mb-4">
-                        60 giorni gratis.<br />Senza carta di credito.
+                        30 giorni gratis.<br />Senza carta di credito.
                     </h2>
                     <p className="text-[var(--text-muted)] text-sm max-w-md mx-auto mb-8">
                         Offriamo un pilot per aziende selezionate. Porta SplitPlan al tuo team,

@@ -40,6 +40,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallbackDenylist: [/^\/api/],
+        // Elimina le precache delle versioni precedenti invece di lasciarle
+        // accumulare: senza, il service worker poteva continuare a servire una
+        // index.html vecchia, che punta a chunk con hash non piu' esistenti.
+        cleanupOutdatedCaches: true,
+        // Il nuovo service worker prende il controllo subito, cosi' il
+        // ricaricamento innescato dall'ErrorBoundary trova gia' i file nuovi.
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
